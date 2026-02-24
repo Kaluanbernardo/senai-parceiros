@@ -1,0 +1,1208 @@
+[
+  {
+    "id": 1,
+    "instituicao": "Serviço Nacional de Aprendizagem Industrial",
+    "pais": "Brasil",
+    "areas": "Multissetorial (Indústria)",
+    "relevancia": "Maior complexo de EPT da América Latina; campeão WorldSkills 2015; 26 Institutos de Inovação; referência mundial",
+    "website": "https://portaldaindustria.com.br/senai",
+    "logo": "https://www.google.com/s2/favicons?domain=portaldaindustria.com.br&sz=128"
+  },
+  {
+    "id": 2,
+    "instituicao": "Serviço Nacional de Aprendizagem Comercial",
+    "pais": "Brasil",
+    "areas": "Comércio; Serviços; Saúde; TI; Gestão; Design",
+    "relevancia": "Maior sistema de EPT no setor de serviços; Programa Senac de Gratuidade; 2.182 municípios",
+    "website": "https://senac.br",
+    "logo": "https://www.google.com/s2/favicons?domain=senac.br&sz=128"
+  },
+  {
+    "id": 3,
+    "instituicao": "Rede Federal de EPT (38 IFs + 2 CEFETs + UTFPR + CP2)",
+    "pais": "Brasil",
+    "areas": "Multissetorial",
+    "relevancia": "Padrão-ouro da EPT pública gratuita; expansão de 100 novos campi (R$ 3,9 bi)",
+    "website": "https://gov.br/mec",
+    "logo": "https://www.google.com/s2/favicons?domain=gov.br&sz=128"
+  },
+  {
+    "id": 4,
+    "instituicao": "Centro Estadual de Educação Tecnológica Paula Souza",
+    "pais": "Brasil",
+    "areas": "Multissetorial",
+    "relevancia": "Maior rede estadual de EPT; 90% empregabilidade FATEC",
+    "website": "https://cps.sp.gov.br",
+    "logo": "https://www.google.com/s2/favicons?domain=cps.sp.gov.br&sz=128"
+  },
+  {
+    "id": 5,
+    "instituicao": "CEFET-RJ — Centro Federal de Ed. Tecnológica Celso Suckow da Fonseca",
+    "pais": "Brasil",
+    "areas": "Engenharia; Saúde; TI; Gestão; Agropecuária",
+    "relevancia": "Um dos 2 CEFETs remanescentes; 100+ anos de história; verticalização completa",
+    "website": "https://cefet-rj.br",
+    "logo": "https://www.google.com/s2/favicons?domain=cefet-rj.br&sz=128"
+  },
+  {
+    "id": 6,
+    "instituicao": "CEFET-MG — Centro Federal de Ed. Tecnológica de Minas Gerais",
+    "pais": "Brasil",
+    "areas": "Engenharia; Química; Meio Ambiente; TI",
+    "relevancia": "Forte vínculo industrial no corredor mineiro",
+    "website": "https://cefetmg.br",
+    "logo": "https://www.google.com/s2/favicons?domain=cefetmg.br&sz=128"
+  },
+  {
+    "id": 7,
+    "instituicao": "Universidade Tecnológica Federal do Paraná",
+    "pais": "Brasil",
+    "areas": "Engenharia; TI; Agropecuária; Design",
+    "relevancia": "Única universidade tecnológica do Brasil; modelo politécnico europeu",
+    "website": "https://utfpr.edu.br",
+    "logo": "https://www.google.com/s2/favicons?domain=utfpr.edu.br&sz=128"
+  },
+  {
+    "id": 8,
+    "instituicao": "Serviço Social da Indústria",
+    "pais": "Brasil",
+    "areas": "Educação; Saúde e Segurança do Trabalho",
+    "relevancia": "Maior rede privada de educação básica; modelo integrado SESI-SENAI",
+    "website": "https://portaldaindustria.com.br/sesi",
+    "logo": "https://www.google.com/s2/favicons?domain=portaldaindustria.com.br&sz=128"
+  },
+  {
+    "id": 9,
+    "instituicao": "Serviço Nacional de Aprendizagem Rural",
+    "pais": "Brasil",
+    "areas": "Agropecuária",
+    "relevancia": "Essencial para o maior setor agropecuário do mundo",
+    "website": "https://senar.org.br",
+    "logo": "https://www.google.com/s2/favicons?domain=senar.org.br&sz=128"
+  },
+  {
+    "id": 10,
+    "instituicao": "SEST SENAT",
+    "pais": "Brasil",
+    "areas": "Transporte e Logística",
+    "relevancia": "Único sistema de EPT específico para transporte",
+    "website": "https://sestsenat.org.br",
+    "logo": "https://www.google.com/s2/favicons?domain=sestsenat.org.br&sz=128"
+  },
+  {
+    "id": 11,
+    "instituicao": "Fundação de Apoio à Escola Técnica (RJ)",
+    "pais": "Brasil",
+    "areas": "TI; Saúde; Mecânica; Eletrotécnica; Gestão; Moda",
+    "relevancia": "Maior rede estadual de EPT no RJ",
+    "website": "https://faetec.rj.gov.br",
+    "logo": "https://www.google.com/s2/favicons?domain=faetec.rj.gov.br&sz=128"
+  },
+  {
+    "id": 12,
+    "instituicao": "Centro de Integração Empresa-Escola",
+    "pais": "Brasil",
+    "areas": "Multissetorial (Estágio e Aprendizagem)",
+    "relevancia": "Principal ponte entre EPT e mercado de trabalho",
+    "website": "https://ciee.org.br",
+    "logo": "https://www.google.com/s2/favicons?domain=ciee.org.br&sz=128"
+  },
+  {
+    "id": 13,
+    "instituicao": "Serviço Nacional de Aprendizagem do Cooperativismo",
+    "pais": "Brasil",
+    "areas": "Gestão; Cooperativismo",
+    "relevancia": "Único sistema de EPT para cooperativismo",
+    "website": "https://sescoop.coop.br",
+    "logo": "https://www.google.com/s2/favicons?domain=sescoop.coop.br&sz=128"
+  },
+  {
+    "id": 14,
+    "instituicao": "INET — Instituto Nacional de Educación Tecnológica",
+    "pais": "Argentina",
+    "areas": "Multissetorial (Coordenação de EPT)",
+    "relevancia": "Órgão coordenador nacional da educação técnico-profissional",
+    "website": "https://inet.edu.ar",
+    "logo": "https://www.google.com/s2/favicons?domain=inet.edu.ar&sz=128"
+  },
+  {
+    "id": 15,
+    "instituicao": "UTN — Universidad Tecnológica Nacional",
+    "pais": "Argentina",
+    "areas": "Engenharia",
+    "relevancia": "Maior universidade de engenharia da Argentina; forma ~50% dos engenheiros do país",
+    "website": "https://utn.edu.ar",
+    "logo": "https://www.google.com/s2/favicons?domain=utn.edu.ar&sz=128"
+  },
+  {
+    "id": 16,
+    "instituicao": "Fundación UOCRA",
+    "pais": "Argentina",
+    "areas": "Construção Civil; Segurança do Trabalho",
+    "relevancia": "Modelo de formação profissional sindical; membro Cinterfor",
+    "website": "https://uocra.org",
+    "logo": "https://www.google.com/s2/favicons?domain=uocra.org&sz=128"
+  },
+  {
+    "id": 17,
+    "instituicao": "CONALEP — Colegio Nacional de Educación Profesional Técnica",
+    "pais": "México",
+    "areas": "Multissetorial (Indústria; Serviços; Saúde; TI; Automotivo)",
+    "relevancia": "Principal sistema de ensino médio técnico; modelo dual; membro Cinterfor",
+    "website": "https://conalep.edu.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=conalep.edu.mx&sz=128"
+  },
+  {
+    "id": 18,
+    "instituicao": "DGETI — Dirección General de Educación Tecnológica Industrial",
+    "pais": "México",
+    "areas": "Mecatrônica; Eletrônica; TI; Tecnologia Industrial",
+    "relevancia": "Maior subsistema de educação tecnológica de nível médio superior",
+    "website": "https://dgeti.sep.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=dgeti.sep.gob.mx&sz=128"
+  },
+  {
+    "id": 19,
+    "instituicao": "IPN — Instituto Politécnico Nacional",
+    "pais": "México",
+    "areas": "Engenharia; Saúde; Gestão",
+    "relevancia": "Principal instituição politécnica do México; inclui nível médio e superior",
+    "website": "https://ipn.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=ipn.mx&sz=128"
+  },
+  {
+    "id": 20,
+    "instituicao": "TecNM — Tecnológico Nacional de México",
+    "pais": "México",
+    "areas": "Engenharia; Gestão; Arquitetura",
+    "relevancia": "Maior sistema de educação tecnológica superior do México e da América Latina",
+    "website": "https://tecnm.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=tecnm.mx&sz=128"
+  },
+  {
+    "id": 21,
+    "instituicao": "Universidades Tecnológicas (Sistema UT)",
+    "pais": "México",
+    "areas": "Manufatura; TI; Energia; Mecatrônica",
+    "relevancia": "Modelo inovador de ciclo curto (TSU); 85% são primeira geração universitária",
+    "website": "https://cgut.sep.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=cgut.sep.gob.mx&sz=128"
+  },
+  {
+    "id": 22,
+    "instituicao": "Universidades Politécnicas (Sistema UP)",
+    "pais": "México",
+    "areas": "Engenharia; Biotecnologia; Mecatrônica; Aeronáutica",
+    "relevancia": "Engenharia baseada em competências; estágio obrigatório de 15 semanas",
+    "website": "https://dgutyp.sep.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=dgutyp.sep.gob.mx&sz=128"
+  },
+  {
+    "id": 23,
+    "instituicao": "CECATI / DGCFT — Centros de Capacitación para el Trabajo Industrial",
+    "pais": "México",
+    "areas": "Mecânica; Soldagem; Elétrica; TI; Cosmetologia; Carpintaria",
+    "relevancia": "Principal sistema de capacitação não formal para adultos",
+    "website": "https://dgcft.sep.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=dgcft.sep.gob.mx&sz=128"
+  },
+  {
+    "id": 24,
+    "instituicao": "CONOCER — Consejo Nacional de Normalización y Certificación",
+    "pais": "México",
+    "areas": "Multissetorial (Certificação de Competências)",
+    "relevancia": "Órgão nacional de certificação de competências; referência para marcos de qualificações",
+    "website": "https://conocer.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=conocer.gob.mx&sz=128"
+  },
+  {
+    "id": 25,
+    "instituicao": "Sistema de Community Colleges (AACC)",
+    "pais": "EUA",
+    "areas": "Multissetorial",
+    "relevancia": "Maior sistema de educação profissional pós-secundária dos EUA; 41% de todos os universitários",
+    "website": "https://aacc.nche.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=aacc.nche.edu&sz=128"
+  },
+  {
+    "id": 26,
+    "instituicao": "California Community Colleges (Sistema estadual)",
+    "pais": "EUA",
+    "areas": "Multissetorial",
+    "relevancia": "Maior sistema estadual de CCs dos EUA",
+    "website": "https://cccco.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=cccco.edu&sz=128"
+  },
+  {
+    "id": 27,
+    "instituicao": "Ivy Tech Community College (Indiana)",
+    "pais": "EUA",
+    "areas": "Saúde; TI; Manufatura; Agropecuária",
+    "relevancia": "Maior community college dos EUA por headcount",
+    "website": "https://ivytech.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=ivytech.edu&sz=128"
+  },
+  {
+    "id": 28,
+    "instituicao": "Maricopa County CC District (Arizona)",
+    "pais": "EUA",
+    "areas": "TI; Saúde; Manufatura; IA",
+    "relevancia": "Maior distrito de CC; pioneiro em grau de bacharelado e IA",
+    "website": "https://maricopa.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=maricopa.edu&sz=128"
+  },
+  {
+    "id": 29,
+    "instituicao": "Houston Community College (Texas)",
+    "pais": "EUA",
+    "areas": "IA e Robótica; Saúde; TI",
+    "relevancia": "Primeiro CC a oferecer bacharelado em IA e robótica",
+    "website": "https://hccs.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=hccs.edu&sz=128"
+  },
+  {
+    "id": 30,
+    "instituicao": "US DOL — Registered Apprenticeship Program",
+    "pais": "EUA",
+    "areas": "Construção Civil; Saúde; Manufatura; TI",
+    "relevancia": "Sistema federal de aprendizagem; crescimento de 114% desde 2014",
+    "website": "https://apprenticeship.gov",
+    "logo": "https://www.google.com/s2/favicons?domain=apprenticeship.gov&sz=128"
+  },
+  {
+    "id": 31,
+    "instituicao": "Universal Technical Institute (UTI)",
+    "pais": "EUA",
+    "areas": "Automotivo; HVAC; Soldagem; Marítimo; Saúde",
+    "relevancia": "Maior provedor privado de formação em ofícios técnicos; NYSE: UTI",
+    "website": "https://uti.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=uti.edu&sz=128"
+  },
+  {
+    "id": 32,
+    "instituicao": "Job Corps (DOL)",
+    "pais": "EUA",
+    "areas": "Manufatura; Saúde; TI; Construção Civil",
+    "relevancia": "Maior programa federal residencial gratuito para jovens 16-24",
+    "website": "https://jobcorps.gov",
+    "logo": "https://www.google.com/s2/favicons?domain=jobcorps.gov&sz=128"
+  },
+  {
+    "id": 33,
+    "instituicao": "Polytechnics Canada (13 membros)",
+    "pais": "Canadá",
+    "areas": "Multissetorial",
+    "relevancia": "Organismo coordenador das politécnicas canadenses; 100% aprendizagem experiencial",
+    "website": "https://polytechnicscanada.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=polytechnicscanada.ca&sz=128"
+  },
+  {
+    "id": 34,
+    "instituicao": "CICan — Colleges and Institutes Canada (127 membros)",
+    "pais": "Canadá",
+    "areas": "Multissetorial",
+    "relevancia": "Maior associação nacional de instituições pós-secundárias do Canadá",
+    "website": "https://collegesinstitutes.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=collegesinstitutes.ca&sz=128"
+  },
+  {
+    "id": 35,
+    "instituicao": "BCIT — British Columbia Institute of Technology",
+    "pais": "Canadá",
+    "areas": "Engenharia; TI; Saúde; Construção Civil; Transporte",
+    "relevancia": "Maior politécnica do Canadá; única com acreditação global em transporte",
+    "website": "https://bcit.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=bcit.ca&sz=128"
+  },
+  {
+    "id": 36,
+    "instituicao": "SAIT — Southern Alberta Institute of Technology",
+    "pais": "Canadá",
+    "areas": "Energia; Construção Civil; Manufatura; Saúde",
+    "relevancia": "Fundada em 1916; politécnica mais antiga do Canadá; capital energética",
+    "website": "https://sait.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=sait.ca&sz=128"
+  },
+  {
+    "id": 37,
+    "instituicao": "NAIT — Northern Alberta Institute of Technology",
+    "pais": "Canadá",
+    "areas": "Multissetorial (Aprendizagem; Saúde; TI)",
+    "relevancia": "Um dos maiores formadores de aprendizes do Canadá",
+    "website": "https://nait.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=nait.ca&sz=128"
+  },
+  {
+    "id": 38,
+    "instituicao": "Seneca Polytechnic (Ontario)",
+    "pais": "Canadá",
+    "areas": "Aviação; Engenharia; TI; Saúde",
+    "relevancia": "2º maior college público do Canadá",
+    "website": "https://senecapolytechnic.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=senecapolytechnic.ca&sz=128"
+  },
+  {
+    "id": 39,
+    "instituicao": "Humber Polytechnic (Ontario)",
+    "pais": "Canadá",
+    "areas": "Engenharia; Saúde; TI; Mídia",
+    "relevancia": "Uma das maiores e mais diversificadas politécnicas",
+    "website": "https://humber.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=humber.ca&sz=128"
+  },
+  {
+    "id": 40,
+    "instituicao": "Conestoga College (Ontario)",
+    "pais": "Canadá",
+    "areas": "Engenharia; TI; Saúde; Aviação",
+    "relevancia": "Único college com graus de engenharia acreditados em Ontario",
+    "website": "https://conestogac.on.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=conestogac.on.ca&sz=128"
+  },
+  {
+    "id": 41,
+    "instituicao": "Sistema Dual de Formação (visão geral)",
+    "pais": "Alemanha",
+    "areas": "Multissetorial (Formação Dual)",
+    "relevancia": "Padrão-ouro mundial para formação dual; empresas investem €28 bi/ano",
+    "website": "https://bibb.de",
+    "logo": "https://www.google.com/s2/favicons?domain=bibb.de&sz=128"
+  },
+  {
+    "id": 42,
+    "instituicao": "BIBB — Bundesinstitut für Berufsbildung",
+    "pais": "Alemanha",
+    "areas": "Multissetorial (Pesquisa e Regulação de EPT)",
+    "relevancia": "Coordenador central do sistema dual; desenvolve 320+ regulamentos de formação",
+    "website": "https://bibb.de",
+    "logo": "https://www.google.com/s2/favicons?domain=bibb.de&sz=128"
+  },
+  {
+    "id": 43,
+    "instituicao": "IHK — Industrie- und Handelskammern (79 câmaras)",
+    "pais": "Alemanha",
+    "areas": "Multissetorial (Exames de Aprendizagem)",
+    "relevancia": "Administra a maior parcela dos exames de aprendizagem dual",
+    "website": "https://ihk.de",
+    "logo": "https://www.google.com/s2/favicons?domain=ihk.de&sz=128"
+  },
+  {
+    "id": 44,
+    "instituicao": "Handwerkskammern (53 câmaras de artesanato)",
+    "pais": "Alemanha",
+    "areas": "Artesanato",
+    "relevancia": "Sistema único de artesanato; qualificação Meister reconhecida mundialmente",
+    "website": "https://zdh.de",
+    "logo": "https://www.google.com/s2/favicons?domain=zdh.de&sz=128"
+  },
+  {
+    "id": 45,
+    "instituicao": "DHBW — Duale Hochschule Baden-Württemberg",
+    "pais": "Alemanha",
+    "areas": "Engenharia; Gestão; Serviços Sociais",
+    "relevancia": "Maior universidade dual da Alemanha; modelo de \"degree apprenticeship\"",
+    "website": "https://dhbw.de",
+    "logo": "https://www.google.com/s2/favicons?domain=dhbw.de&sz=128"
+  },
+  {
+    "id": 46,
+    "instituicao": "Fachhochschulen / UAS (Universidades de Ciências Aplicadas)",
+    "pais": "Alemanha",
+    "areas": "Engenharia; Gestão; TI; Design",
+    "relevancia": "Via aplicada do ensino superior; crescente oferta de estudos duais",
+    "website": "https://hochschulkompass.de",
+    "logo": "https://www.google.com/s2/favicons?domain=hochschulkompass.de&sz=128"
+  },
+  {
+    "id": 47,
+    "instituicao": "Berufsschulen (Escolas Vocacionais)",
+    "pais": "Alemanha",
+    "areas": "Multissetorial (Formação Dual - componente escolar)",
+    "relevancia": "Infraestrutura escolar do sistema dual; €6,4 bi de gasto público",
+    "website": "https://kmk.org",
+    "logo": "https://www.google.com/s2/favicons?domain=kmk.org&sz=128"
+  },
+  {
+    "id": 48,
+    "instituicao": "CFAs — Centres de Formation d'Apprentis",
+    "pais": "França",
+    "areas": "Multissetorial (Formação em Alternância)",
+    "relevancia": "Triplicou em 7 anos; maior caso de sucesso europeu em expansão de aprendizagem",
+    "website": "https://alternance.emploi.gouv.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=alternance.emploi.gouv.fr&sz=128"
+  },
+  {
+    "id": 49,
+    "instituicao": "Lycées Professionnels",
+    "pais": "França",
+    "areas": "Multissetorial (EPT Secundária)",
+    "relevancia": "Principal via de EPT secundária na França",
+    "website": "https://education.gouv.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=education.gouv.fr&sz=128"
+  },
+  {
+    "id": 50,
+    "instituicao": "AFPA — Agence Nationale pour la Formation Professionnelle des Adultes",
+    "pais": "França",
+    "areas": "Multissetorial (Formação de Adultos)",
+    "relevancia": "Maior provedor público de formação de adultos; 66% empregabilidade em 6 meses",
+    "website": "https://afpa.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=afpa.fr&sz=128"
+  },
+  {
+    "id": 51,
+    "instituicao": "CNAM — Conservatoire National des Arts et Métiers",
+    "pais": "França",
+    "areas": "Multissetorial (Formação Contínua para Adultos)",
+    "relevancia": "Modelo único de educação superior vocacional contínua desde 1794",
+    "website": "https://cnam.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=cnam.fr&sz=128"
+  },
+  {
+    "id": 52,
+    "instituicao": "BTS/BUT — Brevets de Technicien Supérieur / Instituts Universitaires de Technologie",
+    "pais": "França",
+    "areas": "Multissetorial (Ensino Superior Vocacional)",
+    "relevancia": "Principal via vocacional de ensino superior; crescente oferta em alternância",
+    "website": "https://enseignementsup-recherche.gouv.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=enseignementsup-recherche.gouv.fr&sz=128"
+  },
+  {
+    "id": 53,
+    "instituicao": "France Compétences",
+    "pais": "França",
+    "areas": "Multissetorial (Regulação e Certificação)",
+    "relevancia": "Governança central criada pela reforma de 2018",
+    "website": "https://francecompetences.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=francecompetences.fr&sz=128"
+  },
+  {
+    "id": 54,
+    "instituicao": "Compagnons du Devoir et du Tour de France",
+    "pais": "França",
+    "areas": "Artesanato",
+    "relevancia": "Patrimônio Imaterial UNESCO (2010); modelo medieval de excelência artesanal",
+    "website": "https://compagnons-du-devoir.com",
+    "logo": "https://www.google.com/s2/favicons?domain=compagnons-du-devoir.com&sz=128"
+  },
+  {
+    "id": 55,
+    "instituicao": "ITS Academy (Istituti Tecnologici Superiori)",
+    "pais": "Itália",
+    "areas": "TI; Mobilidade; Energia; Saúde; Turismo",
+    "relevancia": "Modelo flagship italiano; 87% empregabilidade; €1,5 bi do PNRR",
+    "website": "https://itsacademy.it",
+    "logo": "https://www.google.com/s2/favicons?domain=itsacademy.it&sz=128"
+  },
+  {
+    "id": 56,
+    "instituicao": "Istituti Tecnici (Ensino Médio Técnico)",
+    "pais": "Itália",
+    "areas": "Mecânica; Eletrônica; TI; Construção Civil; Química",
+    "relevancia": "Principal via técnica secundária; alimenta ITS e mercado",
+    "website": "https://miur.gov.it",
+    "logo": "https://www.google.com/s2/favicons?domain=miur.gov.it&sz=128"
+  },
+  {
+    "id": 57,
+    "instituicao": "Istituti Professionali (Ensino Médio Profissional)",
+    "pais": "Itália",
+    "areas": "Serviços; Indústria; Artesanato; Agropecuária; Saúde",
+    "relevancia": "Via vocacional secundária; em reforma para reduzir evasão",
+    "website": "https://miur.gov.it",
+    "logo": "https://www.google.com/s2/favicons?domain=miur.gov.it&sz=128"
+  },
+  {
+    "id": 58,
+    "instituicao": "INAPP — Istituto Nazionale per l'Analisi delle Politiche Pubbliche",
+    "pais": "Itália",
+    "areas": "Multissetorial (Pesquisa em EPT)",
+    "relevancia": "Equivalente italiano do BIBB para pesquisa em EPT",
+    "website": "https://inapp.gov.it",
+    "logo": "https://www.google.com/s2/favicons?domain=inapp.gov.it&sz=128"
+  },
+  {
+    "id": 59,
+    "instituicao": "Skills England (sucessor do IfATE)",
+    "pais": "Reino Unido",
+    "areas": "Multissetorial (Governança de EPT)",
+    "relevancia": "Órgão central de governança; transição para Growth and Skills Levy",
+    "website": "https://gov.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=gov.uk&sz=128"
+  },
+  {
+    "id": 60,
+    "instituicao": "Sistema de FE Colleges (~235 colleges na Inglaterra)",
+    "pais": "Reino Unido",
+    "areas": "Multissetorial (EPT Pós-16)",
+    "relevancia": "Infraestrutura central da educação vocacional inglesa",
+    "website": "https://aoc.co.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=aoc.co.uk&sz=128"
+  },
+  {
+    "id": 61,
+    "instituicao": "City & Guilds",
+    "pais": "Reino Unido",
+    "areas": "Multissetorial (Certificação Vocacional)",
+    "relevancia": "Maior organismo de qualificações vocacionais do mundo (desde 1878); 80+ países",
+    "website": "https://cityandguilds.com",
+    "logo": "https://www.google.com/s2/favicons?domain=cityandguilds.com&sz=128"
+  },
+  {
+    "id": 62,
+    "instituicao": "T-Levels (sistema)",
+    "pais": "Reino Unido",
+    "areas": "Multissetorial (Qualificações Técnicas)",
+    "relevancia": "Reforma ambiciosa para paridade entre rotas acadêmica e técnica",
+    "website": "https://tlevels.gov.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=tlevels.gov.uk&sz=128"
+  },
+  {
+    "id": 63,
+    "instituicao": "Apprenticeship System (Inglaterra)",
+    "pais": "Reino Unido",
+    "areas": "Multissetorial (Aprendizagem)",
+    "relevancia": "Modelo de levy comparável ao S System brasileiro",
+    "website": "https://apprenticeships.gov.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=apprenticeships.gov.uk&sz=128"
+  },
+  {
+    "id": 64,
+    "instituicao": "KOSEN — National Institute of Technology (63 instituições)",
+    "pais": "Japão",
+    "areas": "Engenharia (Mecânica; Elétrica; TI; Civil; Naval)",
+    "relevancia": "Modelo globalmente único de entrada precoce em engenharia; ~100% empregabilidade",
+    "website": "https://kosen-k.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=kosen-k.go.jp&sz=128"
+  },
+  {
+    "id": 65,
+    "instituicao": "Senmon Gakko (Escolas de Formação Especializada)",
+    "pais": "Japão",
+    "areas": "Multissetorial (Saúde; Indústria; Agropecuária; Negócios)",
+    "relevancia": "Maior setor de EPT no ensino superior japonês; ~80% empregabilidade",
+    "website": "https://mext.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=mext.go.jp&sz=128"
+  },
+  {
+    "id": 66,
+    "instituicao": "JEED — Japan Organization for Employment",
+    "pais": "Japão",
+    "areas": "Manufatura; Reconversão Profissional",
+    "relevancia": "Coordenação central de formação pública; rede de centros politécnicos",
+    "website": "https://jeed.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=jeed.go.jp&sz=128"
+  },
+  {
+    "id": 67,
+    "instituicao": "JAVADA — Japan Vocational Ability Development Association",
+    "pais": "Japão",
+    "areas": "Multissetorial (Avaliação e Padrões Vocacionais)",
+    "relevancia": "Organismo de avaliação e padrões vocacionais",
+    "website": "https://javada.or.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=javada.or.jp&sz=128"
+  },
+  {
+    "id": 68,
+    "instituicao": "Korea Polytechnics (한국폴리텍대학)",
+    "pais": "Coreia do Sul",
+    "areas": "Multissetorial (Indústria)",
+    "relevancia": "Maior instituição pública de EPT da Coreia; 57 anos de história",
+    "website": "https://kopo.ac.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=kopo.ac.kr&sz=128"
+  },
+  {
+    "id": 69,
+    "instituicao": "KRIVET — Korea Research Institute for VET",
+    "pais": "Coreia do Sul",
+    "areas": "Multissetorial (Pesquisa em EPT)",
+    "relevancia": "Principal órgão de pesquisa em EPT da Coreia",
+    "website": "https://krivet.re.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=krivet.re.kr&sz=128"
+  },
+  {
+    "id": 70,
+    "instituicao": "Meister High Schools (마이스터고)",
+    "pais": "Coreia do Sul",
+    "areas": "Semicondutores; IA; Robótica; Energia",
+    "relevancia": "Modelo inspirado no Meister alemão; admissão competitiva; emprego garantido",
+    "website": "https://hifive.go.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=hifive.go.kr&sz=128"
+  },
+  {
+    "id": 71,
+    "instituicao": "HRD Korea",
+    "pais": "Coreia do Sul",
+    "areas": "Multissetorial (Certificação de Competências)",
+    "relevancia": "Organismo nacional de certificação de competências",
+    "website": "https://hrdkorea.or.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=hrdkorea.or.kr&sz=128"
+  },
+  {
+    "id": 72,
+    "instituicao": "Junior Colleges (전문대학) — 130 instituições",
+    "pais": "Coreia do Sul",
+    "areas": "Multissetorial",
+    "relevancia": "Principal pilar de EPT terciária por volume de matrículas",
+    "website": "https://kcce.or.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=kcce.or.kr&sz=128"
+  },
+  {
+    "id": 73,
+    "instituicao": "Sistema de Colégios Vocacionais Superiores (高等职业院校)",
+    "pais": "China",
+    "areas": "Manufatura; TI; Biotecnologia; Saúde; Construção Civil",
+    "relevancia": "Maior sistema de educação vocacional superior do mundo; 70%+ dos trabalhadores da manufatura moderna",
+    "website": "https://moe.gov.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=moe.gov.cn&sz=128"
+  },
+  {
+    "id": 74,
+    "instituicao": "Educação Vocacional Secundária (中等职业学校)",
+    "pais": "China",
+    "areas": "Manufatura; Serviços; Agropecuária; Saúde; TI; Construção Civil",
+    "relevancia": "Base do pipeline vocacional chinês; 33% do ensino médio",
+    "website": "https://moe.gov.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=moe.gov.cn&sz=128"
+  },
+  {
+    "id": 75,
+    "instituicao": "Shenzhen Polytechnic University (深圳职业技术大学)",
+    "pais": "China",
+    "areas": "IA; TI; Engenharia; Saúde; Design",
+    "relevancia": "Nº 1 entre 1.400+ colégios vocacionais por 8 anos consecutivos; 1ª a obter status de universidade vocacional (2023); centro UNESCO-UNEVOC",
+    "website": "https://szpt.edu.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=szpt.edu.cn&sz=128"
+  },
+  {
+    "id": 76,
+    "instituicao": "Chinese Society for Technical and Vocational Education",
+    "pais": "China",
+    "areas": "Multissetorial (Coordenação de EPT)",
+    "relevancia": "Organismo coordenador do maior sistema de EPT do mundo",
+    "website": "https://chinatt.org",
+    "logo": "https://www.google.com/s2/favicons?domain=chinatt.org&sz=128"
+  },
+  {
+    "id": 77,
+    "instituicao": "Sistema de ITIs — Industrial Training Institutes",
+    "pais": "Índia",
+    "areas": "Multissetorial (Formação em Ofícios Industriais)",
+    "relevancia": "Maior rede de institutos de formação vocacional do mundo; Rs 60 mil crore para modernização",
+    "website": "https://dgt.gov.in",
+    "logo": "https://www.google.com/s2/favicons?domain=dgt.gov.in&sz=128"
+  },
+  {
+    "id": 78,
+    "instituicao": "NSDC — National Skill Development Corporation",
+    "pais": "Índia",
+    "areas": "Multissetorial (Capacitação)",
+    "relevancia": "Agência apex de capacitação da Índia; central para Skill India Mission",
+    "website": "https://nsdcindia.org",
+    "logo": "https://www.google.com/s2/favicons?domain=nsdcindia.org&sz=128"
+  },
+  {
+    "id": 79,
+    "instituicao": "DGT — Directorate General of Training",
+    "pais": "Índia",
+    "areas": "Multissetorial (Coordenação de EPT)",
+    "relevancia": "Órgão federal coordenador de toda a EPT",
+    "website": "https://dgt.gov.in",
+    "logo": "https://www.google.com/s2/favicons?domain=dgt.gov.in&sz=128"
+  },
+  {
+    "id": 80,
+    "instituicao": "PMKVY — Pradhan Mantri Kaushal Vikas Yojana",
+    "pais": "Índia",
+    "areas": "Multissetorial (Capacitação e IA)",
+    "relevancia": "Principal programa governamental de capacitação; 4 versões",
+    "website": "https://pmkvyofficial.org",
+    "logo": "https://www.google.com/s2/favicons?domain=pmkvyofficial.org&sz=128"
+  },
+  {
+    "id": 81,
+    "instituicao": "Sistema de Politécnicas Estaduais",
+    "pais": "Índia",
+    "areas": "Engenharia",
+    "relevancia": "Maior sistema de educação técnica de nível diploma da Índia",
+    "website": "https://aicte-india.org",
+    "logo": "https://www.google.com/s2/favicons?domain=aicte-india.org&sz=128"
+  },
+  {
+    "id": 82,
+    "instituicao": "Sistema TAFE — Technical and Further Education (nacional)",
+    "pais": "Austrália",
+    "areas": "Multissetorial",
+    "relevancia": "Um dos sistemas de EPT mais maduros do mundo; modelo de treinamento baseado em competências; Fee-Free TAFE",
+    "website": "https://tda.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=tda.edu.au&sz=128"
+  },
+  {
+    "id": 83,
+    "instituicao": "TAFE NSW",
+    "pais": "Austrália",
+    "areas": "Multissetorial",
+    "relevancia": "Maior provedor individual de educação e treinamento da Austrália",
+    "website": "https://tafensw.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=tafensw.edu.au&sz=128"
+  },
+  {
+    "id": 84,
+    "instituicao": "NCVER — National Centre for Vocational Education Research",
+    "pais": "Austrália",
+    "areas": "Multissetorial (Pesquisa em EPT)",
+    "relevancia": "Referência mundial em pesquisa e dados de EPT",
+    "website": "https://ncver.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=ncver.edu.au&sz=128"
+  },
+  {
+    "id": 85,
+    "instituicao": "TVTC — Technical and Vocational Training Corporation",
+    "pais": "Árabia Saudita",
+    "areas": "Multissetorial",
+    "relevancia": "Maior instituição de TVET do Oriente Médio; central para Visão 2030",
+    "website": "https://tvtc.gov.sa",
+    "logo": "https://www.google.com/s2/favicons?domain=tvtc.gov.sa&sz=128"
+  },
+  {
+    "id": 86,
+    "instituicao": "HRDF / Hadaf — Human Resources Development Fund",
+    "pais": "Árabia Saudita",
+    "areas": "Multissetorial (Capacitação e Emprego)",
+    "relevancia": "Principal fundo de investimento em capacitação; Saudização",
+    "website": "https://hrdf.org.sa",
+    "logo": "https://www.google.com/s2/favicons?domain=hrdf.org.sa&sz=128"
+  },
+  {
+    "id": 87,
+    "instituicao": "TVET Colleges (50 colleges, 250+ campi)",
+    "pais": "África do Sul",
+    "areas": "Engenharia; Gestão; Turismo; TI; Agropecuária",
+    "relevancia": "Pilar central da educação pós-escolar; modelo para economias em desenvolvimento",
+    "website": "https://dhet.gov.za",
+    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128"
+  },
+  {
+    "id": 88,
+    "instituicao": "SETAs — Sector Education and Training Authorities (21)",
+    "pais": "África do Sul",
+    "areas": "Multissetorial (Governança Setorial de Competências)",
+    "relevancia": "Modelo único de governança setorial de competências; comparável aos SSCs da Índia",
+    "website": "https://dhet.gov.za",
+    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128"
+  },
+  {
+    "id": 89,
+    "instituicao": "DHET — Department of Higher Education and Training",
+    "pais": "África do Sul",
+    "areas": "Multissetorial (Coordenação de EPT)",
+    "relevancia": "Órgão coordenador nacional",
+    "website": "https://dhet.gov.za",
+    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128"
+  },
+  {
+    "id": 90,
+    "instituicao": "MEB — Escolas Vocacionais e Técnicas Anatolianas",
+    "pais": "Turquia",
+    "areas": "Tecnologia Industrial; TI; Saúde; Agropecuária; Turismo; Marítimo",
+    "relevancia": "3ª maior matrícula em EPT secundária da OCDE",
+    "website": "https://meb.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=meb.gov.tr&sz=128"
+  },
+  {
+    "id": 91,
+    "instituicao": "Meslek Yüksekokulları (Escolas Vocacionais Superiores)",
+    "pais": "Turquia",
+    "areas": "Multissetorial (Ensino Superior Vocacional)",
+    "relevancia": "Massivo sistema terciário vocacional",
+    "website": "https://yok.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=yok.gov.tr&sz=128"
+  },
+  {
+    "id": 92,
+    "instituicao": "İŞKUR — Turkish Employment Agency",
+    "pais": "Turquia",
+    "areas": "Multissetorial (Emprego e Formação)",
+    "relevancia": "Principal instituição de política ativa de mercado de trabalho",
+    "website": "https://iskur.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=iskur.gov.tr&sz=128"
+  },
+  {
+    "id": 93,
+    "instituicao": "Sistema de Colégios e Técnicos (СПО)",
+    "pais": "Rússia",
+    "areas": "Multissetorial (Saúde; TI; Engenharia; Construção Civil; Automotivo)",
+    "relevancia": "42% dos alunos do 9º ano escolhem colégios; crescente popularidade",
+    "website": "https://edu.gov.ru",
+    "logo": "https://www.google.com/s2/favicons?domain=edu.gov.ru&sz=128"
+  },
+  {
+    "id": 94,
+    "instituicao": "WorldSkills Russia / Профессионалитет",
+    "pais": "Rússia",
+    "areas": "Multissetorial (Competições de Habilidades)",
+    "relevancia": "Principal mecanismo de padrões de qualidade; sediou WorldSkills 2019 em Kazan",
+    "website": "https://worldskills.ru",
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.ru&sz=128"
+  },
+  {
+    "id": 95,
+    "instituicao": "RSVPU — Russian State Vocational Pedagogical University",
+    "pais": "Rússia",
+    "areas": "Educação (Formação de Instrutores de EPT)",
+    "relevancia": "Principal universidade de formação de instrutores de EPT na Rússia",
+    "website": "https://rsvpu.ru",
+    "logo": "https://www.google.com/s2/favicons?domain=rsvpu.ru&sz=128"
+  },
+  {
+    "id": 96,
+    "instituicao": "CEDEFOP — European Centre for the Development of VET",
+    "pais": "Grécia",
+    "areas": "Multissetorial (Pesquisa em EPT)",
+    "relevancia": "Agência primária de pesquisa em EPT da UE; dados comparativos definitivos",
+    "website": "https://cedefop.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=cedefop.europa.eu&sz=128"
+  },
+  {
+    "id": 97,
+    "instituicao": "ETF — European Training Foundation",
+    "pais": "Itália",
+    "areas": "Multissetorial (Pesquisa em EPT)",
+    "relevancia": "Complementa o CEDEFOP com foco em cooperação externa",
+    "website": "https://etf.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=etf.europa.eu&sz=128"
+  },
+  {
+    "id": 98,
+    "instituicao": "EQF — European Qualifications Framework",
+    "pais": "Bruxelas (Comissão Europeia)",
+    "areas": "Multissetorial (Quadro de Qualificações)",
+    "relevancia": "Fundamental para comparação entre sistemas nacionais de EPT",
+    "website": "https://ec.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128"
+  },
+  {
+    "id": 99,
+    "instituicao": "Erasmus+ VET",
+    "pais": "Bruxelas (Comissão Europeia)",
+    "areas": "Multissetorial (Mobilidade e Cooperação em EPT)",
+    "relevancia": "",
+    "website": "https://ec.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128"
+  },
+  {
+    "id": 100,
+    "instituicao": "EAfA — European Alliance for Apprenticeships",
+    "pais": "União Europeia",
+    "areas": "Multissetorial (Aprendizagem)",
+    "relevancia": "",
+    "website": "https://ec.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128"
+  },
+  {
+    "id": 101,
+    "instituicao": "SENA — Servicio Nacional de Aprendizaje",
+    "pais": "Colômbia",
+    "areas": "Multissetorial (TI; Gastronomia; Saúde; Agropecuária; Indústria; Construção Civil)",
+    "relevancia": "Maior e mais importante instituição de EPT da América do Sul; gratuita; modelo de referência internacional para IFPs; membro fundador da Cinterfor",
+    "website": "https://sena.edu.co",
+    "logo": "https://www.google.com/s2/favicons?domain=sena.edu.co&sz=128"
+  },
+  {
+    "id": 102,
+    "instituicao": "INACAP (Universidade Tecnológica + IP + CFT)",
+    "pais": "Chile",
+    "areas": "Multissetorial (Saúde; Mineração; TI; Construção Civil; Energia)",
+    "relevancia": "Maior instituição de educação superior do Chile; modelo integrado CFT-IP-Universidade",
+    "website": "https://inacap.cl",
+    "logo": "https://www.google.com/s2/favicons?domain=inacap.cl&sz=128"
+  },
+  {
+    "id": 103,
+    "instituicao": "Duoc UC — Instituto Profesional",
+    "pais": "Chile",
+    "areas": "Engenharia; Saúde; TI; Design; Construção Civil; Gestão",
+    "relevancia": "2ª maior IP técnico-profissional; vinculado à PUC; 7/7 anos de acreditação",
+    "website": "https://duoc.cl",
+    "logo": "https://www.google.com/s2/favicons?domain=duoc.cl&sz=128"
+  },
+  {
+    "id": 104,
+    "instituicao": "SENCE — Servicio Nacional de Capacitación y Empleo",
+    "pais": "Chile",
+    "areas": "Multissetorial (Financiamento de Capacitação)",
+    "relevancia": "Modelo de financiamento por incentivo fiscal para capacitação",
+    "website": "https://sence.gob.cl",
+    "logo": "https://www.google.com/s2/favicons?domain=sence.gob.cl&sz=128"
+  },
+  {
+    "id": 105,
+    "instituicao": "SENATI — Servicio Nacional de Adiestramiento en Trabajo Industrial",
+    "pais": "Peru",
+    "areas": "Automotivo; Mineração; Eletrônica; Mecatrônica; TI",
+    "relevancia": "Pioneiro em Sistema Dual na América Latina; melhor instituto técnico do Peru por 11 anos (IPSOS)",
+    "website": "https://senati.edu.pe",
+    "logo": "https://www.google.com/s2/favicons?domain=senati.edu.pe&sz=128"
+  },
+  {
+    "id": 106,
+    "instituicao": "SENCICO — Servicio Nacional de Capacitación para la Industria de la Construcción",
+    "pais": "Peru",
+    "areas": "Construção Civil",
+    "relevancia": "Modelo setorial específico para construção; financiado por contribuição setorial",
+    "website": "https://sencico.gob.pe",
+    "logo": "https://www.google.com/s2/favicons?domain=sencico.gob.pe&sz=128"
+  },
+  {
+    "id": 107,
+    "instituicao": "TECSUP",
+    "pais": "Peru",
+    "areas": "Mineração; Engenharia; TI; Automação; Energia",
+    "relevancia": "Instituto técnico privado de elite; fortes parcerias com mineração; alta empregabilidade",
+    "website": "https://tecsup.edu.pe",
+    "logo": "https://www.google.com/s2/favicons?domain=tecsup.edu.pe&sz=128"
+  },
+  {
+    "id": 108,
+    "instituicao": "IESTs — Rede de Institutos de Educação Superior Tecnológica Públicos",
+    "pais": "Peru",
+    "areas": "Multissetorial",
+    "relevancia": "Espinha dorsal da educação técnica pública",
+    "website": "https://minedu.gob.pe",
+    "logo": "https://www.google.com/s2/favicons?domain=minedu.gob.pe&sz=128"
+  },
+  {
+    "id": 109,
+    "instituicao": "INCES — Instituto Nacional de Capacitación y Educación Socialista",
+    "pais": "Venezuela",
+    "areas": "Multissetorial (Indústria; Agropecuária; Comércio; Turismo)",
+    "relevancia": "Único sistema nacional de EPT da Venezuela; equivalente ao SENA; membro Cinterfor",
+    "website": "https://inces.gob.ve",
+    "logo": "https://www.google.com/s2/favicons?domain=inces.gob.ve&sz=128"
+  },
+  {
+    "id": 110,
+    "instituicao": "SECAP — Servicio Ecuatoriano de Capacitación Profesional",
+    "pais": "Equador",
+    "areas": "Multissetorial (Certificação de Competências)",
+    "relevancia": "IFP equivalente do Equador; criado em 1966 com apoio da OIT e assessoria do SENA",
+    "website": "https://secap.gob.ec",
+    "logo": "https://www.google.com/s2/favicons?domain=secap.gob.ec&sz=128"
+  },
+  {
+    "id": 111,
+    "instituicao": "ESPOL — Escuela Superior Politécnica del Litoral",
+    "pais": "Equador",
+    "areas": "Engenharia; Oceanografia; Design",
+    "relevancia": "Principal politécnica do Equador; top 100 da América Latina (QS)",
+    "website": "https://espol.edu.ec",
+    "logo": "https://www.google.com/s2/favicons?domain=espol.edu.ec&sz=128"
+  },
+  {
+    "id": 112,
+    "instituicao": "EPN — Escuela Politécnica Nacional",
+    "pais": "Equador",
+    "areas": "Engenharia; TI; Gestão",
+    "relevancia": "Uma das mais antigas e prestigiosas instituições técnicas (fundada 1869)",
+    "website": "https://epn.edu.ec",
+    "logo": "https://www.google.com/s2/favicons?domain=epn.edu.ec&sz=128"
+  },
+  {
+    "id": 113,
+    "instituicao": "INFOCAL — Fundación Nacional para la Formación y Capacitación Laboral",
+    "pais": "Bolívia",
+    "areas": "Mecânica; Eletrônica; TI; Gestão; Construção Civil; Gastronomia; Agropecuária",
+    "relevancia": "IFP principal da Bolívia; gestão privada pela CEPB; membro Cinterfor; governança tripartite",
+    "website": "https://infocal.edu.bo",
+    "logo": "https://www.google.com/s2/favicons?domain=infocal.edu.bo&sz=128"
+  },
+  {
+    "id": 114,
+    "instituicao": "SNPP — Servicio Nacional de Promoción Profesional",
+    "pais": "Paraguai",
+    "areas": "Mecatrônica; Automotivo; TI; Gastronomia; Agropecuária; Construção Civil",
+    "relevancia": "IFP principal do Paraguai; implementa modelo dual alemão (MoPaDual)",
+    "website": "https://snpp.edu.py",
+    "logo": "https://www.google.com/s2/favicons?domain=snpp.edu.py&sz=128"
+  },
+  {
+    "id": 115,
+    "instituicao": "SINAFOCAL — Sistema Nacional de Formación y Capacitación Laboral",
+    "pais": "Paraguai",
+    "areas": "Multissetorial (Coordenação e Financiamento de Formação)",
+    "relevancia": "Modelo público-privado (financiamento público, execução privada)",
+    "website": "https://sinafocal.gov.py",
+    "logo": "https://www.google.com/s2/favicons?domain=sinafocal.gov.py&sz=128"
+  },
+  {
+    "id": 116,
+    "instituicao": "UTU/CETP — Dirección General de Educación Técnico Profesional",
+    "pais": "Uruguai",
+    "areas": "Construção Civil; Gastronomia; Gestão; Logística; Tecnologia Industrial; Agropecuária; Saúde; TI",
+    "relevancia": "Pilar da educação técnica uruguaia; mais de um século de história; gratuita",
+    "website": "https://utu.edu.uy",
+    "logo": "https://www.google.com/s2/favicons?domain=utu.edu.uy&sz=128"
+  },
+  {
+    "id": 117,
+    "instituicao": "INEFOP — Instituto Nacional de Empleo y Formación Profesional",
+    "pais": "Uruguai",
+    "areas": "Multissetorial (Coordenação e Emprego)",
+    "relevancia": "Governança tripartite; complementa UTU com formação orientada ao mercado",
+    "website": "https://inefop.org.uy",
+    "logo": "https://www.google.com/s2/favicons?domain=inefop.org.uy&sz=128"
+  },
+  {
+    "id": 118,
+    "instituicao": "INA — Instituto Nacional de Aprendizaje",
+    "pais": "Costa Rica",
+    "areas": "Multissetorial (Indústria; Agropecuária; Turismo; Automotivo; TI; Construção Civil)",
+    "relevancia": "IFP autônoma financiada por contribuição patronal; membro REDIFP e Cinterfor",
+    "website": "https://ina.ac.cr",
+    "logo": "https://www.google.com/s2/favicons?domain=ina.ac.cr&sz=128"
+  },
+  {
+    "id": 119,
+    "instituicao": "INADEH — Inst. Nacional de Formación Profesional y Capacitación para el Desarrollo Humano",
+    "pais": "Panamá",
+    "areas": "Multissetorial (Indústria; Construção Civil; Logística; Marítimo; Turismo)",
+    "relevancia": "IFP nacional para economia estratégica (Canal do Panamá, logística)",
+    "website": "https://inadeh.edu.pa",
+    "logo": "https://www.google.com/s2/favicons?domain=inadeh.edu.pa&sz=128"
+  },
+  {
+    "id": 120,
+    "instituicao": "INTECAP — Instituto Técnico de Capacitación y Productividad",
+    "pais": "Guatemala",
+    "areas": "Multissetorial (Indústria; Agropecuária; TI; Construção Civil)",
+    "relevancia": "Maior provedor de EPT do país mais populoso da América Central; coordenador REDIFP",
+    "website": "https://intecap.edu.gt",
+    "logo": "https://www.google.com/s2/favicons?domain=intecap.edu.gt&sz=128"
+  },
+  {
+    "id": 121,
+    "instituicao": "INFOP — Instituto Nacional de Formación Profesional",
+    "pais": "Honduras",
+    "areas": "Multissetorial (Indústria; Agropecuária; Construção Civil; Turismo; TI)",
+    "relevancia": "IFP nacional; membro REDIFP",
+    "website": "https://infop.hn",
+    "logo": "https://www.google.com/s2/favicons?domain=infop.hn&sz=128"
+  },
+  {
+    "id": 122,
+    "instituicao": "INCAF — Instituto Nacional de Capacitación y Formación (ex-INSAFORP)",
+    "pais": "El Salvador",
+    "areas": "Multissetorial (Indústria; Serviços; TI; Agropecuária)",
+    "relevancia": "Substituiu o INSAFORP em 2023; modelo de demanda com foco em empregabilidade e articulação com sistema educativo",
+    "website": "https://incaf.gob.sv",
+    "logo": "https://www.google.com/s2/favicons?domain=incaf.gob.sv&sz=128"
+  },
+  {
+    "id": 123,
+    "instituicao": "INATEC — Instituto Nacional Tecnológico",
+    "pais": "Nicarágua",
+    "areas": "Multissetorial (Indústria; Agropecuária; Turismo; TI; Construção Civil)",
+    "relevancia": "IFP combinando regulação e execução direta; membro REDIFP",
+    "website": "https://tecnacional.edu.ni",
+    "logo": "https://www.google.com/s2/favicons?domain=tecnacional.edu.ni&sz=128"
+  },
+  {
+    "id": 124,
+    "instituicao": "INFOTEP — Inst. Nacional de Formación Técnico Profesional",
+    "pais": "Rep. Dominicana",
+    "areas": "Multissetorial (Indústria; Turismo; TI; Gastronomia; Saúde; Construção Civil)",
+    "relevancia": "Um dos IFPs mais impactantes da América Latina; governança tripartite; forte atuação em zonas francas",
+    "website": "https://infotep.gob.do",
+    "logo": "https://www.google.com/s2/favicons?domain=infotep.gob.do&sz=128"
+  },
+  {
+    "id": 125,
+    "instituicao": "ETP — Sistema de Escolas Politécnicas",
+    "pais": "Cuba",
+    "areas": "Multissetorial (Indústria; Saúde; TI; Turismo; Agropecuária; Construção Civil)",
+    "relevancia": "Único modelo estatal integrado de EPT na região; vinculação direta empresa-escola",
+    "website": "https://mes.gob.cu",
+    "logo": "https://www.google.com/s2/favicons?domain=mes.gob.cu&sz=128"
+  },
+  {
+    "id": 126,
+    "instituicao": "INFP — Institut National de Formation Professionnelle",
+    "pais": "Haiti",
+    "areas": "Construção Civil; Elétrica; Mecânica; Saúde; Agropecuária",
+    "relevancia": "IFP nacional; membro REDIFP; desenvolvimento do Quadro Nacional de Qualificações em andamento",
+    "website": "https://infp.ht",
+    "logo": "https://www.google.com/s2/favicons?domain=infp.ht&sz=128"
+  },
+  {
+    "id": 127,
+    "instituicao": "HEART/NSTA Trust",
+    "pais": "Jamaica",
+    "areas": "Construção Civil; TI; Automotivo; Turismo; Saúde; Agropecuária",
+    "relevancia": "Principal instituição de TVET do Caribe anglófono; programas inovadores (LIFT, CARE)",
+    "website": "https://heart-nta.org",
+    "logo": "https://www.google.com/s2/favicons?domain=heart-nta.org&sz=128"
+  },
+  {
+    "id": 128,
+    "instituicao": "YTEPP Limited",
+    "pais": "Trinidad e Tobago",
+    "areas": "Construção Civil; Automotivo; TI; Cosmetologia; Refrigeração",
+    "relevancia": "Foco em jovens em risco (15-35); parceria digital com Google",
+    "website": "https://ytepp.gov.tt",
+    "logo": "https://www.google.com/s2/favicons?domain=ytepp.gov.tt&sz=128"
+  },
+  {
+    "id": 129,
+    "instituicao": "MIC-IT — MIC Institute of Technology",
+    "pais": "Trinidad e Tobago",
+    "areas": "Soldagem; Mecânica; Elétrica; Tecnologia Industrial",
+    "relevancia": "Formação de instrutores de TVET; foco em tecnologia industrial",
+    "website": "https://mic.gov.tt",
+    "logo": "https://www.google.com/s2/favicons?domain=mic.gov.tt&sz=128"
+  },
+  {
+    "id": 130,
+    "instituicao": "NESC — National Energy Skills Center",
+    "pais": "Trinidad e Tobago",
+    "areas": "Energia (Petróleo e Gás)",
+    "relevancia": "Único centro de treinamento especializado em energia no Caribe",
+    "website": "https://nesc.co.tt",
+    "logo": "https://www.google.com/s2/favicons?domain=nesc.co.tt&sz=128"
+  },
+  {
+    "id": 131,
+    "instituicao": "SJPI — Samuel Jackman Prescod Institute of Technology",
+    "pais": "Barbados",
+    "areas": "Multissetorial (Agropecuária; Automotivo; Construção Civil; Engenharia; TI; Marítimo)",
+    "relevancia": "Principal politécnica de Barbados; currículo alinhado ao CARICOM",
+    "website": "https://sjpi.edu.bb",
+    "logo": "https://www.google.com/s2/favicons?domain=sjpi.edu.bb&sz=128"
+  },
+  {
+    "id": 132,
+    "instituicao": "BTVI — Bahamas Technical and Vocational Institute",
+    "pais": "Bahamas",
+    "areas": "Elétrica; TI; Mecânica; Moda; Cosmetologia",
+    "relevancia": "Principal instituição de TVET das Bahamas; membro Cinterfor",
+    "website": "https://btvi.edu.bs",
+    "logo": "https://www.google.com/s2/favicons?domain=btvi.edu.bs&sz=128"
+  },
+  {
+    "id": 133,
+    "instituicao": "Board of Industrial Training (BIT)",
+    "pais": "Guiana",
+    "areas": "Construção Civil; Elétrica; Soldagem; Automotivo; TI; Agropecuária",
+    "relevancia": "Relevância crescente com boom petrolífero; contexto CARICOM",
+    "website": "https://bit.gov.gy",
+    "logo": "https://www.google.com/s2/favicons?domain=bit.gov.gy&sz=128"
+  },
+  {
+    "id": 134,
+    "instituicao": "ITVET — Institute for Technical and Vocational Education and Training",
+    "pais": "Belize",
+    "areas": "Construção Civil; Automotivo; TI; Turismo; Agropecuária",
+    "relevancia": "Implementa Qualificações Vocacionais Caribenhas (CVQ); contexto bilíngue",
+    "website": "https://itvet.edu.bz",
+    "logo": "https://www.google.com/s2/favicons?domain=itvet.edu.bz&sz=128"
+  }
+]

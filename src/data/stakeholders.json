@@ -1,0 +1,1002 @@
+[
+  {
+    "id": 1,
+    "nome": "AACC — American Association of Community Colleges",
+    "pais": "EUA",
+    "diferencial": "Voz de 1.000+ community colleges servindo 12+ milhões de alunos. Programas Pathways e Advanced Technological Education (NSF). Maior rede VET americana. Community Colleges oferecem educação técnica e profissional acessível, cursos de transferência e workforce development.",
+    "natureza": "Privada",
+    "relacao": "🔗 SENAI parceiro do Innovation Fund (100K Strong Americas) para intercâmbio Brasil-EUA. Parceria SENAI CIMATEC-Broward College/EUA em manufatura avançada. Parceiro institucional.",
+    "website": "https://aacc.nche.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=aacc.nche.edu&sz=128"
+  },
+  {
+    "id": 2,
+    "nome": "AFPA — Agence nationale pour la formation professionnelle des adultes",
+    "pais": "França",
+    "diferencial": "Maior organização de formação profissional de adultos da França, fundada em 1949: 140.000+ pessoas/ano, 900+ cursos. Especialista em reconversão profissional e validação de competências (VAE). Missão de reinserção, reconversão e atualização de competências, inclusive para públicos vulneráveis.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. Referência em programas de requalificação de adultos que podem inspirar iniciativas do SENAI.",
+    "website": "https://afpa.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=afpa.fr&sz=128"
+  },
+  {
+    "id": 3,
+    "nome": "ASQA — Australian Skills Quality Authority",
+    "pais": "Austrália",
+    "diferencial": "Regulador nacional do setor VET australiano desde 2011. Modelo serviu de benchmark para a Coreia do Sul estabelecer a KSQA. Referência global em garantia de qualidade VET.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://asqa.gov.au",
+    "logo": "https://www.google.com/s2/favicons?domain=asqa.gov.au&sz=128"
+  },
+  {
+    "id": 4,
+    "nome": "AUDA-NEPAD (SIFA)",
+    "pais": "União Africana",
+    "diferencial": "Iniciativa continental de habilidades e inovação",
+    "natureza": "Pública",
+    "relacao": "Parceiro Estratégico (África)",
+    "website": "https://nepad.org",
+    "logo": "https://www.google.com/s2/favicons?domain=nepad.org&sz=128"
+  },
+  {
+    "id": 5,
+    "nome": "Autodesk",
+    "pais": "EUA",
+    "diferencial": "Padrão global em software de design/engenharia",
+    "natureza": "Privada",
+    "relacao": "Parceiro Educacional",
+    "website": "https://autodesk.com",
+    "logo": "https://www.google.com/s2/favicons?domain=autodesk.com&sz=128"
+  },
+  {
+    "id": 6,
+    "nome": "bbw Gruppe",
+    "pais": "Alemanha",
+    "diferencial": "Gestão privada, conexão bávara, projetos internacionais",
+    "natureza": "Privada",
+    "relacao": "Parceiro de Projetos (Via GIZ)",
+    "website": "https://bbw.de",
+    "logo": "https://www.google.com/s2/favicons?domain=bbw.de&sz=128"
+  },
+  {
+    "id": 7,
+    "nome": "BIBB — Bundesinstitut für Berufsbildung",
+    "pais": "Alemanha",
+    "diferencial": "Centro nacional de excelência em pesquisa e política VET da Alemanha. Desenvolve regulamentos de formação, gerencia o GOVET e o iMOVE. Backbone do sistema dual com 320+ profissões reconhecidas. Identifica tendências futuras em qualificação. Monitora o sistema dual, desenvolve normas de formação, padrões de qualificação e relatórios anuais de dados.",
+    "natureza": "Pública",
+    "relacao": "✅ Parceiro estratégico desde 1998. MoU renovado em nov/2023 para governança VET e pesquisa. Chamada conjunta EdTech com SENAI (2025). Intercâmbio em governança, padrões, pesquisa em VET e transformação digital.",
+    "website": "https://bibb.de",
+    "logo": "https://www.google.com/s2/favicons?domain=bibb.de&sz=128"
+  },
+  {
+    "id": 8,
+    "nome": "BLK/BPVP — Balai Latihan Kerja (Centros de Formação)",
+    "pais": "Indonésia",
+    "diferencial": "Rede nacional de centros públicos de formação sob Min. do Trabalho. CEVEST Bekasi é centro-modelo. 70% dos formandos absorvidos. Roadmap VET 2017-2025. Adaptou modelo KOSEN. Centros focados em cursos de curta duração para jovens e trabalhadores informais, com qualificação gratuita.",
+    "natureza": "Pública",
+    "relacao": "❓ Funções paralelas ao SENAI. Cooperação via ABC brasileira em países vizinhos (Timor-Leste). Potencial troca de experiências em centros móveis e comunitários, semelhantes aos BLK Komunitas.",
+    "website": "https://kemnaker.go.id",
+    "logo": "https://www.google.com/s2/favicons?domain=kemnaker.go.id&sz=128"
+  },
+  {
+    "id": 9,
+    "nome": "Bosch Rexroth Academy",
+    "pais": "Alemanha",
+    "diferencial": "Treinamento em Hidráulica Conectada e Automação",
+    "natureza": "Privada",
+    "relacao": "Fornecedor/Parceiro Técnico",
+    "website": "https://boschrexroth.com",
+    "logo": "https://www.google.com/s2/favicons?domain=boschrexroth.com&sz=128"
+  },
+  {
+    "id": 10,
+    "nome": "British Council (Skills for Employability)",
+    "pais": "Reino Unido",
+    "diferencial": "Organização britânica de relações culturais e educacionais presente em 100+ países. No campo de Skills/TVET, conduz o programa International Skills Partnerships, unindo instituições de diferentes países. Promoção cultural, ensino de inglês e liderança escolar.",
+    "natureza": "Pública",
+    "relacao": "✅ SENAI mantém cooperação com o British Council, reconhecida pela ONU como parceria estratégica. Projetos conjuntos incluem intercâmbio de metodologias e participação em programas do British Council.",
+    "website": "https://britishcouncil.org",
+    "logo": "https://www.google.com/s2/favicons?domain=britishcouncil.org&sz=128"
+  },
+  {
+    "id": 11,
+    "nome": "Cedefop — Centro Europeu para o Desenvolvimento da Formação Profissional",
+    "pais": "Grécia",
+    "diferencial": "Agência da UE para VET desde 1975. Apoia desenvolvimento de políticas europeias de VET. Produz indicadores, análises comparativas, inteligência de competências, previsão de habilidades e estudos sobre aprendizagem ao longo da vida. Ferramentas: EQF, ECVET, EQAVET, Europass.",
+    "natureza": "Pública",
+    "relacao": "🔗 Mandato EU-interno. Pesquisas amplamente referenciadas por SENAI e formuladores de política brasileiros. Referência importante para benchmarking de políticas e indicadores de VET. Fonte de dados e referência.",
+    "website": "https://cedefop.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=cedefop.europa.eu&sz=128"
+  },
+  {
+    "id": 12,
+    "nome": "Centro Paula Souza (CPS)",
+    "pais": "Brasil",
+    "diferencial": "Principal provedor público de educação técnica e tecnológica do Estado de São Paulo (ETECs e FATECs), com forte integração com o setor produtivo paulista.oitcinterfor​",
+    "natureza": "Pública",
+    "relacao": "Convergência intensa no ecossistema paulista (CNI/FIESP, governo SP, projetos setoriais); não encontrei menção a acordo internacional formal SENAI‑CPS nesta busca.",
+    "website": "https://cps.sp.gov.br",
+    "logo": "https://www.google.com/s2/favicons?domain=cps.sp.gov.br&sz=128"
+  },
+  {
+    "id": 13,
+    "nome": "Céreq",
+    "pais": "França",
+    "diferencial": "Análise de trajetórias e inserção profissional",
+    "natureza": "Pública",
+    "relacao": "Benchmark de Pesquisa",
+    "website": "https://cereq.fr",
+    "logo": "https://www.google.com/s2/favicons?domain=cereq.fr&sz=128"
+  },
+  {
+    "id": 14,
+    "nome": "CICan — Colleges and Institutes Canada",
+    "pais": "Canadá",
+    "diferencial": "Associação nacional que representa 127+ colleges, institutes, CEGEPs e polytechnics públicos. Centro UNEVOC. 800+ projetos internacionais em 105 países. 1,5 milhão de alunos/ano. Mais de 10.000 programas. Liderança global em Pesquisa Aplicada em VET.",
+    "natureza": "Privada",
+    "relacao": "✅ Cooperação com SETEC/CAPES desde 2001. Acordo renovado abr/2023. ~US$25 mi desde 2012. Programa Mulheres Mil, Canada-Brazil (1990) com SENAI. Projetos EFE. Coopera com WFCP e diversos projetos internacionais.",
+    "website": "https://collegesinstitutes.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=collegesinstitutes.ca&sz=128"
+  },
+  {
+    "id": 15,
+    "nome": "Cisco Networking Academy (Cisco NetAcad)",
+    "pais": "EUA",
+    "diferencial": "Programa global de formação em TI criado pela Cisco Systems. Presente em 190 países. Oferece cursos online e presenciais em redes de computadores, cibersegurança, automação e IoT. Currículo padronizado de Redes e Cibersegurança.",
+    "natureza": "Privada",
+    "relacao": "✅ Amplamente implantado no SENAI. Unidades SENAI de vários estados são academias Cisco Networking, com instrutores certificados e laboratórios específicos. Cisco e SENAI já realizaram juntos competições e eventos. Parceiro operacional.",
+    "website": "https://netacad.com",
+    "logo": "https://www.google.com/s2/favicons?domain=netacad.com&sz=128"
+  },
+  {
+    "id": 16,
+    "nome": "City & Guilds of London Institute",
+    "pais": "Reino Unido",
+    "diferencial": "Maior organismo certificador VET do mundo (fundado 1878). ~2 milhões de alunos/ano, 2.312+ qualificações em 25+ setores, reconhecidas em 80+ países. Tradição em certificação de ofícios e skills.",
+    "natureza": "Privada",
+    "relacao": "🔗 British Council listado como parceiro SENAI. City & Guilds atua internacionalmente no Brasil via certificações. Em 2012 qualificações City & Guilds foram reconhecidas em projeto piloto no SENAI-SP. Ambos membros WorldSkills.",
+    "website": "https://cityandguilds.com",
+    "logo": "https://www.google.com/s2/favicons?domain=cityandguilds.com&sz=128"
+  },
+  {
+    "id": 17,
+    "nome": "Compagnons du Devoir et du Tour de France",
+    "pais": "França",
+    "diferencial": "Guilda tradicional de artesãos inscrita no Patrimônio Imaterial da UNESCO. Sistema secular de formação artesanal com aprendizado itinerante (\"Tour de France\") em ofícios manuais (marcenaria, metalurgia, construção). Formação de 5 anos com mestres artesãos. Excelência ética e técnica artesanal.",
+    "natureza": "Privada",
+    "relacao": "❓ Sem cooperação formal. SENAI se inspira no modelo de aprendizagem de excelência e intercâmbio cultural dos Compagnons.",
+    "website": "https://compagnons-du-devoir.com",
+    "logo": "https://www.google.com/s2/favicons?domain=compagnons-du-devoir.com&sz=128"
+  },
+  {
+    "id": 18,
+    "nome": "CONALEP — Colegio Nacional de Educación Profesional Técnica",
+    "pais": "México",
+    "diferencial": "Principal instituição VET do México: 75%+ dos alunos vocacionais. 308+ campi. Centro UNESCO-UNEVOC. Pioneiro em sistema dual (Mercedes-Benz, VW, Siemens, BIBB). Forma técnicos bacharel (upper secondary). Implementação do Modelo Dual Mexicano. Rede pública federal criada em 1978.",
+    "natureza": "Pública",
+    "relacao": "🔗 Ambos centros UNEVOC e membros OIT/Cinterfor. CONALEP coorganizou Aliança para Formação Dual na América Latina, junto com BIBB e OIT/Cinterfor. Cooperação multilateral. Trocam experiências em educação dual e competições.",
+    "website": "https://conalep.edu.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=conalep.edu.mx&sz=128"
+  },
+  {
+    "id": 19,
+    "nome": "CONOCER — Consejo Nacional de Normalización y Certificación",
+    "pais": "México",
+    "diferencial": "Única instituição mexicana que concede certificados oficiais de competência ocupacional. Sistema Nacional de Padrões de Competência. 52+ instituições autorizadas.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://conocer.gob.mx",
+    "logo": "https://www.google.com/s2/favicons?domain=conocer.gob.mx&sz=128"
+  },
+  {
+    "id": 20,
+    "nome": "DIHK/IHK — Câmaras de Indústria e Comércio",
+    "pais": "Alemanha",
+    "diferencial": "Sistema de 79 câmaras regionais representando 3 milhões de empresas. Pilares do sistema dual: registram contratos, acreditam empresas formadoras, aplicam exames VET. Rede VETnet em 11+ países.",
+    "natureza": "Pública",
+    "relacao": "✅ AHK Brasil ativa. VETnet inclui Brasil como país-foco para adaptação do sistema dual.",
+    "website": "https://dihk.de",
+    "logo": "https://www.google.com/s2/favicons?domain=dihk.de&sz=128"
+  },
+  {
+    "id": 21,
+    "nome": "DMG MORI Academy",
+    "pais": "Internacional",
+    "diferencial": "Máquinas-ferramenta avançadas e digitalização",
+    "natureza": "Privada",
+    "relacao": "Parceiro Técnico",
+    "website": "https://dmgmori.com",
+    "logo": "https://www.google.com/s2/favicons?domain=dmgmori.com&sz=128"
+  },
+  {
+    "id": 22,
+    "nome": "ENAIP – Ente Nazionale ACLI Istruzione Professionale",
+    "pais": "Itália",
+    "diferencial": "Tradicional rede de formação profissional fundada em 1951 pela associação católica ACLI. Opera centros de treinamento em diversas regiões italianas, oferecendo cursos gratuitos ou subsidiados para jovens e adultos em áreas técnicas (mecânica, informática, turismo, setor socio-sanitário, etc.). É reconhecida como entidade de utilidade pública, cofinanciada por recursos públicos e contratos com empresas. Conta com cerca de 210 sedes na Itália e 22 centros no exterior (Europa e Argentina). Foca inclusão social e inserção laboral de públicos vulneráveis, com mais de 70 anos de atuação contínua.",
+    "natureza": "Privada",
+    "relacao": "Nenhuma parceria identificada; possivelmente contatos indiretos via Cinterfor OIT ou Igreja Católica.",
+    "website": "https://enaip.it",
+    "logo": "https://www.google.com/s2/favicons?domain=enaip.it&sz=128"
+  },
+  {
+    "id": 23,
+    "nome": "ETF — European Training Foundation",
+    "pais": "Itália",
+    "diferencial": "Agência da UE para capital humano em 29+ países vizinhos. Apoia reforma de VET, emprego e sistemas de qualificação. Processo de Torino, Rede para Excelência (ENE), ferramenta ISATCOVE. Green Skills Awards. Acordo com OIT (fev/2025). Forte atuação em modernização de TVET.",
+    "natureza": "Pública",
+    "relacao": "🔗 Metodologias (Processo de Torino/CoVE) servem como benchmark para desenho de reformas sistêmicas em VET e qualificação em países em desenvolvimento.",
+    "website": "https://etf.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=etf.europa.eu&sz=128"
+  },
+  {
+    "id": 24,
+    "nome": "Festo Didactic",
+    "pais": "Alemanha",
+    "diferencial": "Divisão educacional da empresa Festo, líder mundial em equipamentos de treinamento técnico e soluções de aprendizagem para automação industrial, mecatrônica e Indústria 4.0. Oferece \"fábricas didáticas\" modulares, kits de automação, currículos, formação de formadores e simuladores industriais. Equipamentos usados em centros VET de 60+ países.",
+    "natureza": "Privada",
+    "relacao": "✅ Fornecedora de tecnologia educacional para laboratórios SENAI. Parceira global da WorldSkills. SENAI é cliente e parceiro tecnológico: utiliza equipamentos Festo em laboratórios e colaborou em eventos.",
+    "website": "https://festo-didactic.com",
+    "logo": "https://www.google.com/s2/favicons?domain=festo-didactic.com&sz=128"
+  },
+  {
+    "id": 25,
+    "nome": "Fraunhofer-Gesellschaft",
+    "pais": "Alemanha",
+    "diferencial": "Maior organização de pesquisa aplicada da Europa: 75 institutos, ~32.000 funcionários, €3,6 bi/ano. Modelo serviu de blueprint para os Institutos SENAI de Inovação. Foco em inovação tecnológica e transferência para a indústria.",
+    "natureza": "Privada",
+    "relacao": "✅ Desde 2012 apoiou criação dos 26+ Institutos SENAI de Inovação. Parceria reconhecida pela ONU como cooperação Sul-Sul de destaque. Colaboração em P&D em materiais e manufatura avançada. Uma das parcerias mais estratégicas do SENAI.",
+    "website": "https://fraunhofer.de",
+    "logo": "https://www.google.com/s2/favicons?domain=fraunhofer.de&sz=128"
+  },
+  {
+    "id": 26,
+    "nome": "GAN Global — Global Apprenticeship Network",
+    "pais": "Internacional",
+    "diferencial": "Aliança multisetorial para apprenticeships de qualidade. Fundada em 2013 via G20. Membros: Adecco, Microsoft, Nestlé, UBS, IBM, Hilton. Redes nacionais em 10 países.",
+    "natureza": "PPP",
+    "relacao": "❓ Redes na Argentina e Colômbia. Potencial via conexões G20.",
+    "website": "https://gan-global.org",
+    "logo": "https://www.google.com/s2/favicons?domain=gan-global.org&sz=128"
+  },
+  {
+    "id": 27,
+    "nome": "Gatsby Foundation",
+    "pais": "Reino Unido",
+    "diferencial": "Referência mundial em orientação de carreira (Benchmarks)",
+    "natureza": "Privada",
+    "relacao": "Referência Intelectual",
+    "website": "https://gatsby.org.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=gatsby.org.uk&sz=128"
+  },
+  {
+    "id": 28,
+    "nome": "GIZ — Deutsche Gesellschaft für Internationale Zusammenarbeit",
+    "pais": "Alemanha",
+    "diferencial": "Principal agência alemã de cooperação para desenvolvimento, líder global em projetos VET internacionais. Opera Academia TVET especializada. Fornece assistência técnica em desenvolvimento, levando a expertise alemã (modelo dual) a países em desenvolvimento.",
+    "natureza": "Pública",
+    "relacao": "✅ Múltiplos projetos: PROKLIMA, H2Brasil (hidrogênio verde, Natal, 2024), SAF, H2Uppp com TÜV Rheinland (2024), cooperação trilateral (2015-2019). Cooperação em energias renováveis e fortalecimento institucional.",
+    "website": "https://giz.de",
+    "logo": "https://www.google.com/s2/favicons?domain=giz.de&sz=128"
+  },
+  {
+    "id": 29,
+    "nome": "HRD Korea — Human Resources Development Service of Korea",
+    "pais": "Coreia do Sul",
+    "diferencial": "Serviço nacional de Desenvolvimento de Mão de Obra. Exames de qualificação nacional, competições de habilidades (WorldSkills Korea). Opera o GIFTS e Centro UNESCO-UNEVOC. 897+ Padrões Nacionais de Competência. Certificação ocupacional nacional. Coreia é o país mais bem-sucedido na história do WorldSkills.",
+    "natureza": "Pública",
+    "relacao": "🔗 Conexão indireta via WorldSkills International. Especialistas coreanos e do SENAI interagem no desenvolvimento de provas. Em 2021, SENAI-SC e KOICA uniram-se para capacitação. Programa K-Star.",
+    "website": "https://hrdkorea.or.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=hrdkorea.or.kr&sz=128"
+  },
+  {
+    "id": 30,
+    "nome": "ibw Austria — Institut für Bildungsforschung der Wirtschaft",
+    "pais": "Áustria",
+    "diferencial": "Instituto de pesquisa VET ligado à Câmara Econômica Federal Austríaca. Parceiro Cedefop. Papel central no desenho de currículos para 200+ profissões de aprendizagem.",
+    "natureza": "Privada",
+    "relacao": "🔗 Colabora com BIBB no projeto D-A-CH de monitoramento do sistema dual.",
+    "website": "https://ibw.at",
+    "logo": "https://www.google.com/s2/favicons?domain=ibw.at&sz=128"
+  },
+  {
+    "id": 31,
+    "nome": "INDIRE",
+    "pais": "Itália",
+    "diferencial": "Inovação em ambientes de aprendizagem e Erasmus+",
+    "natureza": "Pública",
+    "relacao": "Fonte de Inteligência",
+    "website": "https://indire.it",
+    "logo": "https://www.google.com/s2/favicons?domain=indire.it&sz=128"
+  },
+  {
+    "id": 32,
+    "nome": "INET — Instituto Nacional de Educación Tecnológica",
+    "pais": "Argentina",
+    "diferencial": "Agência do Ministério da Educação responsável por coordenar as políticas de Educação Técnico-Profissional (ETP) em níveis médio técnico, superior técnico e formação profissional em todas as províncias. Define padrões curriculares, homologa títulos e forte foco em adequação territorial e produtiva.",
+    "natureza": "Pública",
+    "relacao": "🔗 Diálogo via MERCOSUR e rede OIT/Cinterfor. Candidato natural a cooperação Sul-Sul (Brasil-Argentina) em políticas de rede, certificação e prospectiva de ETP.",
+    "website": "https://inet.edu.ar",
+    "logo": "https://www.google.com/s2/favicons?domain=inet.edu.ar&sz=128"
+  },
+  {
+    "id": 33,
+    "nome": "ISKUR",
+    "pais": "Turquia",
+    "diferencial": "Vínculo direto entre emprego, seguro e treinamento",
+    "natureza": "Pública",
+    "relacao": "Benchmark",
+    "website": "https://iskur.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=iskur.gov.tr&sz=128"
+  },
+  {
+    "id": 34,
+    "nome": "ITE — Institute of Technical Education",
+    "pais": "Singapura",
+    "diferencial": "Transformação VET premiada (Harvard-IBM Innovations Award 2007). Modelo One ITE Three Colleges. ~25% de cada coorte. Certificação nacional de competências. Programas de pré-emprego, CET e work-study. ITEES (braço internacional) fornece consultoria turnkey em TVET a governos e instituições em ~30 países. Infraestrutura de classe mundial.",
+    "natureza": "Pública",
+    "relacao": "🔗 SENAI parceiro do INCIT (Singapura) para Smart Industry Readiness Index. ITEES é parceiro natural para co-desenvolver centros e programas em terceiros países. Benchmark principal.",
+    "website": "https://ite.edu.sg",
+    "logo": "https://www.google.com/s2/favicons?domain=ite.edu.sg&sz=128"
+  },
+  {
+    "id": 35,
+    "nome": "ITI System — Industrial Training Institutes",
+    "pais": "Índia",
+    "diferencial": "Maior rede de centros VET da Índia: milhares de ITIs sob o Directorate General of Training (DGT). 130+ ofícios. Cursos de 6 meses a 2 anos. Certificados Nacionais de Ofício reconhecidos nacionalmente. Parte central do sistema de TVET indiano, focada em trades industriais.",
+    "natureza": "PPP",
+    "relacao": "❓ Sem registro identificado. SENAI e autoridades indianas já trocaram visitas técnicas. ITIs indianos são equivalentes aos CFPs históricos do SENAI, servindo de referência mútua.",
+    "website": "https://dgt.gov.in",
+    "logo": "https://www.google.com/s2/favicons?domain=dgt.gov.in&sz=128"
+  },
+  {
+    "id": 36,
+    "nome": "ITS Academy — Istituti Tecnici Superiori",
+    "pais": "Itália",
+    "diferencial": "Sistema terciário VET italiano: 120 fundações ITS em 6 áreas tecnológicas. Mínimo 30% de estágio, 50% de docentes da indústria. Empregabilidade acima de 80%. Cursos de 2 a 3 anos (EQF nível 5). Fundações flexíveis focadas em vocações regionais. Modelo de integração pós-médio com a indústria.",
+    "natureza": "PPP",
+    "relacao": "🔗 SENAI lista Politecnico di Milano como parceiro. SENAI acompanha o modelo ITS como exemplo de integração pós-médio com a indústria. Possíveis diálogos via programas UE-América Latina.",
+    "website": "https://itsacademy.it",
+    "logo": "https://www.google.com/s2/favicons?domain=itsacademy.it&sz=128"
+  },
+  {
+    "id": 37,
+    "nome": "Ivy Tech Community College",
+    "pais": "EUA",
+    "diferencial": "Maior community college de acreditação única dos EUA, com forte foco em upskilling para manufatura avançada e TI.eddesignlab​",
+    "natureza": "Pública",
+    "relacao": "Sem evidência pública de parceria com SENAI; referência em community colleges integrados a estratégias de requalificação regional.",
+    "website": "https://ivytech.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=ivytech.edu&sz=128"
+  },
+  {
+    "id": 38,
+    "nome": "JAVADA — Japan Vocational Ability Development Association",
+    "pais": "Japão",
+    "diferencial": "Administra testes nacionais de habilidades (Ginō Kentei). Opera SESPP em 7+ países asiáticos. Projetos APEC que treinaram 16.533 participantes em 10 economias.",
+    "natureza": "Pública",
+    "relacao": "❓ Programas APEC em economias latino-americanas (Chile/Peru/México).",
+    "website": "https://javada.or.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=javada.or.jp&sz=128"
+  },
+  {
+    "id": 39,
+    "nome": "JEED / Polytechnic University of Japan",
+    "pais": "Japão",
+    "diferencial": "Opera sistema de Universidades Politécnicas. Formação de instrutores VET, reciclagem e pesquisa. Forma inovadores de processos para monozukuri. Empregabilidade de 80,8%.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://jeed.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=jeed.go.jp&sz=128"
+  },
+  {
+    "id": 40,
+    "nome": "JICA — Japan International Cooperation Agency",
+    "pais": "Japão",
+    "diferencial": "Principal agência japonesa de cooperação. No Brasil desde 1959, assistência de 500 bilhões de ienes. Projetos trilaterais com SENAI em Paraguai, Moçambique, Angola. Cooperação técnica e envio de peritos (Kaizen/5S).",
+    "natureza": "Pública",
+    "relacao": "✅ Parceria histórica desde anos 1970. Doação de equipamentos em MG/ES/PE/SP. Construção do Cetel (BH). Cooperação em hidrogênio verde. Parceiro histórico e atual.",
+    "website": "https://jica.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=jica.go.jp&sz=128"
+  },
+  {
+    "id": 41,
+    "nome": "Job Corps",
+    "pais": "EUA",
+    "diferencial": "Inclusão social e formação residencial para vulneráveis",
+    "natureza": "Pública",
+    "relacao": "Benchmark Social",
+    "website": "https://jobcorps.gov",
+    "logo": "https://www.google.com/s2/favicons?domain=jobcorps.gov&sz=128"
+  },
+  {
+    "id": 42,
+    "nome": "Korea Polytechnics (KOPO)",
+    "pais": "Coreia do Sul",
+    "diferencial": "Rede nacional de 8 politécnicos com formação financiada pelo governo para desempregados 15+. Graduados isentos de provas para certificações nacionais. Cursos de alta tecnologia. Cursos de 2-3 anos focados na formação superior de técnicos especializados para a indústria.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. Papel similar aos Institutos Federais e Faculdades de Tecnologia no Brasil. SENAI e Korea Polytechnics já interagiram em feiras de educação e via UNESCO-UNEVOC.",
+    "website": "https://kopo.ac.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=kopo.ac.kr&sz=128"
+  },
+  {
+    "id": 43,
+    "nome": "KOREATECH — Korea University of Technology and Education",
+    "pais": "Coreia do Sul",
+    "diferencial": "Nº 1 entre universidades educacionais por 14 anos consecutivos. Maior empregabilidade (75,9%) entre universidades de 4 anos. Currículo 50/50 teoria-prática. Única que emite licenças de professor TVET na Coreia.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. Oferece mestrados Global TVET.",
+    "website": "https://koreatech.ac.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=koreatech.ac.kr&sz=128"
+  },
+  {
+    "id": 44,
+    "nome": "KOSEN — National Institute of Technology Japan",
+    "pais": "Japão",
+    "diferencial": "Rede de 51-63 colleges nacionais de tecnologia. Programa integrado de 5 anos a partir dos 15 anos. Forma engenheiros aplicados com forte ênfase em prática e experimentos. Graduados recebem 20+ ofertas de emprego. Empregabilidade ~100%. Modelo exportado para Sudeste Asiático. Referência mundial em formação precoce de engenheiros.",
+    "natureza": "Pública",
+    "relacao": "🔗 Colabora com JICA para programas internacionais TVET. Intercâmbio de estudantes japoneses no Brasil. SENAI participa de fóruns com KOSEN via WorldSkills.",
+    "website": "https://kosen-k.go.jp",
+    "logo": "https://www.google.com/s2/favicons?domain=kosen-k.go.jp&sz=128"
+  },
+  {
+    "id": 45,
+    "nome": "KRIVET — Korea Research Institute for VET",
+    "pais": "Coreia do Sul",
+    "diferencial": "Instituto nacional de pesquisa em políticas VET, sob o gabinete do Primeiro-Ministro. 236 funcionários, 100+ pesquisadores (86 com Ph.D.), orçamento ~US$58 mi. Centro UNESCO-UNEVOC. Opera programa ASEAN-ROK TEAM. Formula políticas, desenvolve programas. Pesquisa VET baseada em dados e prospectiva.",
+    "natureza": "Pública",
+    "relacao": "❓ Potencial alto como benchmark em pesquisa VET. Sinergias fortes via BIBB, UNEVOC e projetos globais (ex.: Skills2Capabilities). Rede de conhecimento.",
+    "website": "https://krivet.re.kr",
+    "logo": "https://www.google.com/s2/favicons?domain=krivet.re.kr&sz=128"
+  },
+  {
+    "id": 46,
+    "nome": "Lincoln Electric",
+    "pais": "EUA",
+    "diferencial": "Realidade Virtual em Soldagem (VRTEX)",
+    "natureza": "Privada",
+    "relacao": "Parceiro Técnico",
+    "website": "https://lincolnelectric.com",
+    "logo": "https://www.google.com/s2/favicons?domain=lincolnelectric.com&sz=128"
+  },
+  {
+    "id": 47,
+    "nome": "merSETA — Manufacturing Engineering and Related Services SETA",
+    "pais": "África do Sul",
+    "diferencial": "Uma das 21 SETAs. Cobre manufatura, engenharia e serviços — equivalente sul-africano mais próximo do foco industrial do SENAI. Learnerships e apprenticeships.",
+    "natureza": "Pública",
+    "relacao": "🔗 Paralelo setorial direto com SENAI (foco em manufatura/engenharia).",
+    "website": "https://merseta.org.za",
+    "logo": "https://www.google.com/s2/favicons?domain=merseta.org.za&sz=128"
+  },
+  {
+    "id": 48,
+    "nome": "Ministry of Education (CVED)",
+    "pais": "China",
+    "diferencial": "Gestão do maior sistema VET do mundo (Estratégia)",
+    "natureza": "Pública",
+    "relacao": "Relações Institucionais",
+    "website": "https://moe.gov.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=moe.gov.cn&sz=128"
+  },
+  {
+    "id": 49,
+    "nome": "MIT – Massachusetts Institute of Technology",
+    "pais": "EUA",
+    "diferencial": "Instituto de Tecnologia de Massachusetts, universidade de referência mundial em ciência, engenharia e inovação. Embora seja uma instituição acadêmica de alto nível, o MIT tem forte atuação em educação aplicada e cooperação com a indústria (pioneiro em aprendizagem por projetos, incubação de startups e pesquisa de ponta). Possui laboratórios como o FabLab e iniciativas como o Fab Academy que disseminam conhecimento técnico globalmente. O MIT influenciou diretamente o avanço de tecnologias industriais (ex.: robótica, CAD/CAM) e colabora com institutos de treinamento em projetos de inovação.",
+    "natureza": "Privada",
+    "relacao": "Sim – Parceria notável: SENAI e MIT firmaram cooperação (citado como parceiro do SENAI) em pesquisa e educação em manufatura avançada. O SENAI Instituto de Inovação em Sistemas de Manufatura (São Paulo) já desenvolveu projetos com o MIT, e delegações do SENAI frequentam cursos do MIT (como Lean Manufacturing).",
+    "website": "https://mit.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=mit.edu&sz=128"
+  },
+  {
+    "id": 50,
+    "nome": "MoNE/DGVTE — Direção-Geral de Educação Profissional e Técnica (Turquia)",
+    "pais": "Turquia",
+    "diferencial": "Principal direção do Ministério da Educação responsável pela educação profissional e técnica. 15 centros setoriais de excelência (financiado UE, Projeto METEK). 3.000+ professores VET treinados. Sistema VET atende ~49% dos alunos do ensino médio. 313 centros de formação gratuita. Lidera reformas e articulação teoria-prática.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. Relevante como benchmark de política de VET em país emergente do G20.",
+    "website": "https://meb.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=meb.gov.tr&sz=128"
+  },
+  {
+    "id": 51,
+    "nome": "MYK — Mesleki Yeterlilik Kurumu (Vocational Qualifications Authority)",
+    "pais": "Turquia",
+    "diferencial": "Autoridade de Qualificações Profissionais da Turquia, criada em 2006 para estabelecer e gerir o Sistema Nacional de Qualificações Profissionais e o Quadro de Qualificações Turco, alinhados ao EQF europeu. Certificação nacional independente.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem cooperação direta conhecida. SENAI mantém diálogo via organizações internacionais (rede UNEVOC). Modelo do MYK serve de referência em certificação. Benchmark de certificação.",
+    "website": "https://myk.gov.tr",
+    "logo": "https://www.google.com/s2/favicons?domain=myk.gov.tr&sz=128"
+  },
+  {
+    "id": 52,
+    "nome": "Nanyang Polytechnic",
+    "pais": "Singapura",
+    "diferencial": "Conceito de \"Teaching Factory\" integrado com empresas",
+    "natureza": "Pública",
+    "relacao": "Benchmark de Inovação",
+    "website": "https://nyp.edu.sg",
+    "logo": "https://www.google.com/s2/favicons?domain=nyp.edu.sg&sz=128"
+  },
+  {
+    "id": 53,
+    "nome": "NC3",
+    "pais": "EUA",
+    "diferencial": "Certificações industriais \"Turnkey\" (Vendor-specific)",
+    "natureza": "Privada",
+    "relacao": "Parceiro Operacional (Centros no BR)",
+    "website": "https://nc3.net",
+    "logo": "https://www.google.com/s2/favicons?domain=nc3.net&sz=128"
+  },
+  {
+    "id": 54,
+    "nome": "NCVER — National Centre for Vocational Education Research",
+    "pais": "Austrália",
+    "diferencial": "Organização nacional de pesquisa e informação VET. Base de dados VOCEDplus cataloga pesquisa VET global. Custódia de dados estatísticos nacionais VET.",
+    "natureza": "Pública",
+    "relacao": "🔗 VOCEDplus cataloga pesquisa sobre o SENAI.",
+    "website": "https://ncver.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=ncver.edu.au&sz=128"
+  },
+  {
+    "id": 55,
+    "nome": "Niagara College",
+    "pais": "Canadá",
+    "diferencial": "Excelência em Gestão Sustentável e Inovação",
+    "natureza": "Pública",
+    "relacao": "Benchmark/Parceiro",
+    "website": "https://niagaracollege.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=niagaracollege.ca&sz=128"
+  },
+  {
+    "id": 56,
+    "nome": "NOCTI — National Occupational Competency Testing Institute",
+    "pais": "EUA",
+    "diferencial": "Maior provedor de credenciais CTE nos EUA. 120+ certificações técnicas. Consórcio dos 50 estados. Avaliações escritas e de performance alinhadas com O*NET.",
+    "natureza": "Privada",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://nocti.org",
+    "logo": "https://www.google.com/s2/favicons?domain=nocti.org&sz=128"
+  },
+  {
+    "id": 57,
+    "nome": "NSDC — National Skill Development Corporation",
+    "pais": "Índia",
+    "diferencial": "PPP (governo 49%, setor privado 51%). 5,2+ milhões de alunos, 235 parcerias privadas, 38 Conselhos Setoriais. Opera NSDC International em 25+ países. Central ao Skill India. Modelo de financiamento e Sector Skill Councils.",
+    "natureza": "PPP",
+    "relacao": "❓ Potencial alto: ambos são instituições VET de grande escala em países BRICS. Diálogo em fóruns BRICS e G20 sobre políticas de qualificação. SENAI e NSDC compartilharam experiências em reuniões internacionais.",
+    "website": "https://nsdcindia.org",
+    "logo": "https://www.google.com/s2/favicons?domain=nsdcindia.org&sz=128"
+  },
+  {
+    "id": 58,
+    "nome": "OCDE — Organisation for Economic Co-operation and Development (Skills/VET)",
+    "pais": "Internacional",
+    "diferencial": "Análise comparativa de políticas VET. Desenvolvendo PISA-VET. Centre for Skills para políticas de competências ao longo da vida. Simpósios com Cedefop.",
+    "natureza": "Pública",
+    "relacao": "🔗 Brasil é parceiro-chave (não membro). SENAI aparece em estudos comparativos da OCDE.",
+    "website": "https://oecd.org",
+    "logo": "https://www.google.com/s2/favicons?domain=oecd.org&sz=128"
+  },
+  {
+    "id": 59,
+    "nome": "OIT/Cinterfor — Centro Interamericano para Formação Profissional",
+    "pais": "Uruguai",
+    "diferencial": "Serviço técnico da OIT fundado em 1963, com sede em Montevidéu. Maior rede mundial de instituições de formação: 68+ organizações de 27 países. Cooperação horizontal, formação dual, transição digital e verde. Produz estudos de prospectiva, bancos de competências e cooperação Sul-Sul. Rede de gestão do conhecimento nas Américas.",
+    "natureza": "Pública",
+    "relacao": "✅ SENAI é membro fundador e constituinte. Já presidiu reuniões técnicas. Publicação conjunta Skills Anticipation (2015). Workshop maio/2025 sobre produtividade. Conferência Curitiba. Manuais didáticos do SENAI estão no acervo Cinterfor.",
+    "website": "https://oitcinterfor.org",
+    "logo": "https://www.google.com/s2/favicons?domain=oitcinterfor.org&sz=128"
+  },
+  {
+    "id": 60,
+    "nome": "Omnia — Joint Authority of Education (Espoo)",
+    "pais": "Finlândia",
+    "diferencial": "Principal provedora VET da Finlândia: 32.000+ alunos. Centro UNESCO-UNEVOC. Modelo finlandês: competências, flexibilidade, planos individuais, 2.200+ empresas parceiras.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. OEP opera internacionalmente.",
+    "website": "https://omnia.fi",
+    "logo": "https://www.google.com/s2/favicons?domain=omnia.fi&sz=128"
+  },
+  {
+    "id": 61,
+    "nome": "ORT Argentina (Escuelas ORT)",
+    "pais": "Argentina",
+    "diferencial": "Organização educacional não-governamental fundada em 1936, mantém duas escolas técnicas de ponta em Buenos Aires, um instituto tecnológico de nível superior e outros programas integrando tecnologia e inovação. Atende ~6 mil alunos com currículos focados em alta tecnologia, reconhecida como uma das melhores escolas técnicas do país.",
+    "natureza": "Privada",
+    "relacao": "Nenhuma parceria direta conhecida com o SENAI.",
+    "website": "https://ort.edu.ar",
+    "logo": "https://www.google.com/s2/favicons?domain=ort.edu.ar&sz=128"
+  },
+  {
+    "id": 62,
+    "nome": "Pearson (BTEC)",
+    "pais": "Reino Unido",
+    "diferencial": "Sistema de certificação agnóstico e portátil globalmente",
+    "natureza": "Privada",
+    "relacao": "Parceiro/Fornecedor",
+    "website": "https://pearson.com",
+    "logo": "https://www.google.com/s2/favicons?domain=pearson.com&sz=128"
+  },
+  {
+    "id": 63,
+    "nome": "PENS (Politeknik Elektronika)",
+    "pais": "Indonésia",
+    "diferencial": "Liderança em robótica/eletrônica no Sudeste Asiático",
+    "natureza": "Pública",
+    "relacao": "Potencial Parceiro",
+    "website": "https://pens.ac.id",
+    "logo": "https://www.google.com/s2/favicons?domain=pens.ac.id&sz=128"
+  },
+  {
+    "id": 64,
+    "nome": "Plataformas de Centres of Vocational Excellence (CoVE) – Erasmus+",
+    "pais": "União Europeia",
+    "diferencial": "Redes temáticas de “Centros de Excelência Vocacional” que articulam VET, empresas, centros de pesquisa e desenvolvimento regional; foco em transições verde e digital e inclusão.epr+3",
+    "natureza": "Pública",
+    "relacao": "Não há evidência de projetos CoVE com SENAI nesta busca; grande potencial de entrada do SENAI como parceiro associado em projetos futuros.",
+    "website": "https://ec.europa.eu",
+    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128"
+  },
+  {
+    "id": 65,
+    "nome": "POLMAN Bandung — Politeknik Manufaktur Bandung",
+    "pais": "Indonésia",
+    "diferencial": "Politécnico de manufatura histórico (1976, cooperação suíça). Premier politécnico de manufatura da Indonésia. Parte do sistema de dezenas de politécnicos estatais.",
+    "natureza": "Pública",
+    "relacao": "❓ SENAI opera centros no Timor-Leste (presença regional).",
+    "website": "https://polman-bandung.ac.id",
+    "logo": "https://www.google.com/s2/favicons?domain=polman-bandung.ac.id&sz=128"
+  },
+  {
+    "id": 66,
+    "nome": "Polytechnics Canada",
+    "pais": "Canadá",
+    "diferencial": "Associação nacional de 13 polytechnics e institutes of technology de pesquisa aplicada. Membros ofertam educação prática orientada pela indústria, com forte ênfase em formação orientada ao trabalho, aprendizagem integrada ao trabalho e P&D aplicada.",
+    "natureza": "Privada",
+    "relacao": "❓ Sem parceria direta identificada; modelo próximo ao de institutos federais e SENAI (pesquisa aplicada + VET). Possível intercâmbio de boas práticas via fóruns internacionais.",
+    "website": "https://polytechnicscanada.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=polytechnicscanada.ca&sz=128"
+  },
+  {
+    "id": 67,
+    "nome": "Rede Federal de Educação Profissional, Científica e Tecnológica (IFs)",
+    "pais": "Brasil",
+    "diferencial": "Rede federal de institutos que integram ensino médio técnico, tecnológico e superior aplicado, com forte inserção territorial e foco em pesquisa aplicada e extensão tecnológica.",
+    "natureza": "Pública",
+    "relacao": "Convergência doméstica com SENAI em múltiplas agendas (indústria 4.0, energia, agro, etc.), sobretudo por meio de programas do MEC e MDIC; parceria varia por estado e projeto.",
+    "website": "https://gov.br/mec",
+    "logo": "https://www.google.com/s2/favicons?domain=gov.br&sz=128"
+  },
+  {
+    "id": 68,
+    "nome": "Rizhao Polytechnic",
+    "pais": "China",
+    "diferencial": "Excelência em engenharia civil/marítima e arquitetura",
+    "natureza": "Pública",
+    "relacao": "Benchmark (WFCP)",
+    "website": "https://rzpt.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=rzpt.cn&sz=128"
+  },
+  {
+    "id": 69,
+    "nome": "SAIT — Southern Alberta Institute of Technology",
+    "pais": "Canadá",
+    "diferencial": "Primeiro instituto técnico público do Canadá (1916). 110+ programas. Líder em certificação Red Seal. Forte pesquisa aplicada e parcerias indústria petróleo/gás. Infraestrutura de ponta para Energia e Petróleo.",
+    "natureza": "Pública",
+    "relacao": "❓ SENAI tem parcerias no Canadá via CICan e ÉTS. Benchmark.",
+    "website": "https://sait.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=sait.ca&sz=128"
+  },
+  {
+    "id": 70,
+    "nome": "Samsung Electronics",
+    "pais": "Coreia do Sul",
+    "diferencial": "Innovation Campus e patrocínio WorldSkills",
+    "natureza": "Privada",
+    "relacao": "Parceiro Tecnológico",
+    "website": "https://samsung.com",
+    "logo": "https://www.google.com/s2/favicons?domain=samsung.com&sz=128"
+  },
+  {
+    "id": 71,
+    "nome": "SBB — Samenwerkingsorganisatie Beroepsonderwijs Bedrijfsleven",
+    "pais": "Holanda",
+    "diferencial": "Órgão que conecta VET holandês ao mercado. 250.000+ empresas de estágio acreditadas, inteligência de mercado. 40%+ da população holandesa possui diploma VET.",
+    "natureza": "PPP",
+    "relacao": "❓ SENAI-SP pesquisou Fontys University (Holanda) para cooperação.",
+    "website": "https://s-bb.nl",
+    "logo": "https://www.google.com/s2/favicons?domain=s-bb.nl&sz=128"
+  },
+  {
+    "id": 72,
+    "nome": "SENA",
+    "pais": "Colômbia",
+    "diferencial": "Capilaridade social e programas de empreendedorismo",
+    "natureza": "Pública",
+    "relacao": "Parceiro Irmão (Cinterfor)",
+    "website": "https://sena.edu.co",
+    "logo": "https://www.google.com/s2/favicons?domain=sena.edu.co&sz=128"
+  },
+  {
+    "id": 73,
+    "nome": "SENAC – Serviço Nacional de Aprendizagem Comercial",
+    "pais": "Brasil",
+    "diferencial": "Principal instituição de educação profissional para comércio e serviços no Brasil; rede nacional com forte atuação em hospitalidade, comércio, serviços e economia criativa.oitcinterfor​",
+    "natureza": "PPP",
+    "relacao": "Atuação articulada com SENAI em políticas nacionais de formação profissional e em redes como Cinterfor, mas sem evidência rápida de MoU bilateral específico nesta busca.",
+    "website": "https://senac.br",
+    "logo": "https://www.google.com/s2/favicons?domain=senac.br&sz=128"
+  },
+  {
+    "id": 74,
+    "nome": "SENAI — Serviço Nacional de Aprendizagem Industrial",
+    "pais": "Brasil",
+    "diferencial": "Maior rede de educação profissional da América Latina, fundada em 1942, com 809 centros de treinamento em todos os estados do Brasil. Forma milhões de profissionais em áreas industriais. Atua em inovação tecnológica (26+ Institutos de Inovação), consultorias e organização da delegação brasileira da WorldSkills.",
+    "natureza": "PPP",
+    "relacao": "Instituição focal desta análise. Referência internacional; já coopera com diversos atores listados (WorldSkills, BIBB, ILO/Cinterfor, INCIT etc.).",
+    "website": "https://portaldaindustria.com.br/senai",
+    "logo": "https://www.google.com/s2/favicons?domain=portaldaindustria.com.br&sz=128"
+  },
+  {
+    "id": 75,
+    "nome": "SFUVET/EHB — Swiss Federal University for VET",
+    "pais": "Suíça",
+    "diferencial": "Instituição central suíça para VET, elevada a universidade em 2021. Forma professores e formadores VET. ~70% dos jovens suíços seguem trajetória VET. Formação de professores e pesquisa em pedagogia VET.",
+    "natureza": "Pública",
+    "relacao": "🔗 Swissnex Brasil assinou acordo com SENAI-SP (jul/2023). Parceria de 50 anos com a Suíça desde 1973. Parceiro de cooperação.",
+    "website": "https://ehb.swiss",
+    "logo": "https://www.google.com/s2/favicons?domain=ehb.swiss&sz=128"
+  },
+  {
+    "id": 76,
+    "nome": "Shenzhen Polytechnic University (SZPU)",
+    "pais": "China",
+    "diferencial": "Nº 1 entre 1.400+ instituições vocacionais da China por 8 anos. Centro UNESCO-UNEVOC. 1ª Cátedra UNESCO em Digitalização TVET (2022). Parcerias Huawei, ARM, Alibaba, BYD, Tencent. Empregabilidade 96%+. Primeira universidade vocacional de graduação resultante da elevação de um \"Double High Level\" college. Referência em educação vocacional superior e inovação institucional.",
+    "natureza": "Pública",
+    "relacao": "🔗 SENAI tem parceria com Universidade Tsinghua (China). SENAI já enviou delegações para conhecer modelos chineses de EPT. Benchmark de universidades vocacionais e parcerias profundas com grandes empresas de tecnologia.",
+    "website": "https://szpt.edu.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=szpt.edu.cn&sz=128"
+  },
+  {
+    "id": 77,
+    "nome": "Siemens Prof. Education",
+    "pais": "Alemanha",
+    "diferencial": "Gêmeos Digitais e Formação Dual Corporativa",
+    "natureza": "Privada",
+    "relacao": "Parceiro de Projetos",
+    "website": "https://siemens.com",
+    "logo": "https://www.google.com/s2/favicons?domain=siemens.com&sz=128"
+  },
+  {
+    "id": 78,
+    "nome": "Sistema de Colleges/Polytechnics públicos do Canadá (EduCanada)",
+    "pais": "Canadá",
+    "diferencial": "127 instituições públicas com mais de 10.000 programas técnicos e profissionais, forte ênfase em empregabilidade, migração qualificada e caminhos flexíveis.educanada​",
+    "natureza": "Pública",
+    "relacao": "Não identifiquei cooperação direta SENAI‑instituições canadenses na busca rápida; há, contudo, muitas oportunidades de benchmarking e projetos conjuntos.",
+    "website": "https://educanada.ca",
+    "logo": "https://www.google.com/s2/favicons?domain=educanada.ca&sz=128"
+  },
+  {
+    "id": 79,
+    "nome": "Skills England (ex-IfATE)",
+    "pais": "Reino Unido",
+    "diferencial": "Órgão responsável por T-Levels, HTQs e padrões de apprenticeship. Modelo employer-led para alinhar VET às necessidades do mercado.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://gov.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=gov.uk&sz=128"
+  },
+  {
+    "id": 80,
+    "nome": "SkillsFuture Singapore (SSG)",
+    "pais": "Singapura",
+    "diferencial": "Coordena movimento nacional SkillsFuture de lifelong learning. Crédito S$500/cidadão + S$4.000 para 40+. Modelo whole-of-government admirado globalmente.",
+    "natureza": "Pública",
+    "relacao": "🔗 Conexão indireta via INCIT Singapura.",
+    "website": "https://skillsfuture.gov.sg",
+    "logo": "https://www.google.com/s2/favicons?domain=skillsfuture.gov.sg&sz=128"
+  },
+  {
+    "id": 81,
+    "nome": "South Metropolitan TAFE",
+    "pais": "Austrália",
+    "diferencial": "Excelência em Defesa, Naval e Petróleo",
+    "natureza": "Pública",
+    "relacao": "Benchmark Setorial",
+    "website": "https://southmetrotafe.wa.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=southmetrotafe.wa.edu.au&sz=128"
+  },
+  {
+    "id": 82,
+    "nome": "Swisscontact — Swiss Foundation for Technical Cooperation",
+    "pais": "Suíça",
+    "diferencial": "Organização de desenvolvimento focada em VET e setor privado em 36+ países. Aplica princípios do sistema dual suíço em cooperação internacional, especialmente na América Latina.",
+    "natureza": "Privada",
+    "relacao": "❓ Ativa na América Latina em desenvolvimento VET.",
+    "website": "https://swisscontact.org",
+    "logo": "https://www.google.com/s2/favicons?domain=swisscontact.org&sz=128"
+  },
+  {
+    "id": 83,
+    "nome": "TAFE Directors Australia",
+    "pais": "Austrália",
+    "diferencial": "Liderança política e padrões de qualidade",
+    "natureza": "Privada",
+    "relacao": "Interlocutor",
+    "website": "https://tda.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=tda.edu.au&sz=128"
+  },
+  {
+    "id": 84,
+    "nome": "TAFE NSW — Technical and Further Education NSW",
+    "pais": "Austrália",
+    "diferencial": "Maior instituto TAFE da Austrália, 140+ anos. Forma mais de 400 mil estudantes/ano em mais de 150 campi, com mais de 1.200 cursos. Forte rede de 25.000+ parceiros empresariais. Desde certificados até bacharelados. Sistema público de faculdades técnicas em todos os estados australianos, com qualificações alinhadas ao Australian Qualifications Framework.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. TAFE tem extensa experiência em parcerias globais (China, Fiji etc.). SENAI e TAFEs já trocaram experiências em competições (WorldSkills) e eventos técnicos.",
+    "website": "https://tafensw.edu.au",
+    "logo": "https://www.google.com/s2/favicons?domain=tafensw.edu.au&sz=128"
+  },
+  {
+    "id": 85,
+    "nome": "Tata STRIVE",
+    "pais": "Índia",
+    "diferencial": "Iniciativa do Grupo Tata para habilidades de jovens desfavorecidos (desde 2014). Parceiros: Google, SAP, IKEA, Airbus. Selecionado para o primeiro Skill Impact Bond da Índia.",
+    "natureza": "Privada",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://tatastrive.com",
+    "logo": "https://www.google.com/s2/favicons?domain=tatastrive.com&sz=128"
+  },
+  {
+    "id": 86,
+    "nome": "TEC — Technical Education Copenhagen",
+    "pais": "Dinamarca",
+    "diferencial": "Segunda maior escola VET da Dinamarca: 7 campi, ~4.600 alunos FTE. Sistema dual forte. 100+ especializações. Modelo flexicurity.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://tec.dk",
+    "logo": "https://www.google.com/s2/favicons?domain=tec.dk&sz=128"
+  },
+  {
+    "id": 87,
+    "nome": "Tianjin Vocational Institute",
+    "pais": "China",
+    "diferencial": "Uma das primeiras e maiores faculdades vocacionais da China (1978). National Demonstrative College. Cooperação Airbus, VW, Haier. Empregabilidade 97%. 175+ prêmios nacionais.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado.",
+    "website": "https://tjtc.edu.cn",
+    "logo": "https://www.google.com/s2/favicons?domain=tjtc.edu.cn&sz=128"
+  },
+  {
+    "id": 88,
+    "nome": "Toyota Tech. Skills Academy",
+    "pais": "Japão",
+    "diferencial": "Disciplina industrial, TPS e formação de caráter",
+    "natureza": "Privada",
+    "relacao": "Referência Metodológica",
+    "website": "https://toyota.com",
+    "logo": "https://www.google.com/s2/favicons?domain=toyota.com&sz=128"
+  },
+  {
+    "id": 89,
+    "nome": "TVET Colleges System (DHET)",
+    "pais": "África do Sul",
+    "diferencial": "50 colleges TVET públicos em 9 províncias, coordenados pelo Department of Higher Education and Training (DHET). Mais de 260 campi. Ofícios artesanais a TI. National Skills Development Plan e NQF. CICan opera programa SASTEP de apoio. Foco em formação prática, equidade racial e transformação social.",
+    "natureza": "Pública",
+    "relacao": "🔗 Banco Mundial estudou modelo SENAI como referência para a África Subsaariana. Diálogo via WorldSkills (times sul-africanos já treinaram no SENAI) e projetos BRICS. Potencial de intercâmbio em governança de redes nacionais grandes e políticas de acesso.",
+    "website": "https://dhet.gov.za",
+    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128"
+  },
+  {
+    "id": 90,
+    "nome": "TVTC — Technical and Vocational Training Corporation",
+    "pais": "Arábia Saudita",
+    "diferencial": "283+ instalações, 240.000+ formandos, 250+ especializações. 1º global em % de alunos em programas vocacionais pós-secundários (2022). Peça-chave da Visão 2030. Fundada em 1980, administra rede com centenas de faculdades técnicas, institutos secundários e centros de treinamento, credencia mais de mil provedores privados. Parcerias com operadores internacionais (International Colleges).",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro identificado. SENAI e TVTC já interagiram em eventos da WorldSkills. Benchmark importante para sistemas centralizados de TVET em países ricos em recursos naturais com agenda de diversificação industrial. Potencial como cliente/parceiro.",
+    "website": "https://tvtc.gov.sa",
+    "logo": "https://www.google.com/s2/favicons?domain=tvtc.gov.sa&sz=128"
+  },
+  {
+    "id": 91,
+    "nome": "U.S. DOL — Office of Apprenticeship (Registered Apprenticeship)",
+    "pais": "EUA",
+    "diferencial": "Sistema de Aprendizagem Profissional Registrada dos EUA, programa earn while you learn desde 1937. 91% dos concluintes empregados 9 meses depois. Completadores ganham ~US$300 mil a mais ao longo da carreira. Parcerias entre empregadores e sindicatos.",
+    "natureza": "Pública",
+    "relacao": "❓ Modelo paralelo à aprendizagem industrial do SENAI. SENAI observa práticas do modelo de apprenticeship para fortalecer seus programas. Já houve seminários comparativos.",
+    "website": "https://apprenticeship.gov",
+    "logo": "https://www.google.com/s2/favicons?domain=apprenticeship.gov&sz=128"
+  },
+  {
+    "id": 92,
+    "nome": "UNESCO-UNEVOC — International Centre for TVET",
+    "pais": "Internacional",
+    "diferencial": "Único centro UNESCO dedicado ao TVET, com sede em Bonn. Coordena rede global de 230+ centros em 150+ países. Atua como hub global de conhecimento e cooperação em TVET. Programas BILT, Greening TVET, TVET Leadership. Produz guias e agendas globais de TVET alinhadas ao ODS 4.",
+    "natureza": "Pública",
+    "relacao": "✅ SENAI é Centro UNEVOC designado (desde 2015/2019). Contribui ativamente na rede. Conferência TVET LAC conjunta (jul/2025). Chamada EdTech BIBB/SENAI (2025). COP30. Acessa projetos e relatórios globais.",
+    "website": "https://unevoc.unesco.org",
+    "logo": "https://www.google.com/s2/favicons?domain=unevoc.unesco.org&sz=128"
+  },
+  {
+    "id": 93,
+    "nome": "UNESCO‑UNEVOC Network – Cometa Formazione",
+    "pais": "Itália",
+    "diferencial": "Centro UNEVOC italiano, reconhecido como centro de excelência inclusivo e laboratório de pedagogia inovadora e empática, com forte foco em jovens em risco, NEETs e migrantes.unesco​",
+    "natureza": "Privada",
+    "relacao": "Sem evidência de parceria específica; benchmark relevante para inclusão social via TVET, design de percursos e metodologias ativas.",
+    "website": "https://cometaformazione.org",
+    "logo": "https://www.google.com/s2/favicons?domain=cometaformazione.org&sz=128"
+  },
+  {
+    "id": 94,
+    "nome": "UNESCO‑UNEVOC Network – TKNIKA (País Basco)",
+    "pais": "Espanha",
+    "diferencial": "Centro de pesquisa e inovação aplicada do sistema de FP do País Basco; promove inovação tecnológica, metodológica e de gestão, com foco em colocar a FP basca na vanguarda europeia.unevoczentroa+3",
+    "natureza": "Pública",
+    "relacao": "Convergência em redes globais (UNEVOC); não localizei cooperação específica com SENAI, mas é um benchmark forte para inovação sistêmica e hubs de inovação em VET.",
+    "website": "https://tknika.eus",
+    "logo": "https://www.google.com/s2/favicons?domain=tknika.eus&sz=128"
+  },
+  {
+    "id": 95,
+    "nome": "UTN — Universidad Tecnológica Nacional",
+    "pais": "Argentina",
+    "diferencial": "Única universidade nacional argentina com foco exclusivo em engenharia e tecnologia. 30 faculdades regionais, 85.000+ alunos. Forma ~50% dos novos engenheiros argentinos.",
+    "natureza": "Pública",
+    "relacao": "❓ Sem registro direto identificado.",
+    "website": "https://utn.edu.ar",
+    "logo": "https://www.google.com/s2/favicons?domain=utn.edu.ar&sz=128"
+  },
+  {
+    "id": 96,
+    "nome": "Valencia College",
+    "pais": "EUA",
+    "diferencial": "Gestão focada no sucesso/retenção do aluno (LifeMap)",
+    "natureza": "Pública",
+    "relacao": "Benchmark de Gestão",
+    "website": "https://valenciacollege.edu",
+    "logo": "https://www.google.com/s2/favicons?domain=valenciacollege.edu&sz=128"
+  },
+  {
+    "id": 97,
+    "nome": "World Federation of Colleges and Polytechnics (WFCP)",
+    "pais": "Internacional",
+    "diferencial": "Rede internacional de federações e faculdades de educação aplicada; liderança em workforce education, grupos de afinidade temáticos e congressos mundiais. Compartilhamento global de melhores práticas de Colleges.",
+    "natureza": "Privada",
+    "relacao": "❓ Convergência em redes globais (vários membros cooperam com SENAI); não localizei evidência pública específica de filiação ou acordo SENAI-WFCP.",
+    "website": "https://wfcp.org",
+    "logo": "https://www.google.com/s2/favicons?domain=wfcp.org&sz=128"
+  },
+  {
+    "id": 98,
+    "nome": "WorldSkills International",
+    "pais": "Internacional",
+    "diferencial": "Hub global de excelência em habilidades em 85-89 países. Organiza a maior competição mundial de educação profissional (Olimpíada das Profissões): ~1.500 competidores em 60+ áreas. Fundada em 1950. Estabelece padrões internacionais de competência. Pesquisa sobre futuro das habilidades.",
+    "natureza": "Privada",
+    "relacao": "✅ Parceria profunda. Brasil membro desde 1981/1983. SENAI sediou WorldSkills SP 2015 (27 medalhas, 1º lugar). 136+ medalhas em 18+ competições. SENAI usa padrões WorldSkills em seus programas. Suas equipes estão entre as melhores do mundo.",
+    "website": "https://worldskills.org",
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.org&sz=128"
+  },
+  {
+    "id": 99,
+    "nome": "WorldSkills Russia (Young Professionals)",
+    "pais": "Rússia",
+    "diferencial": "550+ competições com 40.000+ competidores/ano em 197 habilidades. Exame de Demonstração (Demo Exam) como certificação final. Sediou WorldSkills Kazan 2019. Atua como laboratório para evolução do sistema de EPT russo, introduzindo padrões internacionais de habilidades. Transformação sistêmica via exames práticos.",
+    "natureza": "Pública",
+    "relacao": "✅ SENAI contratado (2016-2019) para reformar sistema VET russo e treinar competidores. Treinou 28 competidores russos para WorldSkills Kazan 2019. Rússia alcançou 1º lugar em Abu Dhabi 2017. Memorandos de entendimento para intercâmbio técnico. SENAI compartilhou metodologia de treinamento.",
+    "website": "https://worldskills.ru",
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.ru&sz=128"
+  },
+  {
+    "id": 100,
+    "nome": "WorldSkills UK",
+    "pais": "Reino Unido",
+    "diferencial": "Uso de competições para elevar padrões de Colleges",
+    "natureza": "PPP",
+    "relacao": "Parceiro de Rede",
+    "website": "https://worldskills.uk",
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.uk&sz=128"
+  }
+]
