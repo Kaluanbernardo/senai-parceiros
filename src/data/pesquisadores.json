@@ -9,7 +9,8 @@
     "pesquisa": "Crítica marxista das relações entre ensino médio, trabalho e dualidade educacional.",
     "scholar": "https://lattes.cnpq.br/1240227827563843",
     "foto": "https://ui-avatars.com/api/?name=Acacia+Kuenzer&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "lattes"
+    "profileType": "lattes",
+    "genero": "F"
   },
   {
     "id": 2,
@@ -21,7 +22,8 @@
     "pesquisa": "Integração de competências verdes (green skills) e tecnologia no currículo indonésio.",
     "scholar": "https://scholar.google.com/citations?user=CHDL_7sAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Agus+Setiawan&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 3,
@@ -33,7 +35,8 @@
     "pesquisa": "Co-desenvolvedora da teoria de ambientes de aprendizagem expansivos.",
     "scholar": "https://scholar.google.com/citations?user=PUA4B6EAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Alison+Fuller&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 4,
@@ -45,7 +48,8 @@
     "pesquisa": "Autor chave em handbooks VET globais",
     "scholar": "https://scholar.google.com/citations?user=Po8dlz0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Andy+Green&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 5,
@@ -57,7 +61,8 @@
     "pesquisa": "Perspectivas nórdicas",
     "scholar": "https://www.researchgate.net/profile/Anja-Heikkinen",
     "foto": "https://ui-avatars.com/api/?name=Anja+Heikkinen&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "F"
   },
   {
     "id": 6,
@@ -69,7 +74,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=l6m5KpIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Anna+Lichtwarck-Aschoff&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 7,
@@ -81,7 +87,8 @@
     "pesquisa": "Ambientes de aprendizagem inovadores e criatividade no VET suíço.",
     "scholar": "https://www.researchgate.net/profile/Antje-Barabasch",
     "foto": "https://ui-avatars.com/api/?name=Antje+Barabasch&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "F"
   },
   {
     "id": 8,
@@ -93,7 +100,8 @@
     "pesquisa": "Liderança em ferramentas normativas e guias para sistemas de aprendizagem modernos.",
     "scholar": "https://scholar.google.com/citations?user=Ex3L2KgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ashwani+Aggarwal&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 9,
@@ -105,7 +113,8 @@
     "pesquisa": "Diretor de políticas de skills da UNESCO; foco em micro-credenciais e futuro digital.",
     "scholar": "https://www.researchgate.net/profile/Borhene-Chakroun",
     "foto": "https://ui-avatars.com/api/?name=Borhene+Chakroun&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 10,
@@ -117,7 +126,8 @@
     "pesquisa": "Estudos sobre trade-offs alocação-trabalho ​",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Cecilia+Nylund&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 11,
@@ -129,7 +139,8 @@
     "pesquisa": "",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Charity+Kome&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 12,
@@ -141,7 +152,8 @@
     "pesquisa": "Editor do TVET@Asia; pesquisa sobre competências técnicas de instrutores.",
     "scholar": "https://scholar.google.com/citations?user=HzzQwRkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Chee+Sern+Lai&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 13,
@@ -153,7 +165,8 @@
     "pesquisa": "Pesquisa sobre equidade e \"qualificações híbridas\" (acesso duplo VET/Universidade).",
     "scholar": "https://scholar.google.com/citations?user=aL2Mt2kAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christian+H.+Jørgensen&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 14,
@@ -165,7 +178,8 @@
     "pesquisa": "Contribuições em equidade VET ​",
     "scholar": "https://scholar.google.com/citations?user=mGGvwaQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christopher+Brockmann&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 15,
@@ -177,7 +191,8 @@
     "pesquisa": "Pesquisador em outcomes de aprendizagem e futuro da VET na Europa ",
     "scholar": "https://scholar.google.com/citations?user=W6rzXG4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 16,
@@ -189,7 +204,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 17,
@@ -201,7 +217,8 @@
     "pesquisa": "Sociologia das transições desiguais e políticas de inclusão para jovens vulneráveis.",
     "scholar": "https://scholar.google.com/citations?user=p-Z3Fk4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Claudia+Jacinto&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 18,
@@ -213,7 +230,8 @@
     "pesquisa": "Defesa pragmática do ensino técnico e crítica ao academicismo na América Latina.",
     "scholar": "https://independent.academia.edu/ClaudioDeMouraCastro",
     "foto": "https://ui-avatars.com/api/?name=Claudio+de+Moura+Castro&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "academia"
+    "profileType": "academia",
+    "genero": "M"
   },
   {
     "id": 19,
@@ -225,7 +243,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=3YqXgYAAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Daniel+Pittich&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 20,
@@ -237,7 +256,8 @@
     "pesquisa": "",
     "scholar": "https://www.researchgate.net/profile/David-Ashton-2",
     "foto": "https://ui-avatars.com/api/?name=David+Ashton&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 21,
@@ -249,7 +269,8 @@
     "pesquisa": "Estudos qualitativos FE colleges",
     "scholar": "https://scholar.google.com/citations?user=GuJUyd8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=David+James&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 22,
@@ -261,7 +282,8 @@
     "pesquisa": "Líder em pedagogia VET holandesa; foco em indução de professores de segunda carreira ",
     "scholar": "https://scholar.google.com/citations?user=BNgrPlMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 23,
@@ -273,7 +295,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 24,
@@ -285,7 +308,8 @@
     "pesquisa": "\"Abordagem Societal\" (Escola de Aix): VET como construção social e política.",
     "scholar": "https://scholar.google.com/citations?user=hV_fBDMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Eric+Verdier&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 25,
@@ -297,7 +321,8 @@
     "pesquisa": "Pesquisa sobre a força de trabalho docente em VET e sua qualificação pedagógica.",
     "scholar": "https://scholar.google.com/citations?user=frFQOEsAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Erica+Smith&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 26,
@@ -309,7 +334,8 @@
     "pesquisa": "Especialista em sistemas de qualificação e garantia de qualidade na Coreia e Ásia.",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Eunsang+Cho&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 27,
@@ -321,7 +347,8 @@
     "pesquisa": "Crítica às falhas de mercado e políticas de VET focadas apenas na oferta.",
     "scholar": "https://www.researchgate.net/profile/Ewart-Keep-2",
     "foto": "https://ui-avatars.com/api/?name=Ewart+Keep&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 28,
@@ -333,7 +360,8 @@
     "pesquisa": "Foco em TVET nórdico",
     "scholar": "https://orcid.org/0000-0002-9957-3209",
     "foto": "https://ui-avatars.com/api/?name=Felix+Breyer&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "orcid"
+    "profileType": "orcid",
+    "genero": "M"
   },
   {
     "id": 29,
@@ -345,7 +373,8 @@
     "pesquisa": "Criador do modelo COMET para medição de competência profissional em larga escala.",
     "scholar": "https://scholar.google.com/citations?user=jD5wj4oAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Felix+Rauner&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 30,
@@ -357,7 +386,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=JNd4jmIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Frank+Agbola&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 31,
@@ -369,7 +399,8 @@
     "pesquisa": "",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Frank+Bünte&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 32,
@@ -381,7 +412,8 @@
     "pesquisa": "Modernização de ocupações para a digitalização e sustentabilidade no sistema dual.",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Friedrich+Hubert+Esser&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 33,
@@ -393,7 +425,8 @@
     "pesquisa": "Principal teórico crítico latino-americano; defesa da educação politécnica e omnilateral.",
     "scholar": "http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4780705Y6",
     "foto": "https://ui-avatars.com/api/?name=Gaudêncio+Frigotto&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "lattes"
+    "profileType": "lattes",
+    "genero": "M"
   },
   {
     "id": 34,
@@ -405,7 +438,8 @@
     "pesquisa": "Currículos baseados em processos de trabalho reais; adaptação à manufatura avançada.",
     "scholar": "https://uni-bremen.academia.edu/GeorgSp%C3%B6ttl",
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "academia"
+    "profileType": "academia",
+    "genero": "M"
   },
   {
     "id": 35,
@@ -417,7 +451,8 @@
     "pesquisa": "Projetos Cedefop",
     "scholar": "https://uni-bremen.academia.edu/GeorgSp%C3%B6ttl",
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "academia"
+    "profileType": "academia",
+    "genero": "M"
   },
   {
     "id": 36,
@@ -429,7 +464,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=DpLQXpMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Geraint+Johnes&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 37,
@@ -441,7 +477,8 @@
     "pesquisa": "Alta citação em clusters bibliométricos VET ",
     "scholar": "https://scholar.google.com/citations?user=GWS7UF0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 38,
@@ -453,7 +490,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 39,
@@ -465,7 +503,8 @@
     "pesquisa": "",
     "scholar": "https://www.researchgate.net/profile/Helen-Jossberger",
     "foto": "https://ui-avatars.com/api/?name=Helen+Jossberger&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "F"
   },
   {
     "id": 40,
@@ -477,7 +516,8 @@
     "pesquisa": "Diretor de pesquisa do BIBB; foco em equivalência acadêmica/vocacional na Alemanha.",
     "scholar": "https://www.researchgate.net/scientific-contributions/Hubert-Ertl-2011030832",
     "foto": "https://ui-avatars.com/api/?name=Hubert+Ertl&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 41,
@@ -489,7 +529,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=T8anQvgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ian+Hardy&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 42,
@@ -501,7 +542,8 @@
     "pesquisa": "Análise das transformações dos sistemas educacionais na Rússia e ex-URSS.",
     "scholar": "https://scholar.google.com/citations?user=6AmOSQUAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Isak+Froumin&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 43,
@@ -513,7 +555,8 @@
     "pesquisa": "Crítica marxista/pós-estruturalista das políticas de VET e precarização do trabalho.",
     "scholar": "https://scholar.google.com/citations?user=3VoLLcgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=James+Avis&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 44,
@@ -525,7 +568,8 @@
     "pesquisa": "Pesquisa sobre rigor acadêmico no CTE e modelos de \"Career Pathways\" nos EUA.",
     "scholar": "https://www.researchgate.net/profile/James-Iii-2",
     "foto": "https://ui-avatars.com/api/?name=James+Stone+III&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 45,
@@ -537,7 +581,8 @@
     "pesquisa": "Avaliação da implementação do modelo dual mexicano e impacto na empregabilidade.",
     "scholar": "https://scholar.google.com/citations?user=rJKzif8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Jimena+Hernández-Fernández&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 46,
@@ -549,7 +594,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=jAvrvgEAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Johnny+Sung&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 47,
@@ -561,7 +607,8 @@
     "pesquisa": "Integração VET com psicologia do trabalho ​",
     "scholar": "https://scholar.google.com/citations?user=MWkMNAUAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 48,
@@ -573,7 +620,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 49,
@@ -585,7 +633,8 @@
     "pesquisa": "Validação de competências transversais e soft skills no sistema francês.",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Josiane+Paddeu&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 50,
@@ -597,7 +646,8 @@
     "pesquisa": "Identidade e profissionalização de professores de TVET e faculdades comunitárias.",
     "scholar": "https://scholar.google.com/citations?user=qwCOtuQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Joy+Papier&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 51,
@@ -609,7 +659,8 @@
     "pesquisa": "Conceito de \"agência limitada\" (bounded agency) em transições de vida e trabalho.",
     "scholar": "https://scholar.google.com/citations?user=WB0gmGwAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Karen+Evans&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 52,
@@ -621,7 +672,8 @@
     "pesquisa": "\"Padrão ouro\" em avaliação de impacto líquido de programas de força de trabalho nos EUA.",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Kevin+Hollenbeck&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 53,
@@ -633,7 +685,8 @@
     "pesquisa": "Políticas Inglaterra",
     "scholar": "https://scholar.google.com/citations?user=lTKOfgsAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Kevin+Orr&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 54,
@@ -645,7 +698,8 @@
     "pesquisa": "Defesa do acesso ao \"conhecimento poderoso\" (teórico) no VET para justiça social.",
     "scholar": "https://scholar.google.com/citations?user=oV7sDPkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Leesa+Wheelahan&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 55,
@@ -657,7 +711,8 @@
     "pesquisa": "Criadora do modelo \"Expansivo-Restritivo\" para avaliar a qualidade de estágios.",
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 56,
@@ -669,7 +724,8 @@
     "pesquisa": "Expansive apprenticeships",
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 57,
@@ -681,7 +737,8 @@
     "pesquisa": "Tecnologias digitais e habilidades de empregabilidade no contexto do Sudeste Asiático.",
     "scholar": "https://scholar.google.com/citations?user=iaTfDPAAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=M.+Bruri+Triyono&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 58,
@@ -693,7 +750,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=w0MPlXQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Maarten+Van+Houten&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 59,
@@ -705,7 +763,8 @@
     "pesquisa": "Arquiteto da reforma do VET turco; integração com indústria e redução de desigualdades.",
     "scholar": "https://scholar.google.com/citations?user=LNSvy6MAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Mahmut+Özer&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 60,
@@ -717,7 +776,8 @@
     "pesquisa": "Pioneira na definição e inserção de competências verdes em sistemas VET asiáticos.",
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 61,
@@ -729,7 +789,8 @@
     "pesquisa": "Especialista em TVET sustentável e parcerias indústria ​",
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 62,
@@ -741,7 +802,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 63,
@@ -753,7 +815,8 @@
     "pesquisa": "Contribuições em CSCL (computer-supported collaborative learning) para VET ​",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 64,
@@ -765,7 +828,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 65,
@@ -777,7 +841,8 @@
     "pesquisa": "Estudos longitudinais BIBB",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Martin+Fischer&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 66,
@@ -789,7 +854,8 @@
     "pesquisa": "Fundador VETNET (EERA); Prêmio Europeu de Pesquisador em VET (2016); editor JAEE ",
     "scholar": "https://scholar.google.com/citations?user=pw2srdQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 67,
@@ -801,7 +867,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 68,
@@ -813,7 +880,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=ufPcJysAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Matthew+Schmidt&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 69,
@@ -825,7 +893,8 @@
     "pesquisa": "Estudos sobre a viabilidade de exportar o sistema dual alemão para contextos não-europeus.",
     "scholar": "https://scholar.google.com/citations?user=qPaXkB0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Matthias+Pilz&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 70,
@@ -837,7 +906,8 @@
     "pesquisa": "Editor do IJRVET; pesquisa sobre a gestão e transferência internacional de VET.",
     "scholar": "https://scholar.google.com/citations?user=fKPERGcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Michael+Gessler&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 71,
@@ -849,7 +919,8 @@
     "pesquisa": "Alta citação em clusters VET ",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Mijke+Kuijpers&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 72,
@@ -861,7 +932,8 @@
     "pesquisa": "Pesquisa longitudinal sobre a eficácia da legislação federal de educação técnica nos EUA.",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Morgan+V.+Lewis&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 73,
@@ -873,7 +945,8 @@
     "pesquisa": "Filosofia prática VET",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Nick+Boreham&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 74,
@@ -885,7 +958,8 @@
     "pesquisa": "Pesquisa baseada na prática sobre \"excelência inclusiva\" para migrantes e jovens.",
     "scholar": "https://www.researchgate.net/profile/Paolo-Nardi-3",
     "foto": "https://ui-avatars.com/api/?name=Paolo+Nardi&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 75,
@@ -897,7 +971,8 @@
     "pesquisa": "Coordenação de padrões de TVET e mobilidade na ASEAN.",
     "scholar": "https://scholar.google.com/citations?user=NGaxEI8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Paryono+Paryono&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 76,
@@ -909,7 +984,8 @@
     "pesquisa": "Análise das \"High Performance Work Systems\" e falhas do mercado de treinamento.",
     "scholar": "https://scholar.google.com/citations?user=m9iPVYgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Paul+Osterman&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 77,
@@ -921,7 +997,8 @@
     "pesquisa": "",
     "scholar": "https://scholar.google.com/citations?user=rVtKyFkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Petri+Nokelainen&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 78,
@@ -933,7 +1010,8 @@
     "pesquisa": "Especialista sistema dual suíço-alemão",
     "scholar": "https://www.researchgate.net/profile/Philipp-Gonon",
     "foto": "https://ui-avatars.com/api/?name=Philipp+Gonon&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 79,
@@ -945,7 +1023,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Pietty+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 80,
@@ -957,7 +1036,8 @@
     "pesquisa": "Estudos sobre autoeficácia e liderança transformacional em VET holandesa ",
     "scholar": "https://scholar.google.com/citations?user=1gCIUBcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Piety+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 81,
@@ -969,7 +1049,8 @@
     "pesquisa": "",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Rasa+Silyte-Niavas&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 82,
@@ -981,7 +1062,8 @@
     "pesquisa": "Principal economista defensor do modelo de apprenticeship nos EUA (custo-benefício).",
     "scholar": "https://scholar.google.com/citations?user=Outz9ygAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Robert+Lerman&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 83,
@@ -993,7 +1075,8 @@
     "pesquisa": "UNESCO contribuições",
     "scholar": "https://www.researchgate.net/profile/Rupert-Maclean",
     "foto": "https://ui-avatars.com/api/?name=Rupert+Maclean&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 84,
@@ -1005,7 +1088,8 @@
     "pesquisa": "",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Sachiko+Genda&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "F"
   },
   {
     "id": 85,
@@ -1017,7 +1101,8 @@
     "pesquisa": "Análise macroeconômica do \"dividendo demográfico\" e falhas do sistema de skills indiano.",
     "scholar": "https://scholar.google.com/citations?user=GRYkrfkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Santosh+Mehrotra&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 86,
@@ -1029,7 +1114,8 @@
     "pesquisa": "Análise das culturas de habilidades na Ásia e África e transferência de modelos.",
     "scholar": "https://scholar.google.com/citations?user=T5nqGvYAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Shoko+Yamada&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 87,
@@ -1041,7 +1127,8 @@
     "pesquisa": "Abordagem de \"capacidades humanas\" (Sen) aplicada ao VET; crítica ao produtivismo.",
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 88,
@@ -1053,7 +1140,8 @@
     "pesquisa": "Líder em TVET para ALC/África; Labour Market Intelligence Partnership (SADC) ",
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 89,
@@ -1065,7 +1153,8 @@
     "pesquisa": "-",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 90,
@@ -1077,7 +1166,8 @@
     "pesquisa": "**Total (geral). Análise baseada em dados da eficácia e diversificação do ensino técnico.",
     "scholar": "https://scholar.google.com/citations?user=JrpilR0WTPcC",
     "foto": "https://ui-avatars.com/api/?name=Simon+Schwartzman&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 91,
@@ -1089,7 +1179,8 @@
     "pesquisa": "Pesquisa sobre inovação em educação e integração de criatividade no VET.",
     "scholar": "https://www.researchgate.net/scientific-contributions/Stephan-Vincent-Lancrin-2099826335",
     "foto": "https://ui-avatars.com/api/?name=Stéphan+Vincent-Lancrin&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 92,
@@ -1101,7 +1192,8 @@
     "pesquisa": "Crítica global à ineficácia dos Quadros Nacionais de Qualificações em países pobres.",
     "scholar": "https://scholar.google.com/citations?user=-dE5IDoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Stephanie+Allais&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 93,
@@ -1113,7 +1205,8 @@
     "pesquisa": "Teoria da \"participação guiada\"; redefiniu o trabalho como ambiente pedagógico complexo.",
     "scholar": "https://scholar.google.com/citations?user=oU3faRcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Stephen+Billett&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 94,
@@ -1125,7 +1218,8 @@
     "pesquisa": "Análise do conceito de \"Beruflichkeit\" (vocação) e raízes históricas do sistema dual.",
     "scholar": "https://www.researchgate.net/profile/Thomas-Deissinger",
     "foto": "https://ui-avatars.com/api/?name=Thomas+Deissinger&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "researchgate"
+    "profileType": "researchgate",
+    "genero": "M"
   },
   {
     "id": 95,
@@ -1137,7 +1231,8 @@
     "pesquisa": "Liderança em cooperação internacional e profissionalização docente na Ásia/Europa.",
     "scholar": "https://scholar.google.com/citations?user=vv7S7oIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Thomas+Schröder&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 96,
@@ -1149,7 +1244,8 @@
     "pesquisa": "3º mais citado em cluster bibliométrico ​",
     "scholar": "https://scholar.google.com/citations?user=nMP0iF4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Tom+Bol&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "M"
   },
   {
     "id": 97,
@@ -1161,7 +1257,8 @@
     "pesquisa": "Métricas de \"permeabilidade\" e governança corporativa em sistemas de VET dual.",
     "scholar": "https://scholar.google.com/citations?user=RDxHdg4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ursula+Renold&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "scholar"
+    "profileType": "scholar",
+    "genero": "F"
   },
   {
     "id": 98,
@@ -1173,7 +1270,8 @@
     "pesquisa": "",
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Volker+Trappmann&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": null
+    "profileType": null,
+    "genero": "M"
   },
   {
     "id": 99,
@@ -1185,7 +1283,8 @@
     "pesquisa": "",
     "scholar": "https://orcid.org/0000-0002-4463-6057",
     "foto": "https://ui-avatars.com/api/?name=Wendy+Sims-Schouten&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "orcid"
+    "profileType": "orcid",
+    "genero": "F"
   },
   {
     "id": 100,
@@ -1197,6 +1296,7 @@
     "pesquisa": "Adaptação de modelos de competência baseados em processos de trabalho para a China.",
     "scholar": "https://orcid.org/0009-0009-5406-9832",
     "foto": "https://ui-avatars.com/api/?name=Zhiqun+Zhao&size=128&background=random&color=fff&bold=true&format=png",
-    "profileType": "orcid"
+    "profileType": "orcid",
+    "genero": "M"
   }
 ]

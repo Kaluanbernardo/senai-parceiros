@@ -11,6 +11,8 @@ import IconButton from '@mui/material/IconButton';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 import Button from '@mui/material/Button';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import SearchBar from '../components/SearchBar';
 import StatsBar from '../components/StatsBar';
 import PesquisadorCard from '../components/PesquisadorCard';
@@ -34,6 +36,7 @@ export default function PesquisadoresPage() {
   const [search, setSearch] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedAreas, setSelectedAreas] = useState([]);
+  const [selectedGenero, setSelectedGenero] = useState('todos');
   const [showFilters, setShowFilters] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -65,9 +68,12 @@ export default function PesquisadoresPage() {
           return item.areas.toLowerCase().includes(area.toLowerCase());
         });
 
-      return matchSearch && matchCountry && matchArea;
+      const matchGenero =
+        selectedGenero === 'todos' || item.genero === selectedGenero;
+
+      return matchSearch && matchCountry && matchArea && matchGenero;
     });
-  }, [search, selectedCountries, selectedAreas]);
+  }, [search, selectedCountries, selectedAreas, selectedGenero]);
 
   const stats = useMemo(() => {
     const countries = new Set(filtered.map((s) => s.pais));
@@ -75,12 +81,13 @@ export default function PesquisadoresPage() {
   }, [filtered]);
 
   const hasActiveFilters =
-    selectedCountries.length > 0 || selectedAreas.length > 0 || search;
+    selectedCountries.length > 0 || selectedAreas.length > 0 || search || selectedGenero !== 'todos';
 
   const clearFilters = () => {
     setSearch('');
     setSelectedCountries([]);
     setSelectedAreas([]);
+    setSelectedGenero('todos');
   };
 
   const quickAreas = [
@@ -141,6 +148,24 @@ export default function PesquisadoresPage() {
               />
             </Grid>
           </Grid>
+
+          {/* Gender filter */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              Gênero:
+            </Typography>
+            <ToggleButtonGroup
+              value={selectedGenero}
+              exclusive
+              onChange={(_, v) => { if (v !== null) setSelectedGenero(v); }}
+              size="small"
+              color="secondary"
+            >
+              <ToggleButton value="todos">Todos</ToggleButton>
+              <ToggleButton value="F">Feminino</ToggleButton>
+              <ToggleButton value="M">Masculino</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
           {/* Quick area chips */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2 }}>
