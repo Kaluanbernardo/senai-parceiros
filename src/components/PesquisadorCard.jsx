@@ -30,7 +30,8 @@ function nameToSlug(name) {
 
 function usePhotoWithFallback(nome, fallbackUrl) {
   const [stage, setStage] = React.useState(0);
-  const sources = [`/fotos/${nameToSlug(nome)}.jpg`, fallbackUrl];
+  const slug = nameToSlug(nome);
+  const sources = [`/fotos/${slug}.jpg`, `/fotos/${slug}.png`, fallbackUrl];
   const src = stage < sources.length ? sources[stage] : undefined;
   const onError = () => setStage((s) => s + 1);
   return { src, onError };
