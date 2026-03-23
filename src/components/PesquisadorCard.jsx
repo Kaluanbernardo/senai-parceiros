@@ -19,10 +19,19 @@ function getInitials(name) {
   return parts[0][0].toUpperCase();
 }
 
+function usePhotoWithFallback(id, fallbackUrl) {
+  // Try: /fotos/{id}.jpg → fallbackUrl (ui-avatars) → null (initials)
+  const [stage, setStage] = React.useState(0);
+  const sources = [`/fotos/${id}.jpg`, fallbackUrl];
+  const src = stage < sources.length ? sources[stage] : undefined;
+  const onError = () => setStage((s) => s + 1);
+  return { src, onError };
+}
+
 export default function PesquisadorCard({ item, onClick }) {
   const areas = item.areas ? item.areas.split(';').slice(0, 3) : [];
   const moreCount = item.areas ? item.areas.split(';').length - 3 : 0;
-  const [imgError, setImgError] = React.useState(false);
+  const photo = usePhotoWithFallback(item.id, item.foto);
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: 3, borderColor: 'secondary.main' }}>
@@ -30,9 +39,9 @@ export default function PesquisadorCard({ item, onClick }) {
         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
             <Avatar
-              src={!imgError && item.foto ? item.foto : undefined}
+              src={photo.src}
               alt={item.nome}
-              onError={() => setImgError(true)}
+              onError={photo.onError}
               sx={{ width: 48, height: 48, bgcolor: 'secondary.light', fontSize: 18, fontWeight: 700, flexShrink: 0 }}
             >
               {getInitials(item.nome)}

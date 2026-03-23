@@ -46,8 +46,18 @@ function getInitials(name) {
   return parts[0][0].toUpperCase();
 }
 
+function usePhotoWithFallback(id, fallbackUrl) {
+  const [stage, setStage] = React.useState(0);
+  React.useEffect(() => { setStage(0); }, [id, fallbackUrl]);
+  const sources = [`/fotos/${id}.jpg`, fallbackUrl];
+  const src = stage < sources.length ? sources[stage] : undefined;
+  const onError = () => setStage((s) => s + 1);
+  return { src, onError };
+}
+
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
   const [imgError, setImgError] = React.useState(false);
+  const pesqPhoto = usePhotoWithFallback(item?.id, item?.foto);
 
   // Reset error state when item changes
   React.useEffect(() => { setImgError(false); }, [item]);
@@ -63,8 +73,12 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
     type === 'pesquisador' ? item.instituicao : null;
 
   const imageUrl =
-    type === 'pesquisador' ? (item.foto || undefined) :
+    type === 'pesquisador' ? pesqPhoto.src :
     (item.logo || undefined);
+
+  const imageOnError =
+    type === 'pesquisador' ? pesqPhoto.onError :
+    () => setImgError(true);
 
   const initial =
     type === 'pesquisador' ? getInitials(item.nome) :
@@ -78,9 +92,9 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
       <DialogTitle sx={{ pr: 6, pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar
-            src={!imgError && imageUrl ? imageUrl : undefined}
+            src={type === 'pesquisador' ? imageUrl : (!imgError && imageUrl ? imageUrl : undefined)}
             alt={title}
-            onError={() => setImgError(true)}
+            onError={imageOnError}
             sx={{
               width: 56,
               height: 56,
