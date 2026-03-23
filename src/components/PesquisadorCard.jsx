@@ -129,7 +129,7 @@ export default function PesquisadorCard({ item, onClick }) {
               flex: 1,
               mb: 1.5,
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               lineHeight: 1.5,
