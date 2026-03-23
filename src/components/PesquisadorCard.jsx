@@ -1,6 +1,5 @@
 import React from 'react';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -8,7 +7,6 @@ import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import SchoolIcon from '@mui/icons-material/School';
 import { CountryFlag } from '../utils/countryCode';
 
@@ -20,7 +18,6 @@ function getInitials(name) {
 }
 
 function usePhotoWithFallback(id, fallbackUrl) {
-  // Try: /fotos/{id}.jpg → fallbackUrl (ui-avatars) → null (initials)
   const [stage, setStage] = React.useState(0);
   const sources = [`/fotos/${id}.jpg`, fallbackUrl];
   const src = stage < sources.length ? sources[stage] : undefined;
@@ -34,43 +31,103 @@ export default function PesquisadorCard({ item, onClick }) {
   const photo = usePhotoWithFallback(item.id, item.foto);
 
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: 3, borderColor: 'secondary.main' }}>
+    <Card sx={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      borderRadius: 2,
+      overflow: 'hidden',
+      boxShadow: 3,
+    }}>
       <CardActionArea onClick={onClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-        <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
-            <Avatar
-              src={photo.src}
-              alt={item.nome}
-              onError={photo.onError}
-              sx={{ width: 48, height: 48, bgcolor: 'secondary.light', fontSize: 18, fontWeight: 700, flexShrink: 0 }}
-            >
-              {getInitials(item.nome)}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
-                {item.nome}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.3, mt: 0.25 }}>
-                {item.instituicao}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
-                <CountryFlag pais={item.pais} size={14} />
-                <Typography variant="caption" color="text.secondary">
-                  {item.pais}
+        {/* ID Card Header Band */}
+        <Box sx={{
+          bgcolor: 'secondary.main',
+          px: 2,
+          pt: 2,
+          pb: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
+          <Avatar
+            src={photo.src}
+            alt={item.nome}
+            onError={photo.onError}
+            sx={{
+              width: 96,
+              height: 96,
+              bgcolor: 'secondary.dark',
+              fontSize: 32,
+              fontWeight: 700,
+              border: '3px solid',
+              borderColor: 'white',
+              mb: 1.5,
+              '& img': { objectFit: 'cover' },
+            }}
+          >
+            {getInitials(item.nome)}
+          </Avatar>
+        </Box>
+
+        {/* Card Body */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+          {/* Name */}
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            align="center"
+            sx={{ lineHeight: 1.3, mb: 0.25 }}
+          >
+            {item.nome}
+          </Typography>
+
+          {/* Institution */}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            align="center"
+            sx={{ lineHeight: 1.3, mb: 0.75 }}
+          >
+            {item.instituicao}
+          </Typography>
+
+          {/* Country */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, mb: 1.25 }}>
+            <CountryFlag pais={item.pais} size={14} />
+            <Typography variant="caption" color="text.secondary">
+              {item.pais}
+            </Typography>
+          </Box>
+
+          {/* Divider line */}
+          <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.25 }} />
+
+          {/* h-index badge */}
+          {item.h_index && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.25 }}>
+              <Box sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5,
+                py: 0.25,
+                bgcolor: 'secondary.50',
+                border: '1px solid',
+                borderColor: 'secondary.main',
+                borderRadius: 10,
+              }}>
+                <Typography variant="caption" fontWeight={700} color="secondary.main">
+                  h-index
+                </Typography>
+                <Typography variant="caption" fontWeight={900} color="secondary.main">
+                  {item.h_index}
                 </Typography>
               </Box>
             </Box>
-          </Box>
-
-          {item.h_index && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-              <FormatQuoteIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
-              <Typography variant="caption" fontWeight={600} color="secondary.main">
-                h-index: {item.h_index}
-              </Typography>
-            </Box>
           )}
 
+          {/* Research summary */}
           <Typography
             variant="body2"
             color="text.secondary"
@@ -82,11 +139,13 @@ export default function PesquisadorCard({ item, onClick }) {
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               lineHeight: 1.5,
+              fontSize: '0.8rem',
             }}
           >
             {item.pesquisa}
           </Typography>
 
+          {/* Footer: chips + scholar link */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 'auto' }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, flex: 1 }}>
               {areas.map((area, i) => (
@@ -96,7 +155,7 @@ export default function PesquisadorCard({ item, onClick }) {
                   size="small"
                   variant="outlined"
                   color="secondary"
-                  sx={{ fontSize: '0.7rem', height: 24 }}
+                  sx={{ fontSize: '0.68rem', height: 22 }}
                 />
               ))}
               {moreCount > 0 && (
@@ -104,7 +163,7 @@ export default function PesquisadorCard({ item, onClick }) {
                   label={`+${moreCount}`}
                   size="small"
                   variant="outlined"
-                  sx={{ fontSize: '0.7rem', height: 24 }}
+                  sx={{ fontSize: '0.68rem', height: 22 }}
                 />
               )}
             </Box>
@@ -117,14 +176,14 @@ export default function PesquisadorCard({ item, onClick }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  sx={{ color: 'secondary.main', flexShrink: 0 }}
+                  sx={{ color: 'secondary.main', flexShrink: 0, ml: 0.5 }}
                 >
                   <SchoolIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
           </Box>
-        </CardContent>
+        </Box>
       </CardActionArea>
     </Card>
   );
