@@ -46,10 +46,15 @@ function getInitials(name) {
   return parts[0][0].toUpperCase();
 }
 
-function usePhotoWithFallback(id, fallbackUrl) {
+function nameToSlug(name) {
+  if (!name) return '';
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+function usePhotoWithFallback(nome, fallbackUrl) {
   const [stage, setStage] = React.useState(0);
-  React.useEffect(() => { setStage(0); }, [id, fallbackUrl]);
-  const sources = [`/fotos/${id}.jpg`, fallbackUrl];
+  React.useEffect(() => { setStage(0); }, [nome, fallbackUrl]);
+  const sources = [`/fotos/${nameToSlug(nome)}.jpg`, fallbackUrl];
   const src = stage < sources.length ? sources[stage] : undefined;
   const onError = () => setStage((s) => s + 1);
   return { src, onError };
@@ -57,7 +62,7 @@ function usePhotoWithFallback(id, fallbackUrl) {
 
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
   const [imgError, setImgError] = React.useState(false);
-  const pesqPhoto = usePhotoWithFallback(item?.id, item?.foto);
+  const pesqPhoto = usePhotoWithFallback(item?.nome, item?.foto);
 
   // Reset error state when item changes
   React.useEffect(() => { setImgError(false); }, [item]);

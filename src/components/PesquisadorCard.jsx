@@ -17,9 +17,14 @@ function getInitials(name) {
   return parts[0][0].toUpperCase();
 }
 
-function usePhotoWithFallback(id, fallbackUrl) {
+function nameToSlug(name) {
+  if (!name) return '';
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+function usePhotoWithFallback(nome, fallbackUrl) {
   const [stage, setStage] = React.useState(0);
-  const sources = [`/fotos/${id}.jpg`, fallbackUrl];
+  const sources = [`/fotos/${nameToSlug(nome)}.jpg`, fallbackUrl];
   const src = stage < sources.length ? sources[stage] : undefined;
   const onError = () => setStage((s) => s + 1);
   return { src, onError };
@@ -28,7 +33,7 @@ function usePhotoWithFallback(id, fallbackUrl) {
 export default function PesquisadorCard({ item, onClick }) {
   const areas = item.areas ? item.areas.split(';').slice(0, 3) : [];
   const moreCount = item.areas ? item.areas.split(';').length - 3 : 0;
-  const photo = usePhotoWithFallback(item.id, item.foto);
+  const photo = usePhotoWithFallback(item.nome, item.foto);
 
   return (
     <Card sx={{
