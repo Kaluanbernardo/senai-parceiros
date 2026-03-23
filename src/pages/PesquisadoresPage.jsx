@@ -88,12 +88,6 @@ export default function PesquisadoresPage() {
     setSelectedGenero('todos');
   };
 
-  const quickAreas = [
-    'Pedagogia VET', 'Aprendizagem', 'Competencias', 'Economia VET',
-    'TVET Verde', 'Industria 4.0', 'Politica VET', 'Formacao Docente',
-    'Empregabilidade', 'Sistemas VET Comparados',
-  ];
-
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
       {/* Header */}
@@ -147,8 +141,8 @@ export default function PesquisadoresPage() {
             </Grid>
           </Grid>
 
-          {/* Gender filter + Quick area chips */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2, alignItems: 'center' }}>
+          {/* Gender filter */}
+          <Box sx={{ display: 'flex', gap: 0.75, mt: 2 }}>
             {[
               { label: 'Todos', value: 'todos' },
               { label: 'Feminino', value: 'F' },
@@ -163,25 +157,6 @@ export default function PesquisadoresPage() {
                   variant={isActive ? 'filled' : 'outlined'}
                   color={isActive ? 'primary' : 'default'}
                   onClick={() => setSelectedGenero(value)}
-                  sx={{ cursor: 'pointer' }}
-                />
-              );
-            })}
-            <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 0.5 }} />
-            {quickAreas.map((area) => {
-              const isActive = selectedAreas.includes(area);
-              return (
-                <Chip
-                  key={area}
-                  label={area}
-                  size="small"
-                  variant={isActive ? 'filled' : 'outlined'}
-                  color={isActive ? 'secondary' : 'default'}
-                  onClick={() => {
-                    setSelectedAreas((prev) =>
-                      isActive ? prev.filter((a) => a !== area) : [...prev, area]
-                    );
-                  }}
                   sx={{ cursor: 'pointer' }}
                 />
               );
