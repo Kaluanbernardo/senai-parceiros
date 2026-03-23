@@ -11,8 +11,6 @@ import IconButton from '@mui/material/IconButton';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 import Button from '@mui/material/Button';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import SearchBar from '../components/SearchBar';
 import StatsBar from '../components/StatsBar';
 import PesquisadorCard from '../components/PesquisadorCard';
@@ -149,26 +147,27 @@ export default function PesquisadoresPage() {
             </Grid>
           </Grid>
 
-          {/* Gender filter */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600}>
-              Gênero:
-            </Typography>
-            <ToggleButtonGroup
-              value={selectedGenero}
-              exclusive
-              onChange={(_, v) => { if (v !== null) setSelectedGenero(v); }}
-              size="small"
-              color="secondary"
-            >
-              <ToggleButton value="todos">Todos</ToggleButton>
-              <ToggleButton value="F">Feminino</ToggleButton>
-              <ToggleButton value="M">Masculino</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-
-          {/* Quick area chips */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2 }}>
+          {/* Gender filter + Quick area chips */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2, alignItems: 'center' }}>
+            {[
+              { label: 'Todos', value: 'todos' },
+              { label: 'Feminino', value: 'F' },
+              { label: 'Masculino', value: 'M' },
+            ].map(({ label, value }) => {
+              const isActive = selectedGenero === value;
+              return (
+                <Chip
+                  key={value}
+                  label={label}
+                  size="small"
+                  variant={isActive ? 'filled' : 'outlined'}
+                  color={isActive ? 'primary' : 'default'}
+                  onClick={() => setSelectedGenero(value)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              );
+            })}
+            <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 0.5 }} />
             {quickAreas.map((area) => {
               const isActive = selectedAreas.includes(area);
               return (
