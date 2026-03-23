@@ -37,95 +37,78 @@ export default function PesquisadorCard({ item, onClick }) {
       flexDirection: 'column',
       borderRadius: 2,
       overflow: 'hidden',
-      boxShadow: 3,
+      boxShadow: 2,
     }}>
+      {/* Thin top stripe */}
+      <Box sx={{ height: 6, bgcolor: 'secondary.main', flexShrink: 0 }} />
+
       <CardActionArea onClick={onClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-        {/* ID Card Header Band */}
-        <Box sx={{
-          bgcolor: 'secondary.main',
-          px: 2,
-          pt: 2,
-          pb: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-          <Avatar
-            src={photo.src}
-            alt={item.nome}
-            onError={photo.onError}
-            sx={{
-              width: 96,
-              height: 96,
-              bgcolor: 'secondary.dark',
-              fontSize: 32,
-              fontWeight: 700,
-              border: '3px solid',
-              borderColor: 'white',
-              mb: 1.5,
-              '& img': { objectFit: 'cover' },
-            }}
-          >
-            {getInitials(item.nome)}
-          </Avatar>
-        </Box>
-
-        {/* Card Body */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
-          {/* Name */}
-          <Typography
-            variant="subtitle1"
-            fontWeight={700}
-            align="center"
-            sx={{ lineHeight: 1.3, mb: 0.25 }}
-          >
-            {item.nome}
-          </Typography>
 
-          {/* Institution */}
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            align="center"
-            sx={{ lineHeight: 1.3, mb: 0.75 }}
-          >
-            {item.instituicao}
-          </Typography>
-
-          {/* Country */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, mb: 1.25 }}>
-            <CountryFlag pais={item.pais} size={14} />
-            <Typography variant="caption" color="text.secondary">
-              {item.pais}
-            </Typography>
-          </Box>
-
-          {/* Divider line */}
-          <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.25 }} />
-
-          {/* h-index badge */}
-          {item.h_index && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.25 }}>
-              <Box sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.5,
-                px: 1.5,
-                py: 0.25,
-                bgcolor: 'secondary.50',
+          {/* Top section: photo left + identity right */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
+            {/* Photo */}
+            <Avatar
+              src={photo.src}
+              alt={item.nome}
+              onError={photo.onError}
+              sx={{
+                width: 80,
+                height: 96,
+                borderRadius: 1.5,
+                bgcolor: 'secondary.light',
+                fontSize: 26,
+                fontWeight: 700,
+                flexShrink: 0,
                 border: '1px solid',
-                borderColor: 'secondary.main',
-                borderRadius: 10,
-              }}>
-                <Typography variant="caption" fontWeight={700} color="secondary.main">
-                  h-index
-                </Typography>
-                <Typography variant="caption" fontWeight={900} color="secondary.main">
-                  {item.h_index}
+                borderColor: 'grey.200',
+                '& img': { objectFit: 'cover' },
+              }}
+            >
+              {getInitials(item.nome)}
+            </Avatar>
+
+            {/* Identity info */}
+            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.8, lineHeight: 1 }}>
+                Pesquisador EPT
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3, mt: 0.5 }}>
+                {item.nome}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.3, mt: 0.25 }}>
+                {item.instituicao}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5 }}>
+                <CountryFlag pais={item.pais} size={13} />
+                <Typography variant="caption" color="text.secondary">
+                  {item.pais}
                 </Typography>
               </Box>
+              {item.h_index && (
+                <Box sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  mt: 0.75,
+                  px: 1,
+                  py: 0.2,
+                  bgcolor: 'grey.100',
+                  border: '1px solid',
+                  borderColor: 'secondary.main',
+                  borderRadius: 10,
+                  alignSelf: 'flex-start',
+                }}>
+                  <Typography variant="caption" fontWeight={700} color="secondary.main">
+                    h-index {item.h_index}
+                  </Typography>
+                </Box>
+              )}
             </Box>
-          )}
+          </Box>
+
+          {/* Divider */}
+          <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.5 }} />
 
           {/* Research summary */}
           <Typography
