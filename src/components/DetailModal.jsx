@@ -31,6 +31,14 @@ const naturezaColor = {
   'PPP': 'success',
 };
 
+const profileLabels = {
+  scholar: 'Google Scholar',
+  lattes: 'Lattes / CNPq',
+  orcid: 'ORCID',
+  researchgate: 'ResearchGate',
+  academia: 'Academia.edu',
+};
+
 function getInitials(name) {
   if (!name) return '?';
   const parts = name.split(' ').filter(Boolean);
@@ -142,7 +150,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Google Scholar
+                {profileLabels[item.profileType] || 'Perfil Acadêmico'}
               </Button>
             )}
           </Box>

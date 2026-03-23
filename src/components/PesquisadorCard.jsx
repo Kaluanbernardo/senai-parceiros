@@ -100,7 +100,7 @@ export default function PesquisadorCard({ item, onClick }) {
               )}
             </Box>
             {item.scholar && (
-              <Tooltip title="Google Scholar">
+              <Tooltip title={{ scholar: 'Google Scholar', lattes: 'Lattes / CNPq', orcid: 'ORCID', researchgate: 'ResearchGate', academia: 'Academia.edu' }[item.profileType] || 'Perfil Acadêmico'}>
                 <IconButton
                   size="small"
                   component="a"
