@@ -17,6 +17,12 @@ function getInitials(name) {
   return parts[0][0].toUpperCase();
 }
 
+function summarize(text, maxSentences = 2) {
+  if (!text) return '';
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  return sentences.slice(0, maxSentences).join(' ').trim();
+}
+
 function nameToSlug(name) {
   if (!name) return '';
   return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -115,7 +121,7 @@ export default function PesquisadorCard({ item, onClick }) {
           {/* Divider */}
           <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.5 }} />
 
-          {/* Research summary */}
+          {/* Research summary (first 2 sentences as self-contained preview) */}
           <Typography
             variant="body2"
             color="text.secondary"
@@ -123,14 +129,14 @@ export default function PesquisadorCard({ item, onClick }) {
               flex: 1,
               mb: 1.5,
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               lineHeight: 1.5,
               fontSize: '0.8rem',
             }}
           >
-            {item.pesquisa}
+            {summarize(item.pesquisa)}
           </Typography>
 
           {/* Footer: chips + scholar link */}
