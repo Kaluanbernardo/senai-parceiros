@@ -15,77 +15,104 @@ import OrgCard from '../components/OrgCard';
 import DetailModal from '../components/DetailModal';
 import { useData } from '../context/DataContext';
 
-const CATEGORIA_LABELS = {
-  'Empresa': 'Empresas privadas',
-  'Pública/PPP': 'Públicas e público-privadas',
-  'Terceiro setor': 'Terceiro setor',
-};
+function extractUniqueAreas(items) {
+  const set = new Set();
+  items.forEach((item) => {
+    if (!item.areas) return;
+    item.areas.split(';').forEach((a) => {
+      const clean = a.trim().replace(/\(.*\)/, '').trim();
+      if (clean) set.add(clean);
+    });
+  });
+  return [...set].sort();
+}
 
-export default function OrganizacoesPage() {
-  const { stakeholders: stakeholdersData } = useData();
+const QUICK_AREAS = [
+  'Engenharia', 'TI', 'Saúde', 'Manufatura', 'Construção Civil',
+  'Mecânica', 'Automotivo', 'Energia', 'Agropecuária', 'Gestão', 'Multissetorial',
+];
+
+export default function EscolasUnificadaPage() {
+  const { stakeholders: stakeholdersData, escolas: escolasData } = useData();
   const [search, setSearch] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
-  const [selectedCategorias, setSelectedCategorias] = useState([]);
+  const [selectedAreas, setSelectedAreas] = useState([]);
   const [showFilters, setShowFilters] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const allOrgs = useMemo(() => {
-    return stakeholdersData
-      .filter((item) => item.categoria !== 'Escola')
-      .map((item) => ({
+  const allEscolas = useMemo(() => {
+    const orgs = [];
+    for (const item of stakeholdersData) {
+      if (item.categoria !== 'Escola') continue;
+      orgs.push({
         id: `s-${item.id}`,
         nome: item.nome,
         descricao: item.diferencial,
         pais: item.pais,
         logo: item.logo,
         website: item.website,
-        categoria: item.categoria || 'Pública/PPP',
+        categoria: 'Escola',
         areas: null,
         hasPartnership: !!(item.relacao && !item.relacao.includes('Sem registro')),
         _type: 'stakeholder',
         _original: item,
-      }));
-  }, [stakeholdersData]);
+      });
+    }
+    for (const item of escolasData) {
+      orgs.push({
+        id: `e-${item.id}`,
+        nome: item.instituicao,
+        descricao: item.relevancia,
+        pais: item.pais,
+        logo: item.logo,
+        website: item.website,
+        categoria: 'Escola',
+        areas: item.areas,
+        hasPartnership: false,
+        _type: 'escola',
+        _original: item,
+      });
+    }
+    return orgs;
+  }, [stakeholdersData, escolasData]);
 
   const allCountries = useMemo(() => {
-    const set = new Set(allOrgs.map((o) => o.pais).filter(Boolean));
+    const set = new Set(allEscolas.map((o) => o.pais).filter(Boolean));
     return [...set].sort();
-  }, [allOrgs]);
+  }, [allEscolas]);
+
+  const allAreas = useMemo(() => extractUniqueAreas(allEscolas), [allEscolas]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return allOrgs.filter((item) => {
+    return allEscolas.filter((item) => {
       const matchSearch =
         !q ||
         item.nome.toLowerCase().includes(q) ||
         (item.descricao && item.descricao.toLowerCase().includes(q)) ||
-        (item.pais && item.pais.toLowerCase().includes(q));
+        (item.pais && item.pais.toLowerCase().includes(q)) ||
+        (item.areas && item.areas.toLowerCase().includes(q));
       const matchCountry =
         selectedCountries.length === 0 || selectedCountries.includes(item.pais);
-      const matchCat =
-        selectedCategorias.length === 0 || selectedCategorias.includes(item.categoria);
-      return matchSearch && matchCountry && matchCat;
+      const matchArea =
+        selectedAreas.length === 0 ||
+        selectedAreas.some((area) => item.areas && item.areas.toLowerCase().includes(area.toLowerCase()));
+      return matchSearch && matchCountry && matchArea;
     });
-  }, [allOrgs, search, selectedCountries, selectedCategorias]);
+  }, [allEscolas, search, selectedCountries, selectedAreas]);
 
-  const hasActiveFilters = selectedCountries.length > 0 || selectedCategorias.length > 0 || !!search;
+  const hasActiveFilters = selectedCountries.length > 0 || selectedAreas.length > 0 || !!search;
   const clearFilters = () => {
     setSearch('');
     setSelectedCountries([]);
-    setSelectedCategorias([]);
-  };
-
-  const toggleCategoria = (key) => {
-    setSelectedCategorias((prev) =>
-      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key]
-    );
+    setSelectedAreas([]);
   };
 
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Organizações Parceiras
+          Escolas &amp; Institutos
         </Typography>
         <IconButton onClick={() => setShowFilters((v) => !v)} color="primary">
           <FilterListIcon />
@@ -107,10 +134,10 @@ export default function OrganizacoesPage() {
               <SearchBar
                 value={search}
                 onChange={setSearch}
-                placeholder="Buscar por nome, país..."
+                placeholder="Buscar por nome, área ou país..."
               />
             </Box>
-            <Box sx={{ minWidth: 220 }}>
+            <Box sx={{ minWidth: 200 }}>
               <Autocomplete
                 multiple
                 size="small"
@@ -118,24 +145,41 @@ export default function OrganizacoesPage() {
                 value={selectedCountries}
                 onChange={(_, v) => setSelectedCountries(v)}
                 renderInput={(params) => (
-                  <TextField {...params} label="País / Região" variant="outlined" />
+                  <TextField {...params} label="País" variant="outlined" />
+                )}
+                limitTags={2}
+              />
+            </Box>
+            <Box sx={{ minWidth: 220 }}>
+              <Autocomplete
+                multiple
+                size="small"
+                options={allAreas}
+                value={selectedAreas}
+                onChange={(_, v) => setSelectedAreas(v)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Área de Atuação" variant="outlined" />
                 )}
                 limitTags={2}
               />
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-            {Object.entries(CATEGORIA_LABELS).map(([key, label]) => {
-              const active = selectedCategorias.includes(key);
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+            {QUICK_AREAS.map((area) => {
+              const active = selectedAreas.includes(area);
               return (
                 <Chip
-                  key={key}
-                  label={label}
+                  key={area}
+                  label={area}
                   size="small"
                   variant={active ? 'filled' : 'outlined'}
                   color={active ? 'primary' : 'default'}
-                  onClick={() => toggleCategoria(key)}
+                  onClick={() =>
+                    setSelectedAreas((prev) =>
+                      active ? prev.filter((a) => a !== area) : [...prev, area]
+                    )
+                  }
                   sx={{ cursor: 'pointer' }}
                 />
               );
@@ -150,7 +194,7 @@ export default function OrganizacoesPage() {
       </Collapse>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {filtered.length} de {allOrgs.length} organizações
+        {filtered.length} de {allEscolas.length} escolas e institutos
       </Typography>
 
       <Grid container spacing={2}>
@@ -164,7 +208,7 @@ export default function OrganizacoesPage() {
       {filtered.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            Nenhuma organização encontrada
+            Nenhuma escola encontrada
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Tente ajustar os filtros ou a busca

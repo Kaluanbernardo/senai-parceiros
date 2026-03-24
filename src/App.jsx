@@ -9,10 +9,12 @@ import Tab from '@mui/material/Tab';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import SchoolIcon from '@mui/icons-material/School';
 import PublicIcon from '@mui/icons-material/Public';
 import ScienceIcon from '@mui/icons-material/Science';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import OrganizacoesPage from './pages/OrganizacoesPage';
+import EscolasUnificadaPage from './pages/EscolasUnificadaPage';
 import PesquisadoresPage from './pages/PesquisadoresPage';
 import AdminPage from './pages/AdminPage';
 
@@ -46,13 +48,15 @@ function MainView() {
           }}
         >
           <Tab icon={<AccountBalanceIcon />} iconPosition="start" label="Organizações" />
+          <Tab icon={<SchoolIcon />} iconPosition="start" label="Escolas" />
           <Tab icon={<ScienceIcon />} iconPosition="start" label="Pesquisadores" />
         </Tabs>
       </AppBar>
 
       <Box sx={{ flex: 1, bgcolor: 'background.default' }}>
         {tab === 0 && <OrganizacoesPage />}
-        {tab === 1 && <PesquisadoresPage />}
+        {tab === 1 && <EscolasUnificadaPage />}
+        {tab === 2 && <PesquisadoresPage />}
       </Box>
 
       <Box
