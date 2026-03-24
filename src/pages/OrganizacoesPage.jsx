@@ -70,7 +70,7 @@ export default function OrganizacoesPage() {
       const matchPartnership = !onlyPartnership || item.hasPartnership;
       return matchSearch && matchCountry && matchCat && matchPartnership;
     });
-  }, [allOrgs, search, selectedCountries, selectedCategorias]);
+  }, [allOrgs, search, selectedCountries, selectedCategorias, onlyPartnership]);
 
   const hasActiveFilters = selectedCountries.length > 0 || selectedCategorias.length > 0 || onlyPartnership || !!search;
   const clearFilters = () => {
