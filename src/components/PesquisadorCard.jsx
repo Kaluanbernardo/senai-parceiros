@@ -122,7 +122,7 @@ export default function PesquisadorCard({ item, onClick }) {
           {/* Divider */}
           <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.5 }} />
 
-          {/* Research summary (first 2 sentences as self-contained preview) */}
+          {/* Research summary preview (miniBio field, max 4 lines) */}
           <Typography
             variant="body2"
             color="text.secondary"
@@ -137,7 +137,7 @@ export default function PesquisadorCard({ item, onClick }) {
               fontSize: '0.8rem',
             }}
           >
-            {summarize(item.pesquisa)}
+            {item.miniBio || summarize(item.pesquisa)}
           </Typography>
 
           {/* Footer: chips + scholar link */}

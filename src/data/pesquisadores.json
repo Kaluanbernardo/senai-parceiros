@@ -10,7 +10,8 @@
     "scholar": "https://lattes.cnpq.br/1240227827563843",
     "foto": "https://ui-avatars.com/api/?name=Acacia+Kuenzer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "lattes",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Referência central no campo Trabalho-Educação no Brasil, com mais de quatro décadas de produção acadêmica."
   },
   {
     "id": 2,
@@ -23,7 +24,8 @@
     "scholar": "https://scholar.google.com/citations?user=CHDL_7sAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Agus+Setiawan&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor titular da Universidade Pendidikan Indonesia (UPI), é referência em educação técnica e vocacional na Indonésia."
   },
   {
     "id": 3,
@@ -36,7 +38,8 @@
     "scholar": "https://scholar.google.com/citations?user=PUA4B6EAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Alison+Fuller&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora emérita do UCL Institute of Education, é uma das pesquisadoras mais influentes em aprendizagem no local de trabalho no Reino Unido."
   },
   {
     "id": 4,
@@ -49,7 +52,8 @@
     "scholar": "https://scholar.google.com/citations?user=Po8dlz0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Andy+Green&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito do UCL Institute of Education, é um dos principais teóricos em educação comparada e sistemas de competências no mundo."
   },
   {
     "id": 5,
@@ -62,7 +66,8 @@
     "scholar": "https://www.researchgate.net/profile/Anja-Heikkinen",
     "foto": "https://ui-avatars.com/api/?name=Anja+Heikkinen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Universidade de Tampere, é especialista em história da educação de adultos e educação vocacional nos países nórdicos."
   },
   {
     "id": 6,
@@ -75,7 +80,8 @@
     "scholar": "https://scholar.google.com/citations?user=l6m5KpIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Anna+Lichtwarck-Aschoff&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Psicóloga do desenvolvimento na Universidade de Groningen, com formação na Radboud University."
   },
   {
     "id": 7,
@@ -88,7 +94,8 @@
     "scholar": "https://www.researchgate.net/profile/Antje-Barabasch",
     "foto": "https://ui-avatars.com/api/?name=Antje+Barabasch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora e pesquisadora do Instituto Federal Suíço de Educação e Formação Profissional (SFUVET), é especialista em criatividade e inovação na educação vocacional."
   },
   {
     "id": 8,
@@ -101,7 +108,8 @@
     "scholar": "https://scholar.google.com/citations?user=Ex3L2KgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ashwani+Aggarwal&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Especialista sênior da Organização Internacional do Trabalho (OIT/ILO) em Genebra, é referência global em sistemas de aprendizagem profissional (apprenticeship)."
   },
   {
     "id": 9,
@@ -114,7 +122,8 @@
     "scholar": "https://www.researchgate.net/profile/Borhene-Chakroun",
     "foto": "https://ui-avatars.com/api/?name=Borhene+Chakroun&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Diretor da Divisão de Políticas e Sistemas de Aprendizagem ao Longo da Vida da UNESCO, é um dos formuladores mais influentes de políticas globais de educação e competências."
   },
   {
     "id": 10,
@@ -127,7 +136,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Cecilia+Nylund&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Pesquisadora da Universidade de Melbourne especializada em políticas de educação vocacional e tracking educacional na Austrália e Escandinávia."
   },
   {
     "id": 11,
@@ -140,7 +150,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Charity+Kome&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Analista do Centro de Competências da OCDE, contribuiu para publicações de referência sobre professores e líderes em educação vocacional e profissional."
   },
   {
     "id": 12,
@@ -153,7 +164,8 @@
     "scholar": "https://scholar.google.com/citations?user=HzzQwRkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Chee+Sern+Lai&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Editor-chefe do periódico TVET@Asia e professor da Universiti Tun Hussein Onn Malaysia (UTHM), é referência em formação de instrutores na Malásia e Sudeste Asiático."
   },
   {
     "id": 13,
@@ -166,7 +178,8 @@
     "scholar": "https://scholar.google.com/citations?user=aL2Mt2kAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christian+H.+Jørgensen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Roskilde University na Dinamarca, é especialista em transições educação-trabalho e modelos híbridos de VET nos países nórdicos."
   },
   {
     "id": 14,
@@ -179,7 +192,8 @@
     "scholar": "https://scholar.google.com/citations?user=mGGvwaQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christopher+Brockmann&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador da Canterbury Christ Church University, com foco em governança e equidade em sistemas de educação vocacional na Europa."
   },
   {
     "id": 15,
@@ -192,7 +206,8 @@
     "scholar": "https://scholar.google.com/citations?user=W6rzXG4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor do King's College London, é um dos principais filósofos da educação profissional no mundo."
   },
   {
     "id": 16,
@@ -205,7 +220,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Christopher Winch (ID 15)."
   },
   {
     "id": 17,
@@ -218,7 +234,8 @@
     "scholar": "https://scholar.google.com/citations?user=p-Z3Fk4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Claudia+Jacinto&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Pesquisadora do IDES/CONICET na Argentina, é a principal referência latino-americana em sociologia das transições juvenis e políticas de formação profissional."
   },
   {
     "id": 18,
@@ -231,7 +248,8 @@
     "scholar": "https://independent.academia.edu/ClaudioDeMouraCastro",
     "foto": "https://ui-avatars.com/api/?name=Claudio+de+Moura+Castro&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador independente e ex-consultor do Banco Mundial, é um dos defensores mais influentes do ensino técnico na América Latina."
   },
   {
     "id": 19,
@@ -244,7 +262,8 @@
     "scholar": "https://scholar.google.com/citations?user=3YqXgYAAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Daniel+Pittich&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor assistente de Educação Técnica na TU Munich (Escola de Ciências Sociais e Tecnologia), com formação original como carpinteiro antes de seguir carreira acadêmica."
   },
   {
     "id": 20,
@@ -257,7 +276,8 @@
     "scholar": "https://www.researchgate.net/profile/David-Ashton-2",
     "foto": "https://ui-avatars.com/api/?name=David+Ashton&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Sociólogo da Universidade de Leicester, é pioneiro nos estudos sobre 'high skills societies' e sistemas de alto desempenho no trabalho. Com mais de 6."
   },
   {
     "id": 21,
@@ -270,7 +290,8 @@
     "scholar": "https://scholar.google.com/citations?user=GuJUyd8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=David+James&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Cardiff University no País de Gales, é especialista em identidade docente e culturas de aprendizagem em colleges de Further Education no Reino Unido."
   },
   {
     "id": 22,
@@ -283,7 +304,8 @@
     "scholar": "https://scholar.google.com/citations?user=BNgrPlMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora e pesquisadora líder na HU University of Applied Sciences Utrecht, é referência em pedagogia vocacional nos Países Baixos."
   },
   {
     "id": 23,
@@ -296,7 +318,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Elly de Bruijn (ID 22)."
   },
   {
     "id": 24,
@@ -309,7 +332,8 @@
     "scholar": "https://scholar.google.com/citations?user=hV_fBDMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Eric+Verdier&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador do CEREQ/CNRS na França, é um dos principais teóricos dos 'regimes de formação' na tradição sociológica francesa."
   },
   {
     "id": 25,
@@ -322,7 +346,8 @@
     "scholar": "https://scholar.google.com/citations?user=frFQOEsAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Erica+Smith&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Federation University Australia, é especialista na força de trabalho docente de educação vocacional e qualidade do ensino."
   },
   {
     "id": 26,
@@ -335,7 +360,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Eunsang+Cho&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador do KRIVET (Instituto Coreano de Pesquisa em Educação Vocacional e Treinamento), é especialista em sistemas de qualificação nacional e garantia de qualidade na Coreia do Sul."
   },
   {
     "id": 27,
@@ -348,7 +374,8 @@
     "scholar": "https://www.researchgate.net/profile/Ewart-Keep-2",
     "foto": "https://ui-avatars.com/api/?name=Ewart+Keep&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito da Universidade de Oxford e pesquisador do SKOPE (Centre on Skills, Knowledge and Organisational Performance), é um dos críticos mais influentes das políticas de competências no mundo anglo-saxão."
   },
   {
     "id": 28,
@@ -361,7 +388,8 @@
     "scholar": "https://orcid.org/0000-0002-9957-3209",
     "foto": "https://ui-avatars.com/api/?name=Felix+Breyer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador com foco em inovação e digitalização na educação vocacional nos países nórdicos."
   },
   {
     "id": 29,
@@ -374,7 +402,8 @@
     "scholar": "https://scholar.google.com/citations?user=jD5wj4oAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Felix+Rauner&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito da Universidade de Bremen, é o criador do modelo COMET para medição de competência profissional em larga escala."
   },
   {
     "id": 30,
@@ -387,7 +416,8 @@
     "scholar": "https://scholar.google.com/citations?user=JNd4jmIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Frank+Agbola&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor de Economia na Universidade de Newcastle, Austrália, com mais de 120 produções científicas e 67 artigos em periódicos de alto impacto."
   },
   {
     "id": 31,
@@ -400,7 +430,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Frank+Bünte&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador da Hochschule Ruhr West (Universidade de Ciências Aplicadas de Ruhr Oeste) na Alemanha, com foco em sistemas de garantia de qualidade na educação vocacional."
   },
   {
     "id": 32,
@@ -413,7 +444,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Friedrich+Hubert+Esser&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Presidente do BIBB (Instituto Federal de Educação e Formação Profissional da Alemanha), é o principal gestor estratégico do sistema dual alemão."
   },
   {
     "id": 33,
@@ -426,7 +458,8 @@
     "scholar": "http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4780705Y6",
     "foto": "https://ui-avatars.com/api/?name=Gaudêncio+Frigotto&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "lattes",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito da UERJ, é o principal teórico crítico da educação profissional na América Latina."
   },
   {
     "id": 34,
@@ -439,7 +472,8 @@
     "scholar": "https://uni-bremen.academia.edu/GeorgSp%C3%B6ttl",
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Bremen, é especialista em currículos baseados em processos de trabalho reais e na adaptação da formação profissional às demandas da manufatura avançada."
   },
   {
     "id": 35,
@@ -452,7 +486,8 @@
     "scholar": "https://uni-bremen.academia.edu/GeorgSp%C3%B6ttl",
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Georg Spöttl (ID 34)."
   },
   {
     "id": 36,
@@ -465,7 +500,8 @@
     "scholar": "https://scholar.google.com/citations?user=DpLQXpMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Geraint+Johnes&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor de Economia na Lancaster University Management School, é especialista em economia do trabalho e economia da educação."
   },
   {
     "id": 37,
@@ -478,7 +514,8 @@
     "scholar": "https://scholar.google.com/citations?user=GWS7UF0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Fontys University of Applied Sciences nos Países Baixos, é um dos pesquisadores mais citados em clusters bibliométricos sobre educação vocacional."
   },
   {
     "id": 38,
@@ -491,7 +528,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Harmen Schaap (ID 37)."
   },
   {
     "id": 39,
@@ -504,7 +542,8 @@
     "scholar": "https://www.researchgate.net/profile/Helen-Jossberger",
     "foto": "https://ui-avatars.com/api/?name=Helen+Jossberger&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora assistente na Universidade de Regensburg, Alemanha, especializada em aprendizagem autodirigida e autorregulada em contextos de educação vocacional."
   },
   {
     "id": 40,
@@ -517,7 +556,8 @@
     "scholar": "https://www.researchgate.net/scientific-contributions/Hubert-Ertl-2011030832",
     "foto": "https://ui-avatars.com/api/?name=Hubert+Ertl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Diretor de pesquisa do BIBB (Instituto Federal de Educação e Formação Profissional) e professor da Universidade de Paderborn, é especialista em permeabilidade entre educação vocacional e ensino superior na Alemanha."
   },
   {
     "id": 41,
@@ -530,7 +570,8 @@
     "scholar": "https://scholar.google.com/citations?user=T8anQvgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ian+Hardy&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor associado da School of Education na Universidade de Queensland, investiga políticas educacionais e suas manifestações em contextos institucionais. Com mais de 7."
   },
   {
     "id": 42,
@@ -543,7 +584,8 @@
     "scholar": "https://scholar.google.com/citations?user=6AmOSQUAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Isak+Froumin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da HSE University (Moscou), é referência em análise dos sistemas educacionais pós-soviéticos e suas transformações."
   },
   {
     "id": 43,
@@ -556,7 +598,8 @@
     "scholar": "https://scholar.google.com/citations?user=3VoLLcgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=James+Avis&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Derby, é um dos principais teóricos críticos da educação vocacional no mundo anglófono."
   },
   {
     "id": 44,
@@ -569,7 +612,8 @@
     "scholar": "https://www.researchgate.net/profile/James-Iii-2",
     "foto": "https://ui-avatars.com/api/?name=James+Stone+III&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Diretor do National Research Center for Career and Technical Education (NRCCTE) e pesquisador do SREB nos Estados Unidos, é referência em pesquisa aplicada sobre Career and Technical Education (CTE)."
   },
   {
     "id": 45,
@@ -582,7 +626,8 @@
     "scholar": "https://scholar.google.com/citations?user=rJKzif8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Jimena+Hernández-Fernández&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Pesquisadora da Universidad Iberoamericana no México, é especialista na implementação do modelo de formação dual mexicano e seu impacto na empregabilidade juvenil."
   },
   {
     "id": 46,
@@ -595,7 +640,8 @@
     "scholar": "https://scholar.google.com/citations?user=jAvrvgEAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Johnny+Sung&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor honorário da Universidade de Oxford e ex-diretor do Centre for Skills, Performance and Productivity no Institute for Adult Learning de Singapura."
   },
   {
     "id": 47,
@@ -608,7 +654,8 @@
     "scholar": "https://scholar.google.com/citations?user=MWkMNAUAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Vrije Universiteit Amsterdam, é referência internacional em psicologia de carreiras e transições escola-trabalho."
   },
   {
     "id": 48,
@@ -621,7 +668,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Jos Akkermans (ID 47)."
   },
   {
     "id": 49,
@@ -634,7 +682,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Josiane+Paddeu&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Pesquisadora do CEREQ (Centro de Estudos e Pesquisas sobre Qualificações) na França, é especialista em competências transversais e soft skills no sistema de formação profissional francês."
   },
   {
     "id": 50,
@@ -647,7 +696,8 @@
     "scholar": "https://scholar.google.com/citations?user=qwCOtuQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Joy+Papier&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Universidade de Western Cape na África do Sul, é referência em formação e profissionalização de professores de TVET em contextos africanos."
   },
   {
     "id": 51,
@@ -660,7 +710,8 @@
     "scholar": "https://scholar.google.com/citations?user=WB0gmGwAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Karen+Evans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora emérita do UCL Institute of Education, é criadora do conceito de 'bounded agency' (agência limitada) aplicado a transições de vida e trabalho."
   },
   {
     "id": 52,
@@ -673,7 +724,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Kevin+Hollenbeck&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador sênior do W. E."
   },
   {
     "id": 53,
@@ -686,7 +738,8 @@
     "scholar": "https://scholar.google.com/citations?user=lTKOfgsAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Kevin+Orr&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Huddersfield, é especialista em liderança, políticas e práticas no setor de Further Education (FE) e educação vocacional na Inglaterra."
   },
   {
     "id": 54,
@@ -699,7 +752,8 @@
     "scholar": "https://scholar.google.com/citations?user=oV7sDPkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Leesa+Wheelahan&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Universidade de Toronto, é uma das vozes mais influentes na defesa do acesso ao 'conhecimento poderoso' na educação vocacional."
   },
   {
     "id": 55,
@@ -712,7 +766,8 @@
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora emérita do UCL Institute of Education, é co-criadora do modelo 'Expansivo-Restritivo' para avaliar a qualidade de programas de aprendizagem profissional (apprenticeships)."
   },
   {
     "id": 56,
@@ -725,7 +780,8 @@
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Lorna Unwin (ID 55)."
   },
   {
     "id": 57,
@@ -738,7 +794,8 @@
     "scholar": "https://scholar.google.com/citations?user=iaTfDPAAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=M.+Bruri+Triyono&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Yogyakarta State University (UNY) na Indonésia, é especialista em e-learning e empregabilidade no contexto do TVET indonésio."
   },
   {
     "id": 58,
@@ -751,7 +808,8 @@
     "scholar": "https://scholar.google.com/citations?user=w0MPlXQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Maarten+Van+Houten&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Cientista social interdisciplinar com doutorado pela Universidade de Glasgow sobre organizações de aprendizagem e compartilhamento de conhecimento tácito."
   },
   {
     "id": 59,
@@ -764,7 +822,8 @@
     "scholar": "https://scholar.google.com/citations?user=LNSvy6MAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Mahmut+Özer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Ex-Ministro da Educação Nacional da Turquia e acadêmico, é o arquiteto das reformas de VET no país sob a Visão Educacional 2023."
   },
   {
     "id": 60,
@@ -777,7 +836,8 @@
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Diretora do Centro UNEVOC (Hong Kong) da UNESCO e professora associada na Education University of Hong Kong, é pioneira global em competências verdes (green skills) para a educação vocacional."
   },
   {
     "id": 61,
@@ -790,7 +850,8 @@
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60)."
   },
   {
     "id": 62,
@@ -803,7 +864,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60)."
   },
   {
     "id": 63,
@@ -816,7 +878,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Utrecht University nos Países Baixos, com contribuições em aprendizagem colaborativa e memória transacional em contextos de educação vocacional."
   },
   {
     "id": 64,
@@ -829,7 +892,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Marjaana Akkerman (ID 63)."
   },
   {
     "id": 65,
@@ -842,7 +906,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Martin+Fischer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador do BIBB (Instituto Federal de Educação e Formação Profissional) e do ITB (Instituto de Técnica e Educação) em Berlim, é especialista em pesquisa empírica sobre o sistema dual alemão."
   },
   {
     "id": 66,
@@ -855,7 +920,8 @@
     "scholar": "https://scholar.google.com/citations?user=pw2srdQAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito da Wageningen University nos Países Baixos, é um dos pesquisadores mais influentes em educação vocacional baseada em competências na Europa."
   },
   {
     "id": 67,
@@ -868,7 +934,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Martin Mulder (ID 66)."
   },
   {
     "id": 68,
@@ -881,7 +948,8 @@
     "scholar": "https://scholar.google.com/citations?user=ufPcJysAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Matthew+Schmidt&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor associado da Universidade da Flórida, diretor do Advanced Learning Technologies Studio (ALT Studio), é especialista em design instrucional e tecnologias educacionais para educação vocacional."
   },
   {
     "id": 69,
@@ -894,7 +962,8 @@
     "scholar": "https://scholar.google.com/citations?user=qPaXkB0AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Matthias+Pilz&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Colônia, é um dos principais pesquisadores em VET comparada e transferência de modelos de formação profissional."
   },
   {
     "id": 70,
@@ -907,7 +976,8 @@
     "scholar": "https://scholar.google.com/citations?user=fKPERGcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Michael+Gessler&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Bremen e editor-chefe do International Journal of Research in Vocational Education and Training (IJRVET), é especialista em transferência e internacionalização de modelos de VET."
   },
   {
     "id": 71,
@@ -920,7 +990,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Mijke+Kuijpers&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora na Saxion University of Applied Sciences nos Países Baixos, é uma das pesquisadoras mais citadas em clusters bibliométricos sobre educação vocacional."
   },
   {
     "id": 72,
@@ -933,7 +1004,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Morgan+V.+Lewis&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador da Ohio State University, é especialista em avaliação de políticas federais de educação técnica nos Estados Unidos, particularmente o Perkins Act (lei federal que financia o CTE)."
   },
   {
     "id": 73,
@@ -946,7 +1018,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Nick+Boreham&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Stirling no Reino Unido, é especialista em competência organizacional e aprendizagem no local de trabalho em contextos de VET."
   },
   {
     "id": 74,
@@ -959,7 +1032,8 @@
     "scholar": "https://www.researchgate.net/profile/Paolo-Nardi-3",
     "foto": "https://ui-avatars.com/api/?name=Paolo+Nardi&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Diretor do Cometa VET Centre na Itália, é pesquisador e praticante no campo da 'excelência inclusiva' na educação vocacional."
   },
   {
     "id": 75,
@@ -972,7 +1046,8 @@
     "scholar": "https://scholar.google.com/citations?user=NGaxEI8AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Paryono+Paryono&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Diretor do SEAMEO VOCTECH em Brunei, é coordenador de esforços regionais para harmonização de padrões de TVET na ASEAN."
   },
   {
     "id": 76,
@@ -985,7 +1060,8 @@
     "scholar": "https://scholar.google.com/citations?user=m9iPVYgAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Paul+Osterman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor do MIT Sloan School of Management, é um dos economistas do trabalho mais influentes dos Estados Unidos."
   },
   {
     "id": 77,
@@ -998,7 +1074,8 @@
     "scholar": "https://scholar.google.com/citations?user=rVtKyFkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Petri+Nokelainen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor de Pedagogia da Engenharia na Universidade de Tampere, Finlândia, e líder do grupo de pesquisa em Crescimento Profissional e Aprendizagem."
   },
   {
     "id": 78,
@@ -1011,7 +1088,8 @@
     "scholar": "https://www.researchgate.net/profile/Philipp-Gonon",
     "foto": "https://ui-avatars.com/api/?name=Philipp+Gonon&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Zurique, é um dos maiores especialistas na história e evolução do sistema dual suíço-alemão de educação profissional."
   },
   {
     "id": 79,
@@ -1024,7 +1102,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Pietty+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Entrada duplicada — ver Piety Runhaar (ID 80)."
   },
   {
     "id": 80,
@@ -1037,7 +1116,8 @@
     "scholar": "https://scholar.google.com/citations?user=1gCIUBcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Piety+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Wageningen University nos Países Baixos, é especialista em desenvolvimento profissional de professores e gestão de recursos humanos (HRM) em colleges de educação vocacional."
   },
   {
     "id": 81,
@@ -1050,7 +1130,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Rasa+Silyte-Niavas&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Colaboradora do Centro de Competências da OCDE, contribuiu para relatórios e publicações sobre professores e líderes em educação vocacional."
   },
   {
     "id": 82,
@@ -1063,7 +1144,8 @@
     "scholar": "https://scholar.google.com/citations?user=Outz9ygAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Robert+Lerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador sênior do Urban Institute e professor de Economia na American University, é o principal economista defensor do modelo de apprenticeship nos Estados Unidos."
   },
   {
     "id": 83,
@@ -1076,7 +1158,8 @@
     "scholar": "https://www.researchgate.net/profile/Rupert-Maclean",
     "foto": "https://ui-avatars.com/api/?name=Rupert+Maclean&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Ex-diretor da seção de TVET da UNESCO e pesquisador com longa trajetória em políticas globais de educação vocacional."
   },
   {
     "id": 84,
@@ -1089,7 +1172,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Sachiko+Genda&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Pesquisadora da Doshisha University no Japão, com foco em TVET na Ásia e competências verdes (green skills)."
   },
   {
     "id": 85,
@@ -1102,7 +1186,8 @@
     "scholar": "https://scholar.google.com/citations?user=GRYkrfkAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Santosh+Mehrotra&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Jawaharlal Nehru University e economista do trabalho, é referência em análise do 'dividendo demográfico' e das falhas do sistema de competências na Índia."
   },
   {
     "id": 86,
@@ -1115,7 +1200,8 @@
     "scholar": "https://scholar.google.com/citations?user=T5nqGvYAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Shoko+Yamada&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Nagoya University no Japão, é especialista em educação vocacional comparada e no papel da cultura na transferência de modelos de formação."
   },
   {
     "id": 87,
@@ -1128,7 +1214,8 @@
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Glasgow, é um dos pesquisadores mais influentes em VET para desenvolvimento e justiça social, especialmente na África e América Latina."
   },
   {
     "id": 88,
@@ -1141,7 +1228,8 @@
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87)."
   },
   {
     "id": 89,
@@ -1154,7 +1242,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87)."
   },
   {
     "id": 90,
@@ -1167,7 +1256,8 @@
     "scholar": "https://scholar.google.com/citations?user=JrpilR0WTPcC",
     "foto": "https://ui-avatars.com/api/?name=Simon+Schwartzman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Sociólogo e pesquisador sênior do IETS e membro da Academia Brasileira de Ciências, é referência em análise baseada em dados sobre educação e políticas públicas no Brasil."
   },
   {
     "id": 91,
@@ -1180,7 +1270,8 @@
     "scholar": "https://www.researchgate.net/scientific-contributions/Stephan-Vincent-Lancrin-2099826335",
     "foto": "https://ui-avatars.com/api/?name=Stéphan+Vincent-Lancrin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Economista sênior da OCDE e líder do projeto sobre Inovação em Educação, é referência global em criatividade e inovação no ensino."
   },
   {
     "id": 92,
@@ -1193,7 +1284,8 @@
     "scholar": "https://scholar.google.com/citations?user=-dE5IDoAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Stephanie+Allais&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da Universidade de Witwatersrand (Wits) na África do Sul, é uma das críticas globais mais contundentes da eficácia dos Quadros Nacionais de Qualificações (NQF)."
   },
   {
     "id": 93,
@@ -1206,7 +1298,8 @@
     "scholar": "https://scholar.google.com/citations?user=oU3faRcAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Stephen+Billett&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor emérito da Griffith University na Austrália, é um dos teóricos mais influentes de aprendizagem no local de trabalho no mundo."
   },
   {
     "id": 94,
@@ -1219,7 +1312,8 @@
     "scholar": "https://www.researchgate.net/profile/Thomas-Deissinger",
     "foto": "https://ui-avatars.com/api/?name=Thomas+Deissinger&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Universidade de Konstanz, é especialista em história, cultura e transferência de modelos de educação vocacional."
   },
   {
     "id": 95,
@@ -1232,7 +1326,8 @@
     "scholar": "https://scholar.google.com/citations?user=vv7S7oIAAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Thomas+Schröder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da TU Dortmund, é especialista em cooperação internacional em TVET e na profissionalização de docentes de educação vocacional."
   },
   {
     "id": 96,
@@ -1245,7 +1340,8 @@
     "scholar": "https://scholar.google.com/citations?user=nMP0iF4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Tom+Bol&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor associado de Sociologia na Universidade de Amsterdam e co-diretor do Amsterdam Centre for Inequality Studies, é um dos pesquisadores mais citados em estudos sobre estratificação educacional e VET."
   },
   {
     "id": 97,
@@ -1258,7 +1354,8 @@
     "scholar": "https://scholar.google.com/citations?user=RDxHdg4AAAAJ",
     "foto": "https://ui-avatars.com/api/?name=Ursula+Renold&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora da ETH Zurich, é criadora do KOF Education-Employment Linkage Index, a principal métrica internacional para avaliar a articulação entre sistemas de educação profissional e mercados de trabalho."
   },
   {
     "id": 98,
@@ -1271,7 +1368,8 @@
     "scholar": null,
     "foto": "https://ui-avatars.com/api/?name=Volker+Trappmann&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Pesquisador com foco em relações laborais e qualificações profissionais em contextos de transição econômica na Europa."
   },
   {
     "id": 99,
@@ -1284,7 +1382,8 @@
     "scholar": "https://orcid.org/0000-0002-4463-6057",
     "foto": "https://ui-avatars.com/api/?name=Wendy+Sims-Schouten&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
-    "genero": "F"
+    "genero": "F",
+    "miniBio": "Professora de Psicologia Interdisciplinar na UCL (University College London), com trajetória profissional que inclui formação como enfermeira psiquiátrica e especialização em psicologia infantil."
   },
   {
     "id": 100,
@@ -1297,6 +1396,7 @@
     "scholar": "https://orcid.org/0009-0009-5406-9832",
     "foto": "https://ui-avatars.com/api/?name=Zhiqun+Zhao&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
-    "genero": "M"
+    "genero": "M",
+    "miniBio": "Professor da Beijing Normal University, é o principal pesquisador chinês em currículo de educação vocacional e cognição profissional."
   }
 ]
