@@ -9,6 +9,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import SchoolIcon from '@mui/icons-material/School';
 import { CountryFlag } from '../utils/countryCode';
+import { getCategoriasFromAreas } from '../utils/areaCategories';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -38,8 +39,7 @@ function usePhotoWithFallback(nome, fallbackUrl) {
 }
 
 export default function PesquisadorCard({ item, onClick }) {
-  const areas = item.areas ? item.areas.split(';').slice(0, 3) : [];
-  const moreCount = item.areas ? item.areas.split(';').length - 3 : 0;
+  const categorias = getCategoriasFromAreas(item.areas);
   const photo = usePhotoWithFallback(item.nome, item.foto);
 
   return (
@@ -140,25 +140,26 @@ export default function PesquisadorCard({ item, onClick }) {
             {item.miniBio || summarize(item.pesquisa)}
           </Typography>
 
-          {/* Footer: chips + scholar link */}
+          {/* Footer: category chips + scholar link */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 'auto' }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, flex: 1 }}>
-              {areas.map((area, i) => (
+              {categorias.map((cat) => (
                 <Chip
-                  key={i}
-                  label={area.trim()}
+                  key={cat}
+                  label={cat}
                   size="small"
                   variant="outlined"
                   color="secondary"
-                  sx={{ fontSize: '0.68rem', height: 22 }}
+                  sx={{ fontSize: '0.67rem', height: 22 }}
                 />
               ))}
-              {moreCount > 0 && (
+              {categorias.length === 0 && item.areas && item.areas !== '-' && (
                 <Chip
-                  label={`+${moreCount}`}
+                  label={item.areas.split(';')[0].trim()}
                   size="small"
                   variant="outlined"
-                  sx={{ fontSize: '0.68rem', height: 22 }}
+                  color="secondary"
+                  sx={{ fontSize: '0.67rem', height: 22 }}
                 />
               )}
             </Box>

@@ -16,24 +16,13 @@ import StatsBar from '../components/StatsBar';
 import PesquisadorCard from '../components/PesquisadorCard';
 import DetailModal from '../components/DetailModal';
 import { useData } from '../context/DataContext';
-
-function extractUniqueAreas(data) {
-  const set = new Set();
-  data.forEach((item) => {
-    if (!item.areas) return;
-    item.areas.split(';').forEach((a) => {
-      const clean = a.trim();
-      if (clean) set.add(clean);
-    });
-  });
-  return [...set].sort();
-}
+import { CATEGORIAS, getCategoriasFromAreas } from '../utils/areaCategories';
 
 export default function PesquisadoresPage() {
   const { pesquisadores: pesquisadoresData } = useData();
   const [search, setSearch] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
-  const [selectedAreas, setSelectedAreas] = useState([]);
+  const [selectedCategorias, setSelectedCategorias] = useState([]);
   const [selectedGenero, setSelectedGenero] = useState('todos');
   const [showFilters, setShowFilters] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -42,8 +31,6 @@ export default function PesquisadoresPage() {
     const set = new Set(pesquisadoresData.map((s) => s.pais).filter(Boolean));
     return [...set].sort();
   }, [pesquisadoresData]);
-
-  const allAreas = useMemo(() => extractUniqueAreas(pesquisadoresData), [pesquisadoresData]);
 
   const filtered = useMemo(() => {
     return pesquisadoresData.filter((item) => {
@@ -59,19 +46,18 @@ export default function PesquisadoresPage() {
       const matchCountry =
         selectedCountries.length === 0 || selectedCountries.includes(item.pais);
 
-      const matchArea =
-        selectedAreas.length === 0 ||
-        selectedAreas.some((area) => {
-          if (!item.areas) return false;
-          return item.areas.toLowerCase().includes(area.toLowerCase());
-        });
+      const matchCategoria = (() => {
+        if (selectedCategorias.length === 0) return true;
+        const itemCats = getCategoriasFromAreas(item.areas);
+        return selectedCategorias.some((cat) => itemCats.includes(cat));
+      })();
 
       const matchGenero =
         selectedGenero === 'todos' || item.genero === selectedGenero;
 
-      return matchSearch && matchCountry && matchArea && matchGenero;
+      return matchSearch && matchCountry && matchCategoria && matchGenero;
     });
-  }, [search, selectedCountries, selectedAreas, selectedGenero]);
+  }, [search, selectedCountries, selectedCategorias, selectedGenero, pesquisadoresData]);
 
   const stats = useMemo(() => {
     const countries = new Set(filtered.map((s) => s.pais));
@@ -79,13 +65,22 @@ export default function PesquisadoresPage() {
   }, [filtered]);
 
   const hasActiveFilters =
-    selectedCountries.length > 0 || selectedAreas.length > 0 || search || selectedGenero !== 'todos';
+    selectedCountries.length > 0 ||
+    selectedCategorias.length > 0 ||
+    search ||
+    selectedGenero !== 'todos';
 
   const clearFilters = () => {
     setSearch('');
     setSelectedCountries([]);
-    setSelectedAreas([]);
+    setSelectedCategorias([]);
     setSelectedGenero('todos');
+  };
+
+  const toggleCategoria = (cat) => {
+    setSelectedCategorias((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
   };
 
   return (
@@ -104,7 +99,7 @@ export default function PesquisadoresPage() {
       <Collapse in={showFilters}>
         <Paper sx={{ p: 2.5, mb: 2 }} elevation={1}>
           <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 5 }}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <SearchBar
                 value={search}
                 onChange={setSearch}
@@ -112,7 +107,7 @@ export default function PesquisadoresPage() {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Autocomplete
                 multiple
                 size="small"
@@ -125,24 +120,28 @@ export default function PesquisadoresPage() {
                 limitTags={2}
               />
             </Grid>
-
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Autocomplete
-                multiple
-                size="small"
-                options={allAreas}
-                value={selectedAreas}
-                onChange={(_, v) => setSelectedAreas(v)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Área de Pesquisa" variant="outlined" />
-                )}
-                limitTags={2}
-              />
-            </Grid>
           </Grid>
 
+          {/* Area category chips */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2 }}>
+            {CATEGORIAS.map((cat) => {
+              const isActive = selectedCategorias.includes(cat);
+              return (
+                <Chip
+                  key={cat}
+                  label={cat}
+                  size="small"
+                  variant={isActive ? 'filled' : 'outlined'}
+                  color={isActive ? 'secondary' : 'default'}
+                  onClick={() => toggleCategoria(cat)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              );
+            })}
+          </Box>
+
           {/* Gender filter */}
-          <Box sx={{ display: 'flex', gap: 0.75, mt: 2 }}>
+          <Box sx={{ display: 'flex', gap: 0.75, mt: 1.25 }}>
             {[
               { label: 'Todos', value: 'todos' },
               { label: 'Feminino', value: 'F' },
