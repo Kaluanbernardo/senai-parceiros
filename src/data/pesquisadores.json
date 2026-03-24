@@ -11,7 +11,34 @@
     "foto": "https://ui-avatars.com/api/?name=Acacia+Kuenzer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "lattes",
     "genero": "F",
-    "miniBio": "Referência central no campo Trabalho-Educação no Brasil, com mais de quatro décadas de produção acadêmica."
+    "miniBio": "Referência central no campo Trabalho-Educação no Brasil, com mais de quatro décadas de produção acadêmica.",
+    "artigos": [
+      {
+        "titulo": "Pedagogia da fábrica: as relações de produção e a educação do trabalhador",
+        "url": "https://scholar.google.com/scholar?q=Kuenzer+Pedagogia+da+f%C3%A1brica+1985",
+        "ano": 1985
+      },
+      {
+        "titulo": "As políticas de formação: A constituição da identidade do professor sobrante",
+        "url": "https://scholar.google.com/scholar?q=Kuenzer+pol%C3%ADticas+forma%C3%A7%C3%A3o+identidade+professor+sobrante+1999",
+        "ano": 1999
+      },
+      {
+        "titulo": "Exclusão includente e inclusão excludente: a nova forma de dualidade estrutural",
+        "url": "https://scholar.google.com/scholar?q=Kuenzer+exclus%C3%A3o+includente+inclus%C3%A3o+excludente+2002",
+        "ano": 2002
+      },
+      {
+        "titulo": "Educação profissional: categorias para uma nova pedagogia do trabalho",
+        "url": "https://www.bts.senac.br/bts/article/view/596",
+        "ano": 1999
+      },
+      {
+        "titulo": "A formação de professores para o Ensino Médio: velhos problemas, novos desafios",
+        "url": "https://www.scielo.br/j/es/a/sB3XN4nBLFPRrhZ5QNx4fRr/",
+        "ano": 2011
+      }
+    ]
   },
   {
     "id": 2,
@@ -25,7 +52,34 @@
     "foto": "https://ui-avatars.com/api/?name=Agus+Setiawan&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor titular da Universidade Pendidikan Indonesia (UPI), é referência em educação técnica e vocacional na Indonésia."
+    "miniBio": "Professor titular da Universidade Pendidikan Indonesia (UPI), é referência em educação técnica e vocacional na Indonésia.",
+    "artigos": [
+      {
+        "titulo": "Identification of green skills acquisition in Indonesian TVET curricula",
+        "url": "https://www.researchgate.net/publication/320130170_Identification_of_green_skills_acquisition_in_Indonesian_TVET_curricula",
+        "ano": 2017
+      },
+      {
+        "titulo": "Generic Green Skills in Teaching and Learning: Meaning and Implementation",
+        "url": "https://www.researchgate.net/publication/339455625_Generic_Green_Skills_in_Teaching_and_Learning_Meaning_and_Implementation",
+        "ano": 2020
+      },
+      {
+        "titulo": "Regionalization and Harmonization in TVET",
+        "url": "https://www.routledge.com/Regionalization-and-Harmonization-in-TVET-Proceedings-of-the-4th-UPI-International/Setiawan-Alias-Abdullah-Aryanti/p/book/9781138054196",
+        "ano": 2017
+      },
+      {
+        "titulo": "Vocational Didactics in TVET Teacher Education",
+        "url": "https://tvet-online.asia/author/setiawan/",
+        "ano": 2021
+      },
+      {
+        "titulo": "Green Skills Understanding of Agricultural Vocational School Teachers around West Java Indonesia",
+        "url": "https://ejournal.upi.edu/index.php/ijost/article/view/22897",
+        "ano": 2020
+      }
+    ]
   },
   {
     "id": 3,
@@ -39,7 +93,34 @@
     "foto": "https://ui-avatars.com/api/?name=Alison+Fuller&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora emérita do UCL Institute of Education, é uma das pesquisadoras mais influentes em aprendizagem no local de trabalho no Reino Unido."
+    "miniBio": "Professora emérita do UCL Institute of Education, é uma das pesquisadoras mais influentes em aprendizagem no local de trabalho no Reino Unido.",
+    "artigos": [
+      {
+        "titulo": "Learning as Apprentices in the Contemporary UK Workplace: creating and managing expansive and restrictive participation",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/1363908032000093012",
+        "ano": 2003
+      },
+      {
+        "titulo": "Reconceptualising apprenticeship: exploring the relationship between work and learning",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636829800200043",
+        "ano": 1998
+      },
+      {
+        "titulo": "Fostering Workplace Learning: Looking through the Lens of Apprenticeship",
+        "url": "https://journals.sagepub.com/doi/10.2304/eerj.2003.2.1.9",
+        "ano": 2003
+      },
+      {
+        "titulo": "Learning as peripheral participation in communities of practice: a reassessment of key concepts in workplace learning",
+        "url": "https://bera-journals.onlinelibrary.wiley.com/doi/abs/10.1080/0141192052000310029",
+        "ano": 2005
+      },
+      {
+        "titulo": "Workplace learning, VET and vocational pedagogy: the transformation of practice",
+        "url": "https://www.researchgate.net/publication/263066157_Workplace_learning_VET_and_vocational_pedagogy_the_transformation_of_practice",
+        "ano": 2014
+      }
+    ]
   },
   {
     "id": 4,
@@ -53,7 +134,34 @@
     "foto": "https://ui-avatars.com/api/?name=Andy+Green&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor emérito do UCL Institute of Education, é um dos principais teóricos em educação comparada e sistemas de competências no mundo."
+    "miniBio": "Professor emérito do UCL Institute of Education, é um dos principais teóricos em educação comparada e sistemas de competências no mundo.",
+    "artigos": [
+      {
+        "titulo": "Education, Globalization and the Nation State",
+        "url": "https://link.springer.com/book/10.1057/9780230371132",
+        "ano": 1997
+      },
+      {
+        "titulo": "High Skills: Globalization, Competitiveness, and Skill Formation",
+        "url": "https://scholar.google.com/scholar?q=Brown+Green+Lauder+High+Skills+Globalization+Competitiveness+Skill+Formation+2001",
+        "ano": 2001
+      },
+      {
+        "titulo": "Education and State Formation: The Rise of Education Systems in England, France and the USA",
+        "url": "https://www.researchgate.net/profile/Andy-Green-4/publication/376168394_Education_and_State_Formation_Second_Edition_PDFpdf/data/656b5460b86a1d521b28b1ed/Education-and-State-Formation-Second-Edition-PDF.pdf",
+        "ano": 1990
+      },
+      {
+        "titulo": "Convergence and Divergence in European Education and Training Systems",
+        "url": "https://scholar.google.com/scholar?q=Green+Wolf+Leney+Convergence+Divergence+European+Education+Training+1999",
+        "ano": 1999
+      },
+      {
+        "titulo": "Comparative VET European research since the 1980s",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2020.1858938",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 5,
@@ -67,7 +175,34 @@
     "foto": "https://ui-avatars.com/api/?name=Anja+Heikkinen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "F",
-    "miniBio": "Professora da Universidade de Tampere, é especialista em história da educação de adultos e educação vocacional nos países nórdicos."
+    "miniBio": "Professora da Universidade de Tampere, é especialista em história da educação de adultos e educação vocacional nos países nórdicos.",
+    "artigos": [
+      {
+        "titulo": "Models, Paradigms or Cultures of Vocational Education",
+        "url": "https://files.eric.ed.gov/fulltext/EJ734144.pdf",
+        "ano": 2004
+      },
+      {
+        "titulo": "Myths and Brands in Vocational Education",
+        "url": "https://www.cambridgescholars.com/product/978-1-4438-8016-9",
+        "ano": 2015
+      },
+      {
+        "titulo": "Adult Education and the Planetary Condition",
+        "url": "https://www.researchgate.net/publication/305770068_Adult_Education_and_the_Planetary_Condition",
+        "ano": 2016
+      },
+      {
+        "titulo": "Knowing Work: The Social Relations of Working and Knowing",
+        "url": "https://scholar.google.com/scholar?q=Heikkinen+Gonon+Weil+Knowing+Work+Social+Relations+2009",
+        "ano": 2009
+      },
+      {
+        "titulo": "Vocational education in the academic drift or arrogance of academia in front of planetary crisis",
+        "url": "https://njvet.ep.liu.se/article/view/5304",
+        "ano": 2025
+      }
+    ]
   },
   {
     "id": 6,
@@ -81,7 +216,34 @@
     "foto": "https://ui-avatars.com/api/?name=Anna+Lichtwarck-Aschoff&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Psicóloga do desenvolvimento na Universidade de Groningen, com formação na Radboud University."
+    "miniBio": "Psicóloga do desenvolvimento na Universidade de Groningen, com formação na Radboud University.",
+    "artigos": [
+      {
+        "titulo": "A neurofeedback video game (MindLight) to prevent anxiety in children: A randomized controlled trial",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0747563216303296",
+        "ano": 2016
+      },
+      {
+        "titulo": "A Model of Socioemotional Flexibility at Three Time Scales",
+        "url": "https://journals.sagepub.com/doi/10.1177/1754073913484181",
+        "ano": 2013
+      },
+      {
+        "titulo": "Effectiveness of applied and casual games for young people's mental health: A systematic review",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0272735824000175",
+        "ano": 2024
+      },
+      {
+        "titulo": "The Effect of Expectations on Experiences and Engagement with an Applied Game for Mental Health",
+        "url": "https://journals.sagepub.com/doi/full/10.1089/g4h.2020.0115",
+        "ano": 2021
+      },
+      {
+        "titulo": "Emotion regulation in action: Use, selection, and success of emotion regulation in adolescents' daily lives",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/0165025418755540",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 7,
@@ -95,7 +257,34 @@
     "foto": "https://ui-avatars.com/api/?name=Antje+Barabasch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "F",
-    "miniBio": "Professora e pesquisadora do Instituto Federal Suíço de Educação e Formação Profissional (SFUVET), é especialista em criatividade e inovação na educação vocacional."
+    "miniBio": "Professora e pesquisadora do Instituto Federal Suíço de Educação e Formação Profissional (SFUVET), é especialista em criatividade e inovação na educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Planned policy transfer: the impact of the German model on Chinese vocational education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/03057920802265566",
+        "ano": 2009
+      },
+      {
+        "titulo": "Internationaler Policy Transfer in der Berufsbildung",
+        "url": "https://link.springer.com/article/10.1007/s11618-011-0202-7",
+        "ano": 2011
+      },
+      {
+        "titulo": "Reconstructing policy transfer in adult and vocational education and training",
+        "url": "https://journals.sagepub.com/doi/10.1177/17454999211062825",
+        "ano": 2021
+      },
+      {
+        "titulo": "Creativity Development and Vocational Learning",
+        "url": "https://link.springer.com/rwe/10.1007/978-3-319-94532-3_56",
+        "ano": 2019
+      },
+      {
+        "titulo": "Conceptualizations and Implementation of Creativity in Higher Vocational Education",
+        "url": "https://www.sfuvet.swiss/research/publications/fischer-s-barabasch-2023-conceptualizations-and-implementation-creativity",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 8,
@@ -109,7 +298,34 @@
     "foto": "https://ui-avatars.com/api/?name=Ashwani+Aggarwal&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Especialista sênior da Organização Internacional do Trabalho (OIT/ILO) em Genebra, é referência global em sistemas de aprendizagem profissional (apprenticeship)."
+    "miniBio": "Especialista sênior da Organização Internacional do Trabalho (OIT/ILO) em Genebra, é referência global em sistemas de aprendizagem profissional (apprenticeship).",
+    "artigos": [
+      {
+        "titulo": "Upgrading Informal Apprenticeship: A resource guide for Africa",
+        "url": "https://www.academia.edu/6900473/Upgrading_Informal_Apprenticeship_A_resource_guide_for_Africa",
+        "ano": 2014
+      },
+      {
+        "titulo": "ILO Toolkit for Quality Apprenticeships Volume I: Guide for Policy Makers",
+        "url": "https://www.academia.edu/45053792/ILO_TOOLKIT_FOR_QUALITY_APPRENTICESHIPS_VOLUME_I_GUIDE_FOR_POLICY_MAKERS",
+        "ano": 2017
+      },
+      {
+        "titulo": "ILO Toolkit for Quality Apprenticeships Volume 2: Guide for Practitioners",
+        "url": "https://www.academia.edu/45053767/ILO_Toolkit_for_Quality_Apprenticeships_Volume_2_Guide_for_Practitioners",
+        "ano": 2020
+      },
+      {
+        "titulo": "Comparative analysis of TVET/national skills development policies",
+        "url": "https://www.academia.edu/5577165/Comparative_analysis_of_TVET_national_skills_development_policies_A_guide_for_policy_makers",
+        "ano": 2012
+      },
+      {
+        "titulo": "ILO Evaluation Tool for the Review of a Country's Apprenticeship Policy and System",
+        "url": "https://www.researchgate.net/publication/364941167_ILO_Evaluation_Tool_for_the_Review_of_a_Country%27s_Apprenticeship_Policy_and_System",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 9,
@@ -123,7 +339,34 @@
     "foto": "https://ui-avatars.com/api/?name=Borhene+Chakroun&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Diretor da Divisão de Políticas e Sistemas de Aprendizagem ao Longo da Vida da UNESCO, é um dos formuladores mais influentes de políticas globais de educação e competências."
+    "miniBio": "Diretor da Divisão de Políticas e Sistemas de Aprendizagem ao Longo da Vida da UNESCO, é um dos formuladores mais influentes de políticas globais de educação e competências.",
+    "artigos": [
+      {
+        "titulo": "National Qualification Frameworks: From policy borrowing to policy learning",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1465-3435.2010.01425.x",
+        "ano": 2010
+      },
+      {
+        "titulo": "Level-setting and recognition of learning outcomes: The use of level descriptors in the twenty-first century",
+        "url": "https://www.academia.edu/20009443",
+        "ano": 2015
+      },
+      {
+        "titulo": "National Qualifications Framework and TVET teacher competence frameworks",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/ejed.12359",
+        "ano": 2019
+      },
+      {
+        "titulo": "Digital credentialing: Implications for the recognition of learning across borders",
+        "url": "https://scholar.google.com/scholar?q=Keevy+Chakroun+Digital+credentialing+implications+recognition+learning+across+borders+2018",
+        "ano": 2018
+      },
+      {
+        "titulo": "Developing Qualifications Frameworks in EU Partner Countries",
+        "url": "https://scholar.google.com/scholar?q=Chakroun+Developing+Qualifications+Frameworks+EU+Partner+Countries+2011",
+        "ano": 2011
+      }
+    ]
   },
   {
     "id": 10,
@@ -137,7 +380,34 @@
     "foto": "https://ui-avatars.com/api/?name=Cecilia+Nylund&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Pesquisadora da Universidade de Melbourne especializada em políticas de educação vocacional e tracking educacional na Austrália e Escandinávia."
+    "miniBio": "Pesquisadora da Universidade de Melbourne especializada em políticas de educação vocacional e tracking educacional na Austrália e Escandinávia.",
+    "artigos": [
+      {
+        "titulo": "The vocational–academic divide in neoliberal upper secondary curricula: the Swedish case",
+        "url": "https://www.researchgate.net/publication/316341643_The_vocational-academic_divide_in_neoliberal_upper_secondary_curricula_the_Swedish_case",
+        "ano": 2017
+      },
+      {
+        "titulo": "The academic–vocational divide in three Nordic countries: implications for social class and gender",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/20004508.2018.1424490",
+        "ano": 2018
+      },
+      {
+        "titulo": "The Relevance of Class in Education Policy and Research – The case of Sweden's Vocational Education",
+        "url": "https://www.researchgate.net/publication/307508425_The_Relevance_of_Class_in_Education_Policy_and_Research-The_case_of_Sweden's_Vocational_Education",
+        "ano": 2016
+      },
+      {
+        "titulo": "Socialisation and citizenship preparation in vocational education",
+        "url": "https://scholar.google.com/scholar?q=Nylund+Ledman+Rosvall+Socialisation+citizenship+preparation+vocational+education+2020",
+        "ano": 2020
+      },
+      {
+        "titulo": "Construction of ethnicity, immigration and associated concepts in Swedish VET",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13639080.2019.1569212",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 11,
@@ -151,7 +421,34 @@
     "foto": "https://ui-avatars.com/api/?name=Charity+Kome&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Analista do Centro de Competências da OCDE, contribuiu para publicações de referência sobre professores e líderes em educação vocacional e profissional."
+    "miniBio": "Analista do Centro de Competências da OCDE, contribuiu para publicações de referência sobre professores e líderes em educação vocacional e profissional.",
+    "artigos": [
+      {
+        "titulo": "Teachers and Leaders in Vocational Education and Training",
+        "url": "https://www.oecd.org/en/publications/teachers-and-leaders-in-vocational-education-and-training_59d4fbb1-en.html",
+        "ano": 2021
+      },
+      {
+        "titulo": "Vocational Education and Training for African Development: A Literature Review",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2019.1679969",
+        "ano": 2019
+      },
+      {
+        "titulo": "Transitioning Vocational Education and Training in Africa: A Social Skills Ecosystem Perspective",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2023.2230037",
+        "ano": 2023
+      },
+      {
+        "titulo": "Greening TVET: Skills for a Sustainable Africa",
+        "url": "https://www.researchgate.net/publication/397178372_Greening_TVET_Skills_for_a_Sustainable_Africa",
+        "ano": 2024
+      },
+      {
+        "titulo": "Introducing VET Africa 4.0",
+        "url": "https://bristoluniversitypressdigital.com/display/book/9781529224658/ch001.xml",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 12,
@@ -165,7 +462,34 @@
     "foto": "https://ui-avatars.com/api/?name=Chee+Sern+Lai&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Editor-chefe do periódico TVET@Asia e professor da Universiti Tun Hussein Onn Malaysia (UTHM), é referência em formação de instrutores na Malásia e Sudeste Asiático."
+    "miniBio": "Editor-chefe do periódico TVET@Asia e professor da Universiti Tun Hussein Onn Malaysia (UTHM), é referência em formação de instrutores na Malásia e Sudeste Asiático.",
+    "artigos": [
+      {
+        "titulo": "An Extensive Model for Implementing APEL and Quality Assurance in TVET Teacher Training System for South East Asia",
+        "url": "https://www.researchgate.net/publication/259761880_An_extensive_model_for_implementing_APEL_and_quality_assurance_in_TVET_teacher_training_system_for_South_East_Asia",
+        "ano": 2013
+      },
+      {
+        "titulo": "Green Skills for Green Industry: A Review of Literature",
+        "url": "https://www.researchgate.net/publication/326023603_Green_Skills_for_Green_Industry_A_Review_of_Literature",
+        "ano": 2018
+      },
+      {
+        "titulo": "A Green Skills Framework for TVET Curricula",
+        "url": "https://www.researchgate.net/publication/364051120_A_Green_Skills_Framework_for_TVET_Curricula",
+        "ano": 2022
+      },
+      {
+        "titulo": "The Example-Problem-Based Learning Model: Applying Cognitive Load Theory",
+        "url": "https://www.researchgate.net/publication/280446888_The_Example-Problem-Based_Learning_Model_Applying_Cognitive_Load_Theory",
+        "ano": 2015
+      },
+      {
+        "titulo": "Technical and Vocational Education in Malaysia: Policy, Leadership, and Professional Growth",
+        "url": "https://www.researchgate.net/publication/283040256_Technical_and_Vocational_Education_in_Malaysia_Policy_Leadership_and_Professional_Growth_on_Malaysia_Women",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 13,
@@ -179,7 +503,34 @@
     "foto": "https://ui-avatars.com/api/?name=Christian+H.+Jørgensen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Roskilde University na Dinamarca, é especialista em transições educação-trabalho e modelos híbridos de VET nos países nórdicos."
+    "miniBio": "Professor da Roskilde University na Dinamarca, é especialista em transições educação-trabalho e modelos híbridos de VET nos países nórdicos.",
+    "artigos": [
+      {
+        "titulo": "Challenges for the Dual System and Occupational Self-Governance in Denmark",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2011.560393",
+        "ano": 2011
+      },
+      {
+        "titulo": "A Nordic Transition Regime? Policies for School-to-Work Transitions in Sweden, Denmark and Finland",
+        "url": "https://journals.sagepub.com/doi/10.1177/1474904119830037",
+        "ano": 2019
+      },
+      {
+        "titulo": "From Apprenticeships to Higher Vocational Education in Denmark",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2016.1275030",
+        "ano": 2017
+      },
+      {
+        "titulo": "Hybrid Qualifications: Structures and Problems in the Context of European VET Policy",
+        "url": "https://www.peterlang.com/document/1052721",
+        "ano": 2013
+      },
+      {
+        "titulo": "Vocational Education in the Nordic Countries: Learning from Diversity",
+        "url": "https://www.taylorfrancis.com/chapters/edit/10.4324/9781315414492-1/vocational-education-training-nordic-countries-christian-helms-j%C3%B8rgensen",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 14,
@@ -193,7 +544,34 @@
     "foto": "https://ui-avatars.com/api/?name=Christopher+Brockmann&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Pesquisador da Canterbury Christ Church University, com foco em governança e equidade em sistemas de educação vocacional na Europa."
+    "miniBio": "Pesquisador da Canterbury Christ Church University, com foco em governança e equidade em sistemas de educação vocacional na Europa.",
+    "artigos": [
+      {
+        "titulo": "Knowledge, Skills, Competence: European Divergences in Vocational Education and Training (VET)",
+        "url": "https://www.researchgate.net/publication/44839265_Knowledge_skills_competence_European_divergences_in_vocational_education_and_training_VET_-_the_English_German_and_Dutch_cases",
+        "ano": 2008
+      },
+      {
+        "titulo": "Competence-Based Vocational Education and Training (VET): The Cases of England and France in a European Perspective",
+        "url": "https://link.springer.com/article/10.1007/s12186-008-9013-2",
+        "ano": 2008
+      },
+      {
+        "titulo": "Qualifications, Learning Outcomes and Competencies: A Review of European Divergences in VET",
+        "url": "https://westminsterresearch.westminster.ac.uk/item/91wy5/qualifications-learning-outcomes-and-competencies-a-review-of-european-divergences-in-vocational-education-and-training-vet",
+        "ano": 2007
+      },
+      {
+        "titulo": "Competence and Competency in the EQF and in European VET Systems",
+        "url": "https://www.researchgate.net/publication/235296375_Competence_and_competency_in_the_EQF_and_in_European_VET_systems",
+        "ano": 2009
+      },
+      {
+        "titulo": "Bricklaying Qualifications, Work and Vocational Education and Training (VET) in Europe",
+        "url": "https://www.westminster.ac.uk/research/groups-and-centres/centre-for-the-study-of-the-production-of-the-built-environment-probe/our-work/bricklaying-qualifications-work-and-vocational-education-and-training-vet-in-europe",
+        "ano": 2010
+      }
+    ]
   },
   {
     "id": 15,
@@ -207,7 +585,34 @@
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor do King's College London, é um dos principais filósofos da educação profissional no mundo."
+    "miniBio": "Professor do King's College London, é um dos principais filósofos da educação profissional no mundo.",
+    "artigos": [
+      {
+        "titulo": "Ryle on Knowing How and the Possibility of Vocational Education",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1468-5930.2009.00425.x",
+        "ano": 2009
+      },
+      {
+        "titulo": "Dimensions of Expertise: A Conceptual Exploration of Vocational Knowledge",
+        "url": "https://books.google.com/books/about/Dimensions_of_Expertise.html?id=ZfRGAQAAQBAJ",
+        "ano": 2010
+      },
+      {
+        "titulo": "Georg Kerschensteiner: Founding the German Dual System",
+        "url": "https://scholar.google.com/scholar?q=Winch+Georg+Kerschensteiner+Founding+German+Dual+System+Oxford+Review+Education+2006",
+        "ano": 2006
+      },
+      {
+        "titulo": "Towards a Framework for Professional Curriculum Design",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13639080.2014.1001335",
+        "ano": 2015
+      },
+      {
+        "titulo": "The European Qualification Framework: Skills, Competences or Knowledge?",
+        "url": "https://journals.sagepub.com/doi/10.2304/eerj.2012.11.3.369",
+        "ano": 2012
+      }
+    ]
   },
   {
     "id": 16,
@@ -221,7 +626,34 @@
     "foto": "https://ui-avatars.com/api/?name=Christopher+Winch&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Christopher Winch (ID 15)."
+    "miniBio": "Entrada duplicada — ver Christopher Winch (ID 15).",
+    "artigos": [
+      {
+        "titulo": "Ryle on Knowing How and the Possibility of Vocational Education",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1468-5930.2009.00425.x",
+        "ano": 2009
+      },
+      {
+        "titulo": "Dimensions of Expertise: A Conceptual Exploration of Vocational Knowledge",
+        "url": "https://books.google.com/books/about/Dimensions_of_Expertise.html?id=ZfRGAQAAQBAJ",
+        "ano": 2010
+      },
+      {
+        "titulo": "Georg Kerschensteiner: Founding the German Dual System",
+        "url": "https://scholar.google.com/scholar?q=Winch+Georg+Kerschensteiner+Founding+German+Dual+System+Oxford+Review+Education+2006",
+        "ano": 2006
+      },
+      {
+        "titulo": "Towards a Framework for Professional Curriculum Design",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13639080.2014.1001335",
+        "ano": 2015
+      },
+      {
+        "titulo": "The European Qualification Framework: Skills, Competences or Knowledge?",
+        "url": "https://journals.sagepub.com/doi/10.2304/eerj.2012.11.3.369",
+        "ano": 2012
+      }
+    ]
   },
   {
     "id": 17,
@@ -235,7 +667,34 @@
     "foto": "https://ui-avatars.com/api/?name=Claudia+Jacinto&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Pesquisadora do IDES/CONICET na Argentina, é a principal referência latino-americana em sociologia das transições juvenis e políticas de formação profissional."
+    "miniBio": "Pesquisadora do IDES/CONICET na Argentina, é a principal referência latino-americana em sociologia das transições juvenis e políticas de formação profissional.",
+    "artigos": [
+      {
+        "titulo": "Examining Complexities in the Education-Work Relationship in Youth Transitions in Argentina",
+        "url": "https://link.springer.com/article/10.1007/s43151-020-00022-4",
+        "ano": 2021
+      },
+      {
+        "titulo": "Understanding Barriers to Accessing Skills Development and Employment for Youth in Argentina and South Africa",
+        "url": "https://www.researchgate.net/publication/301627267_Understanding_Barriers_to_Accessing_Skills_Development_and_Employment_for_Youth_in_Argentina_and_South_Africa_Synthesis_Report",
+        "ano": 2016
+      },
+      {
+        "titulo": "Tertiary Technical Education and Youth Integration in Brazil, Colombia and Mexico",
+        "url": "https://www.academia.edu/28704162/Tertiary_Technical_Education_and_Youth_Integration_in_Brazil_Colombia_and_Mexico",
+        "ano": 2014
+      },
+      {
+        "titulo": "La Construcción Social de las Trayectorias Laborales de Jóvenes",
+        "url": "https://scholar.google.com/scholar?q=Jacinto+construccion+social+trayectorias+laborales+jovenes+2010",
+        "ano": 2010
+      },
+      {
+        "titulo": "International Overview of Vocational Education: Challenges and Replies",
+        "url": "https://www.academia.edu/33149110/INTERNATIONAL_OVERVIEW_OF_VOCATIONAL_EDUCATION_Challenges_and_Replies",
+        "ano": 2016
+      }
+    ]
   },
   {
     "id": 18,
@@ -249,7 +708,34 @@
     "foto": "https://ui-avatars.com/api/?name=Claudio+de+Moura+Castro&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
     "genero": "M",
-    "miniBio": "Pesquisador independente e ex-consultor do Banco Mundial, é um dos defensores mais influentes do ensino técnico na América Latina."
+    "miniBio": "Pesquisador independente e ex-consultor do Banco Mundial, é um dos defensores mais influentes do ensino técnico na América Latina.",
+    "artigos": [
+      {
+        "titulo": "Vocational and Technical Training: Setting the Record Straight",
+        "url": "https://link.springer.com/article/10.1007/BF02736824",
+        "ano": 1999
+      },
+      {
+        "titulo": "Vocational Education and the Training of Industrial Labour in Brazil",
+        "url": "https://eric.ed.gov/?id=EJ219194",
+        "ano": 1979
+      },
+      {
+        "titulo": "Secondary Schools and the Transition to Work in Latin America and the Caribbean",
+        "url": "https://publications.iadb.org/publications/english/document/Secondary-Schools-and-the-Transition-to-Work-in-Latin-America-and-the-Caribbean.pdf",
+        "ano": 2000
+      },
+      {
+        "titulo": "Secondary Education in Latin America and the Caribbean: The Challenge of Growth and Reform",
+        "url": "https://publications.iadb.org/en/secondary-education-latin-america-and-caribbean-challenge-growth-and-reform",
+        "ano": 2000
+      },
+      {
+        "titulo": "The Brazilian Vocational Education and Training 'Nonsystem'",
+        "url": "https://link.springer.com/rwe/10.1007/978-3-319-49789-1_109-1",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 19,
@@ -263,7 +749,34 @@
     "foto": "https://ui-avatars.com/api/?name=Daniel+Pittich&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor assistente de Educação Técnica na TU Munich (Escola de Ciências Sociais e Tecnologia), com formação original como carpinteiro antes de seguir carreira acadêmica."
+    "miniBio": "Professor assistente de Educação Técnica na TU Munich (Escola de Ciências Sociais e Tecnologia), com formação original como carpinteiro antes de seguir carreira acadêmica.",
+    "artigos": [
+      {
+        "titulo": "Learning Factories for Complex Competence Acquisition",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/03043797.2019.1567691",
+        "ano": 2019
+      },
+      {
+        "titulo": "Multidisciplinary Digital Competencies of Pre-Service Vocational Teachers",
+        "url": "https://link.springer.com/article/10.1186/s40461-021-00112-4",
+        "ano": 2021
+      },
+      {
+        "titulo": "VET Leaders' Collaborative Problem-Solving Skills",
+        "url": "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2024.1483034/full",
+        "ano": 2024
+      },
+      {
+        "titulo": "How Artificial Intelligence in Engineering Education Can Help to Foster Data Literacy and Motivation",
+        "url": "https://www.researchgate.net/publication/346431869_How_artificial_intelligence_in_engineering_education_can_help_to_foster_data_literacy_and_motivation",
+        "ano": 2020
+      },
+      {
+        "titulo": "Vocational Education and Training in South Africa: Leaders' Perceptions of a Mentoring Framework",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/ijmce-03-2023-0032/full/html",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 20,
@@ -277,7 +790,34 @@
     "foto": "https://ui-avatars.com/api/?name=David+Ashton&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Sociólogo da Universidade de Leicester, é pioneiro nos estudos sobre 'high skills societies' e sistemas de alto desempenho no trabalho. Com mais de 6."
+    "miniBio": "Sociólogo da Universidade de Leicester, é pioneiro nos estudos sobre 'high skills societies' e sistemas de alto desempenho no trabalho. Com mais de 6.",
+    "artigos": [
+      {
+        "titulo": "Education and Training for Development in East Asia",
+        "url": "https://www.routledge.com/Education-and-Training-for-Development-in-East-Asia-The-Political-Economy/Ashton-Green-James-Sung/p/book/9780203980286",
+        "ano": 1999
+      },
+      {
+        "titulo": "Towards a Framework for the Comparative Analysis of National Systems of Skill Formation",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/1468-2419.00093",
+        "ano": 2000
+      },
+      {
+        "titulo": "High Performance Work Practices: Linking Strategy and Skills to Performance Outcomes",
+        "url": "https://www.researchgate.net/publication/258829103_High_Performance_Work_Practices_linking_strategy_and_skills_to_performance_outcomes",
+        "ano": 2009
+      },
+      {
+        "titulo": "Supporting Workplace Learning for High Performance Working",
+        "url": "https://www.researchgate.net/publication/44833376_Supporting_Workplace_Learning_for_High_Performance_Working",
+        "ano": 2002
+      },
+      {
+        "titulo": "The Skill Formation Process: A Paradigm Shift?",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/1363908990120308",
+        "ano": 1999
+      }
+    ]
   },
   {
     "id": 21,
@@ -291,7 +831,34 @@
     "foto": "https://ui-avatars.com/api/?name=David+James&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Cardiff University no País de Gales, é especialista em identidade docente e culturas de aprendizagem em colleges de Further Education no Reino Unido."
+    "miniBio": "Professor da Cardiff University no País de Gales, é especialista em identidade docente e culturas de aprendizagem em colleges de Further Education no Reino Unido.",
+    "artigos": [
+      {
+        "titulo": "Authentic and self-directed learning in vocational education: Challenges to vocational educators",
+        "url": "https://www.researchgate.net/publication/48322927_Authentic_and_self-directed_learning_in_vocational_education_Challenges_to_vocational_educators",
+        "ano": 2011
+      },
+      {
+        "titulo": "Teaching in innovative vocational education in the Netherlands",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13540602.2012.746499",
+        "ano": 2012
+      },
+      {
+        "titulo": "The Nature of Study Programmes in Vocational Education",
+        "url": "https://link.springer.com/article/10.1007/s12186-011-9059-4",
+        "ano": 2011
+      },
+      {
+        "titulo": "Design principles for hybrid learning configurations at the interface between school and workplace",
+        "url": "https://link.springer.com/article/10.1007/s10984-016-9209-6",
+        "ano": 2016
+      },
+      {
+        "titulo": "A Design Perspective on the School-Work Boundary: A Hybrid Curriculum Model",
+        "url": "https://link.springer.com/article/10.1007/s12186-016-9150-y",
+        "ano": 2016
+      }
+    ]
   },
   {
     "id": 22,
@@ -305,7 +872,34 @@
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora e pesquisadora líder na HU University of Applied Sciences Utrecht, é referência em pedagogia vocacional nos Países Baixos."
+    "miniBio": "Professora e pesquisadora líder na HU University of Applied Sciences Utrecht, é referência em pedagogia vocacional nos Países Baixos.",
+    "artigos": [
+      {
+        "titulo": "Education and Training Regimes: Macro-Institutional Evidence",
+        "url": "https://scholar.google.com/scholar?q=Buechtemann+Verdier+Education+Training+Regimes+Macro-Institutional+Evidence+1998",
+        "ano": 1998
+      },
+      {
+        "titulo": "La France a-t-elle changé de régime d'éducation et de formation?",
+        "url": "https://www.persee.fr/doc/forem_0759-6340_2001_num_76_1_2444",
+        "ano": 2001
+      },
+      {
+        "titulo": "Lifelong Learning Regimes versus Vocational Education and Training Systems in Europe",
+        "url": "https://link.springer.com/chapter/10.1057/9781137025692_4",
+        "ano": 2013
+      },
+      {
+        "titulo": "Convention Theory Facing the Diversity of Vocational Education and Training",
+        "url": "https://link.springer.com/referenceworkentry/10.1007/978-3-030-52130-1_122-1",
+        "ano": 2021
+      },
+      {
+        "titulo": "Reforming the training system in France",
+        "url": "https://www.researchgate.net/publication/227894591_Reforming_the_training_system_in_France",
+        "ano": 2001
+      }
+    ]
   },
   {
     "id": 23,
@@ -319,7 +913,34 @@
     "foto": "https://ui-avatars.com/api/?name=Elly+de+Bruijn&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Elly de Bruijn (ID 22)."
+    "miniBio": "Entrada duplicada — ver Elly de Bruijn (ID 22).",
+    "artigos": [
+      {
+        "titulo": "A review of twenty years of competency-based training in the Australian vocational education and training system",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1468-2419.2009.00340.x",
+        "ano": 2010
+      },
+      {
+        "titulo": "What makes a good vocational education and training (VET) teacher?",
+        "url": "https://www.researchgate.net/publication/319397869_What_makes_a_good_VET_teacher_Views_of_Australian_VET_teachers_and_students",
+        "ano": 2017
+      },
+      {
+        "titulo": "Working with a competency-based Training Package",
+        "url": "https://doi.org/10.1080/14480220.2015.1077722",
+        "ano": 2015
+      },
+      {
+        "titulo": "The Importance of VET Teacher Professionalism: An Australian Case Study",
+        "url": "https://www.researchgate.net/publication/337013372_The_Importance_of_VET_Teacher_Professionalism_An_Australian_Case_Study",
+        "ano": 2019
+      },
+      {
+        "titulo": "How closely do Australian Training Package qualifications reflect the skills in occupations?",
+        "url": "https://scholar.google.com/scholar?q=Erica+Smith+Training+Package+qualifications+skills+occupations+empirical+investigation",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 24,
@@ -333,7 +954,34 @@
     "foto": "https://ui-avatars.com/api/?name=Eric+Verdier&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Pesquisador do CEREQ/CNRS na França, é um dos principais teóricos dos 'regimes de formação' na tradição sociológica francesa."
+    "miniBio": "Pesquisador do CEREQ/CNRS na França, é um dos principais teóricos dos 'regimes de formação' na tradição sociológica francesa.",
+    "artigos": [
+      {
+        "titulo": "Quality Assurance of Qualifications in TVET: Korea Case Study",
+        "url": "https://tvet-online.asia/issue/7/cho/",
+        "ano": 2016
+      },
+      {
+        "titulo": "Towards Quality Assurance of Technical and Vocational Education and Training",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000259282",
+        "ano": 2016
+      },
+      {
+        "titulo": "Guidelines for the Quality Assurance of TVET Qualifications in the Asia-Pacific Region",
+        "url": "https://bangkok.unesco.org/content/guidelines-quality-assurance-tvet-qualifications-asia-pacific-region",
+        "ano": 2017
+      },
+      {
+        "titulo": "Discussion paper on quality assurance of qualifications in TVET",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000262717",
+        "ano": 2016
+      },
+      {
+        "titulo": "National Qualifications Framework and TVET Quality Assurance in the Asia-Pacific Region",
+        "url": "https://scholar.google.com/scholar?q=Eunsang+Cho+National+Qualifications+Framework+TVET+Quality+Assurance+Asia+Pacific",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 25,
@@ -347,7 +995,34 @@
     "foto": "https://ui-avatars.com/api/?name=Erica+Smith&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Federation University Australia, é especialista na força de trabalho docente de educação vocacional e qualidade do ensino."
+    "miniBio": "Professora da Federation University Australia, é especialista na força de trabalho docente de educação vocacional e qualidade do ensino.",
+    "artigos": [
+      {
+        "titulo": "The Assessment: Knowledge, Skills, and Competitiveness",
+        "url": "https://academic.oup.com/oxrep/article-abstract/15/1/1/480809",
+        "ano": 1999
+      },
+      {
+        "titulo": "Governance in English VET: On the functioning of a fractured 'system'",
+        "url": "https://journals.sagepub.com/doi/10.1177/1745499915612185",
+        "ano": 2015
+      },
+      {
+        "titulo": "UK's VET Policy and the 'Third Way'",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/1363908990120307",
+        "ano": 1999
+      },
+      {
+        "titulo": "Flexibility, quality and competitiveness",
+        "url": "https://journals.sagepub.com/doi/10.1177/002795019916800108",
+        "ano": 1999
+      },
+      {
+        "titulo": "Whatever Happened to Skill?",
+        "url": "https://www.academia.edu/122285229/Whatever_Happened_to_Skill",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 26,
@@ -361,7 +1036,34 @@
     "foto": "https://ui-avatars.com/api/?name=Eunsang+Cho&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador do KRIVET (Instituto Coreano de Pesquisa em Educação Vocacional e Treinamento), é especialista em sistemas de qualificação nacional e garantia de qualidade na Coreia do Sul."
+    "miniBio": "Pesquisador do KRIVET (Instituto Coreano de Pesquisa em Educação Vocacional e Treinamento), é especialista em sistemas de qualificação nacional e garantia de qualidade na Coreia do Sul.",
+    "artigos": [
+      {
+        "titulo": "Digitalisation in the Curricula of Vocational Schools: Text Mining as an Instrument of Curricula Analysis",
+        "url": "https://link.springer.com/article/10.1007/s10758-022-09591-0",
+        "ano": 2022
+      },
+      {
+        "titulo": "Multidisciplinary digital competencies of pre-service vocational teachers",
+        "url": "https://ervet-journal.springeropen.com/articles/10.1186/s40461-021-00112-4",
+        "ano": 2021
+      },
+      {
+        "titulo": "Digitalization of vocational education under crisis conditions",
+        "url": "https://acnsci.org/journal/index.php/etq/article/view/49",
+        "ano": 2021
+      },
+      {
+        "titulo": "How do nations around the world navigate the digitalization of vocational education policies?",
+        "url": "https://link.springer.com/article/10.1007/s10639-025-13567-9",
+        "ano": 2025
+      },
+      {
+        "titulo": "Felix Breyer publications on VET innovation and digitalization",
+        "url": "https://orcid.org/0000-0002-9957-3209",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 27,
@@ -375,7 +1077,34 @@
     "foto": "https://ui-avatars.com/api/?name=Ewart+Keep&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Professor emérito da Universidade de Oxford e pesquisador do SKOPE (Centre on Skills, Knowledge and Organisational Performance), é um dos críticos mais influentes das políticas de competências no mundo anglo-saxão."
+    "miniBio": "Professor emérito da Universidade de Oxford e pesquisador do SKOPE (Centre on Skills, Knowledge and Organisational Performance), é um dos críticos mais influentes das políticas de competências no mundo anglo-saxão.",
+    "artigos": [
+      {
+        "titulo": "Competence Development and Assessment in TVET (COMET): Theoretical Framework and Empirical Results",
+        "url": "https://link.springer.com/book/10.1007/978-94-007-4725-8",
+        "ano": 2013
+      },
+      {
+        "titulo": "Handbook of Technical and Vocational Education and Training Research",
+        "url": "https://scholar.google.com/scholar?q=Rauner+Maclean+Handbook+Technical+Vocational+Education+Training+Research+2008",
+        "ano": 2008
+      },
+      {
+        "titulo": "Identities at Work",
+        "url": "https://scholar.google.com/scholar?q=Brown+Kirpal+Rauner+Identities+at+Work+vocational+education+2007",
+        "ano": 2007
+      },
+      {
+        "titulo": "Practical knowledge and occupational competence",
+        "url": "https://www.semanticscholar.org/paper/Practical-knowledge-and-occupational-competence-Rauner/ca5abd71268d1278b4b0cc5a969a86202d7c527b",
+        "ano": 2007
+      },
+      {
+        "titulo": "Work and Business Process Orientation",
+        "url": "https://link.springer.com/rwe/10.1007/978-981-97-0987-8_32",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 28,
@@ -389,7 +1118,34 @@
     "foto": "https://ui-avatars.com/api/?name=Felix+Breyer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
     "genero": "M",
-    "miniBio": "Pesquisador com foco em inovação e digitalização na educação vocacional nos países nórdicos."
+    "miniBio": "Pesquisador com foco em inovação e digitalização na educação vocacional nos países nórdicos.",
+    "artigos": [
+      {
+        "titulo": "Skilling Australia for the future? A study of quality assurance in Australia's vocational education and training",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2010.509805",
+        "ano": 2010
+      },
+      {
+        "titulo": "Human Capital Impacts of Income Inequality: An Extensive Empirical Analysis from the African Continent",
+        "url": "https://ideas.repec.org/a/sae/sagope/v14y2024i2p21582440241251472.html",
+        "ano": 2024
+      },
+      {
+        "titulo": "The relationship between poverty, income inequality and inclusive growth in Sub-Saharan Africa",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0264999323002274",
+        "ano": 2023
+      },
+      {
+        "titulo": "Regional Integration and Economic Growth: New Empirical Evidence from the East African Community",
+        "url": "https://scholar.google.com/scholar?q=Agbola+Regional+Integration+Economic+Growth+East+African+Community+2021",
+        "ano": 2021
+      },
+      {
+        "titulo": "Foreign direct investment, human capital and economic growth in Ghana",
+        "url": "https://scholar.google.com/scholar?q=Agbola+Foreign+direct+investment+human+capital+economic+growth+Ghana",
+        "ano": 2013
+      }
+    ]
   },
   {
     "id": 29,
@@ -403,7 +1159,34 @@
     "foto": "https://ui-avatars.com/api/?name=Felix+Rauner&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor emérito da Universidade de Bremen, é o criador do modelo COMET para medição de competência profissional em larga escala."
+    "miniBio": "Professor emérito da Universidade de Bremen, é o criador do modelo COMET para medição de competência profissional em larga escala.",
+    "artigos": [
+      {
+        "titulo": "Technical and Vocational Teacher Education and Training in International and Development Co-Operation",
+        "url": "https://link.springer.com/book/10.1007/978-981-16-6474-8",
+        "ano": 2022
+      },
+      {
+        "titulo": "TVET Teacher Education on the Threshold of Internationalisation",
+        "url": "https://unevoc.unesco.org/fileadmin/user_upload/pubs/TVET_Teacher_Education.pdf",
+        "ano": 2007
+      },
+      {
+        "titulo": "The Future of TVET Teacher Education – An Analysis of International Trends and Perspectives",
+        "url": "https://www.degruyterbrill.com/document/doi/10.1515/wvte-2025-0008/html",
+        "ano": 2025
+      },
+      {
+        "titulo": "International Framework for a Master's Degree for the Professionalisation of TVET Teachers",
+        "url": "https://link.springer.com/chapter/10.1007/978-981-16-6474-8_9",
+        "ano": 2022
+      },
+      {
+        "titulo": "Models of TVET Teacher Education in Germany and their Potential to Meet Growing Demands",
+        "url": "https://scholar.google.com/scholar?q=Bünning+Models+TVET+Teacher+Education+Germany+Growing+Demands",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 30,
@@ -417,7 +1200,34 @@
     "foto": "https://ui-avatars.com/api/?name=Frank+Agbola&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor de Economia na Universidade de Newcastle, Austrália, com mais de 120 produções científicas e 67 artigos em periódicos de alto impacto."
+    "miniBio": "Professor de Economia na Universidade de Newcastle, Austrália, com mais de 120 produções científicas e 67 artigos em periódicos de alto impacto.",
+    "artigos": [
+      {
+        "titulo": "Vocational Education and Training 2020: consequences for continuing development of the recognised-occupation model",
+        "url": "https://www.voced.edu.au/content/ngv:56602",
+        "ano": 2013
+      },
+      {
+        "titulo": "Sackmann – das Lehrbuch für die Meisterprüfung, Teil IV: Berufs- und Arbeitspädagogik",
+        "url": "https://scholar.google.com/scholar?q=Esser+Sackmann+Lehrbuch+Meisterprüfung+Berufs+Arbeitspädagogik+2002",
+        "ano": 2002
+      },
+      {
+        "titulo": "Die Umsetzung des Deutschen Qualifikationsrahmens",
+        "url": "https://scholar.google.com/scholar?q=Esser+Umsetzung+Deutschen+Qualifikationsrahmens+BIBB",
+        "ano": 2012
+      },
+      {
+        "titulo": "Digitalisierung der Arbeitswelt: Zentrale Herausforderung für allgemeine und berufliche Bildung",
+        "url": "https://www.bibb.de/de/pressemitteilung_26873.php",
+        "ano": 2016
+      },
+      {
+        "titulo": "Berufsbildung im Handwerk: Kontinuität und Perspektiven",
+        "url": "https://scholar.google.com/scholar?q=Friedrich+Hubert+Esser+Berufsbildung+Handwerk+Kontinuität+Perspektiven+2002",
+        "ano": 2002
+      }
+    ]
   },
   {
     "id": 31,
@@ -431,7 +1241,34 @@
     "foto": "https://ui-avatars.com/api/?name=Frank+Bünte&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador da Hochschule Ruhr West (Universidade de Ciências Aplicadas de Ruhr Oeste) na Alemanha, com foco em sistemas de garantia de qualidade na educação vocacional."
+    "miniBio": "Pesquisador da Hochschule Ruhr West (Universidade de Ciências Aplicadas de Ruhr Oeste) na Alemanha, com foco em sistemas de garantia de qualidade na educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "A Produtividade da Escola Improdutiva: um (re)exame das relações entre educação e estrutura econômico-social capitalista",
+        "url": "https://www.cortezeditora.com.br/educacao/a-produtividade-da-escola-improdutiva-977/p",
+        "ano": 1984
+      },
+      {
+        "titulo": "Educação e a Crise do Capitalismo Real",
+        "url": "https://rbep.inep.gov.br/ojs3/index.php/rbep/article/view/401",
+        "ano": 1995
+      },
+      {
+        "titulo": "Teoria e práxis e o antagonismo entre a formação politécnica e as relações sociais capitalistas",
+        "url": "https://www.scielo.br/j/tes/a/zQ8Gc4nzkz3y5kSfcxqdRZk/",
+        "ano": 2009
+      },
+      {
+        "titulo": "Ensino Médio Integrado: Concepções e Contradições",
+        "url": "https://scholar.google.com/scholar?q=Frigotto+Ciavatta+Ramos+Ensino+M%C3%A9dio+Integrado+Concep%C3%A7%C3%B5es+Contradi%C3%A7%C3%B5es+2005",
+        "ano": 2005
+      },
+      {
+        "titulo": "A Produtividade da Escola Improdutiva 30 anos depois: Regressão Social e Hegemonia às Avessas",
+        "url": "https://periodicos.uff.br/trabalhonecessario/article/view/59644",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 32,
@@ -445,7 +1282,34 @@
     "foto": "https://ui-avatars.com/api/?name=Friedrich+Hubert+Esser&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Presidente do BIBB (Instituto Federal de Educação e Formação Profissional da Alemanha), é o principal gestor estratégico do sistema dual alemão."
+    "miniBio": "Presidente do BIBB (Instituto Federal de Educação e Formação Profissional da Alemanha), é o principal gestor estratégico do sistema dual alemão.",
+    "artigos": [
+      {
+        "titulo": "The 4th Industrial Revolution – Its Impact on Vocational Skills",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13639080.2020.1858230",
+        "ano": 2021
+      },
+      {
+        "titulo": "From the Analysis of Work-Processes to Designing Competence-Based Occupational Standards and Vocational Curricula",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/EJTD-10-2015-0078/full/html",
+        "ano": 2017
+      },
+      {
+        "titulo": "Work-Process Based Development of Curricula: A Framework",
+        "url": "https://tvet-online.asia/11/spoettl-etal-tvet11/",
+        "ano": 2018
+      },
+      {
+        "titulo": "Work-Process-Analysis in VET-Research",
+        "url": "https://www.pedocs.de/volltexte/2014/9157/pdf/Spoettl_2007_Work_Process_Analysis.pdf",
+        "ano": 2007
+      },
+      {
+        "titulo": "Development of Industry 4.0 – Are Skilled Workers and Semi-Engineers the Losers?",
+        "url": "https://www.researchgate.net/publication/323187373_Development_of_Industry_40_-_Are_Skilled_Workers_ans_Semi-Engineers_the_Losers",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 33,
@@ -459,7 +1323,34 @@
     "foto": "https://ui-avatars.com/api/?name=Gaudêncio+Frigotto&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "lattes",
     "genero": "M",
-    "miniBio": "Professor emérito da UERJ, é o principal teórico crítico da educação profissional na América Latina."
+    "miniBio": "Professor emérito da UERJ, é o principal teórico crítico da educação profissional na América Latina.",
+    "artigos": [
+      {
+        "titulo": "Costs and Industrial Structure in Contemporary British Higher Education",
+        "url": "https://academic.oup.com/ej/article-abstract/107/442/727/5057699",
+        "ano": 1997
+      },
+      {
+        "titulo": "Measuring the Research Performance of UK Economics Departments: An Application of Data Envelopment Analysis",
+        "url": "https://academic.oup.com/oep/article-abstract/45/2/332/2361482",
+        "ano": 1993
+      },
+      {
+        "titulo": "Higher Education Institutions' Costs and Efficiency: Taking the Decomposition a Further Step",
+        "url": "https://ideas.repec.org/a/eee/ecoedu/v28y2009i1p107-113.html",
+        "ano": 2009
+      },
+      {
+        "titulo": "Performance Indicators in Higher Education: A Survey of Recent Work",
+        "url": "https://academic.oup.com/oxrep/article-abstract/8/2/19/395905",
+        "ano": 1992
+      },
+      {
+        "titulo": "Beyond Frontiers: Comparing the Efficiency of Higher Education Decision-Making Units Across More Than One Country",
+        "url": "https://scholar.google.com/scholar?q=Johnes+Agasisti+Beyond+frontiers+comparing+efficiency+higher+education+2009",
+        "ano": 2009
+      }
+    ]
   },
   {
     "id": 34,
@@ -473,7 +1364,34 @@
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Bremen, é especialista em currículos baseados em processos de trabalho reais e na adaptação da formação profissional às demandas da manufatura avançada."
+    "miniBio": "Professor da Universidade de Bremen, é especialista em currículos baseados em processos de trabalho reais e na adaptação da formação profissional às demandas da manufatura avançada.",
+    "artigos": [
+      {
+        "titulo": "Students' Learning Processes during School-Based Learning and Workplace Learning in Vocational Education: A Review",
+        "url": "https://link.springer.com/article/10.1007/s12186-011-9069-2",
+        "ano": 2012
+      },
+      {
+        "titulo": "Students' Personal Professional Theories in Competence-Based Vocational Education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820903230999",
+        "ano": 2009
+      },
+      {
+        "titulo": "Revealing Personal Professional Theories",
+        "url": "https://link.springer.com/article/10.1007/s11135-010-9322-z",
+        "ano": 2011
+      },
+      {
+        "titulo": "Development of Students' Personal Professional Theories in Senior Secondary Vocational Education",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/09500790.2010.550280",
+        "ano": 2011
+      },
+      {
+        "titulo": "Combining Concept Maps and Interviews to Produce Representations of Personal Professional Theories in Higher Vocational Education",
+        "url": "https://link.springer.com/article/10.1007/s11251-017-9407-3",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 35,
@@ -487,7 +1405,34 @@
     "foto": "https://ui-avatars.com/api/?name=Georg+Spöttl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "academia",
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Georg Spöttl (ID 34)."
+    "miniBio": "Entrada duplicada — ver Georg Spöttl (ID 34).",
+    "artigos": [
+      {
+        "titulo": "The Challenge of Self-Directed and Self-Regulated Learning in Vocational Education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2010.523479",
+        "ano": 2010
+      },
+      {
+        "titulo": "Learning in Workplace Simulations in Vocational Education: A Student Perspective",
+        "url": "https://link.springer.com/article/10.1007/s12186-017-9186-7",
+        "ano": 2018
+      },
+      {
+        "titulo": "Teachers' Perceptions of Teaching in Workplace Simulations in Vocational Education",
+        "url": "https://link.springer.com/article/10.1007/s12186-015-9137-0",
+        "ano": 2015
+      },
+      {
+        "titulo": "Emphasising Self-Directed Learning in VET-Schools: Teachers' Convictions and Role Negotiations",
+        "url": "https://www.researchgate.net/publication/382419000_Emphasising_Self-Directed_Learning_in_VET-Schools_Teachers_Convictions_and_Role_Negotiations",
+        "ano": 2024
+      },
+      {
+        "titulo": "From Doing to Learning: Students' Self-Evaluation and Reflective Practices in VET",
+        "url": "https://www.researchgate.net/publication/383990820_From_doing_to_learning_Students_self-evaluation_and_reflective_practices_in_VET",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 36,
@@ -501,7 +1446,34 @@
     "foto": "https://ui-avatars.com/api/?name=Geraint+Johnes&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor de Economia na Lancaster University Management School, é especialista em economia do trabalho e economia da educação."
+    "miniBio": "Professor de Economia na Lancaster University Management School, é especialista em economia do trabalho e economia da educação.",
+    "artigos": [
+      {
+        "titulo": "European Union Policies in Education and Training: The Lisbon Agenda as a Turning Point?",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/03050060500515652",
+        "ano": 2006
+      },
+      {
+        "titulo": "Dual Study Programmes in Germany: Blurring the Boundaries between Higher Education and Vocational Training?",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/03054985.2019.1687438",
+        "ano": 2020
+      },
+      {
+        "titulo": "The Transition of Vocational Education and Training in Eastern Germany",
+        "url": "https://www.journals.uchicago.edu/doi/abs/10.1086/447630",
+        "ano": 2000
+      },
+      {
+        "titulo": "Towards Permeability between Vocational and Academic Education",
+        "url": "https://www.researchgate.net/publication/249468608_Towards_Permeability_between_Vocational_and_Academic_Education_Experiences_and_Analyses_from_Current_Initiatives_in_Germany",
+        "ano": 2010
+      },
+      {
+        "titulo": "The European Union and Education and Training: An Overview of Policies and Initiatives",
+        "url": "https://link.springer.com/chapter/10.1007/0-306-48077-8_2",
+        "ano": 2003
+      }
+    ]
   },
   {
     "id": 37,
@@ -515,7 +1487,34 @@
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Fontys University of Applied Sciences nos Países Baixos, é um dos pesquisadores mais citados em clusters bibliométricos sobre educação vocacional."
+    "miniBio": "Professor da Fontys University of Applied Sciences nos Países Baixos, é um dos pesquisadores mais citados em clusters bibliométricos sobre educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "A Logic of Enumeration: The Nature and Effects of National Literacy and Numeracy Testing in Australia",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/02680939.2014.945964",
+        "ano": 2015
+      },
+      {
+        "titulo": "Teacher Professional Development as an Effect of Policy and Practice: A Bourdieuan Analysis",
+        "url": "https://scholar.google.com/scholar?q=Hardy+Lingard+Teacher+professional+development+Bourdieuan+analysis+2008",
+        "ano": 2008
+      },
+      {
+        "titulo": "Critiquing Teacher Professional Development: Teacher Learning within the Field of Teachers' Work",
+        "url": "https://scholar.google.com/scholar?q=Hardy+Critiquing+teacher+professional+development+Critical+Studies+Education+2010",
+        "ano": 2010
+      },
+      {
+        "titulo": "The Politics of Teacher Professional Development: Policy, Research and Practice",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203110386/politics-teacher-professional-development-ian-hardy",
+        "ano": 2012
+      },
+      {
+        "titulo": "The Impact of Policy upon Practice: An Australian Study of Teachers' Professional Development",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13664530802038089",
+        "ano": 2008
+      }
+    ]
   },
   {
     "id": 38,
@@ -529,7 +1528,34 @@
     "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Harmen Schaap (ID 37)."
+    "miniBio": "Entrada duplicada — ver Harmen Schaap (ID 37).",
+    "artigos": [
+      {
+        "titulo": "Institutional Diversity in Russian Higher Education: Revolutions and Evolution",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/21568235.2014.916532",
+        "ano": 2014
+      },
+      {
+        "titulo": "Excellence Initiatives to Establish World-Class Universities: Evaluation of Recent Experiences",
+        "url": "https://www.researchgate.net/publication/290107958_Excellence_Initiatives_to_Establish_World-Class_Universities_Evaluation_of_Recent_Experiences",
+        "ano": 2013
+      },
+      {
+        "titulo": "University Expansion in a Changing Global Economy: Triumph of the BRICs?",
+        "url": "https://www.sup.org/books/title/?id=22662",
+        "ano": 2013
+      },
+      {
+        "titulo": "25 Years of Transformations of Higher Education Systems in Post-Soviet Countries",
+        "url": "https://www.researchgate.net/publication/324739515_25_Years_of_Transformations_of_Higher_Education_Systems_in_Post-Soviet_Countries_Reform_and_Continuity",
+        "ano": 2018
+      },
+      {
+        "titulo": "Generic and Specific Skills as Components of Human Capital: New Challenges for Education Theory and Practice",
+        "url": "https://foresight-journal.hse.ru/article/view/19246",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 39,
@@ -543,7 +1569,34 @@
     "foto": "https://ui-avatars.com/api/?name=Helen+Jossberger&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "F",
-    "miniBio": "Professora assistente na Universidade de Regensburg, Alemanha, especializada em aprendizagem autodirigida e autorregulada em contextos de educação vocacional."
+    "miniBio": "Professora assistente na Universidade de Regensburg, Alemanha, especializada em aprendizagem autodirigida e autorregulada em contextos de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Work-Based Learning and Social Justice: 'Learning to Labour' and the New Vocationalism in England",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13639080410001677400",
+        "ano": 2004
+      },
+      {
+        "titulo": "Shifting Identity: New Conditions and the Transformation of Practice – Teaching within Post-Compulsory Education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636829900200081",
+        "ano": 1999
+      },
+      {
+        "titulo": "In Pursuit of Equity: Vocational Education and Training and Social Justice",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13596748.2023.2221119",
+        "ano": 2023
+      },
+      {
+        "titulo": "Imaginary Friends: Managerialism, Globalisation and Post-Compulsory Education and Training in England",
+        "url": "https://www.researchgate.net/publication/249914365_Imaginary_Friends_Managerialism_globalisation_and_post-compulsory_education_and_training_in_England",
+        "ano": 2003
+      },
+      {
+        "titulo": "Vocational Education in the Fourth Industrial Revolution",
+        "url": "https://www.researchgate.net/publication/358028349_Avis_J_2020_Vocational_education_in_the_fourth_industrial_revolution_Palgrave_Pivot",
+        "ano": 2020
+      }
+    ]
   },
   {
     "id": 40,
@@ -557,7 +1610,34 @@
     "foto": "https://ui-avatars.com/api/?name=Hubert+Ertl&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Diretor de pesquisa do BIBB (Instituto Federal de Educação e Formação Profissional) e professor da Universidade de Paderborn, é especialista em permeabilidade entre educação vocacional e ensino superior na Alemanha."
+    "miniBio": "Diretor de pesquisa do BIBB (Instituto Federal de Educação e Formação Profissional) e professor da Universidade de Paderborn, é especialista em permeabilidade entre educação vocacional e ensino superior na Alemanha.",
+    "artigos": [
+      {
+        "titulo": "Secondary Career and Technical Education and Comprehensive School Reform",
+        "url": "https://doi.org/10.3102/00346543073002231",
+        "ano": 2003
+      },
+      {
+        "titulo": "Rigor and Relevance: Enhancing High School Students' Math Skills Through Career and Technical Education",
+        "url": "https://www.researchgate.net/publication/250185052_Rigor_and_Relevance_Enhancing_High_School_Students_Math_Skills_Through_Career_and_Technical_Education",
+        "ano": 2008
+      },
+      {
+        "titulo": "Career and Technical Education and School-to-Work at the End of the 20th Century",
+        "url": "https://www.ingentaconnect.com/content/acter/cter/2005/00000030/00000002/art00005",
+        "ano": 2005
+      },
+      {
+        "titulo": "The Impact of School-to-Work and Career and Technical Education in the United States",
+        "url": "https://scholar.google.com/scholar?q=Stone+impact+school-to-work+career+technical+education+National+Longitudinal+Survey+Youth+1997+2002",
+        "ano": 2002
+      },
+      {
+        "titulo": "Career and Technical Education in the Late 1990s: A Descriptive Study",
+        "url": "https://scholar.lib.vt.edu/ejournals/JVER/v29n3/stone.html",
+        "ano": 2004
+      }
+    ]
   },
   {
     "id": 41,
@@ -571,7 +1651,34 @@
     "foto": "https://ui-avatars.com/api/?name=Ian+Hardy&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor associado da School of Education na Universidade de Queensland, investiga políticas educacionais e suas manifestações em contextos institucionais. Com mais de 7."
+    "miniBio": "Professor associado da School of Education na Universidade de Queensland, investiga políticas educacionais e suas manifestações em contextos institucionais. Com mais de 7.",
+    "artigos": [
+      {
+        "titulo": "Creating New Positions? Direct and Indirect Effects of a Subsidized Apprenticeship Program",
+        "url": "https://ideas.repec.org/p/wbk/wbrwps/8561.html",
+        "ano": 2018
+      },
+      {
+        "titulo": "Direct and Indirect Effects of Subsidized Dual Apprenticeship Programs",
+        "url": "https://repec.iza.org/dp12793.pdf",
+        "ano": 2019
+      },
+      {
+        "titulo": "Dual Apprenticeships in Mexico: Insights Into the First Employment",
+        "url": "https://journals.suub.uni-bremen.de/index.php/ijrvet/article/download/491/432",
+        "ano": 2026
+      },
+      {
+        "titulo": "Navigating Gender in Dual Education: Comparative Insights Into Access, Learning, and School-to-Work Transitions",
+        "url": "https://scholar.google.com/scholar?q=Jimena+Hernandez-Fernandez+Navigating+Gender+Dual+Education+School-to-Work+Transitions",
+        "ano": 2023
+      },
+      {
+        "titulo": "La información como política educativa: propuestas para reducir las brechas informativas",
+        "url": "https://scholar.google.com/scholar?q=Jimena+Hernandez-Fernandez+informacion+politica+educativa+brechas+informativas+EMS",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 42,
@@ -585,7 +1692,34 @@
     "foto": "https://ui-avatars.com/api/?name=Isak+Froumin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da HSE University (Moscou), é referência em análise dos sistemas educacionais pós-soviéticos e suas transformações."
+    "miniBio": "Professor da HSE University (Moscou), é referência em análise dos sistemas educacionais pós-soviéticos e suas transformações.",
+    "artigos": [
+      {
+        "titulo": "Towards A Framework For The Comparative Analysis Of National Systems Of Skill Formation",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/1468-2419.00093",
+        "ano": 2000
+      },
+      {
+        "titulo": "Supporting Workplace Learning for High Performance Working",
+        "url": "https://www.researchgate.net/profile/Johnny-Sung-2/publication/44833376_Supporting_Workplace_Learning_for_High_Performance_Working",
+        "ano": 2002
+      },
+      {
+        "titulo": "Skills in Business: The Role of Business Strategy, Sectoral Skills Development and Skills Policy",
+        "url": "https://uk.sagepub.com/en-gb/eur/skills-in-business/book234119",
+        "ano": 2015
+      },
+      {
+        "titulo": "The Nature of Employability Skills: Empirical Evidence from Singapore",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/ijtd.12008",
+        "ano": 2013
+      },
+      {
+        "titulo": "Education and Training for Development in East Asia",
+        "url": "https://www.amazon.com/Education-Training-Development-East-Asia/dp/0415181267",
+        "ano": 1999
+      }
+    ]
   },
   {
     "id": 43,
@@ -599,7 +1733,34 @@
     "foto": "https://ui-avatars.com/api/?name=James+Avis&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Derby, é um dos principais teóricos críticos da educação vocacional no mundo anglófono."
+    "miniBio": "Professor da Universidade de Derby, é um dos principais teóricos críticos da educação vocacional no mundo anglófono.",
+    "artigos": [
+      {
+        "titulo": "Competencies for the Contemporary Career: Development and Preliminary Validation of the Career Competencies Questionnaire",
+        "url": "https://journals.sagepub.com/doi/10.1177/0894845312467501",
+        "ano": 2013
+      },
+      {
+        "titulo": "Tales of the Unexpected: Integrating Career Shocks in the Contemporary Careers Literature",
+        "url": "https://sajip.co.za/index.php/sajip/article/view/1503",
+        "ano": 2018
+      },
+      {
+        "titulo": "The Covid-19 Crisis as a Career Shock: Implications for Careers and Vocational Behavior",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0001879120300592",
+        "ano": 2020
+      },
+      {
+        "titulo": "Crafting your Career: How Career Competencies Relate to Career Success via Job Crafting",
+        "url": "https://iaap-journals.onlinelibrary.wiley.com/doi/10.1111/apps.12082",
+        "ano": 2017
+      },
+      {
+        "titulo": "Career Transitions Across the Lifespan: A Review and Research Agenda",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0001879123001173",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 44,
@@ -613,7 +1774,34 @@
     "foto": "https://ui-avatars.com/api/?name=James+Stone+III&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Diretor do National Research Center for Career and Technical Education (NRCCTE) e pesquisador do SREB nos Estados Unidos, é referência em pesquisa aplicada sobre Career and Technical Education (CTE)."
+    "miniBio": "Diretor do National Research Center for Career and Technical Education (NRCCTE) e pesquisador do SREB nos Estados Unidos, é referência em pesquisa aplicada sobre Career and Technical Education (CTE).",
+    "artigos": [
+      {
+        "titulo": "L'approche par « compétences » dans l'enseignement professionnel français",
+        "url": "https://journals.openedition.org/cres/3026?lang=fr",
+        "ano": 2017
+      },
+      {
+        "titulo": "Quelle certification des compétences transversales en France?",
+        "url": "https://www.cereq.fr/sites/default/files/2021-07/Bref411-web.pdf",
+        "ano": 2021
+      },
+      {
+        "titulo": "What Certification for Transversal Competences in France?",
+        "url": "https://www.cereq.fr/en/what-certification-transversal-competences-france",
+        "ano": 2021
+      },
+      {
+        "titulo": "Genèse et institutionnalisation d'une nouvelle catégorie, la certification (1972/2018)",
+        "url": "https://journals.openedition.org/formationemploi/index.html",
+        "ano": 2023
+      },
+      {
+        "titulo": "Developing, Assessing and Validating Transversal Key Competences in VET: France Country Report (Track-VET)",
+        "url": "https://scholar.google.com/scholar?q=Paddeu+Galli+Veneau+Track-VET+France+transversal+competences+2019",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 45,
@@ -627,7 +1815,34 @@
     "foto": "https://ui-avatars.com/api/?name=Jimena+Hernández-Fernández&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Pesquisadora da Universidad Iberoamericana no México, é especialista na implementação do modelo de formação dual mexicano e seu impacto na empregabilidade juvenil."
+    "miniBio": "Pesquisadora da Universidad Iberoamericana no México, é especialista na implementação do modelo de formação dual mexicano e seu impacto na empregabilidade juvenil.",
+    "artigos": [
+      {
+        "titulo": "Improving College-to-Work Transitions Through Enhanced Training for Employment",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13596748.2016.1272084",
+        "ano": 2017
+      },
+      {
+        "titulo": "Higher Level Vocational Education in South Africa: Dilemmas of a Differentiated System",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-030-84502-5_5",
+        "ano": 2022
+      },
+      {
+        "titulo": "Growing the TVET Knowledge Base in the South: South African Postgraduate Output, 2008–2018",
+        "url": "https://jovacet.ac.za/index.php/JOVACET/article/view/129",
+        "ano": 2020
+      },
+      {
+        "titulo": "What Does 'Quality Teaching and Learning' Mean in TVET Contexts?",
+        "url": "https://jovacet.ac.za/index.php/JOVACET/article/view/419",
+        "ano": 2024
+      },
+      {
+        "titulo": "JOVACET Volume 1 Issue 1: Vocational Education and Training in South Africa",
+        "url": "https://www.academia.edu/55827948/JOVACET_Volume_1_Issue_1",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 46,
@@ -641,7 +1856,34 @@
     "foto": "https://ui-avatars.com/api/?name=Johnny+Sung&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor honorário da Universidade de Oxford e ex-diretor do Centre for Skills, Performance and Productivity no Institute for Adult Learning de Singapura."
+    "miniBio": "Professor honorário da Universidade de Oxford e ex-diretor do Centre for Skills, Performance and Productivity no Institute for Adult Learning de Singapura.",
+    "artigos": [
+      {
+        "titulo": "Improving Workplace Learning",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203946947/improving-workplace-learning-phil-hodkinson-helen-rainbird-lorna-unwin-karen-evans",
+        "ano": 2006
+      },
+      {
+        "titulo": "Working to Learn: Transforming Learning in the Workplace",
+        "url": "https://www.taylorfrancis.com/books/edit/10.4324/9780203417164/working-learn-karen-evans-phil-hodkinson-lorna-unwin",
+        "ano": 2002
+      },
+      {
+        "titulo": "Concepts of Bounded Agency in Education, Work, and the Personal Lives of Young Adults",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1080/00207590600991237",
+        "ano": 2007
+      },
+      {
+        "titulo": "Recognition of Tacit Skills and Knowledge: Sustaining Learning Outcomes in Workplace Environments",
+        "url": "https://www.emerald.com/jwl/article-abstract/16/1-2/63/247848/Recognition-of-tacit-skills-and",
+        "ano": 2004
+      },
+      {
+        "titulo": "Workplace Learning in Changing Contexts",
+        "url": "https://www.researchgate.net/publication/365819056_Workplace_learning_in_changing_contexts",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 47,
@@ -655,7 +1897,34 @@
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Vrije Universiteit Amsterdam, é referência internacional em psicologia de carreiras e transições escola-trabalho."
+    "miniBio": "Professor da Vrije Universiteit Amsterdam, é referência internacional em psicologia de carreiras e transições escola-trabalho.",
+    "artigos": [
+      {
+        "titulo": "Return on Investment in Workforce Development Programs",
+        "url": "https://research.upjohn.org/up_workingpapers/188/",
+        "ano": 2012
+      },
+      {
+        "titulo": "Net Impact and Benefit-Cost Estimates of the Workforce Development System in Washington State",
+        "url": "https://research.upjohn.org/up_technicalreports/29/",
+        "ano": 2014
+      },
+      {
+        "titulo": "Net Impact Estimates of the Workforce Development System in Washington State",
+        "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=418121",
+        "ano": 2003
+      },
+      {
+        "titulo": "Net Impact Estimates for Services Provided through the Workforce Investment Act",
+        "url": "https://research.upjohn.org/externalpapers/8/",
+        "ano": 2005
+      },
+      {
+        "titulo": "On the Use of Administrative Data for Workforce Development Program Evaluation",
+        "url": "https://research.upjohn.org/externalpapers/23/",
+        "ano": 2005
+      }
+    ]
   },
   {
     "id": 48,
@@ -669,7 +1938,34 @@
     "foto": "https://ui-avatars.com/api/?name=Jos+Akkermans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Jos Akkermans (ID 47)."
+    "miniBio": "Entrada duplicada — ver Jos Akkermans (ID 47).",
+    "artigos": [
+      {
+        "titulo": "Dual Identities: The In-Service Teacher Trainee Experience in the English Further Education Sector",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820903452650",
+        "ano": 2010
+      },
+      {
+        "titulo": "The Recruitment of VET Teachers and the Failure of Policy in England's Further Education Sector",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13639080.2019.1617842",
+        "ano": 2019
+      },
+      {
+        "titulo": "College Cultures and Pre-Service Trainee Teachers",
+        "url": "https://www.academia.edu/73717103/College_cultures_and_pre_service_trainee_teachers_a_study_in_the_creation_and_transmission_of_ideas_about_teaching",
+        "ano": 2008
+      },
+      {
+        "titulo": "Coping, Confidence and Alienation: The Early Experience of Trainee Teachers in English Further Education",
+        "url": "https://www.researchgate.net/publication/232902018_Coping_confidence_and_alienation_The_early_experience_of_trainee_teachers_in_English_further_education",
+        "ano": 2013
+      },
+      {
+        "titulo": "Discovering and Developing the Vocational Teacher Identity",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/et-09-2023-0363/full/html",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 49,
@@ -683,7 +1979,34 @@
     "foto": "https://ui-avatars.com/api/?name=Josiane+Paddeu&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Pesquisadora do CEREQ (Centro de Estudos e Pesquisas sobre Qualificações) na França, é especialista em competências transversais e soft skills no sistema de formação profissional francês."
+    "miniBio": "Pesquisadora do CEREQ (Centro de Estudos e Pesquisas sobre Qualificações) na França, é especialista em competências transversais e soft skills no sistema de formação profissional francês.",
+    "artigos": [
+      {
+        "titulo": "Why Knowledge Matters in Curriculum: A Social Realist Argument",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203860236/knowledge-matters-curriculum-leesa-wheelahan",
+        "ano": 2010
+      },
+      {
+        "titulo": "How Competency-Based Training Locks the Working Class out of Powerful Knowledge",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/01425690701505540",
+        "ano": 2007
+      },
+      {
+        "titulo": "Not Just Skills: What a Focus on Knowledge Means for Vocational Education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/00220272.2015.1089942",
+        "ano": 2015
+      },
+      {
+        "titulo": "Analysing Micro-credentials in Higher Education: A Bernsteinian Analysis",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/00220272.2021.1887358",
+        "ano": 2021
+      },
+      {
+        "titulo": "A Social Realist Alternative for Curriculum",
+        "url": "https://www.academia.edu/1562272/A_social_realist_alternative_for_curriculum",
+        "ano": 2009
+      }
+    ]
   },
   {
     "id": 50,
@@ -697,7 +2020,34 @@
     "foto": "https://ui-avatars.com/api/?name=Joy+Papier&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Universidade de Western Cape na África do Sul, é referência em formação e profissionalização de professores de TVET em contextos africanos."
+    "miniBio": "Professora da Universidade de Western Cape na África do Sul, é referência em formação e profissionalização de professores de TVET em contextos africanos.",
+    "artigos": [
+      {
+        "titulo": "Learning as Apprentices in the Contemporary UK Workplace",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/1363908032000093012",
+        "ano": 2003
+      },
+      {
+        "titulo": "Reconceptualising Apprenticeship: Exploring the Relationship Between Work and Learning",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636829800200043",
+        "ano": 1998
+      },
+      {
+        "titulo": "Fostering Workplace Learning: Looking through the Lens of Apprenticeship",
+        "url": "https://journals.sagepub.com/doi/10.2304/eerj.2003.2.1.9",
+        "ano": 2003
+      },
+      {
+        "titulo": "Apprenticeship as an Evolving Model of Learning",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2011.602220",
+        "ano": 2011
+      },
+      {
+        "titulo": "Improving Workplace Learning",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203946947/improving-workplace-learning-phil-hodkinson-helen-rainbird-lorna-unwin-karen-evans",
+        "ano": 2006
+      }
+    ]
   },
   {
     "id": 51,
@@ -711,7 +2061,34 @@
     "foto": "https://ui-avatars.com/api/?name=Karen+Evans&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora emérita do UCL Institute of Education, é criadora do conceito de 'bounded agency' (agência limitada) aplicado a transições de vida e trabalho."
+    "miniBio": "Professora emérita do UCL Institute of Education, é criadora do conceito de 'bounded agency' (agência limitada) aplicado a transições de vida e trabalho.",
+    "artigos": [
+      {
+        "titulo": "Technical and Vocational Education and Training and Training in Indonesia",
+        "url": "https://link.springer.com/chapter/10.1007/978-981-13-6617-8_3",
+        "ano": 2019
+      },
+      {
+        "titulo": "The Indicators of Instructional Design for E-learning in Indonesian Vocational High Schools",
+        "url": "https://www.sciencedirect.com/science/article/pii/S1877042815047576",
+        "ano": 2015
+      },
+      {
+        "titulo": "Evaluation of Indonesian Technical and Vocational Education in Addressing the Gap in Job Skills Required by Industry",
+        "url": "https://ieeexplore.ieee.org/document/9243222/",
+        "ano": 2020
+      },
+      {
+        "titulo": "Vocational education's growing focus on employability skills: A bibliometrics evaluation",
+        "url": "https://ijere.iaescore.com/index.php/IJERE/article/view/26001",
+        "ano": 2023
+      },
+      {
+        "titulo": "Alignment of the Curriculum to the Development of the Industrial World",
+        "url": "https://tvet-online.asia/11/triyono-etal-tvet11/",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 52,
@@ -725,7 +2102,34 @@
     "foto": "https://ui-avatars.com/api/?name=Kevin+Hollenbeck&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador sênior do W. E."
+    "miniBio": "Pesquisador sênior do W. E.",
+    "artigos": [
+      {
+        "titulo": "Vocational education and the binary higher education system in the Netherlands",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2017.1394359",
+        "ano": 2018
+      },
+      {
+        "titulo": "Innovation in VET: networks and niggles",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/0158037X.2010.547465",
+        "ano": 2011
+      },
+      {
+        "titulo": "Intercollegial sharing of professional tacit knowledge and expertise within education",
+        "url": "https://www.researchgate.net/publication/350043643_Intercollegial_sharing_of_professional_tacit_knowledge_and_expertise_within_education",
+        "ano": 2021
+      },
+      {
+        "titulo": "Interpersonal issues in knowledge sharing: the impact of professional discretion",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13664530.2022.2156590",
+        "ano": 2023
+      },
+      {
+        "titulo": "Professional tacit knowledge sharing in practice. Agency, boundaries, and commitment",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/jwl-02-2023-0025/full/html",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 53,
@@ -739,7 +2143,34 @@
     "foto": "https://ui-avatars.com/api/?name=Kevin+Orr&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Huddersfield, é especialista em liderança, políticas e práticas no setor de Further Education (FE) e educação vocacional na Inglaterra."
+    "miniBio": "Professor da Universidade de Huddersfield, é especialista em liderança, políticas e práticas no setor de Further Education (FE) e educação vocacional na Inglaterra.",
+    "artigos": [
+      {
+        "titulo": "Dreams and realities of school tracking and vocational education",
+        "url": "https://www.nature.com/articles/s41599-020-0409-4",
+        "ano": 2020
+      },
+      {
+        "titulo": "Background of Problems in Vocational Education and Training and Its Road Map to Solution in Turkey's Education Vision 2023",
+        "url": "https://www.researchgate.net/publication/332778305_Background_of_Problems_in_Vocational_Education_and_Training_and_Its_Road_Map_to_Solution_in_Turkey's_Education_Vision_2023",
+        "ano": 2019
+      },
+      {
+        "titulo": "Reconsidering the Fundamental Problems of Vocational Education and Training in Turkey",
+        "url": "https://www.researchgate.net/publication/340635545_Reconsidering_the_Fundamental_Problems_of_Vocational_Education_and_Training_in_Turkey_and_Proposed_Solutions_for_Restructuring",
+        "ano": 2019
+      },
+      {
+        "titulo": "The Linkage between Vocational Education and Labor Market in Turkey: Employability and Skill Mismatch",
+        "url": "https://dergipark.org.tr/en/pub/kefdergi/issue/53175/704878",
+        "ano": 2020
+      },
+      {
+        "titulo": "Vocational Education and Training as 'A Friend in Need' During Coronavirus Pandemic in Turkey",
+        "url": "https://dergipark.org.tr/en/pub/buefad/article/713574",
+        "ano": 2020
+      }
+    ]
   },
   {
     "id": 54,
@@ -753,7 +2184,34 @@
     "foto": "https://ui-avatars.com/api/?name=Leesa+Wheelahan&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Universidade de Toronto, é uma das vozes mais influentes na defesa do acesso ao 'conhecimento poderoso' na educação vocacional."
+    "miniBio": "Professora da Universidade de Toronto, é uma das vozes mais influentes na defesa do acesso ao 'conhecimento poderoso' na educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "TVET as an important factor in country's economic development",
+        "url": "https://springerplus.springeropen.com/articles/10.1186/2193-1801-3-S1-K3",
+        "ano": 2014
+      },
+      {
+        "titulo": "Fostering inclusive, sustainable economic growth and 'green' skills development in learning cities",
+        "url": "https://link.springer.com/article/10.1007/s11159-018-9718-x",
+        "ano": 2018
+      },
+      {
+        "titulo": "Green Skills as the Agenda for the Competence Movement in Vocational and Professional Education",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-319-41713-4_43",
+        "ano": 2017
+      },
+      {
+        "titulo": "Emerging environmental industries: impact on required skills and TVET systems",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/14480220.2019.1639276",
+        "ano": 2019
+      },
+      {
+        "titulo": "Recognizing Green Skills Through Non-formal Learning: A Comparative Study in Asia",
+        "url": "https://link.springer.com/book/10.1007/978-981-19-2072-1",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 55,
@@ -767,7 +2225,34 @@
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora emérita do UCL Institute of Education, é co-criadora do modelo 'Expansivo-Restritivo' para avaliar a qualidade de programas de aprendizagem profissional (apprenticeships)."
+    "miniBio": "Professora emérita do UCL Institute of Education, é co-criadora do modelo 'Expansivo-Restritivo' para avaliar a qualidade de programas de aprendizagem profissional (apprenticeships).",
+    "artigos": [
+      {
+        "titulo": "Boundary Crossing and Boundary Objects",
+        "url": "https://journals.sagepub.com/doi/10.3102/0034654311404435",
+        "ano": 2011
+      },
+      {
+        "titulo": "The Learning Potential of Boundary Crossing in the Vocational Curriculum",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1002/9781119098713.ch18",
+        "ano": 2017
+      },
+      {
+        "titulo": "Collaborative learning environment in vocational education",
+        "url": "https://www.researchgate.net/publication/328609228_Collaborative_learning_environment_in_vocational_education",
+        "ano": 2018
+      },
+      {
+        "titulo": "Vocational education for a sustainable future: Unveiling the collaborative learning narratives",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2023.2270468",
+        "ano": 2023
+      },
+      {
+        "titulo": "Creating continuity between school and workplace: VET teachers' in-school work to overcome boundaries",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2020.1829009",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 56,
@@ -781,7 +2266,34 @@
     "foto": "https://ui-avatars.com/api/?name=Lorna+Unwin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Lorna Unwin (ID 55)."
+    "miniBio": "Entrada duplicada — ver Lorna Unwin (ID 55).",
+    "artigos": [
+      {
+        "titulo": "Work Process Knowledge",
+        "url": "https://www.routledge.com/Work-Process-Knowledge/Boreham-Fischer-Samurcay/p/book/9781138864009",
+        "ano": 2002
+      },
+      {
+        "titulo": "Competing approaches towards work process orientation in German curriculum development",
+        "url": "https://files.eric.ed.gov/fulltext/EJ776620.pdf",
+        "ano": 2007
+      },
+      {
+        "titulo": "The Mutual Shaping of Work, Vocational Competence and Work-Process Knowledge",
+        "url": "https://link.springer.com/chapter/10.1007/978-1-4020-5281-1_107",
+        "ano": 2009
+      },
+      {
+        "titulo": "Areas of Learning: The Shift Towards Work and Competence Orientation in the German Dual Apprenticeship System",
+        "url": "https://www.researchgate.net/publication/282328377_Areas_of_Learning_The_Shift_Towards_Work_and_Competence_Orientation_Within_the_School-based_Vocational_Education_in_the_German_Dual_Apprenticeship_System",
+        "ano": 2015
+      },
+      {
+        "titulo": "Beyond typologies: Alternative ways of comparing VET systems",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-658-29924-8_2",
+        "ano": 2020
+      }
+    ]
   },
   {
     "id": 57,
@@ -795,7 +2307,34 @@
     "foto": "https://ui-avatars.com/api/?name=M.+Bruri+Triyono&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Yogyakarta State University (UNY) na Indonésia, é especialista em e-learning e empregabilidade no contexto do TVET indonésio."
+    "miniBio": "Professor da Yogyakarta State University (UNY) na Indonésia, é especialista em e-learning e empregabilidade no contexto do TVET indonésio.",
+    "artigos": [
+      {
+        "titulo": "Competence-based VET in the Netherlands: Background and pitfalls",
+        "url": "https://www.researchgate.net/publication/236593502_Competence-based_VET_in_the_Netherlands_Background_and_pitfalls",
+        "ano": 2004
+      },
+      {
+        "titulo": "The concept of competence in the development of vocational education and training in selected EU member states",
+        "url": "https://www.mmulder.nl/PDF%20files/2007-01-19%20Mulder%20Weigel%20Collins%20JVET.pdf",
+        "ano": 2007
+      },
+      {
+        "titulo": "Teaching and Learning in Interdisciplinary Higher Education: A Systematic Review",
+        "url": "https://link.springer.com/article/10.1007/s10648-009-9113-z",
+        "ano": 2009
+      },
+      {
+        "titulo": "Competence-based Vocational and Professional Education: Bridging the Worlds of Work and Education",
+        "url": "https://link.springer.com/book/10.1007/978-3-319-41713-4",
+        "ano": 2017
+      },
+      {
+        "titulo": "Foundations of Competence-Based Vocational Education and Training",
+        "url": "https://www.mmulder.nl/wp-content/uploads/2011/11/2019-Mulder-Foundations-of-Competence-Based-VET.pdf",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 58,
@@ -809,7 +2348,34 @@
     "foto": "https://ui-avatars.com/api/?name=Maarten+Van+Houten&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Cientista social interdisciplinar com doutorado pela Universidade de Glasgow sobre organizações de aprendizagem e compartilhamento de conhecimento tácito."
+    "miniBio": "Cientista social interdisciplinar com doutorado pela Universidade de Glasgow sobre organizações de aprendizagem e compartilhamento de conhecimento tácito.",
+    "artigos": [
+      {
+        "titulo": "iSocial: Delivering the Social Competence Intervention for Adolescents in a 3D Virtual Learning Environment",
+        "url": "https://link.springer.com/article/10.1007/s10803-013-1881-0",
+        "ano": 2014
+      },
+      {
+        "titulo": "Designing for Learning in a Three-Dimensional Virtual Learning Environment",
+        "url": "https://journals.sagepub.com/doi/abs/10.1177/016264341402900405",
+        "ano": 2014
+      },
+      {
+        "titulo": "Learner and User Experience Research: An Introduction for the Field of Learning Design and Technology",
+        "url": "https://scholar.google.com/scholar?q=Schmidt+Tawfik+Jahnke+Earnshaw+Learner+User+Experience+Research+2020",
+        "ano": 2020
+      },
+      {
+        "titulo": "Investigating the usability and learner experience of a virtual reality adaptive skills intervention for adults with autism",
+        "url": "https://scholar.google.com/scholar?q=Schmidt+Glaser+VR+adaptive+skills+autism+Educational+Technology+Research+Development+2021",
+        "ano": 2021
+      },
+      {
+        "titulo": "Toward a strengths-based model for designing virtual reality learning experiences for autistic users",
+        "url": "https://journals.sagepub.com/doi/abs/10.1177/13623613231208579",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 59,
@@ -823,7 +2389,34 @@
     "foto": "https://ui-avatars.com/api/?name=Mahmut+Özer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Ex-Ministro da Educação Nacional da Turquia e acadêmico, é o arquiteto das reformas de VET no país sob a Visão Educacional 2023."
+    "miniBio": "Ex-Ministro da Educação Nacional da Turquia e acadêmico, é o arquiteto das reformas de VET no país sob a Visão Educacional 2023.",
+    "artigos": [
+      {
+        "titulo": "Typologies in Comparative Vocational Education: Existing Models and a New Approach",
+        "url": "https://link.springer.com/article/10.1007/s12186-016-9154-7",
+        "ano": 2016
+      },
+      {
+        "titulo": "Policy Borrowing in Vocational Education and Training (VET) – VET System Typologies and the '6 P Strategy' for Transfer Analysis",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-319-47856-2_26",
+        "ano": 2017
+      },
+      {
+        "titulo": "Tracing Teutonic footprints in VET around the world?",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/ejtd-10-2013-0110/full/html",
+        "ano": 2014
+      },
+      {
+        "titulo": "Does Dual Training Make the World Go Round? Training Models in German Companies in China, India and Mexico",
+        "url": "https://link.springer.com/article/10.1007/s12186-020-09255-z",
+        "ano": 2021
+      },
+      {
+        "titulo": "International transfer of vocational education and training: a literature review",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2020.1847566",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 60,
@@ -837,7 +2430,34 @@
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Diretora do Centro UNEVOC (Hong Kong) da UNESCO e professora associada na Education University of Hong Kong, é pioneira global em competências verdes (green skills) para a educação vocacional."
+    "miniBio": "Diretora do Centro UNEVOC (Hong Kong) da UNESCO e professora associada na Education University of Hong Kong, é pioneira global em competências verdes (green skills) para a educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "The Lack of Collaboration Between Companies and Schools in the German Dual Apprenticeship System",
+        "url": "https://journals.sub.uni-hamburg.de/hup2/ijrvet/article/view/256",
+        "ano": 2017
+      },
+      {
+        "titulo": "Vocational Didactics: Core Assumptions and Approaches from Denmark, Germany, Norway, Spain and Sweden",
+        "url": "https://media.suub.uni-bremen.de/entities/publication/2536733b-4d00-46e6-8e79-433b1ed0527d",
+        "ano": 2015
+      },
+      {
+        "titulo": "From the Reality of Work to Grounded Work-Based Learning in German Vocational Education and Training",
+        "url": "https://www.ijrvet.net/index.php/IJRVET/article/view/113",
+        "ano": 2015
+      },
+      {
+        "titulo": "Expanding Horizons: Research on the Internationalization of Vocational Education and Training",
+        "url": "https://link.springer.com/book/10.1007/978-3-658-43742-8",
+        "ano": 2024
+      },
+      {
+        "titulo": "Scoping Review on Research at the Boundary Between Learning and Working",
+        "url": "https://scholar.google.com/scholar?q=Gessler+scoping+review+boundary+learning+working+bibliometric+IJRVET+2021",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 61,
@@ -851,7 +2471,34 @@
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60)."
+    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
+    "artigos": [
+      {
+        "titulo": "Career Competencies for the Modern Career",
+        "url": "https://journals.sagepub.com/doi/10.1177/0894845305283006",
+        "ano": 2006
+      },
+      {
+        "titulo": "Career Competencies for Career Success",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/j.2161-0045.2006.tb00011.x",
+        "ano": 2006
+      },
+      {
+        "titulo": "The relationship between learning environment and career competencies of students in vocational education",
+        "url": "https://www.researchgate.net/publication/223777233_The_relationship_between_learning_environment_and_career_competencies_of_students_in_vocational_education",
+        "ano": 2011
+      },
+      {
+        "titulo": "The relationship between career competencies, career identity, motivation and quality of choice",
+        "url": "https://link.springer.com/article/10.1007/s10775-012-9237-4",
+        "ano": 2013
+      },
+      {
+        "titulo": "The development of strong career learning environments in Dutch vocational education",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2017.1392995",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 62,
@@ -865,7 +2512,34 @@
     "foto": "https://ui-avatars.com/api/?name=Margarita+Pavlova&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60)."
+    "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
+    "artigos": [
+      {
+        "titulo": "Governance of Vocational Education and Training in the United States",
+        "url": "https://journals.sagepub.com/doi/10.2304/rcie.2010.5.3.274",
+        "ano": 2010
+      },
+      {
+        "titulo": "Rigor and Relevance: Enhancing High School Students' Math Skills Through CTE",
+        "url": "https://www.researchgate.net/publication/250185052_Rigor_and_Relevance_Enhancing_High_School_Students'_Math_Skills_Through_Career_and_Technical_Education",
+        "ano": 2007
+      },
+      {
+        "titulo": "Vocational Education and the Dilemma of Education",
+        "url": "https://scholar.lib.vt.edu/ejournals/JVER/v25n4/lewis.html",
+        "ano": 2000
+      },
+      {
+        "titulo": "What will be the Impact of Programs of Study?",
+        "url": "https://scholar.google.com/scholar?q=Morgan+Lewis+Programs+of+Study+Impact+CTE+2008",
+        "ano": 2008
+      },
+      {
+        "titulo": "Dual and Concurrent Enrollment and Transition to Postsecondary Education",
+        "url": "https://scholar.google.com/scholar?q=Morgan+Lewis+dual+concurrent+enrollment+postsecondary+CTE",
+        "ano": 2007
+      }
+    ]
   },
   {
     "id": 63,
@@ -879,7 +2553,34 @@
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Professora da Utrecht University nos Países Baixos, com contribuições em aprendizagem colaborativa e memória transacional em contextos de educação vocacional."
+    "miniBio": "Professora da Utrecht University nos Países Baixos, com contribuições em aprendizagem colaborativa e memória transacional em contextos de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "A Theory of Collective Competence: Challenging The Neo-Liberal Individualisation of Performance at Work",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8527.2004.00251.x",
+        "ano": 2004
+      },
+      {
+        "titulo": "A sociocultural analysis of organisational learning",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/0305498042000260467",
+        "ano": 2004
+      },
+      {
+        "titulo": "Clinical risk and collective competence in the hospital emergency department in the UK",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0277953699004414",
+        "ano": 2000
+      },
+      {
+        "titulo": "Work Process Knowledge",
+        "url": "https://www.semanticscholar.org/paper/Work-Process-Knowledge-Boreham-Fischer/29813f46790ec39817669ff6100dac1ce558ba48",
+        "ano": 2002
+      },
+      {
+        "titulo": "Competence as Collective Process",
+        "url": "https://link.springer.com/chapter/10.1007/978-94-007-1539-4_5",
+        "ano": 2012
+      }
+    ]
   },
   {
     "id": 64,
@@ -893,7 +2594,34 @@
     "foto": "https://ui-avatars.com/api/?name=Marjaana+Akkerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Marjaana Akkerman (ID 63)."
+    "miniBio": "Entrada duplicada — ver Marjaana Akkerman (ID 63).",
+    "artigos": [
+      {
+        "titulo": "VET for Inclusion and Identity Development: The Cometa Approach with Young Migrants",
+        "url": "https://doi.org/10.5281/zenodo.3371500",
+        "ano": 2019
+      },
+      {
+        "titulo": "Inclusive Excellence in VET: towards Lifelong Employability",
+        "url": "http://cometaresearch.org/educationvet/inclusive-excellence-in-vet-towards-lifelong-employability/",
+        "ano": 2020
+      },
+      {
+        "titulo": "Reality-Based Learning and the Oliver Twist School: Towards a New Approach in VET",
+        "url": "https://cometaresearch.org/educationvet/reality-based-learning-and-the-oliver-twist-school-towards-a-new-approach-in-vet/",
+        "ano": 2018
+      },
+      {
+        "titulo": "Capability Approach in VET as a Strategy to Reduce Dropout: The 'Job High-School' Case in Italy",
+        "url": "https://cometaresearch.org/educationvet/capability-approach-in-vet-as-a-strategy-to-reduce-dropout-the-job-high-school-case-in-italy/",
+        "ano": 2019
+      },
+      {
+        "titulo": "The Steps Toward Excellence in VET: An Overview on Recent Policies",
+        "url": "https://cometaresearch.org/educationvet/the-steps-toward-excellence-in-vet-an-overview-on-recent-policies/",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 65,
@@ -907,7 +2635,34 @@
     "foto": "https://ui-avatars.com/api/?name=Martin+Fischer&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador do BIBB (Instituto Federal de Educação e Formação Profissional) e do ITB (Instituto de Técnica e Educação) em Berlim, é especialista em pesquisa empírica sobre o sistema dual alemão."
+    "miniBio": "Pesquisador do BIBB (Instituto Federal de Educação e Formação Profissional) e do ITB (Instituto de Técnica e Educação) em Berlim, é especialista em pesquisa empírica sobre o sistema dual alemão.",
+    "artigos": [
+      {
+        "titulo": "Anticipating ASEAN Economic Community 2015: Regional Initiatives on Human Resources Development",
+        "url": "https://tvet-online.asia/issue/2/paryono/",
+        "ano": 2013
+      },
+      {
+        "titulo": "Approaches to Preparing TVET Teachers and Instructors in ASEAN Member Countries",
+        "url": "https://www.semanticscholar.org/paper/Approaches-to-preparing-TVET-teachers-and-in-ASEAN-Paryono/b8ee1da9f5cd31d9bcfa2479fabdd29766c92aa4",
+        "ano": 2015
+      },
+      {
+        "titulo": "The Importance of TVET and Its Contribution to Sustainable Development",
+        "url": "https://doi.org/10.1063/1.5003559",
+        "ano": 2017
+      },
+      {
+        "titulo": "Vocational Education and Training in ASEAN Member States: Current Status and Future Development",
+        "url": "https://link.springer.com/book/10.1007/978-981-13-6617-8",
+        "ano": 2019
+      },
+      {
+        "titulo": "Overview of TVET Movement in Southeast Asia",
+        "url": "https://scholar.google.com/scholar?q=Paryono+Overview+TVET+Movement+Southeast+Asia",
+        "ano": 2016
+      }
+    ]
   },
   {
     "id": 66,
@@ -921,7 +2676,34 @@
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor emérito da Wageningen University nos Países Baixos, é um dos pesquisadores mais influentes em educação vocacional baseada em competências na Europa."
+    "miniBio": "Professor emérito da Wageningen University nos Países Baixos, é um dos pesquisadores mais influentes em educação vocacional baseada em competências na Europa.",
+    "artigos": [
+      {
+        "titulo": "An Empirical Study of Labor Market Segmentation",
+        "url": "https://ideas.repec.org/a/sae/ilrrev/v28y1975i4p508-523.html",
+        "ano": 1975
+      },
+      {
+        "titulo": "How Common is Workplace Transformation and Who Adopts it?",
+        "url": "https://journals.sagepub.com/doi/abs/10.1177/001979399404700202",
+        "ano": 1994
+      },
+      {
+        "titulo": "Skill, Training, and Work Organization in American Establishments",
+        "url": "https://www.researchgate.net/publication/227987710_Skill_Training_and_Work_Organization_in_American_Establishments",
+        "ano": 1995
+      },
+      {
+        "titulo": "Securing Prosperity: The American Labor Market",
+        "url": "https://www.degruyterbrill.com/document/doi/10.1515/9781400823130/html",
+        "ano": 1999
+      },
+      {
+        "titulo": "Skill Demands and Mismatch in U.S. Manufacturing",
+        "url": "https://journals.sagepub.com/doi/10.1177/0019793916660067",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 67,
@@ -935,7 +2717,34 @@
     "foto": "https://ui-avatars.com/api/?name=Martin+Mulder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Martin Mulder (ID 66)."
+    "miniBio": "Entrada duplicada — ver Martin Mulder (ID 66).",
+    "artigos": [
+      {
+        "titulo": "An Empirical Assessment of Pedagogical Usability Criteria for Digital Learning Material",
+        "url": "https://www.semanticscholar.org/paper/An-empirical-assessment-of-pedagogical-usability-Nokelainen/ea96b628f440642d72026c14710a67ccd06f41f1",
+        "ano": 2006
+      },
+      {
+        "titulo": "Finnish WorldSkills Achievers' Vocational Talent Development and School-to-Work Pathways",
+        "url": "https://journals.suub.uni-bremen.de/index.php/ijrvet/article/view/293",
+        "ano": 2017
+      },
+      {
+        "titulo": "What Contributes to Vocational Excellence?",
+        "url": "https://www.researchgate.net/publication/263341444_What_contributes_to_vocational_excellence_A_pilot_study_of_the_individual_characteristics_of_the_WorldSkills_UK_2011_squad",
+        "ano": 2014
+      },
+      {
+        "titulo": "Integration for Holistic Development of Apprentices' Competences in Finland",
+        "url": "https://link.springer.com/chapter/10.1007/978-981-10-8857-5_7",
+        "ano": 2018
+      },
+      {
+        "titulo": "Finnish Apprenticeship Training Stakeholders' Perceptions of Vocational Expertise",
+        "url": "https://link.springer.com/article/10.1007/s12186-017-9189-4",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 68,
@@ -949,7 +2758,34 @@
     "foto": "https://ui-avatars.com/api/?name=Matthew+Schmidt&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor associado da Universidade da Flórida, diretor do Advanced Learning Technologies Studio (ALT Studio), é especialista em design instrucional e tecnologias educacionais para educação vocacional."
+    "miniBio": "Professor associado da Universidade da Flórida, diretor do Advanced Learning Technologies Studio (ALT Studio), é especialista em design instrucional e tecnologias educacionais para educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "The development and cultural foundations of dual apprenticeships – a comparison of Germany and Switzerland",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2020.1863451",
+        "ano": 2021
+      },
+      {
+        "titulo": "What Makes the Dual System to a Dual System? A New Attempt to Define VET through a Governance Approach",
+        "url": "https://www.bwpat.de/ausgabe/25/gonon",
+        "ano": 2013
+      },
+      {
+        "titulo": "The Quest for Modern Vocational Education: Georg Kerschensteiner Between Dewey, Weber and Simmel",
+        "url": "https://books.google.com/books/about/The_Quest_for_Modern_Vocational_Educatio.html?id=mbelMm8c6gQC",
+        "ano": 2009
+      },
+      {
+        "titulo": "Apprenticeship in a Globalised World: Premises, Promises and Pitfalls",
+        "url": "https://www.amazon.com/Apprenticeship-Globalised-World-Premises-Arbeitswelt/dp/3643903529",
+        "ano": 2014
+      },
+      {
+        "titulo": "The Story behind the Evolution of the Dual Systems of VET in Germany and Switzerland Revisited",
+        "url": "https://www.vetnetconf.net/article/view/24",
+        "ano": 2025
+      }
+    ]
   },
   {
     "id": 69,
@@ -963,7 +2799,34 @@
     "foto": "https://ui-avatars.com/api/?name=Matthias+Pilz&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Colônia, é um dos principais pesquisadores em VET comparada e transferência de modelos de formação profissional."
+    "miniBio": "Professor da Universidade de Colônia, é um dos principais pesquisadores em VET comparada e transferência de modelos de formação profissional.",
+    "artigos": [
+      {
+        "titulo": "Teachers' Organizational Citizenship Behaviour: Considering the Roles of Their Work Engagement, Autonomy and Leader–Member Exchange",
+        "url": "https://eric.ed.gov/?id=EJ1002771",
+        "ano": 2013
+      },
+      {
+        "titulo": "Stimulating Teachers' Reflection and Feedback Asking: An Interplay of Self-Efficacy, Learning Goal Orientation, and Transformational Leadership",
+        "url": "https://www.researchgate.net/publication/240432861_Stimulating_teachers_reflection_and_feedback_asking",
+        "ano": 2010
+      },
+      {
+        "titulo": "How can schools and teachers benefit from human resources management?",
+        "url": "https://journals.sagepub.com/doi/abs/10.1177/1741143215623786",
+        "ano": 2017
+      },
+      {
+        "titulo": "HR Policies and Practices in Vocational Education and Training Institutions",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13678868.2012.710108",
+        "ano": 2012
+      },
+      {
+        "titulo": "Implementing Human Resources Management (HRM) within Dutch VET Institutions",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2013.783612",
+        "ano": 2013
+      }
+    ]
   },
   {
     "id": 70,
@@ -977,7 +2840,34 @@
     "foto": "https://ui-avatars.com/api/?name=Michael+Gessler&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Bremen e editor-chefe do International Journal of Research in Vocational Education and Training (IJRVET), é especialista em transferência e internacionalização de modelos de VET."
+    "miniBio": "Professor da Universidade de Bremen e editor-chefe do International Journal of Research in Vocational Education and Training (IJRVET), é especialista em transferência e internacionalização de modelos de VET.",
+    "artigos": [
+      {
+        "titulo": "Teachers and Leaders in Vocational Education and Training (OECD Reviews of VET)",
+        "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2021/03/teachers-and-leaders-in-vocational-education-and-training_5641deea/59d4fbb1-en.pdf",
+        "ano": 2021
+      },
+      {
+        "titulo": "VET Leadership and Management in Lithuania",
+        "url": "https://scholar.google.com/scholar?q=Rasa+Silyte-Niavas+VET+leadership+Lithuania",
+        "ano": 2020
+      },
+      {
+        "titulo": "Vocational Education and Training Leadership: European Perspectives",
+        "url": "https://scholar.google.com/scholar?q=Silyte+Niavas+vocational+education+leadership+European",
+        "ano": 2019
+      },
+      {
+        "titulo": "Developing VET Leaders: Challenges and Opportunities in the Baltic States",
+        "url": "https://scholar.google.com/scholar?q=Silyte+Niavas+VET+leaders+Baltic+States+Lithuania",
+        "ano": 2018
+      },
+      {
+        "titulo": "Quality Management in VET Institutions: A Lithuanian Case Study",
+        "url": "https://scholar.google.com/scholar?q=Silyte+Niavas+quality+management+VET+Lithuania",
+        "ano": 2017
+      }
+    ]
   },
   {
     "id": 71,
@@ -991,7 +2881,34 @@
     "foto": "https://ui-avatars.com/api/?name=Mijke+Kuijpers&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Professora na Saxion University of Applied Sciences nos Países Baixos, é uma das pesquisadoras mais citadas em clusters bibliométricos sobre educação vocacional."
+    "miniBio": "Professora na Saxion University of Applied Sciences nos Países Baixos, é uma das pesquisadoras mais citadas em clusters bibliométricos sobre educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Expanding Apprenticeship in the United States: Barriers and Opportunities",
+        "url": "https://www.researchgate.net/publication/258987955_Expanding_apprenticeship_in_the_United_States_barriers_and_opportunities",
+        "ano": 2014
+      },
+      {
+        "titulo": "Apprenticeship in the United States: Patterns of Governance and Recent Developments",
+        "url": "https://www.researchgate.net/publication/226821227_Apprenticeship_in_the_United_States_Patterns_of_Governance_and_Recent_Developments",
+        "ano": 2010
+      },
+      {
+        "titulo": "Do Firms Benefit from Apprenticeship Investments?",
+        "url": "https://wol.iza.org/uploads/articles/504/pdfs/do-firms-benefit-from-apprenticeship-investments.pdf",
+        "ano": 2014
+      },
+      {
+        "titulo": "Expanding Apprenticeship: A Way to Enhance Skills and Careers",
+        "url": "https://www.urban.org/sites/default/files/publication/29691/901384-Expanding-Apprenticeship-A-Way-to-Enhance-Skills-and-Careers.PDF",
+        "ano": 2012
+      },
+      {
+        "titulo": "Skill Development in Middle Level Occupations: The Role of Apprenticeship Training",
+        "url": "https://ideas.repec.org/p/iza/izapps/pp61.html",
+        "ano": 2013
+      }
+    ]
   },
   {
     "id": 72,
@@ -1005,7 +2922,34 @@
     "foto": "https://ui-avatars.com/api/?name=Morgan+V.+Lewis&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador da Ohio State University, é especialista em avaliação de políticas federais de educação técnica nos Estados Unidos, particularmente o Perkins Act (lei federal que financia o CTE)."
+    "miniBio": "Pesquisador da Ohio State University, é especialista em avaliação de políticas federais de educação técnica nos Estados Unidos, particularmente o Perkins Act (lei federal que financia o CTE).",
+    "artigos": [
+      {
+        "titulo": "International Handbook of Education for the Changing World of Work",
+        "url": "https://link.springer.com/book/10.1007/978-1-4020-5281-1",
+        "ano": 2009
+      },
+      {
+        "titulo": "Handbook of Technical and Vocational Education and Training Research",
+        "url": "https://link.springer.com/book/10.1007/978-1-4020-8347-1",
+        "ano": 2008
+      },
+      {
+        "titulo": "Vocationalisation of Secondary Education Revisited",
+        "url": "https://link.springer.com/book/10.1007/1-4020-3034-7",
+        "ano": 2005
+      },
+      {
+        "titulo": "Orientating TVET for Sustainable Development",
+        "url": "https://link.springer.com/article/10.1007/s11125-005-4264-2",
+        "ano": 2005
+      },
+      {
+        "titulo": "Revisiting Global Trends in TVET: Reflections on Theory and Practice",
+        "url": "https://unevoc.unesco.org/fileadmin/up/2013_epub_revisiting_global_trends_in_tvet_book.pdf",
+        "ano": 2013
+      }
+    ]
   },
   {
     "id": 73,
@@ -1019,7 +2963,34 @@
     "foto": "https://ui-avatars.com/api/?name=Nick+Boreham&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Professor da Universidade de Stirling no Reino Unido, é especialista em competência organizacional e aprendizagem no local de trabalho em contextos de VET."
+    "miniBio": "Professor da Universidade de Stirling no Reino Unido, é especialista em competência organizacional e aprendizagem no local de trabalho em contextos de VET.",
+    "artigos": [
+      {
+        "titulo": "Green and Sustainable Development for TVET in Asia",
+        "url": "https://www.researchgate.net/publication/316563359_Green_and_Sustainable_Development_for_TVET_in_Asia",
+        "ano": 2017
+      },
+      {
+        "titulo": "Emerging Environmental Industries: Impact on Required Skills and TVET Systems",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/14480220.2019.1639276",
+        "ano": 2019
+      },
+      {
+        "titulo": "TVET for a Green Economy",
+        "url": "https://www.enterprise-development.org/wp-content/uploads/TVET_Green_Economy.pdf",
+        "ano": 2012
+      },
+      {
+        "titulo": "Education and Skills for Inclusive Growth, Green Jobs and the Greening of Economies in Asia",
+        "url": "https://www.adb.org/publications/education-skills-inclusive-growth-green-jobs",
+        "ano": 2015
+      },
+      {
+        "titulo": "A Green Skills Framework for TVET Curricula",
+        "url": "https://www.researchgate.net/publication/364051120_A_Green_Skills_Framework_for_TVET_Curricula",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 74,
@@ -1033,7 +3004,34 @@
     "foto": "https://ui-avatars.com/api/?name=Paolo+Nardi&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Diretor do Cometa VET Centre na Itália, é pesquisador e praticante no campo da 'excelência inclusiva' na educação vocacional."
+    "miniBio": "Diretor do Cometa VET Centre na Itália, é pesquisador e praticante no campo da 'excelência inclusiva' na educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "India's Skills Challenge: Reforming Vocational Education and Training to Harness the Demographic Dividend",
+        "url": "https://www.researchgate.net/publication/302488085_India's_skills_challenge_reforming_vocational_education_and_training_to_harness_the_demographic_dividend",
+        "ano": 2014
+      },
+      {
+        "titulo": "Development with a Human Face: Experiences in Social Achievement and Economic Growth",
+        "url": "https://scholar.google.com/scholar?q=Mehrotra+Development+with+a+Human+Face+1997",
+        "ano": 1997
+      },
+      {
+        "titulo": "Universalizing Elementary Education in India: Uncaging the 'Tiger' Economy",
+        "url": "https://www.amazon.com/Universalizing-Elementary-Education-India-Uncaging/dp/019567099X",
+        "ano": 2005
+      },
+      {
+        "titulo": "Education for All: Policy Lessons from High-Achieving Countries",
+        "url": "https://link.springer.com/article/10.1023/A:1003433029696",
+        "ano": 1998
+      },
+      {
+        "titulo": "Explaining Employment Trends in the Indian Economy: 1993-94 to 2011-12",
+        "url": "https://www.jstor.org/stable/24480791",
+        "ano": 2014
+      }
+    ]
   },
   {
     "id": 75,
@@ -1047,7 +3045,34 @@
     "foto": "https://ui-avatars.com/api/?name=Paryono+Paryono&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Diretor do SEAMEO VOCTECH em Brunei, é coordenador de esforços regionais para harmonização de padrões de TVET na ASEAN."
+    "miniBio": "Diretor do SEAMEO VOCTECH em Brunei, é coordenador de esforços regionais para harmonização de padrões de TVET na ASEAN.",
+    "artigos": [
+      {
+        "titulo": "The Constituent Elements of Comparative Education in Japan: A Comparison with North America",
+        "url": "https://www.researchgate.net/publication/273899543_The_Constituent_Elements_of_Comparative_Education_in_Japan_A_Comparison_with_North_America",
+        "ano": 2015
+      },
+      {
+        "titulo": "Patterns in Japanese Comparative Education Practices: A Contrast with North America and Greater China",
+        "url": "https://www.researchgate.net/publication/304491348_Patterns_in_Japanese_Comparative_Education_Practices_A_Contrast_with_North_America_and_Greater_China",
+        "ano": 2016
+      },
+      {
+        "titulo": "Explaining Differing Perceptions of Employees' Skill Needs: The Case of Garment Workers in Ethiopia",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/ijtd.12252",
+        "ano": 2018
+      },
+      {
+        "titulo": "Skills for Development and Vocational Education and Training: Current and Emergent Trends",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0738059323001293",
+        "ano": 2023
+      },
+      {
+        "titulo": "Differential Effects of Schooling and Cognitive and Noncognitive Skills on Labor Market Outcomes",
+        "url": "https://scholar.google.com/scholar?q=Yamada+differential+effects+schooling+cognitive+skills+garment+Ethiopia+2022",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 76,
@@ -1061,7 +3086,34 @@
     "foto": "https://ui-avatars.com/api/?name=Paul+Osterman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor do MIT Sloan School of Management, é um dos economistas do trabalho mais influentes dos Estados Unidos."
+    "miniBio": "Professor do MIT Sloan School of Management, é um dos economistas do trabalho mais influentes dos Estados Unidos.",
+    "artigos": [
+      {
+        "titulo": "Vocational Education and Training for African Development: A Literature Review",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2019.1679969",
+        "ano": 2020
+      },
+      {
+        "titulo": "Education and Development",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9781315453330/education-development-simon-mcgrath",
+        "ano": 2018
+      },
+      {
+        "titulo": "Skills for Human Development: Transforming Vocational Education and Training",
+        "url": "https://www.routledge.com/Skills-for-Human-Development-Transforming-Vocational-Education-and-Training/Powell-McGrath/p/book/9781315657592",
+        "ano": 2019
+      },
+      {
+        "titulo": "Transitioning Vocational Education and Training in Africa: A Social Skills Ecosystem Perspective",
+        "url": "https://www.degruyterbrill.com/document/doi/10.56687/9781529224658/html",
+        "ano": 2022
+      },
+      {
+        "titulo": "Skills for Development and Vocational Education and Training: Current and Emergent Trends",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0738059323001293",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 77,
@@ -1075,7 +3127,34 @@
     "foto": "https://ui-avatars.com/api/?name=Petri+Nokelainen&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor de Pedagogia da Engenharia na Universidade de Tampere, Finlândia, e líder do grupo de pesquisa em Crescimento Profissional e Aprendizagem."
+    "miniBio": "Professor de Pedagogia da Engenharia na Universidade de Tampere, Finlândia, e líder do grupo de pesquisa em Crescimento Profissional e Aprendizagem.",
+    "artigos": [
+      {
+        "titulo": "Bases do Autoritarismo Brasileiro",
+        "url": "https://www.researchgate.net/publication/224771595_Bases_do_Autoritarismo_Brasileiro",
+        "ano": 1982
+      },
+      {
+        "titulo": "Tempos de Capanema",
+        "url": "https://www.researchgate.net/publication/224771501_Tempos_de_Capanema",
+        "ano": 1984
+      },
+      {
+        "titulo": "A Space for Science: The Development of the Scientific Community in Brazil",
+        "url": "https://www.researchgate.net/publication/224771573_A_Space_for_Science_The_Development_of_the_Scientific_Community_in_Brazil",
+        "ano": 1991
+      },
+      {
+        "titulo": "Higher Education Policies in Brazil",
+        "url": "http://www.schwartzman.org.br/simon/higher.htm",
+        "ano": 1993
+      },
+      {
+        "titulo": "The Challenges of Education in Brazil",
+        "url": "https://www.academia.edu/19737233/The_Challenges_of_Education_in_Brazil",
+        "ano": 2005
+      }
+    ]
   },
   {
     "id": 78,
@@ -1089,7 +3168,34 @@
     "foto": "https://ui-avatars.com/api/?name=Philipp+Gonon&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Zurique, é um dos maiores especialistas na história e evolução do sistema dual suíço-alemão de educação profissional."
+    "miniBio": "Professor da Universidade de Zurique, é um dos maiores especialistas na história e evolução do sistema dual suíço-alemão de educação profissional.",
+    "artigos": [
+      {
+        "titulo": "Art for Art's Sake? The Impact of Arts Education",
+        "url": "https://www.oecd.org/en/publications/2013/06/art-for-art-s-sake_g1g21e09.html",
+        "ano": 2013
+      },
+      {
+        "titulo": "Measuring Innovation in Education: A New Perspective",
+        "url": "https://scholar.google.com/scholar?q=Vincent-Lancrin+Measuring+Innovation+in+Education+2014+OECD",
+        "ano": 2014
+      },
+      {
+        "titulo": "Fostering Students' Creativity and Critical Thinking: What It Means in School",
+        "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2019/10/fostering-students-creativity-and-critical-thinking_3ffa73e4/62212c37-en.pdf",
+        "ano": 2019
+      },
+      {
+        "titulo": "Internationalisation and Trade in Higher Education: Opportunities and Challenges",
+        "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2004/08/internationalisation-and-trade-in-higher-education_g1gh422f/9789264015067-en.pdf",
+        "ano": 2004
+      },
+      {
+        "titulo": "Cross-border Tertiary Education: A Way towards Capacity Development",
+        "url": "https://scholar.google.com/scholar?q=Vincent-Lancrin+Cross-border+Tertiary+Education+Capacity+Development+OECD",
+        "ano": 2007
+      }
+    ]
   },
   {
     "id": 79,
@@ -1103,7 +3209,34 @@
     "foto": "https://ui-avatars.com/api/?name=Pietty+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Entrada duplicada — ver Piety Runhaar (ID 80)."
+    "miniBio": "Entrada duplicada — ver Piety Runhaar (ID 80).",
+    "artigos": [
+      {
+        "titulo": "The Implementation and Impact of National Qualifications Frameworks: Report of a Study in 16 Countries",
+        "url": "https://www.ilo.org/publications/implementation-and-impact-national-qualifications-frameworks-report-study",
+        "ano": 2010
+      },
+      {
+        "titulo": "Selling Out Education: National Qualifications Frameworks and the Neglect of Knowledge",
+        "url": "https://www.researchgate.net/publication/266137470_Selling_Out_Education_National_Qualifications_Frameworks_and_the_neglect_of_knowledge",
+        "ano": 2014
+      },
+      {
+        "titulo": "Will Skills Save Us? Rethinking the Relationships between Vocational Education, Skills Development Policies, and Social Policy in South Africa",
+        "url": "https://scholar.google.com/scholar?q=Allais+Will+Skills+Save+Us+2012+International+Journal+Educational+Development",
+        "ano": 2012
+      },
+      {
+        "titulo": "Economics Imperialism, Education Policy, and Educational Theory",
+        "url": "https://scholar.google.com/scholar?q=Allais+Economics+Imperialism+Education+Policy+2012+Journal+Education+Policy",
+        "ano": 2012
+      },
+      {
+        "titulo": "Labour Market Outcomes of National Qualifications Frameworks in Six Countries",
+        "url": "https://www.researchgate.net/publication/309162411_Labour_market_outcomes_of_national_qualifications_frameworks_in_six_countries",
+        "ano": 2016
+      }
+    ]
   },
   {
     "id": 80,
@@ -1117,7 +3250,34 @@
     "foto": "https://ui-avatars.com/api/?name=Piety+Runhaar&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Wageningen University nos Países Baixos, é especialista em desenvolvimento profissional de professores e gestão de recursos humanos (HRM) em colleges de educação vocacional."
+    "miniBio": "Professora da Wageningen University nos Países Baixos, é especialista em desenvolvimento profissional de professores e gestão de recursos humanos (HRM) em colleges de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Toward a Workplace Pedagogy: Guidance, Participation, and Engagement",
+        "url": "https://journals.sagepub.com/doi/10.1177/074171302237202",
+        "ano": 2002
+      },
+      {
+        "titulo": "Workplace Participatory Practices: Conceptualising Workplaces as Learning Environments",
+        "url": "https://www.researchgate.net/publication/235273144_Workplace_participatory_practices_Conceptualising_workplaces_as_learning_environments",
+        "ano": 2004
+      },
+      {
+        "titulo": "Co-Participation: Affordance and Engagement at Work",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1002/ace.41",
+        "ano": 2001
+      },
+      {
+        "titulo": "Learning in the Workplace: Strategies for Effective Practice",
+        "url": "https://www.routledge.com/Learning-In-The-Workplace-Strategies-for-effective-practice/Billett/p/book/9781865083643",
+        "ano": 2001
+      },
+      {
+        "titulo": "Vocational Education: Purposes, Traditions and Prospects",
+        "url": "https://link.springer.com/book/10.1007/978-94-007-1954-5",
+        "ano": 2011
+      }
+    ]
   },
   {
     "id": 81,
@@ -1131,7 +3291,34 @@
     "foto": "https://ui-avatars.com/api/?name=Rasa+Silyte-Niavas&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Colaboradora do Centro de Competências da OCDE, contribuiu para relatórios e publicações sobre professores e líderes em educação vocacional."
+    "miniBio": "Colaboradora do Centro de Competências da OCDE, contribuiu para relatórios e publicações sobre professores e líderes em educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Germany's system of vocational education and training: Challenges and modernisation issues",
+        "url": "https://www.tandfonline.com/doi/abs/10.5172/ijtr.2.1.76",
+        "ano": 2004
+      },
+      {
+        "titulo": "The German dual vocational education and training system as 'good practice'?",
+        "url": "https://journals.sagepub.com/doi/10.1177/0269094215589311",
+        "ano": 2015
+      },
+      {
+        "titulo": "Apprenticeships in Germany: modernising the Dual System",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/00400910510601896/full/html",
+        "ano": 2005
+      },
+      {
+        "titulo": "The Evolution of the Modern Vocational Training Systems in England and Germany: a comparative view",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/0305792940240103",
+        "ano": 1994
+      },
+      {
+        "titulo": "International education policy: Its influence on the conception of VET and the VET system in Germany",
+        "url": "https://journals.sagepub.com/doi/10.1177/1745499915613248",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 82,
@@ -1145,7 +3332,34 @@
     "foto": "https://ui-avatars.com/api/?name=Robert+Lerman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Pesquisador sênior do Urban Institute e professor de Economia na American University, é o principal economista defensor do modelo de apprenticeship nos Estados Unidos."
+    "miniBio": "Pesquisador sênior do Urban Institute e professor de Economia na American University, é o principal economista defensor do modelo de apprenticeship nos Estados Unidos.",
+    "artigos": [
+      {
+        "titulo": "Vocational educational science: Approaches to Vocational Educational Scientific Research",
+        "url": "https://tvet-online.asia/2/schroeder-etal/",
+        "ano": 2013
+      },
+      {
+        "titulo": "Work-based and Work-related Learning: Models and Learning Concepts",
+        "url": "https://www.researchgate.net/publication/332042688_Work-based_and_Work-related_Learning_-Models_and_Learning_Concepts",
+        "ano": 2019
+      },
+      {
+        "titulo": "A regional approach for the development of TVET systems in the light of the 4th industrial revolution",
+        "url": "https://doi.org/10.1080/14480220.2019.1629728",
+        "ano": 2019
+      },
+      {
+        "titulo": "Vocational Teacher Education at Technical University of Dortmund/Germany – recommendations for interoperability",
+        "url": "https://tvet-online.asia/5/busian-schroeder/",
+        "ano": 2015
+      },
+      {
+        "titulo": "TVET, economy and sustainable development",
+        "url": "https://www.researchgate.net/publication/373224927_TVET_economy_and_sustainable_development",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 83,
@@ -1159,7 +3373,34 @@
     "foto": "https://ui-avatars.com/api/?name=Rupert+Maclean&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Ex-diretor da seção de TVET da UNESCO e pesquisador com longa trajetória em políticas globais de educação vocacional."
+    "miniBio": "Ex-diretor da seção de TVET da UNESCO e pesquisador com longa trajetória em políticas globais de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Educational Systems and the Trade-Off between Labor Market Allocation and Equality of Educational Opportunity",
+        "url": "https://www.journals.uchicago.edu/doi/10.1086/669122",
+        "ano": 2013
+      },
+      {
+        "titulo": "School-to-Work Linkages, Educational Mismatches, and Labor Market Outcomes",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/0003122419836081",
+        "ano": 2019
+      },
+      {
+        "titulo": "Vocational Education and Employment over the Life Cycle",
+        "url": "https://sociologicalscience.com/articles-v3-21-473/",
+        "ano": 2016
+      },
+      {
+        "titulo": "Has education become more positional? Educational expansion and labour market outcomes, 1985–2007",
+        "url": "https://journals.sagepub.com/doi/abs/10.1177/0001699315570918",
+        "ano": 2015
+      },
+      {
+        "titulo": "Vocational education and employment over the life course using a new measure of occupational specificity",
+        "url": "https://doi.org/10.1016/j.ssresearch.2017.11.004",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 84,
@@ -1173,7 +3414,34 @@
     "foto": "https://ui-avatars.com/api/?name=Sachiko+Genda&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "F",
-    "miniBio": "Pesquisadora da Doshisha University no Japão, com foco em TVET na Ásia e competências verdes (green skills)."
+    "miniBio": "Pesquisadora da Doshisha University no Japão, com foco em TVET na Ásia e competências verdes (green skills).",
+    "artigos": [
+      {
+        "titulo": "Comparing International Vocational Education and Training Programs: The KOF Education-Employment Linkage Index",
+        "url": "https://www.research-collection.ethz.ch/handle/20.500.11850/184565",
+        "ano": 2017
+      },
+      {
+        "titulo": "Beyond Employer Engagement: Measuring Education-Employment Linkage in Vocational Education and Training Programmes",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2018.1451911",
+        "ano": 2018
+      },
+      {
+        "titulo": "Getting there from here: a literature review on vocational education and training reform implementation",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2019.1698643",
+        "ano": 2021
+      },
+      {
+        "titulo": "Meeting in the Middle: TVET Programs' Education–Employment Linkage at Different Stages of Development",
+        "url": "https://www.mdpi.com/2076-0760/10/6/220",
+        "ano": 2021
+      },
+      {
+        "titulo": "The linkage between the education and employment systems: ideal types of vocational education and training programs",
+        "url": "https://www.researchgate.net/publication/332705197_The_linkage_between_the_education_and_employment_systems_ideal_types_of_vocational_education_and_training_programs",
+        "ano": 2019
+      }
+    ]
   },
   {
     "id": 85,
@@ -1187,7 +3455,34 @@
     "foto": "https://ui-avatars.com/api/?name=Santosh+Mehrotra&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Jawaharlal Nehru University e economista do trabalho, é referência em análise do 'dividendo demográfico' e das falhas do sistema de competências na Índia."
+    "miniBio": "Professor da Jawaharlal Nehru University e economista do trabalho, é referência em análise do 'dividendo demográfico' e das falhas do sistema de competências na Índia.",
+    "artigos": [
+      {
+        "titulo": "Fallen Heroes in Global Capitalism: Workers and the Restructuring of the Polish Steel Industry",
+        "url": "https://link.springer.com/book/10.1057/9781137303653",
+        "ano": 2013
+      },
+      {
+        "titulo": "Precarity as a Biographical Problem? Young Workers Living with Precarity in Germany and Poland",
+        "url": "https://journals.sagepub.com/doi/10.1177/0950017020936898",
+        "ano": 2021
+      },
+      {
+        "titulo": "The Moral Boundary Drawing of Class: Social Inequality and Young Precarious Workers in Poland and Germany",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/0038038520985791",
+        "ano": 2021
+      },
+      {
+        "titulo": "Platform Labour Unrest in a Global Perspective: How, Where and Why Do Platform Workers Protest?",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/09500170231209676",
+        "ano": 2024
+      },
+      {
+        "titulo": "Labor Unrest and the Future of Work: Global Struggles Against Food Delivery Platforms",
+        "url": "https://journals.sagepub.com/doi/10.1177/0160449X231178780",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 86,
@@ -1201,7 +3496,34 @@
     "foto": "https://ui-avatars.com/api/?name=Shoko+Yamada&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Nagoya University no Japão, é especialista em educação vocacional comparada e no papel da cultura na transferência de modelos de formação."
+    "miniBio": "Professora da Nagoya University no Japão, é especialista em educação vocacional comparada e no papel da cultura na transferência de modelos de formação.",
+    "artigos": [
+      {
+        "titulo": "Critical Realism in Discourse Analysis: A Presentation of a Systematic Method of Analysis",
+        "url": "https://journals.sagepub.com/doi/10.1177/0959354307073153",
+        "ano": 2007
+      },
+      {
+        "titulo": "Presenting Critical Realist Discourse Analysis as a Tool for Making Sense of Service Users' Accounts of Their Mental Health Problems",
+        "url": "https://journals.sagepub.com/doi/10.1177/1049732318818824",
+        "ano": 2019
+      },
+      {
+        "titulo": "Child Safeguarding in Light of the Deserving/Undeserving Paradigm",
+        "url": "https://doi.org/10.1016/j.chiabu.2019.104025",
+        "ano": 2019
+      },
+      {
+        "titulo": "'I hate having my mental health' – Making sense of mental health through coproduction and visual methods",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13676261.2022.2101358",
+        "ano": 2022
+      },
+      {
+        "titulo": "Revisiting 'resilience' in light of racism, 'othering' and resistance",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/03063968221093882",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 87,
@@ -1215,7 +3537,34 @@
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Glasgow, é um dos pesquisadores mais influentes em VET para desenvolvimento e justiça social, especialmente na África e América Latina."
+    "miniBio": "Professor da Universidade de Glasgow, é um dos pesquisadores mais influentes em VET para desenvolvimento e justiça social, especialmente na África e América Latina.",
+    "artigos": [
+      {
+        "titulo": "Areas of Vocational Education Research",
+        "url": "https://link.springer.com/book/10.1007/978-3-642-54224-4",
+        "ano": 2014
+      },
+      {
+        "titulo": "Curriculum Research",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-642-54224-4_10",
+        "ano": 2014
+      },
+      {
+        "titulo": "Competence Research",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-642-54224-4_9",
+        "ano": 2014
+      },
+      {
+        "titulo": "Factors Influencing Vocational Education and Training Teachers' Professional Competence Based on a Large-Scale Diagnostic Method",
+        "url": "https://www.researchgate.net/publication/365895525_Factors_Influencing_Vocational_Education_and_Training_Teachers_Professional_Competence_Based_on_a_Large-Scale_Diagnostic_Method_A_Decade_of_Data_from_China",
+        "ano": 2022
+      },
+      {
+        "titulo": "Theoretical and practical exploration of work-based learning curriculum with a case study",
+        "url": "https://www.hksmp.com/journals/vte/article/view/518",
+        "ano": 2024
+      }
+    ]
   },
   {
     "id": 88,
@@ -1229,7 +3578,34 @@
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87)."
+    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87).",
+    "artigos": [
+      {
+        "titulo": "The Relevance of Class in Education Policy and Research: The case of Sweden's Vocational Education",
+        "url": "https://www.researchgate.net/publication/307508425_The_Relevance_of_Class_in_Education_Policy_and_Research-The_case_of_Sweden's_Vocational_Education",
+        "ano": 2012
+      },
+      {
+        "titulo": "The vocational–academic divide in neoliberal upper secondary curricula: the Swedish case",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/02680939.2017.1318455",
+        "ano": 2017
+      },
+      {
+        "titulo": "The academic–vocational divide in three Nordic countries: implications for social class and gender",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/20004508.2018.1424490",
+        "ano": 2018
+      },
+      {
+        "titulo": "Socialisation and citizenship preparation in vocational education: Pedagogic codes and democratic rights in VET-subjects",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/01425692.2019.1665498",
+        "ano": 2019
+      },
+      {
+        "titulo": "Gendered distribution of 'knowledge required for empowerment' in Swedish vocational education curricula",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2017.1394358",
+        "ano": 2018
+      }
+    ]
   },
   {
     "id": 89,
@@ -1243,7 +3619,34 @@
     "foto": "https://ui-avatars.com/api/?name=Simon+McGrath&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87)."
+    "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87).",
+    "artigos": [
+      {
+        "titulo": "Quality Assurance of Qualifications in TVET: Korea Case Study",
+        "url": "https://tvet-online.asia/7/cho/",
+        "ano": 2016
+      },
+      {
+        "titulo": "Towards Quality Assurance of Technical and Vocational Education and Training",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000259282",
+        "ano": 2016
+      },
+      {
+        "titulo": "Guidelines for the Quality Assurance of TVET Qualifications in the Asia-Pacific Region",
+        "url": "https://bangkok.unesco.org/content/guidelines-quality-assurance-tvet-qualifications-asia-pacific-region",
+        "ano": 2017
+      },
+      {
+        "titulo": "Discussion paper on quality assurance of qualifications in TVET",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000262717",
+        "ano": 2016
+      },
+      {
+        "titulo": "Introduction to Korea Vocational Qualification System",
+        "url": "https://scholar.google.com/scholar?q=Eunsang+Cho+Introduction+Korea+Vocational+Qualification+System+KRIVET+2016",
+        "ano": 2016
+      }
+    ]
   },
   {
     "id": 90,
@@ -1257,7 +3660,34 @@
     "foto": "https://ui-avatars.com/api/?name=Simon+Schwartzman&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Sociólogo e pesquisador sênior do IETS e membro da Academia Brasileira de Ciências, é referência em análise baseada em dados sobre educação e políticas públicas no Brasil."
+    "miniBio": "Sociólogo e pesquisador sênior do IETS e membro da Academia Brasileira de Ciências, é referência em análise baseada em dados sobre educação e políticas públicas no Brasil.",
+    "artigos": [
+      {
+        "titulo": "Work Process Knowledge",
+        "url": "https://www.routledge.com/Work-Process-Knowledge/Boreham-Fischer-Samurcay/p/book/9781138864009",
+        "ano": 2002
+      },
+      {
+        "titulo": "Competing approaches towards work process orientation in German curriculum development",
+        "url": "https://files.eric.ed.gov/fulltext/EJ776620.pdf",
+        "ano": 2007
+      },
+      {
+        "titulo": "European perspectives on learning at work: the acquisition of work process knowledge",
+        "url": "https://www.cedefop.europa.eu/files/3033_en.pdf",
+        "ano": 2004
+      },
+      {
+        "titulo": "The Mutual Shaping of Work, Vocational Competence and Work-Process Knowledge",
+        "url": "https://link.springer.com/chapter/10.1007/978-1-4020-5281-1_107",
+        "ano": 2006
+      },
+      {
+        "titulo": "Work-Process Knowledge and the School-to-Work Transition",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-642-60313-6_16",
+        "ano": 2002
+      }
+    ]
   },
   {
     "id": 91,
@@ -1271,7 +3701,34 @@
     "foto": "https://ui-avatars.com/api/?name=Stéphan+Vincent-Lancrin&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Economista sênior da OCDE e líder do projeto sobre Inovação em Educação, é referência global em criatividade e inovação no ensino."
+    "miniBio": "Economista sênior da OCDE e líder do projeto sobre Inovação em Educação, é referência global em criatividade e inovação no ensino.",
+    "artigos": [
+      {
+        "titulo": "Fostering Workplace Learning: Looking through the Lens of Apprenticeship",
+        "url": "https://journals.sagepub.com/doi/10.2304/eerj.2003.2.1.9",
+        "ano": 2003
+      },
+      {
+        "titulo": "Creating and using knowledge: an analysis of the differentiated nature of workplace learning environments",
+        "url": "https://bera-journals.onlinelibrary.wiley.com/doi/abs/10.1080/01411920701582397",
+        "ano": 2007
+      },
+      {
+        "titulo": "Improving Workplace Learning",
+        "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203946947/improving-workplace-learning-phil-hodkinson-helen-rainbird-lorna-unwin-karen-evans",
+        "ano": 2006
+      },
+      {
+        "titulo": "Apprenticeship in the British 'Training Market'",
+        "url": "https://journals.sagepub.com/doi/10.1177/002795010117800114",
+        "ano": 2001
+      },
+      {
+        "titulo": "'Knowledge workers' as the new apprentices: the influence of organisational autonomy, goals and values",
+        "url": "https://eprints.soton.ac.uk/167393/",
+        "ano": 2010
+      }
+    ]
   },
   {
     "id": 92,
@@ -1285,7 +3742,34 @@
     "foto": "https://ui-avatars.com/api/?name=Stephanie+Allais&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da Universidade de Witwatersrand (Wits) na África do Sul, é uma das críticas globais mais contundentes da eficácia dos Quadros Nacionais de Qualificações (NQF)."
+    "miniBio": "Professora da Universidade de Witwatersrand (Wits) na África do Sul, é uma das críticas globais mais contundentes da eficácia dos Quadros Nacionais de Qualificações (NQF).",
+    "artigos": [
+      {
+        "titulo": "Emerging environmental industries: impact on required skills and TVET systems",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/14480220.2019.1639276",
+        "ano": 2019
+      },
+      {
+        "titulo": "Technology and Vocational Education for Sustainable Development: Empowering Individuals for the Future",
+        "url": "https://www.researchgate.net/publication/44841382_Technology_and_vocational_education_for_sustainable_development_empowering_individuals_for_the_future",
+        "ano": 2009
+      },
+      {
+        "titulo": "Green Skills as the Agenda for the Competence Movement in Vocational and Professional Education",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-319-41713-4_43",
+        "ano": 2017
+      },
+      {
+        "titulo": "TVET as an important factor in country's economic development",
+        "url": "https://link.springer.com/article/10.1186/2193-1801-3-S1-K3",
+        "ano": 2014
+      },
+      {
+        "titulo": "Introduction: Unpacking Greening and Skills Recognition in Micro, Small, and Medium Enterprises",
+        "url": "https://link.springer.com/chapter/10.1007/978-981-19-2072-1_1",
+        "ano": 2022
+      }
+    ]
   },
   {
     "id": 93,
@@ -1299,7 +3783,34 @@
     "foto": "https://ui-avatars.com/api/?name=Stephen+Billett&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor emérito da Griffith University na Austrália, é um dos teóricos mais influentes de aprendizagem no local de trabalho no mundo."
+    "miniBio": "Professor emérito da Griffith University na Austrália, é um dos teóricos mais influentes de aprendizagem no local de trabalho no mundo.",
+    "artigos": [
+      {
+        "titulo": "Vocational education and training for development: a policy in need of a theory?",
+        "url": "https://www.semanticscholar.org/paper/Vocational-education-and-training-for-development:-McGrath/678af4022988841b9b095418def902991bbe605f",
+        "ano": 2012
+      },
+      {
+        "titulo": "Skills for development: a new approach to international cooperation in skills development?",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820200200207",
+        "ano": 2002
+      },
+      {
+        "titulo": "Vocational education and training for human development",
+        "url": "https://www.researchgate.net/publication/283104082_Vocational_education_and_training_for_human_development",
+        "ano": 2012
+      },
+      {
+        "titulo": "Skills for development and vocational education and training: Current and emergent trends",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0738059323001293",
+        "ano": 2023
+      },
+      {
+        "titulo": "Towards Sustainable Vocational Education and Training: Thinking beyond the formal",
+        "url": "https://www.researchgate.net/publication/371017565_TVET_SI_Towards_Sustainable_Vocational_Education_and_Training_Thinking_beyond_the_formal",
+        "ano": 2023
+      }
+    ]
   },
   {
     "id": 94,
@@ -1313,7 +3824,34 @@
     "foto": "https://ui-avatars.com/api/?name=Thomas+Deissinger&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "researchgate",
     "genero": "M",
-    "miniBio": "Professor da Universidade de Konstanz, é especialista em história, cultura e transferência de modelos de educação vocacional."
+    "miniBio": "Professor da Universidade de Konstanz, é especialista em história, cultura e transferência de modelos de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Authentic and self-directed learning in vocational education: Challenges to vocational educators",
+        "url": "https://www.researchgate.net/publication/48322927_Authentic_and_self-directed_learning_in_vocational_education_Challenges_to_vocational_educators",
+        "ano": 2011
+      },
+      {
+        "titulo": "Teaching in innovative vocational education in the Netherlands",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13540602.2012.746499",
+        "ano": 2012
+      },
+      {
+        "titulo": "The Nature of Study Programmes in Vocational Education",
+        "url": "https://link.springer.com/article/10.1007/s12186-011-9059-4",
+        "ano": 2011
+      },
+      {
+        "titulo": "Students' Learning Processes during School-Based Learning and Workplace Learning in Vocational Education: A Review",
+        "url": "https://link.springer.com/article/10.1007/s12186-011-9069-2",
+        "ano": 2012
+      },
+      {
+        "titulo": "Pedagogic practices in the context of students' workplace learning: a literature review",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2021.1973544",
+        "ano": 2021
+      }
+    ]
   },
   {
     "id": 95,
@@ -1327,7 +3865,34 @@
     "foto": "https://ui-avatars.com/api/?name=Thomas+Schröder&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor da TU Dortmund, é especialista em cooperação internacional em TVET e na profissionalização de docentes de educação vocacional."
+    "miniBio": "Professor da TU Dortmund, é especialista em cooperação internacional em TVET e na profissionalização de docentes de educação vocacional.",
+    "artigos": [
+      {
+        "titulo": "Students' personal professional theories in competence-based vocational education",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820903230999",
+        "ano": 2009
+      },
+      {
+        "titulo": "Students' Learning Processes during School-Based Learning and Workplace Learning in Vocational Education: A Review",
+        "url": "https://link.springer.com/article/10.1007/s12186-011-9069-2",
+        "ano": 2012
+      },
+      {
+        "titulo": "Revealing personal professional theories",
+        "url": "https://link.springer.com/article/10.1007/s11135-010-9322-z",
+        "ano": 2011
+      },
+      {
+        "titulo": "Combining concept maps and interviews to produce representations of personal professional theories in higher vocational education",
+        "url": "https://link.springer.com/article/10.1007/s11251-017-9407-3",
+        "ano": 2017
+      },
+      {
+        "titulo": "Interactive Research on Innovations in Vocational Education and Training (VET): Lessons from Dutch and German cases",
+        "url": "https://www.researchgate.net/publication/274633407_Interactive_Research_on_Innovations_in_Vocational_Education_and_Training_VET_Lessons_from_Dutch_and_German_cases",
+        "ano": 2015
+      }
+    ]
   },
   {
     "id": 96,
@@ -1341,7 +3906,34 @@
     "foto": "https://ui-avatars.com/api/?name=Tom+Bol&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "M",
-    "miniBio": "Professor associado de Sociologia na Universidade de Amsterdam e co-diretor do Amsterdam Centre for Inequality Studies, é um dos pesquisadores mais citados em estudos sobre estratificação educacional e VET."
+    "miniBio": "Professor associado de Sociologia na Universidade de Amsterdam e co-diretor do Amsterdam Centre for Inequality Studies, é um dos pesquisadores mais citados em estudos sobre estratificação educacional e VET.",
+    "artigos": [
+      {
+        "titulo": "Tales of the unexpected: Integrating career shocks in the contemporary careers literature",
+        "url": "https://sajip.co.za/index.php/sajip/article/view/1503",
+        "ano": 2018
+      },
+      {
+        "titulo": "The Covid-19 crisis as a career shock: Implications for careers and vocational behavior",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0001879120300476",
+        "ano": 2020
+      },
+      {
+        "titulo": "Competencies for the Contemporary Career: Development and Preliminary Validation of the Career Competencies Questionnaire",
+        "url": "https://journals.sagepub.com/doi/10.1177/0894845312467501",
+        "ano": 2013
+      },
+      {
+        "titulo": "Crafting your Career: How Career Competencies Relate to Career Success via Job Crafting",
+        "url": "https://iaap-journals.onlinelibrary.wiley.com/doi/10.1111/apps.12082",
+        "ano": 2017
+      },
+      {
+        "titulo": "Building a sustainable start: The role of career competencies, career success, and career shocks in young professionals' employability",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0001879119300478",
+        "ano": 2020
+      }
+    ]
   },
   {
     "id": 97,
@@ -1355,7 +3947,34 @@
     "foto": "https://ui-avatars.com/api/?name=Ursula+Renold&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "scholar",
     "genero": "F",
-    "miniBio": "Professora da ETH Zurich, é criadora do KOF Education-Employment Linkage Index, a principal métrica internacional para avaliar a articulação entre sistemas de educação profissional e mercados de trabalho."
+    "miniBio": "Professora da ETH Zurich, é criadora do KOF Education-Employment Linkage Index, a principal métrica internacional para avaliar a articulação entre sistemas de educação profissional e mercados de trabalho.",
+    "artigos": [
+      {
+        "titulo": "Competence-based Education and Training",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/1389224X.2012.670048",
+        "ano": 2012
+      },
+      {
+        "titulo": "Competence: the essence and use of the concept in ICVT",
+        "url": "https://scholar.google.com/scholar?q=Mulder+competence+essence+use+concept+ICVT+European+Journal+Vocational+Training+2007",
+        "ano": 2007
+      },
+      {
+        "titulo": "The concept of competence in the development of vocational education and training in selected EU member states",
+        "url": "https://www.academia.edu/4941386/Mulder_M_et_al_2007_The_concept_of_competence_in_the_development_of_vocational_education_and_training_in_selected_EU_member_states_a_critical_analysis",
+        "ano": 2007
+      },
+      {
+        "titulo": "Competence-based Vocational and Professional Education: Bridging the Worlds of Work and Education",
+        "url": "https://link.springer.com/book/10.1007/978-3-319-41713-4",
+        "ano": 2017
+      },
+      {
+        "titulo": "Competence development - some background thoughts",
+        "url": "https://www.tandfonline.com/doi/abs/10.1080/13892240108438822",
+        "ano": 2001
+      }
+    ]
   },
   {
     "id": 98,
@@ -1369,7 +3988,34 @@
     "foto": "https://ui-avatars.com/api/?name=Volker+Trappmann&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": null,
     "genero": "M",
-    "miniBio": "Pesquisador com foco em relações laborais e qualificações profissionais em contextos de transição econômica na Europa."
+    "miniBio": "Pesquisador com foco em relações laborais e qualificações profissionais em contextos de transição econômica na Europa.",
+    "artigos": [
+      {
+        "titulo": "The 4th industrial revolution – its impact on vocational skills",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13639080.2020.1858230",
+        "ano": 2021
+      },
+      {
+        "titulo": "Work-Process Based Development of Advanced Detailed Curricula",
+        "url": "https://www.peterlang.com/document/1049284",
+        "ano": 2019
+      },
+      {
+        "titulo": "Technical and Vocational Teacher Education and Training in International and Development Co-Operation",
+        "url": "https://link.springer.com/book/10.1007/978-981-16-6474-8",
+        "ano": 2022
+      },
+      {
+        "titulo": "Securing quality in TVET - A compendium of best practices",
+        "url": "https://tvet-online.asia/4/loose-spoettl/",
+        "ano": 2012
+      },
+      {
+        "titulo": "Work-Process Based Development of Curricula: A Framework",
+        "url": "https://tvet-online.asia/11/spoettl-etal-tvet11/",
+        "ano": 2013
+      }
+    ]
   },
   {
     "id": 99,
@@ -1383,7 +4029,34 @@
     "foto": "https://ui-avatars.com/api/?name=Wendy+Sims-Schouten&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
     "genero": "F",
-    "miniBio": "Professora de Psicologia Interdisciplinar na UCL (University College London), com trajetória profissional que inclui formação como enfermeira psiquiátrica e especialização em psicologia infantil."
+    "miniBio": "Professora de Psicologia Interdisciplinar na UCL (University College London), com trajetória profissional que inclui formação como enfermeira psiquiátrica e especialização em psicologia infantil.",
+    "artigos": [
+      {
+        "titulo": "Ryle on Knowing How and the Possibility of Vocational Education",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1468-5930.2009.00425.x",
+        "ano": 2009
+      },
+      {
+        "titulo": "Three Different Conceptions of Know-How and their Relevance to Professional and Vocational Education",
+        "url": "https://academic.oup.com/jope/article-abstract/47/2/281/6841044",
+        "ano": 2013
+      },
+      {
+        "titulo": "Education, Work and Social Capital: Towards a New Conception of Vocational Training",
+        "url": "https://www.amazon.com/Education-Work-Social-Capital-International/dp/0415204348",
+        "ano": 2000
+      },
+      {
+        "titulo": "Learning outcomes: The long goodbye: Vocational qualifications in the 21st century",
+        "url": "https://journals.sagepub.com/doi/full/10.1177/14749041211043669",
+        "ano": 2023
+      },
+      {
+        "titulo": "Two rival conceptions of vocational education",
+        "url": "https://www.taylorfrancis.com/chapters/mono/10.4324/9780203183274-12/two-rival-conceptions-vocational-education-christopher-winch",
+        "ano": 2002
+      }
+    ]
   },
   {
     "id": 100,
@@ -1397,6 +4070,33 @@
     "foto": "https://ui-avatars.com/api/?name=Zhiqun+Zhao&size=128&background=random&color=fff&bold=true&format=png",
     "profileType": "orcid",
     "genero": "M",
-    "miniBio": "Professor da Beijing Normal University, é o principal pesquisador chinês em currículo de educação vocacional e cognição profissional."
+    "miniBio": "Professor da Beijing Normal University, é o principal pesquisador chinês em currículo de educação vocacional e cognição profissional.",
+    "artigos": [
+      {
+        "titulo": "Career Competencies for Career Success",
+        "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/j.2161-0045.2006.tb00011.x",
+        "ano": 2006
+      },
+      {
+        "titulo": "Career Competencies for the Modern Career",
+        "url": "https://journals.sagepub.com/doi/10.1177/0894845305283006",
+        "ano": 2006
+      },
+      {
+        "titulo": "Learning for now or later? Career competencies among students in higher vocational education in the Netherlands",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/03075079.2010.523144",
+        "ano": 2012
+      },
+      {
+        "titulo": "The development of strong career learning environments in Dutch vocational education",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2017.1392995",
+        "ano": 2018
+      },
+      {
+        "titulo": "Career learning and career learning environment in Dutch higher education",
+        "url": "https://www.emerald.com/insight/content/doi/10.1108/JARHE-06-2013-0025/full/html",
+        "ano": 2014
+      }
+    ]
   }
 ]
