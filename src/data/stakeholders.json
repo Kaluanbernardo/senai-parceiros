@@ -7,7 +7,8 @@
     "natureza": "Privada",
     "relacao": "🔗 SENAI parceiro do Innovation Fund (100K Strong Americas) para intercâmbio Brasil-EUA. Parceria SENAI CIMATEC-Broward College/EUA em manufatura avançada. Parceiro institucional.",
     "website": "https://aacc.nche.edu",
-    "logo": "https://www.google.com/s2/favicons?domain=aacc.nche.edu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=aacc.nche.edu&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. Referência em programas de requalificação de adultos que podem inspirar iniciativas do SENAI.",
     "website": "https://afpa.fr",
-    "logo": "https://www.google.com/s2/favicons?domain=afpa.fr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=afpa.fr&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 3,
@@ -27,7 +29,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://asqa.gov.au",
-    "logo": "https://www.google.com/s2/favicons?domain=asqa.gov.au&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=asqa.gov.au&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 4,
@@ -37,7 +40,8 @@
     "natureza": "Pública",
     "relacao": "Parceiro Estratégico (África)",
     "website": "https://nepad.org",
-    "logo": "https://www.google.com/s2/favicons?domain=nepad.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=nepad.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 5,
@@ -47,7 +51,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro Educacional",
     "website": "https://autodesk.com",
-    "logo": "https://www.google.com/s2/favicons?domain=autodesk.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=autodesk.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 6,
@@ -57,7 +62,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro de Projetos (Via GIZ)",
     "website": "https://bbw.de",
-    "logo": "https://www.google.com/s2/favicons?domain=bbw.de&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=bbw.de&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 7,
@@ -67,7 +73,8 @@
     "natureza": "Pública",
     "relacao": "✅ Parceiro estratégico desde 1998. MoU renovado em nov/2023 para governança VET e pesquisa. Chamada conjunta EdTech com SENAI (2025). Intercâmbio em governança, padrões, pesquisa em VET e transformação digital.",
     "website": "https://bibb.de",
-    "logo": "https://www.google.com/s2/favicons?domain=bibb.de&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=bibb.de&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 8,
@@ -77,7 +84,8 @@
     "natureza": "Pública",
     "relacao": "❓ Funções paralelas ao SENAI. Cooperação via ABC brasileira em países vizinhos (Timor-Leste). Potencial troca de experiências em centros móveis e comunitários, semelhantes aos BLK Komunitas.",
     "website": "https://kemnaker.go.id",
-    "logo": "https://www.google.com/s2/favicons?domain=kemnaker.go.id&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=kemnaker.go.id&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 9,
@@ -87,7 +95,8 @@
     "natureza": "Privada",
     "relacao": "Fornecedor/Parceiro Técnico",
     "website": "https://boschrexroth.com",
-    "logo": "https://www.google.com/s2/favicons?domain=boschrexroth.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=boschrexroth.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 10,
@@ -97,7 +106,8 @@
     "natureza": "Pública",
     "relacao": "✅ SENAI mantém cooperação com o British Council, reconhecida pela ONU como parceria estratégica. Projetos conjuntos incluem intercâmbio de metodologias e participação em programas do British Council.",
     "website": "https://britishcouncil.org",
-    "logo": "https://www.google.com/s2/favicons?domain=britishcouncil.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=britishcouncil.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 11,
@@ -107,7 +117,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Mandato EU-interno. Pesquisas amplamente referenciadas por SENAI e formuladores de política brasileiros. Referência importante para benchmarking de políticas e indicadores de VET. Fonte de dados e referência.",
     "website": "https://cedefop.europa.eu",
-    "logo": "https://www.google.com/s2/favicons?domain=cedefop.europa.eu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=cedefop.europa.eu&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 12,
@@ -117,7 +128,8 @@
     "natureza": "Pública",
     "relacao": "Convergência intensa no ecossistema paulista (CNI/FIESP, governo SP, projetos setoriais); não encontrei menção a acordo internacional formal SENAI‑CPS nesta busca.",
     "website": "https://cps.sp.gov.br",
-    "logo": "https://www.google.com/s2/favicons?domain=cps.sp.gov.br&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=cps.sp.gov.br&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 13,
@@ -127,7 +139,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark de Pesquisa",
     "website": "https://cereq.fr",
-    "logo": "https://www.google.com/s2/favicons?domain=cereq.fr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=cereq.fr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 14,
@@ -137,7 +150,8 @@
     "natureza": "Privada",
     "relacao": "✅ Cooperação com SETEC/CAPES desde 2001. Acordo renovado abr/2023. ~US$25 mi desde 2012. Programa Mulheres Mil, Canada-Brazil (1990) com SENAI. Projetos EFE. Coopera com WFCP e diversos projetos internacionais.",
     "website": "https://collegesinstitutes.ca",
-    "logo": "https://www.google.com/s2/favicons?domain=collegesinstitutes.ca&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=collegesinstitutes.ca&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 15,
@@ -147,7 +161,8 @@
     "natureza": "Privada",
     "relacao": "✅ Amplamente implantado no SENAI. Unidades SENAI de vários estados são academias Cisco Networking, com instrutores certificados e laboratórios específicos. Cisco e SENAI já realizaram juntos competições e eventos. Parceiro operacional.",
     "website": "https://netacad.com",
-    "logo": "https://www.google.com/s2/favicons?domain=netacad.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=netacad.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 16,
@@ -157,7 +172,8 @@
     "natureza": "Privada",
     "relacao": "🔗 British Council listado como parceiro SENAI. City & Guilds atua internacionalmente no Brasil via certificações. Em 2012 qualificações City & Guilds foram reconhecidas em projeto piloto no SENAI-SP. Ambos membros WorldSkills.",
     "website": "https://cityandguilds.com",
-    "logo": "https://www.google.com/s2/favicons?domain=cityandguilds.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=cityandguilds.com&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 17,
@@ -167,7 +183,8 @@
     "natureza": "Privada",
     "relacao": "❓ Sem cooperação formal. SENAI se inspira no modelo de aprendizagem de excelência e intercâmbio cultural dos Compagnons.",
     "website": "https://compagnons-du-devoir.com",
-    "logo": "https://www.google.com/s2/favicons?domain=compagnons-du-devoir.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=compagnons-du-devoir.com&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 18,
@@ -177,7 +194,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Ambos centros UNEVOC e membros OIT/Cinterfor. CONALEP coorganizou Aliança para Formação Dual na América Latina, junto com BIBB e OIT/Cinterfor. Cooperação multilateral. Trocam experiências em educação dual e competições.",
     "website": "https://conalep.edu.mx",
-    "logo": "https://www.google.com/s2/favicons?domain=conalep.edu.mx&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=conalep.edu.mx&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 19,
@@ -187,7 +205,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://conocer.gob.mx",
-    "logo": "https://www.google.com/s2/favicons?domain=conocer.gob.mx&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=conocer.gob.mx&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 20,
@@ -197,7 +216,8 @@
     "natureza": "Pública",
     "relacao": "✅ AHK Brasil ativa. VETnet inclui Brasil como país-foco para adaptação do sistema dual.",
     "website": "https://dihk.de",
-    "logo": "https://www.google.com/s2/favicons?domain=dihk.de&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=dihk.de&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 21,
@@ -207,7 +227,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro Técnico",
     "website": "https://dmgmori.com",
-    "logo": "https://www.google.com/s2/favicons?domain=dmgmori.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=dmgmori.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 22,
@@ -217,7 +238,8 @@
     "natureza": "Privada",
     "relacao": "Nenhuma parceria identificada; possivelmente contatos indiretos via Cinterfor OIT ou Igreja Católica.",
     "website": "https://enaip.it",
-    "logo": "https://www.google.com/s2/favicons?domain=enaip.it&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=enaip.it&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 23,
@@ -227,7 +249,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Metodologias (Processo de Torino/CoVE) servem como benchmark para desenho de reformas sistêmicas em VET e qualificação em países em desenvolvimento.",
     "website": "https://etf.europa.eu",
-    "logo": "https://www.google.com/s2/favicons?domain=etf.europa.eu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=etf.europa.eu&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 24,
@@ -237,7 +260,8 @@
     "natureza": "Privada",
     "relacao": "✅ Fornecedora de tecnologia educacional para laboratórios SENAI. Parceira global da WorldSkills. SENAI é cliente e parceiro tecnológico: utiliza equipamentos Festo em laboratórios e colaborou em eventos.",
     "website": "https://festo-didactic.com",
-    "logo": "https://www.google.com/s2/favicons?domain=festo-didactic.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=festo-didactic.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 25,
@@ -247,7 +271,8 @@
     "natureza": "Privada",
     "relacao": "✅ Desde 2012 apoiou criação dos 26+ Institutos SENAI de Inovação. Parceria reconhecida pela ONU como cooperação Sul-Sul de destaque. Colaboração em P&D em materiais e manufatura avançada. Uma das parcerias mais estratégicas do SENAI.",
     "website": "https://fraunhofer.de",
-    "logo": "https://www.google.com/s2/favicons?domain=fraunhofer.de&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=fraunhofer.de&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 26,
@@ -257,7 +282,8 @@
     "natureza": "PPP",
     "relacao": "❓ Redes na Argentina e Colômbia. Potencial via conexões G20.",
     "website": "https://gan-global.org",
-    "logo": "https://www.google.com/s2/favicons?domain=gan-global.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=gan-global.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 27,
@@ -267,7 +293,8 @@
     "natureza": "Privada",
     "relacao": "Referência Intelectual",
     "website": "https://gatsby.org.uk",
-    "logo": "https://www.google.com/s2/favicons?domain=gatsby.org.uk&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=gatsby.org.uk&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 28,
@@ -277,7 +304,8 @@
     "natureza": "Pública",
     "relacao": "✅ Múltiplos projetos: PROKLIMA, H2Brasil (hidrogênio verde, Natal, 2024), SAF, H2Uppp com TÜV Rheinland (2024), cooperação trilateral (2015-2019). Cooperação em energias renováveis e fortalecimento institucional.",
     "website": "https://giz.de",
-    "logo": "https://www.google.com/s2/favicons?domain=giz.de&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=giz.de&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 29,
@@ -287,7 +315,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Conexão indireta via WorldSkills International. Especialistas coreanos e do SENAI interagem no desenvolvimento de provas. Em 2021, SENAI-SC e KOICA uniram-se para capacitação. Programa K-Star.",
     "website": "https://hrdkorea.or.kr",
-    "logo": "https://www.google.com/s2/favicons?domain=hrdkorea.or.kr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=hrdkorea.or.kr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 30,
@@ -297,7 +326,8 @@
     "natureza": "Privada",
     "relacao": "🔗 Colabora com BIBB no projeto D-A-CH de monitoramento do sistema dual.",
     "website": "https://ibw.at",
-    "logo": "https://www.google.com/s2/favicons?domain=ibw.at&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ibw.at&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 31,
@@ -307,7 +337,8 @@
     "natureza": "Pública",
     "relacao": "Fonte de Inteligência",
     "website": "https://indire.it",
-    "logo": "https://www.google.com/s2/favicons?domain=indire.it&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=indire.it&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 32,
@@ -317,7 +348,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Diálogo via MERCOSUR e rede OIT/Cinterfor. Candidato natural a cooperação Sul-Sul (Brasil-Argentina) em políticas de rede, certificação e prospectiva de ETP.",
     "website": "https://inet.edu.ar",
-    "logo": "https://www.google.com/s2/favicons?domain=inet.edu.ar&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=inet.edu.ar&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 33,
@@ -327,7 +359,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark",
     "website": "https://iskur.gov.tr",
-    "logo": "https://www.google.com/s2/favicons?domain=iskur.gov.tr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=iskur.gov.tr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 34,
@@ -337,7 +370,8 @@
     "natureza": "Pública",
     "relacao": "🔗 SENAI parceiro do INCIT (Singapura) para Smart Industry Readiness Index. ITEES é parceiro natural para co-desenvolver centros e programas em terceiros países. Benchmark principal.",
     "website": "https://ite.edu.sg",
-    "logo": "https://www.google.com/s2/favicons?domain=ite.edu.sg&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ite.edu.sg&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 35,
@@ -347,7 +381,8 @@
     "natureza": "PPP",
     "relacao": "❓ Sem registro identificado. SENAI e autoridades indianas já trocaram visitas técnicas. ITIs indianos são equivalentes aos CFPs históricos do SENAI, servindo de referência mútua.",
     "website": "https://dgt.gov.in",
-    "logo": "https://www.google.com/s2/favicons?domain=dgt.gov.in&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=dgt.gov.in&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 36,
@@ -357,7 +392,8 @@
     "natureza": "PPP",
     "relacao": "🔗 SENAI lista Politecnico di Milano como parceiro. SENAI acompanha o modelo ITS como exemplo de integração pós-médio com a indústria. Possíveis diálogos via programas UE-América Latina.",
     "website": "https://itsacademy.it",
-    "logo": "https://www.google.com/s2/favicons?domain=itsacademy.it&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=itsacademy.it&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 37,
@@ -367,7 +403,8 @@
     "natureza": "Pública",
     "relacao": "Sem evidência pública de parceria com SENAI; referência em community colleges integrados a estratégias de requalificação regional.",
     "website": "https://ivytech.edu",
-    "logo": "https://www.google.com/s2/favicons?domain=ivytech.edu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ivytech.edu&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 38,
@@ -377,7 +414,8 @@
     "natureza": "Pública",
     "relacao": "❓ Programas APEC em economias latino-americanas (Chile/Peru/México).",
     "website": "https://javada.or.jp",
-    "logo": "https://www.google.com/s2/favicons?domain=javada.or.jp&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=javada.or.jp&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 39,
@@ -387,7 +425,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://jeed.go.jp",
-    "logo": "https://www.google.com/s2/favicons?domain=jeed.go.jp&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=jeed.go.jp&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 40,
@@ -397,7 +436,8 @@
     "natureza": "Pública",
     "relacao": "✅ Parceria histórica desde anos 1970. Doação de equipamentos em MG/ES/PE/SP. Construção do Cetel (BH). Cooperação em hidrogênio verde. Parceiro histórico e atual.",
     "website": "https://jica.go.jp",
-    "logo": "https://www.google.com/s2/favicons?domain=jica.go.jp&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=jica.go.jp&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 41,
@@ -407,7 +447,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark Social",
     "website": "https://jobcorps.gov",
-    "logo": "https://www.google.com/s2/favicons?domain=jobcorps.gov&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=jobcorps.gov&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 42,
@@ -417,7 +458,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. Papel similar aos Institutos Federais e Faculdades de Tecnologia no Brasil. SENAI e Korea Polytechnics já interagiram em feiras de educação e via UNESCO-UNEVOC.",
     "website": "https://kopo.ac.kr",
-    "logo": "https://www.google.com/s2/favicons?domain=kopo.ac.kr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=kopo.ac.kr&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 43,
@@ -427,7 +469,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. Oferece mestrados Global TVET.",
     "website": "https://koreatech.ac.kr",
-    "logo": "https://www.google.com/s2/favicons?domain=koreatech.ac.kr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=koreatech.ac.kr&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 44,
@@ -437,7 +480,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Colabora com JICA para programas internacionais TVET. Intercâmbio de estudantes japoneses no Brasil. SENAI participa de fóruns com KOSEN via WorldSkills.",
     "website": "https://kosen-k.go.jp",
-    "logo": "https://www.google.com/s2/favicons?domain=kosen-k.go.jp&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=kosen-k.go.jp&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 45,
@@ -447,7 +491,8 @@
     "natureza": "Pública",
     "relacao": "❓ Potencial alto como benchmark em pesquisa VET. Sinergias fortes via BIBB, UNEVOC e projetos globais (ex.: Skills2Capabilities). Rede de conhecimento.",
     "website": "https://krivet.re.kr",
-    "logo": "https://www.google.com/s2/favicons?domain=krivet.re.kr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=krivet.re.kr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 46,
@@ -457,7 +502,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro Técnico",
     "website": "https://lincolnelectric.com",
-    "logo": "https://www.google.com/s2/favicons?domain=lincolnelectric.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=lincolnelectric.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 47,
@@ -467,7 +513,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Paralelo setorial direto com SENAI (foco em manufatura/engenharia).",
     "website": "https://merseta.org.za",
-    "logo": "https://www.google.com/s2/favicons?domain=merseta.org.za&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=merseta.org.za&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 48,
@@ -477,7 +524,8 @@
     "natureza": "Pública",
     "relacao": "Relações Institucionais",
     "website": "https://moe.gov.cn",
-    "logo": "https://www.google.com/s2/favicons?domain=moe.gov.cn&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=moe.gov.cn&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 49,
@@ -487,7 +535,8 @@
     "natureza": "Privada",
     "relacao": "Sim – Parceria notável: SENAI e MIT firmaram cooperação (citado como parceiro do SENAI) em pesquisa e educação em manufatura avançada. O SENAI Instituto de Inovação em Sistemas de Manufatura (São Paulo) já desenvolveu projetos com o MIT, e delegações do SENAI frequentam cursos do MIT (como Lean Manufacturing).",
     "website": "https://mit.edu",
-    "logo": "https://www.google.com/s2/favicons?domain=mit.edu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=mit.edu&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 50,
@@ -497,7 +546,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. Relevante como benchmark de política de VET em país emergente do G20.",
     "website": "https://meb.gov.tr",
-    "logo": "https://www.google.com/s2/favicons?domain=meb.gov.tr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=meb.gov.tr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 51,
@@ -507,7 +557,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem cooperação direta conhecida. SENAI mantém diálogo via organizações internacionais (rede UNEVOC). Modelo do MYK serve de referência em certificação. Benchmark de certificação.",
     "website": "https://myk.gov.tr",
-    "logo": "https://www.google.com/s2/favicons?domain=myk.gov.tr&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=myk.gov.tr&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 52,
@@ -517,7 +568,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark de Inovação",
     "website": "https://nyp.edu.sg",
-    "logo": "https://www.google.com/s2/favicons?domain=nyp.edu.sg&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=nyp.edu.sg&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 53,
@@ -527,7 +579,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro Operacional (Centros no BR)",
     "website": "https://nc3.net",
-    "logo": "https://www.google.com/s2/favicons?domain=nc3.net&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=nc3.net&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 54,
@@ -537,7 +590,8 @@
     "natureza": "Pública",
     "relacao": "🔗 VOCEDplus cataloga pesquisa sobre o SENAI.",
     "website": "https://ncver.edu.au",
-    "logo": "https://www.google.com/s2/favicons?domain=ncver.edu.au&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ncver.edu.au&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 55,
@@ -547,7 +601,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark/Parceiro",
     "website": "https://niagaracollege.ca",
-    "logo": "https://www.google.com/s2/favicons?domain=niagaracollege.ca&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=niagaracollege.ca&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 56,
@@ -557,7 +612,8 @@
     "natureza": "Privada",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://nocti.org",
-    "logo": "https://www.google.com/s2/favicons?domain=nocti.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=nocti.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 57,
@@ -567,7 +623,8 @@
     "natureza": "PPP",
     "relacao": "❓ Potencial alto: ambos são instituições VET de grande escala em países BRICS. Diálogo em fóruns BRICS e G20 sobre políticas de qualificação. SENAI e NSDC compartilharam experiências em reuniões internacionais.",
     "website": "https://nsdcindia.org",
-    "logo": "https://www.google.com/s2/favicons?domain=nsdcindia.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=nsdcindia.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 58,
@@ -577,7 +634,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Brasil é parceiro-chave (não membro). SENAI aparece em estudos comparativos da OCDE.",
     "website": "https://oecd.org",
-    "logo": "https://www.google.com/s2/favicons?domain=oecd.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=oecd.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 59,
@@ -587,7 +645,8 @@
     "natureza": "Pública",
     "relacao": "✅ SENAI é membro fundador e constituinte. Já presidiu reuniões técnicas. Publicação conjunta Skills Anticipation (2015). Workshop maio/2025 sobre produtividade. Conferência Curitiba. Manuais didáticos do SENAI estão no acervo Cinterfor.",
     "website": "https://oitcinterfor.org",
-    "logo": "https://www.google.com/s2/favicons?domain=oitcinterfor.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=oitcinterfor.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 60,
@@ -597,7 +656,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. OEP opera internacionalmente.",
     "website": "https://omnia.fi",
-    "logo": "https://www.google.com/s2/favicons?domain=omnia.fi&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=omnia.fi&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 61,
@@ -607,7 +667,8 @@
     "natureza": "Privada",
     "relacao": "Nenhuma parceria direta conhecida com o SENAI.",
     "website": "https://ort.edu.ar",
-    "logo": "https://www.google.com/s2/favicons?domain=ort.edu.ar&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ort.edu.ar&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 62,
@@ -617,7 +678,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro/Fornecedor",
     "website": "https://pearson.com",
-    "logo": "https://www.google.com/s2/favicons?domain=pearson.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=pearson.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 63,
@@ -627,7 +689,8 @@
     "natureza": "Pública",
     "relacao": "Potencial Parceiro",
     "website": "https://pens.ac.id",
-    "logo": "https://www.google.com/s2/favicons?domain=pens.ac.id&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=pens.ac.id&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 64,
@@ -637,7 +700,8 @@
     "natureza": "Pública",
     "relacao": "Não há evidência de projetos CoVE com SENAI nesta busca; grande potencial de entrada do SENAI como parceiro associado em projetos futuros.",
     "website": "https://ec.europa.eu",
-    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ec.europa.eu&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 65,
@@ -647,7 +711,8 @@
     "natureza": "Pública",
     "relacao": "❓ SENAI opera centros no Timor-Leste (presença regional).",
     "website": "https://polman-bandung.ac.id",
-    "logo": "https://www.google.com/s2/favicons?domain=polman-bandung.ac.id&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=polman-bandung.ac.id&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 66,
@@ -657,7 +722,8 @@
     "natureza": "Privada",
     "relacao": "❓ Sem parceria direta identificada; modelo próximo ao de institutos federais e SENAI (pesquisa aplicada + VET). Possível intercâmbio de boas práticas via fóruns internacionais.",
     "website": "https://polytechnicscanada.ca",
-    "logo": "https://www.google.com/s2/favicons?domain=polytechnicscanada.ca&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=polytechnicscanada.ca&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 67,
@@ -667,7 +733,8 @@
     "natureza": "Pública",
     "relacao": "Convergência doméstica com SENAI em múltiplas agendas (indústria 4.0, energia, agro, etc.), sobretudo por meio de programas do MEC e MDIC; parceria varia por estado e projeto.",
     "website": "https://gov.br/mec",
-    "logo": "https://www.google.com/s2/favicons?domain=gov.br&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=gov.br&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 68,
@@ -677,7 +744,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark (WFCP)",
     "website": "https://rzpt.cn",
-    "logo": "https://www.google.com/s2/favicons?domain=rzpt.cn&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=rzpt.cn&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 69,
@@ -687,7 +755,8 @@
     "natureza": "Pública",
     "relacao": "❓ SENAI tem parcerias no Canadá via CICan e ÉTS. Benchmark.",
     "website": "https://sait.ca",
-    "logo": "https://www.google.com/s2/favicons?domain=sait.ca&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=sait.ca&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 70,
@@ -697,7 +766,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro Tecnológico",
     "website": "https://samsung.com",
-    "logo": "https://www.google.com/s2/favicons?domain=samsung.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=samsung.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 71,
@@ -707,7 +777,8 @@
     "natureza": "PPP",
     "relacao": "❓ SENAI-SP pesquisou Fontys University (Holanda) para cooperação.",
     "website": "https://s-bb.nl",
-    "logo": "https://www.google.com/s2/favicons?domain=s-bb.nl&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=s-bb.nl&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 72,
@@ -717,7 +788,8 @@
     "natureza": "Pública",
     "relacao": "Parceiro Irmão (Cinterfor)",
     "website": "https://sena.edu.co",
-    "logo": "https://www.google.com/s2/favicons?domain=sena.edu.co&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=sena.edu.co&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 73,
@@ -727,7 +799,8 @@
     "natureza": "PPP",
     "relacao": "Atuação articulada com SENAI em políticas nacionais de formação profissional e em redes como Cinterfor, mas sem evidência rápida de MoU bilateral específico nesta busca.",
     "website": "https://senac.br",
-    "logo": "https://www.google.com/s2/favicons?domain=senac.br&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=senac.br&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 74,
@@ -737,7 +810,8 @@
     "natureza": "PPP",
     "relacao": "Instituição focal desta análise. Referência internacional; já coopera com diversos atores listados (WorldSkills, BIBB, ILO/Cinterfor, INCIT etc.).",
     "website": "https://portaldaindustria.com.br/senai",
-    "logo": "https://www.google.com/s2/favicons?domain=portaldaindustria.com.br&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=portaldaindustria.com.br&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 75,
@@ -747,7 +821,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Swissnex Brasil assinou acordo com SENAI-SP (jul/2023). Parceria de 50 anos com a Suíça desde 1973. Parceiro de cooperação.",
     "website": "https://ehb.swiss",
-    "logo": "https://www.google.com/s2/favicons?domain=ehb.swiss&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=ehb.swiss&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 76,
@@ -757,7 +832,8 @@
     "natureza": "Pública",
     "relacao": "🔗 SENAI tem parceria com Universidade Tsinghua (China). SENAI já enviou delegações para conhecer modelos chineses de EPT. Benchmark de universidades vocacionais e parcerias profundas com grandes empresas de tecnologia.",
     "website": "https://szpt.edu.cn",
-    "logo": "https://www.google.com/s2/favicons?domain=szpt.edu.cn&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=szpt.edu.cn&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 77,
@@ -767,7 +843,8 @@
     "natureza": "Privada",
     "relacao": "Parceiro de Projetos",
     "website": "https://siemens.com",
-    "logo": "https://www.google.com/s2/favicons?domain=siemens.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=siemens.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 78,
@@ -777,7 +854,8 @@
     "natureza": "Pública",
     "relacao": "Não identifiquei cooperação direta SENAI‑instituições canadenses na busca rápida; há, contudo, muitas oportunidades de benchmarking e projetos conjuntos.",
     "website": "https://educanada.ca",
-    "logo": "https://www.google.com/s2/favicons?domain=educanada.ca&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=educanada.ca&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 79,
@@ -787,7 +865,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://gov.uk",
-    "logo": "https://www.google.com/s2/favicons?domain=gov.uk&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=gov.uk&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 80,
@@ -797,7 +876,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Conexão indireta via INCIT Singapura.",
     "website": "https://skillsfuture.gov.sg",
-    "logo": "https://www.google.com/s2/favicons?domain=skillsfuture.gov.sg&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=skillsfuture.gov.sg&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 81,
@@ -807,7 +887,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark Setorial",
     "website": "https://southmetrotafe.wa.edu.au",
-    "logo": "https://www.google.com/s2/favicons?domain=southmetrotafe.wa.edu.au&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=southmetrotafe.wa.edu.au&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 82,
@@ -817,7 +898,8 @@
     "natureza": "Privada",
     "relacao": "❓ Ativa na América Latina em desenvolvimento VET.",
     "website": "https://swisscontact.org",
-    "logo": "https://www.google.com/s2/favicons?domain=swisscontact.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=swisscontact.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 83,
@@ -827,7 +909,8 @@
     "natureza": "Privada",
     "relacao": "Interlocutor",
     "website": "https://tda.edu.au",
-    "logo": "https://www.google.com/s2/favicons?domain=tda.edu.au&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tda.edu.au&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 84,
@@ -837,7 +920,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. TAFE tem extensa experiência em parcerias globais (China, Fiji etc.). SENAI e TAFEs já trocaram experiências em competições (WorldSkills) e eventos técnicos.",
     "website": "https://tafensw.edu.au",
-    "logo": "https://www.google.com/s2/favicons?domain=tafensw.edu.au&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tafensw.edu.au&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 85,
@@ -847,7 +931,8 @@
     "natureza": "Privada",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://tatastrive.com",
-    "logo": "https://www.google.com/s2/favicons?domain=tatastrive.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tatastrive.com&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 86,
@@ -857,7 +942,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://tec.dk",
-    "logo": "https://www.google.com/s2/favicons?domain=tec.dk&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tec.dk&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 87,
@@ -867,7 +953,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado.",
     "website": "https://tjtc.edu.cn",
-    "logo": "https://www.google.com/s2/favicons?domain=tjtc.edu.cn&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tjtc.edu.cn&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 88,
@@ -877,7 +964,8 @@
     "natureza": "Privada",
     "relacao": "Referência Metodológica",
     "website": "https://toyota.com",
-    "logo": "https://www.google.com/s2/favicons?domain=toyota.com&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=toyota.com&sz=128",
+    "categoria": "Empresa"
   },
   {
     "id": 89,
@@ -887,7 +975,8 @@
     "natureza": "Pública",
     "relacao": "🔗 Banco Mundial estudou modelo SENAI como referência para a África Subsaariana. Diálogo via WorldSkills (times sul-africanos já treinaram no SENAI) e projetos BRICS. Potencial de intercâmbio em governança de redes nacionais grandes e políticas de acesso.",
     "website": "https://dhet.gov.za",
-    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=dhet.gov.za&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 90,
@@ -897,7 +986,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro identificado. SENAI e TVTC já interagiram em eventos da WorldSkills. Benchmark importante para sistemas centralizados de TVET em países ricos em recursos naturais com agenda de diversificação industrial. Potencial como cliente/parceiro.",
     "website": "https://tvtc.gov.sa",
-    "logo": "https://www.google.com/s2/favicons?domain=tvtc.gov.sa&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tvtc.gov.sa&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 91,
@@ -907,7 +997,8 @@
     "natureza": "Pública",
     "relacao": "❓ Modelo paralelo à aprendizagem industrial do SENAI. SENAI observa práticas do modelo de apprenticeship para fortalecer seus programas. Já houve seminários comparativos.",
     "website": "https://apprenticeship.gov",
-    "logo": "https://www.google.com/s2/favicons?domain=apprenticeship.gov&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=apprenticeship.gov&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 92,
@@ -917,7 +1008,8 @@
     "natureza": "Pública",
     "relacao": "✅ SENAI é Centro UNEVOC designado (desde 2015/2019). Contribui ativamente na rede. Conferência TVET LAC conjunta (jul/2025). Chamada EdTech BIBB/SENAI (2025). COP30. Acessa projetos e relatórios globais.",
     "website": "https://unevoc.unesco.org",
-    "logo": "https://www.google.com/s2/favicons?domain=unevoc.unesco.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=unevoc.unesco.org&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 93,
@@ -927,7 +1019,8 @@
     "natureza": "Privada",
     "relacao": "Sem evidência de parceria específica; benchmark relevante para inclusão social via TVET, design de percursos e metodologias ativas.",
     "website": "https://cometaformazione.org",
-    "logo": "https://www.google.com/s2/favicons?domain=cometaformazione.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=cometaformazione.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 94,
@@ -937,7 +1030,8 @@
     "natureza": "Pública",
     "relacao": "Convergência em redes globais (UNEVOC); não localizei cooperação específica com SENAI, mas é um benchmark forte para inovação sistêmica e hubs de inovação em VET.",
     "website": "https://tknika.eus",
-    "logo": "https://www.google.com/s2/favicons?domain=tknika.eus&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=tknika.eus&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 95,
@@ -947,7 +1041,8 @@
     "natureza": "Pública",
     "relacao": "❓ Sem registro direto identificado.",
     "website": "https://utn.edu.ar",
-    "logo": "https://www.google.com/s2/favicons?domain=utn.edu.ar&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=utn.edu.ar&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 96,
@@ -957,7 +1052,8 @@
     "natureza": "Pública",
     "relacao": "Benchmark de Gestão",
     "website": "https://valenciacollege.edu",
-    "logo": "https://www.google.com/s2/favicons?domain=valenciacollege.edu&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=valenciacollege.edu&sz=128",
+    "categoria": "Escola"
   },
   {
     "id": 97,
@@ -967,7 +1063,8 @@
     "natureza": "Privada",
     "relacao": "❓ Convergência em redes globais (vários membros cooperam com SENAI); não localizei evidência pública específica de filiação ou acordo SENAI-WFCP.",
     "website": "https://wfcp.org",
-    "logo": "https://www.google.com/s2/favicons?domain=wfcp.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=wfcp.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 98,
@@ -977,7 +1074,8 @@
     "natureza": "Privada",
     "relacao": "✅ Parceria profunda. Brasil membro desde 1981/1983. SENAI sediou WorldSkills SP 2015 (27 medalhas, 1º lugar). 136+ medalhas em 18+ competições. SENAI usa padrões WorldSkills em seus programas. Suas equipes estão entre as melhores do mundo.",
     "website": "https://worldskills.org",
-    "logo": "https://www.google.com/s2/favicons?domain=worldskills.org&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.org&sz=128",
+    "categoria": "Terceiro setor"
   },
   {
     "id": 99,
@@ -987,7 +1085,8 @@
     "natureza": "Pública",
     "relacao": "✅ SENAI contratado (2016-2019) para reformar sistema VET russo e treinar competidores. Treinou 28 competidores russos para WorldSkills Kazan 2019. Rússia alcançou 1º lugar em Abu Dhabi 2017. Memorandos de entendimento para intercâmbio técnico. SENAI compartilhou metodologia de treinamento.",
     "website": "https://worldskills.ru",
-    "logo": "https://www.google.com/s2/favicons?domain=worldskills.ru&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.ru&sz=128",
+    "categoria": "Pública/PPP"
   },
   {
     "id": 100,
@@ -997,6 +1096,7 @@
     "natureza": "PPP",
     "relacao": "Parceiro de Rede",
     "website": "https://worldskills.uk",
-    "logo": "https://www.google.com/s2/favicons?domain=worldskills.uk&sz=128"
+    "logo": "https://www.google.com/s2/favicons?domain=worldskills.uk&sz=128",
+    "categoria": "Terceiro setor"
   }
 ]

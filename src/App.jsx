@@ -8,13 +8,11 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import SchoolIcon from '@mui/icons-material/School';
-import HandshakeIcon from '@mui/icons-material/Handshake';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import PublicIcon from '@mui/icons-material/Public';
 import ScienceIcon from '@mui/icons-material/Science';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import StakeholdersPage from './pages/StakeholdersPage';
-import EscolasPage from './pages/EscolasPage';
+import OrganizacoesPage from './pages/OrganizacoesPage';
 import PesquisadoresPage from './pages/PesquisadoresPage';
 import AdminPage from './pages/AdminPage';
 
@@ -47,16 +45,14 @@ function MainView() {
             '& .Mui-selected': { color: '#fff' },
           }}
         >
-          <Tab icon={<HandshakeIcon />} iconPosition="start" label="Stakeholders" />
-          <Tab icon={<SchoolIcon />} iconPosition="start" label="Escolas Internacionais" />
+          <Tab icon={<AccountBalanceIcon />} iconPosition="start" label="Organizações" />
           <Tab icon={<ScienceIcon />} iconPosition="start" label="Pesquisadores" />
         </Tabs>
       </AppBar>
 
       <Box sx={{ flex: 1, bgcolor: 'background.default' }}>
-        {tab === 0 && <StakeholdersPage />}
-        {tab === 1 && <EscolasPage />}
-        {tab === 2 && <PesquisadoresPage />}
+        {tab === 0 && <OrganizacoesPage />}
+        {tab === 1 && <PesquisadoresPage />}
       </Box>
 
       <Box
