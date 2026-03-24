@@ -53,7 +53,7 @@ export default function EscolasUnificadaPage() {
         website: item.website,
         categoria: 'Escola',
         areas: null,
-        hasPartnership: !!(item.relacao && !item.relacao.includes('Sem registro')),
+        hasPartnership: !!(item.relacao && item.relacao.includes('✅')),
         _type: 'stakeholder',
         _original: item,
       });

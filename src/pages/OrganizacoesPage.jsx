@@ -48,7 +48,7 @@ export default function OrganizacoesPage() {
           ? (item.natureza === 'PPP' ? 'PPP' : 'Pública')
           : (item.categoria || 'Pública'),
         areas: null,
-        hasPartnership: !!(item.relacao && !item.relacao.includes('Sem registro')),
+        hasPartnership: !!(item.relacao && item.relacao.includes('✅')),
         _type: 'stakeholder',
         _original: item,
       }));
