@@ -268,6 +268,43 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 {item.pesquisa || 'Sem informação detalhada'}
               </Typography>
             </InfoRow>
+
+            {item.artigos && item.artigos.length > 0 && (
+              <InfoRow label="Artigos Relevantes">
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {item.artigos.map((artigo, i) => (
+                    <Box
+                      key={i}
+                      component="a"
+                      href={artigo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1,
+                        p: 1,
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        '&:hover': { borderColor: 'secondary.main', bgcolor: 'grey.50' },
+                        transition: 'border-color 0.15s, background-color 0.15s',
+                      }}
+                    >
+                      <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ mt: 0.15, flexShrink: 0 }}>
+                        {artigo.ano}
+                      </Typography>
+                      <Typography variant="body2" sx={{ lineHeight: 1.4, flex: 1 }}>
+                        {artigo.titulo}
+                      </Typography>
+                      <OpenInNewIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0, mt: 0.3 }} />
+                    </Box>
+                  ))}
+                </Box>
+              </InfoRow>
+            )}
           </>
         )}
       </DialogContent>
