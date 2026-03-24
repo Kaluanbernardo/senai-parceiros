@@ -6,6 +6,8 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Collapse from '@mui/material/Collapse';
 import Chip from '@mui/material/Chip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -26,6 +28,7 @@ export default function OrganizacoesPage() {
   const [search, setSearch] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedCategorias, setSelectedCategorias] = useState([]);
+  const [onlyPartnership, setOnlyPartnership] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -64,15 +67,17 @@ export default function OrganizacoesPage() {
         selectedCountries.length === 0 || selectedCountries.includes(item.pais);
       const matchCat =
         selectedCategorias.length === 0 || selectedCategorias.includes(item.categoria);
-      return matchSearch && matchCountry && matchCat;
+      const matchPartnership = !onlyPartnership || item.hasPartnership;
+      return matchSearch && matchCountry && matchCat && matchPartnership;
     });
   }, [allOrgs, search, selectedCountries, selectedCategorias]);
 
-  const hasActiveFilters = selectedCountries.length > 0 || selectedCategorias.length > 0 || !!search;
+  const hasActiveFilters = selectedCountries.length > 0 || selectedCategorias.length > 0 || onlyPartnership || !!search;
   const clearFilters = () => {
     setSearch('');
     setSelectedCountries([]);
     setSelectedCategorias([]);
+    setOnlyPartnership(false);
   };
 
   const toggleCategoria = (key) => {
@@ -140,8 +145,20 @@ export default function OrganizacoesPage() {
                 />
               );
             })}
+            <FormControlLabel
+              sx={{ ml: 1 }}
+              control={
+                <Switch
+                  checked={onlyPartnership}
+                  onChange={(e) => setOnlyPartnership(e.target.checked)}
+                  color="success"
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">Com parceria SENAI</Typography>}
+            />
             {hasActiveFilters && (
-              <Button size="small" startIcon={<ClearIcon />} onClick={clearFilters} sx={{ ml: 1 }}>
+              <Button size="small" startIcon={<ClearIcon />} onClick={clearFilters} sx={{ ml: 0.5 }}>
                 Limpar
               </Button>
             )}
