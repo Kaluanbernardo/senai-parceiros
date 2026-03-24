@@ -17,9 +17,10 @@ import OrgCard from '../components/OrgCard';
 import DetailModal from '../components/DetailModal';
 import { useData } from '../context/DataContext';
 
-const CATEGORIA_LABELS = {
+const FILTER_LABELS = {
   'Empresa': 'Empresas privadas',
-  'Pública/PPP': 'Públicas e público-privadas',
+  'Pública': 'Públicas',
+  'PPP': 'Público-privadas',
   'Terceiro setor': 'Terceiro setor',
 };
 
@@ -43,6 +44,9 @@ export default function OrganizacoesPage() {
         logo: item.logo,
         website: item.website,
         categoria: item.categoria || 'Pública/PPP',
+        filterKey: item.categoria === 'Pública/PPP'
+          ? (item.natureza === 'PPP' ? 'PPP' : 'Pública')
+          : (item.categoria || 'Pública'),
         areas: null,
         hasPartnership: !!(item.relacao && !item.relacao.includes('Sem registro')),
         _type: 'stakeholder',
@@ -66,7 +70,7 @@ export default function OrganizacoesPage() {
       const matchCountry =
         selectedCountries.length === 0 || selectedCountries.includes(item.pais);
       const matchCat =
-        selectedCategorias.length === 0 || selectedCategorias.includes(item.categoria);
+        selectedCategorias.length === 0 || selectedCategorias.includes(item.filterKey);
       const matchPartnership = !onlyPartnership || item.hasPartnership;
       return matchSearch && matchCountry && matchCat && matchPartnership;
     });
@@ -131,7 +135,7 @@ export default function OrganizacoesPage() {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-            {Object.entries(CATEGORIA_LABELS).map(([key, label]) => {
+            {Object.entries(FILTER_LABELS).map(([key, label]) => {
               const active = selectedCategorias.includes(key);
               return (
                 <Chip
