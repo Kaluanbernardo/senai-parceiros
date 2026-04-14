@@ -147,7 +147,7 @@
     "id": 17,
     "instituicao": "CONALEP — Colegio Nacional de Educación Profesional Técnica",
     "pais": "México",
-    "areas": "Multissetorial (Indústria; Serviços; Saúde; TI; Automotivo)",
+    "areas": "Multissetorial (Indústria, Serviços, Saúde, TI, Automotivo)",
     "relevancia": "Principal sistema de ensino médio técnico; modelo dual; membro Cinterfor",
     "website": "https://conalep.edu.mx",
     "logo": "https://www.google.com/s2/favicons?domain=conalep.edu.mx&sz=128"
@@ -327,7 +327,7 @@
     "id": 37,
     "instituicao": "NAIT — Northern Alberta Institute of Technology",
     "pais": "Canadá",
-    "areas": "Multissetorial (Aprendizagem; Saúde; TI)",
+    "areas": "Multissetorial (Aprendizagem, Saúde, TI)",
     "relevancia": "Um dos maiores formadores de aprendizes do Canadá",
     "website": "https://nait.ca",
     "logo": "https://www.google.com/s2/favicons?domain=nait.ca&sz=128"
@@ -570,7 +570,7 @@
     "id": 64,
     "instituicao": "KOSEN — National Institute of Technology (63 instituições)",
     "pais": "Japão",
-    "areas": "Engenharia (Mecânica; Elétrica; TI; Civil; Naval)",
+    "areas": "Engenharia (Mecânica, Elétrica, TI, Civil, Naval)",
     "relevancia": "Modelo globalmente único de entrada precoce em engenharia; ~100% empregabilidade",
     "website": "https://kosen-k.go.jp",
     "logo": "https://www.google.com/s2/favicons?domain=kosen-k.go.jp&sz=128"
@@ -579,7 +579,7 @@
     "id": 65,
     "instituicao": "Senmon Gakko (Escolas de Formação Especializada)",
     "pais": "Japão",
-    "areas": "Multissetorial (Saúde; Indústria; Agropecuária; Negócios)",
+    "areas": "Multissetorial (Saúde, Indústria, Agropecuária, Negócios)",
     "relevancia": "Maior setor de EPT no ensino superior japonês; ~80% empregabilidade",
     "website": "https://mext.go.jp",
     "logo": "https://www.google.com/s2/favicons?domain=mext.go.jp&sz=128"
@@ -831,7 +831,7 @@
     "id": 93,
     "instituicao": "Sistema de Colégios e Técnicos (СПО)",
     "pais": "Rússia",
-    "areas": "Multissetorial (Saúde; TI; Engenharia; Construção Civil; Automotivo)",
+    "areas": "Multissetorial (Saúde, TI, Engenharia, Construção Civil, Automotivo)",
     "relevancia": "42% dos alunos do 9º ano escolhem colégios; crescente popularidade",
     "website": "https://edu.gov.ru",
     "logo": "https://www.google.com/s2/favicons?domain=edu.gov.ru&sz=128"
@@ -903,7 +903,7 @@
     "id": 101,
     "instituicao": "SENA — Servicio Nacional de Aprendizaje",
     "pais": "Colômbia",
-    "areas": "Multissetorial (TI; Gastronomia; Saúde; Agropecuária; Indústria; Construção Civil)",
+    "areas": "Multissetorial (TI, Gastronomia, Saúde, Agropecuária, Indústria, Construção Civil)",
     "relevancia": "Maior e mais importante instituição de EPT da América do Sul; gratuita; modelo de referência internacional para IFPs; membro fundador da Cinterfor",
     "website": "https://sena.edu.co",
     "logo": "https://www.google.com/s2/favicons?domain=sena.edu.co&sz=128"
@@ -912,7 +912,7 @@
     "id": 102,
     "instituicao": "INACAP (Universidade Tecnológica + IP + CFT)",
     "pais": "Chile",
-    "areas": "Multissetorial (Saúde; Mineração; TI; Construção Civil; Energia)",
+    "areas": "Multissetorial (Saúde, Mineração, TI, Construção Civil, Energia)",
     "relevancia": "Maior instituição de educação superior do Chile; modelo integrado CFT-IP-Universidade",
     "website": "https://inacap.cl",
     "logo": "https://www.google.com/s2/favicons?domain=inacap.cl&sz=128"
@@ -975,7 +975,7 @@
     "id": 109,
     "instituicao": "INCES — Instituto Nacional de Capacitación y Educación Socialista",
     "pais": "Venezuela",
-    "areas": "Multissetorial (Indústria; Agropecuária; Comércio; Turismo)",
+    "areas": "Multissetorial (Indústria, Agropecuária, Comércio, Turismo)",
     "relevancia": "Único sistema nacional de EPT da Venezuela; equivalente ao SENA; membro Cinterfor",
     "website": "https://inces.gob.ve",
     "logo": "https://www.google.com/s2/favicons?domain=inces.gob.ve&sz=128"
@@ -1056,7 +1056,7 @@
     "id": 118,
     "instituicao": "INA — Instituto Nacional de Aprendizaje",
     "pais": "Costa Rica",
-    "areas": "Multissetorial (Indústria; Agropecuária; Turismo; Automotivo; TI; Construção Civil)",
+    "areas": "Multissetorial (Indústria, Agropecuária, Turismo, Automotivo, TI, Construção Civil)",
     "relevancia": "IFP autônoma financiada por contribuição patronal; membro REDIFP e Cinterfor",
     "website": "https://ina.ac.cr",
     "logo": "https://www.google.com/s2/favicons?domain=ina.ac.cr&sz=128"
@@ -1065,7 +1065,7 @@
     "id": 119,
     "instituicao": "INADEH — Inst. Nacional de Formación Profesional y Capacitación para el Desarrollo Humano",
     "pais": "Panamá",
-    "areas": "Multissetorial (Indústria; Construção Civil; Logística; Marítimo; Turismo)",
+    "areas": "Multissetorial (Indústria, Construção Civil, Logística, Marítimo, Turismo)",
     "relevancia": "IFP nacional para economia estratégica (Canal do Panamá, logística)",
     "website": "https://inadeh.edu.pa",
     "logo": "https://www.google.com/s2/favicons?domain=inadeh.edu.pa&sz=128"
@@ -1074,7 +1074,7 @@
     "id": 120,
     "instituicao": "INTECAP — Instituto Técnico de Capacitación y Productividad",
     "pais": "Guatemala",
-    "areas": "Multissetorial (Indústria; Agropecuária; TI; Construção Civil)",
+    "areas": "Multissetorial (Indústria, Agropecuária, TI, Construção Civil)",
     "relevancia": "Maior provedor de EPT do país mais populoso da América Central; coordenador REDIFP",
     "website": "https://intecap.edu.gt",
     "logo": "https://www.google.com/s2/favicons?domain=intecap.edu.gt&sz=128"
@@ -1083,7 +1083,7 @@
     "id": 121,
     "instituicao": "INFOP — Instituto Nacional de Formación Profesional",
     "pais": "Honduras",
-    "areas": "Multissetorial (Indústria; Agropecuária; Construção Civil; Turismo; TI)",
+    "areas": "Multissetorial (Indústria, Agropecuária, Construção Civil, Turismo, TI)",
     "relevancia": "IFP nacional; membro REDIFP",
     "website": "https://infop.hn",
     "logo": "https://www.google.com/s2/favicons?domain=infop.hn&sz=128"
@@ -1092,7 +1092,7 @@
     "id": 122,
     "instituicao": "INCAF — Instituto Nacional de Capacitación y Formación (ex-INSAFORP)",
     "pais": "El Salvador",
-    "areas": "Multissetorial (Indústria; Serviços; TI; Agropecuária)",
+    "areas": "Multissetorial (Indústria, Serviços, TI, Agropecuária)",
     "relevancia": "Substituiu o INSAFORP em 2023; modelo de demanda com foco em empregabilidade e articulação com sistema educativo",
     "website": "https://incaf.gob.sv",
     "logo": "https://www.google.com/s2/favicons?domain=incaf.gob.sv&sz=128"
@@ -1101,7 +1101,7 @@
     "id": 123,
     "instituicao": "INATEC — Instituto Nacional Tecnológico",
     "pais": "Nicarágua",
-    "areas": "Multissetorial (Indústria; Agropecuária; Turismo; TI; Construção Civil)",
+    "areas": "Multissetorial (Indústria, Agropecuária, Turismo, TI, Construção Civil)",
     "relevancia": "IFP combinando regulação e execução direta; membro REDIFP",
     "website": "https://tecnacional.edu.ni",
     "logo": "https://www.google.com/s2/favicons?domain=tecnacional.edu.ni&sz=128"
@@ -1110,7 +1110,7 @@
     "id": 124,
     "instituicao": "INFOTEP — Inst. Nacional de Formación Técnico Profesional",
     "pais": "Rep. Dominicana",
-    "areas": "Multissetorial (Indústria; Turismo; TI; Gastronomia; Saúde; Construção Civil)",
+    "areas": "Multissetorial (Indústria, Turismo, TI, Gastronomia, Saúde, Construção Civil)",
     "relevancia": "Um dos IFPs mais impactantes da América Latina; governança tripartite; forte atuação em zonas francas",
     "website": "https://infotep.gob.do",
     "logo": "https://www.google.com/s2/favicons?domain=infotep.gob.do&sz=128"
@@ -1119,7 +1119,7 @@
     "id": 125,
     "instituicao": "ETP — Sistema de Escolas Politécnicas",
     "pais": "Cuba",
-    "areas": "Multissetorial (Indústria; Saúde; TI; Turismo; Agropecuária; Construção Civil)",
+    "areas": "Multissetorial (Indústria, Saúde, TI, Turismo, Agropecuária, Construção Civil)",
     "relevancia": "Único modelo estatal integrado de EPT na região; vinculação direta empresa-escola",
     "website": "https://mes.gob.cu",
     "logo": "https://www.google.com/s2/favicons?domain=mes.gob.cu&sz=128"
@@ -1173,7 +1173,7 @@
     "id": 131,
     "instituicao": "SJPI — Samuel Jackman Prescod Institute of Technology",
     "pais": "Barbados",
-    "areas": "Multissetorial (Agropecuária; Automotivo; Construção Civil; Engenharia; TI; Marítimo)",
+    "areas": "Multissetorial (Agropecuária, Automotivo, Construção Civil, Engenharia, TI, Marítimo)",
     "relevancia": "Principal politécnica de Barbados; currículo alinhado ao CARICOM",
     "website": "https://sjpi.edu.bb",
     "logo": "https://www.google.com/s2/favicons?domain=sjpi.edu.bb&sz=128"
