@@ -58,12 +58,6 @@ function DecisionMatrix({ entries }) {
 function ExportButtons({ result, metadata }) {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
-  const formats = [
-    ['xlsx', 'Planilha XLSX'],
-    ['pdf', 'Relatório PDF'],
-    ['docx', 'Relatório Word'],
-    ['pptx', 'Resumo PowerPoint'],
-  ];
 
   async function handleExport(formatId) {
     setBusy(formatId);
@@ -84,12 +78,11 @@ function ExportButtons({ result, metadata }) {
   }
 
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} flexWrap="wrap" gap={1}>
-      {formats.map(([formatId, label]) => (
-        <Button key={formatId} size="small" variant="outlined" startIcon={<DownloadIcon />} disabled={Boolean(busy)} onClick={() => handleExport(formatId)}>
-          {busy === formatId ? 'Gerando…' : label}
-        </Button>
-      ))}
+    <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} gap={1.25}>
+      <Button size="small" variant="contained" color="primary" startIcon={<DownloadIcon />} disabled={Boolean(busy)} onClick={() => handleExport('xlsx')} aria-label="Baixar planilha rica em formato XLSX">
+        {busy === 'xlsx' ? 'Gerando planilha...' : 'Baixar planilha rica (XLSX)'}
+      </Button>
+      <Typography variant="caption" color="text.secondary">Inclui shortlist, pontuações, dimensões, evidências, lacunas e rastreabilidade.</Typography>
       {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
     </Stack>
   );

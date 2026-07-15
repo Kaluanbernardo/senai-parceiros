@@ -32,6 +32,7 @@ const FORMAT_CONFIG = {
 };
 
 const DIMENSION_KEYS = ['impact', 'alignment', 'credibility', 'collaboration', 'feasibility', 'risk'];
+export const RICH_WORKSHEET_NAMES = Object.freeze(['Leia-me', 'Contexto', 'Shortlist', 'Comparação detalhada', 'Evidências', 'Riscos e lacunas', 'Respostas', 'Metodologia', 'Catálogo considerado']);
 
 const DIMENSION_LABELS = {
   impact: 'Impacto potencial',
@@ -54,6 +55,10 @@ const safeString = (value, fallback = '') => {
 };
 
 const round = (value) => (Number.isFinite(Number(value)) ? Math.round(Number(value) * 10) / 10 : '');
+
+export function sanitizeSpreadsheetValue(value) {
+  return typeof value === 'string' && /^[=+\-@]/.test(value) ? `'${value}` : value;
+}
 
 function normalizeFormat(format) {
   const normalized = String(format || '').trim().toLowerCase().replace(/^\./, '');
@@ -112,6 +117,7 @@ export function snapshotSelection(result = {}, metadata = {}) {
       ...metadata,
     },
     answers: result?.answers || trace.answers || {},
+    catalog: Array.isArray(result?.candidatePool) ? result.candidatePool : (Array.isArray(metadata.catalog) ? metadata.catalog : []),
     shortlist,
     trace: {
       ...trace,
@@ -259,6 +265,48 @@ async function buildXlsx(snapshot) {
   return asBlob(await workbook.xlsx.writeBuffer(), FORMAT_CONFIG.xlsx.mimeType);
 }
 
+async function buildRichXlsx(snapshot) {
+  const exceljs = await import('exceljs');
+  const Workbook = exceljs.Workbook || exceljs.default?.Workbook;
+  if (!Workbook) throw new Error('ExcelJS indisponivel.');
+  const workbook = new Workbook();
+  workbook.creator = 'Senai Parceiros';
+  workbook.created = new Date(snapshot.generatedAt);
+  const sanitize = sanitizeSpreadsheetValue;
+  const addTable = (name, headers, rows) => {
+    const sheet = workbook.addWorksheet(name);
+    sheet.columns = headers.map((header) => ({ header: sanitize(header), width: Math.min(Math.max(String(header).length + 4, 14), 42) }));
+    rows.forEach((row) => {
+      const added = sheet.addRow(row.map(sanitize));
+      added.eachCell((cell) => {
+        if (typeof cell.value === 'string' && /^https?:\/\//i.test(cell.value)) cell.value = { text: cell.value, hyperlink: cell.value };
+      });
+    });
+    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B3B60' } };
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    if (headers.length) sheet.autoFilter = { from: 'A1', to: `${String.fromCharCode(64 + Math.min(headers.length, 26))}1` };
+    sheet.eachRow((row) => row.eachCell((cell) => { cell.alignment = { wrapText: true, vertical: 'top' }; }));
+  };
+  addTable('Leia-me', ['Campo', 'Orientacao'], [
+    ['Objetivo', 'Apoiar a selecao de stakeholders para educacao profissional e desenvolvimento da industria paulista.'],
+    ['Como usar', 'Comece pela aba Contexto, valide a Shortlist e leia as Evidencias antes de contatar qualquer organizacao.'],
+    ['Rastreabilidade', 'As abas preservam respostas, criterios, fontes e lacunas do processamento.'],
+    ['Privacidade', 'Este arquivo e uma exportacao pontual; nao representa armazenamento permanente na ferramenta.'],
+  ]);
+  addTable('Contexto', ['Campo', 'Valor'], metadataRows(snapshot).concat([['Respostas completas', safeString(snapshot.answers)]]));
+  addTable('Shortlist', shortlistColumns(), shortlistRows(snapshot));
+  addTable('Compara\u00e7\u00e3o detalhada', ['Stakeholder', 'Instituicao', 'Pontuacao total', 'Confianca', ...DIMENSION_KEYS.map((key) => DIMENSION_LABELS[key])], snapshot.shortlist.map((entry) => [entry.name, entry.institution, entry.total, entry.confidence, ...DIMENSION_KEYS.map((key) => entry.dimensions[key])]));
+  addTable('Evid\u00eancias', ['Stakeholder', 'Resumo da justificativa', 'Fonte'], snapshot.shortlist.flatMap((entry) => (entry.sources.length ? entry.sources : ['']).map((source) => [entry.name, entry.summary, source])));
+  addTable('Riscos e lacunas', ['Stakeholder', 'Risco grave confirmado', 'Evidencia de risco', 'Lacunas'], snapshot.shortlist.map((entry) => [entry.name, entry.risk.severe ? 'Sim' : 'Nao', entry.risk.evidence, entry.gaps.join('; ')]));
+  addTable('Respostas', ['Pergunta', 'Resposta'], Object.entries(snapshot.answers || {}).map(([question, answer]) => [question, safeString(answer, 'Nao informado')]));
+  addTable('Metodologia', ['Campo', 'Valor'], traceRows(snapshot));
+  const catalog = snapshot.catalog || snapshot.sourceResult?.catalog || snapshot.sourceResult?.candidates || snapshot.trace?.catalog || [];
+  const catalogRows = (Array.isArray(catalog) ? catalog : []).map((candidate, index) => [index + 1, candidate?.nome || candidate?.name || candidate?.instituicao || 'Sem nome', candidate?.instituicao || candidate?.institution || '', candidate?.categoria || candidate?.category || '', candidate?.website || '']);
+  addTable('Cat\u00e1logo considerado', ['#', 'Stakeholder', 'Instituicao', 'Categoria', 'Website'], catalogRows.length ? catalogRows : snapshot.shortlist.map((entry) => [entry.rank, entry.name, entry.institution, entry.category, entry.website]));
+  return asBlob(await workbook.xlsx.writeBuffer(), FORMAT_CONFIG.xlsx.mimeType);
+}
+
 function pageHeader(doc, snapshot, title) {
   doc.setFontSize(18);
   doc.setTextColor(11, 59, 96);
@@ -402,7 +450,7 @@ export async function exportSelection(result, format, metadata = {}) {
   }
 
   const snapshot = snapshotSelection(result, metadata);
-  const builders = { xlsx: buildXlsx, pdf: buildPdf, docx: buildDocx, pptx: buildPptx };
+  const builders = { xlsx: buildRichXlsx, pdf: buildPdf, docx: buildDocx, pptx: buildPptx };
   const blob = await builders[normalizedFormat](snapshot);
   return {
     blob,
