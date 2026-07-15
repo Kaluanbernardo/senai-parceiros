@@ -238,7 +238,7 @@ function withNext(state) {
   return { ...state, askedIds, currentQuestion: questionForState(nextQuestion, state), lastStage: nextQuestion.stage, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
 }
 
-export function start({ category, objective, context = '', gaps = [], aiAdapter = null } = {}) {
+export function start({ category, objective, context = '', gaps = [] } = {}) {
   const safe = { category: safeCategory(category), objective: safeObjective(objective) };
   const state = {
     version: INTERVIEW_PLANNER_VERSION,
@@ -250,7 +250,6 @@ export function start({ category, objective, context = '', gaps = [], aiAdapter 
     history: [],
     gaps: Array.isArray(gaps) ? gaps.filter(Boolean).map(String) : [],
     uncertainties: [],
-    aiAdapter: typeof aiAdapter === 'function' ? aiAdapter : null,
     status: 'active',
     currentQuestion: null,
     validation: null,

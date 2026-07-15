@@ -78,9 +78,10 @@ export default function SelectionPage() {
     setPlannerState((previous) => previous ? { ...previous, answers: { ...previous.answers, [question.id]: value } } : previous);
   }
 
-  async function finishInterview(finalAnswers = answers) {
+  async function finishInterview(finalAnswers = answers, brief = null) {
     const pool = getCandidatePool({ category, data });
     const local = buildLocalEvaluation({ category, objective, answers: finalAnswers, candidates: pool });
+    if (brief) local.trace.selectionBrief = brief;
     setBusy(true);
     setError('');
     try {
@@ -88,7 +89,7 @@ export default function SelectionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ category, objective, answers: finalAnswers }),
+          body: JSON.stringify({ category, objective, answers: finalAnswers, brief }),
       });
       if (!response.ok) throw new Error('ai_unavailable');
       const payload = await response.json();
@@ -107,7 +108,10 @@ export default function SelectionPage() {
       const progressed = InterviewPlanner.next(answeredState);
       setPlannerState(progressed);
       setAnswers(progressed.answers || {});
-      if (progressed.status === 'ready') finishInterview(InterviewPlanner.finalize(progressed).answers);
+      if (progressed.status === 'ready') {
+        const brief = InterviewPlanner.finalize(progressed);
+        finishInterview(brief.answers, brief);
+      }
       return;
     }
     if (plannerState && reviewing) {
@@ -115,7 +119,8 @@ export default function SelectionPage() {
       setPlannerState(revised);
       if (questionIndex >= reviewQuestions.length - 1) {
         setReviewing(false);
-        finishInterview(InterviewPlanner.finalize(revised).answers);
+        const brief = InterviewPlanner.finalize(revised);
+        finishInterview(brief.answers, brief);
       }
       else setQuestionIndex((index) => index + 1);
       return;

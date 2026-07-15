@@ -47,8 +47,8 @@ export default function ProfileAvatar({ person = {}, size = 56, showStatus = fal
   const isLocal = Boolean(source);
   const imageStatus = person.image?.status;
   const status = isLocal
-    ? (imageStatus === 'approved' ? 'Foto local · aprovada' : 'Foto local · em revisão')
-    : 'Fallback · iniciais';
+    ? (imageStatus === 'approved' ? 'Foto local - aprovada' : 'Foto local - em revisao')
+    : 'Fallback - iniciais';
   const width = typeof size === 'object' ? size.width : size;
   const height = typeof size === 'object' ? size.height : size;
 
@@ -56,7 +56,7 @@ export default function ProfileAvatar({ person = {}, size = 56, showStatus = fal
     <Box className={className} sx={{ width, flexShrink: 0, textAlign: 'center' }}>
       <Avatar
         src={source}
-        alt={`${name} — ${status}`}
+        alt={`${name} - ${status}`}
         onError={() => setSourceIndex((current) => current + 1)}
         sx={{
           width,

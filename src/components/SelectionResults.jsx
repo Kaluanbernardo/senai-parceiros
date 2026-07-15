@@ -126,7 +126,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
     <Stack spacing={2.5}>
       <Box>
         <Typography variant="overline" color="primary.main">Resultado da seleção</Typography>
-        <Typography variant="h4" sx={{ fontSize: { xs: '1.8rem', md: '2.35rem' } }}>Shortlist de até cinco stakeholders</Typography>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.8rem', md: '2.35rem' } }}>Shortlist de até dez stakeholders</Typography>
         <Typography color="text.secondary">A lista usa apenas registros já cadastrados. As respostas podem ser revistas a qualquer momento.</Typography>
       </Box>
       <Card variant="outlined">
