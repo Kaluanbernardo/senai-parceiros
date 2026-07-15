@@ -1,0 +1,59 @@
+import { getSession } from '../../server/lib/cookies.js';
+import { readJson, methodNotAllowed } from '../../server/lib/http.js';
+import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selection.js';
+import { evaluateWithProvider } from '../../server/lib/ai.js';
+import { getCatalog } from '../../server/lib/catalog.js';
+import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
+import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
+
+export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method !== 'POST') return methodNotAllowed(res);
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'authentication_required' });
+  if (isSelectionRateLimited(req, session)) return res.status(429).json({ error: 'selection_rate_limited' });
+  try {
+    const payload = await readJson(req);
+    const validAnswers = payload?.answers && typeof payload.answers === 'object' && !Array.isArray(payload.answers)
+      && Object.keys(payload.answers).length <= 20
+      && Object.values(payload.answers).every((value) => typeof value === 'string' && value.length <= 4000);
+    if (!payload || !payload.category || !payload.objective || !['researcher', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
+      return res.status(400).json({ error: 'invalid_selection_payload' });
+    }
+    recordSelectionAttempt(req, session);
+    const candidates = getCatalog(payload.category);
+    const evaluationInput = { ...payload, candidates };
+    const local = await buildLocalEvaluation(evaluationInput);
+    let ai = null;
+    let fallback = false;
+    try {
+      ai = await evaluateWithProvider({ input: evaluationInput, candidates: local.candidatePool.map((entry) => entry.candidate) });
+      ai.evaluations = ai.evaluations.map((evaluation) => ({
+        ...evaluation,
+        id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,
+        evidence: Array.isArray(evaluation.evidence)
+          ? evaluation.evidence.filter((item) => typeof item === 'string' && candidates.some((candidate) => Object.prototype.hasOwnProperty.call(candidate, item) || JSON.stringify(candidate).includes(item)))
+          : [],
+      }));
+    } catch (error) {
+      fallback = true;
+      ai = { model: 'local-fallback', provider: 'local-fallback', evaluations: [] };
+    }
+    const result = ai.evaluations.length ? await mergeEvaluation(local, ai) : local;
+    return res.status(200).json({
+      ...result,
+      trace: {
+        ...(result.trace || {}),
+        provider: ai.provider,
+        model: ai.model,
+        fallback,
+        costQualityTradeoff: ai.costQualityTradeoff ?? null,
+        routing: ai.routing || null,
+        usage: ai.usage || null,
+      },
+    });
+  } catch (error) {
+    const status = error.message === 'local_engine_unavailable' ? 503 : 400;
+    return res.status(status).json({ error: status === 503 ? 'selection_engine_unavailable' : 'invalid_selection_request' });
+  }
+}

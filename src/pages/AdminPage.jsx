@@ -15,9 +15,6 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
-import Paper from '@mui/material/Paper';
-import LockIcon from '@mui/icons-material/Lock';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import SchoolIcon from '@mui/icons-material/School';
 import ScienceIcon from '@mui/icons-material/Science';
@@ -33,62 +30,9 @@ import AdminTable from '../components/AdminTable';
 import EditDialog from '../components/EditDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const ADMIN_PASSWORD = 'SENAISP2026';
-
-function LoginGate({ onAuth }) {
-  const [pwd, setPwd] = useState('');
-  const [error, setError] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (pwd === ADMIN_PASSWORD) {
-      sessionStorage.setItem('admin_auth', '1');
-      onAuth();
-    } else {
-      setError(true);
-      setPwd('');
-    }
-  };
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#1a1a2e', alignItems: 'center', justifyContent: 'center' }}>
-      <Paper sx={{ p: 5, maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: 3 }} elevation={6}>
-        <LockIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          Painel Administrativo
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Digite a senha para acessar a gestao de dados.
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            type="password"
-            label="Senha"
-            value={pwd}
-            onChange={e => { setPwd(e.target.value); setError(false); }}
-            error={error}
-            helperText={error ? 'Senha incorreta. Tente novamente.' : ''}
-            autoFocus
-            sx={{ mb: 2 }}
-          />
-          <Button type="submit" variant="contained" fullWidth size="large" sx={{ mb: 1.5 }}>
-            Entrar
-          </Button>
-          <Button color="inherit" fullWidth onClick={() => navigate('/')}>
-            Voltar ao site
-          </Button>
-        </form>
-      </Paper>
-    </Box>
-  );
-}
-
 export default function AdminPage() {
   const navigate = useNavigate();
   const data = useData();
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('admin_auth') === '1');
   const [tab, setTab] = useState(0);
   const [editItem, setEditItem] = useState(null);
   const [editType, setEditType] = useState(null);
@@ -192,10 +136,6 @@ export default function AdminPage() {
     e.target.value = '';
   };
 
-  if (!authed) {
-    return <LoginGate onAuth={() => setAuthed(true)} />;
-  }
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="sticky" elevation={2} sx={{ bgcolor: '#1a1a2e' }}>
@@ -277,6 +217,9 @@ export default function AdminPage() {
 
       <Box sx={{ flex: 1, bgcolor: '#f5f5f7', p: { xs: 2, md: 3 } }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            As alterações do catálogo ficam nesta sessão do navegador e podem ser exportadas em JSON. A persistência compartilhada será conectada na etapa Azure.
+          </Alert>
           <AdminTable
             data={currentTab.data}
             type={currentTab.type}
