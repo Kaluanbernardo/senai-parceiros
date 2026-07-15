@@ -67,6 +67,13 @@ describe('InterviewPlanner', () => {
 
     expect(collect()).toEqual(collect());
   });
+
+  it('marks the session ready with no current question after the final answer', () => {
+    let state = start({ category: 'organization', objective: 'guided' });
+    while (state.currentQuestion) state = answerAndNext(state, 'Resposta suficiente');
+    expect(state.status).toBe('ready');
+    expect(state.currentQuestion).toBeNull();
+  });
 });
 
 describe('InterviewPlanner exports', () => {
@@ -81,4 +88,3 @@ describe('InterviewPlanner exports', () => {
     expect(finalize).toBe(InterviewPlanner.finalize);
   });
 });
-

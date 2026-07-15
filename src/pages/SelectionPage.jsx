@@ -215,6 +215,16 @@ export default function SelectionPage() {
     );
   }
 
+  if (!question) {
+    return (
+      <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 8, textAlign: 'center' }}>
+        <LinearProgress sx={{ maxWidth: 520, mx: 'auto', mb: 3, height: 8, borderRadius: 4 }} />
+        <Typography variant="h5" fontWeight={800}>Preparando sua shortlist...</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>Estamos organizando as respostas antes de mostrar os resultados.</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
