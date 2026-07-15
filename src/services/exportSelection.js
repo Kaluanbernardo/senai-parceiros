@@ -302,7 +302,10 @@ async function buildRichXlsx(snapshot) {
   addTable('Respostas', ['Pergunta', 'Resposta'], Object.entries(snapshot.answers || {}).map(([question, answer]) => [question, safeString(answer, 'Nao informado')]));
   addTable('Metodologia', ['Campo', 'Valor'], traceRows(snapshot));
   const catalog = snapshot.catalog || snapshot.sourceResult?.catalog || snapshot.sourceResult?.candidates || snapshot.trace?.catalog || [];
-  const catalogRows = (Array.isArray(catalog) ? catalog : []).map((candidate, index) => [index + 1, candidate?.nome || candidate?.name || candidate?.instituicao || 'Sem nome', candidate?.instituicao || candidate?.institution || '', candidate?.categoria || candidate?.category || '', candidate?.website || '']);
+  const catalogRows = (Array.isArray(catalog) ? catalog : []).map((entry, index) => {
+    const candidate = entry?.candidate || entry?.stakeholder || entry || {};
+    return [index + 1, candidate?.nome || candidate?.name || candidate?.instituicao || 'Sem nome', candidate?.instituicao || candidate?.institution || '', candidate?.categoria || candidate?.category || '', candidate?.website || ''];
+  });
   addTable('Cat\u00e1logo considerado', ['#', 'Stakeholder', 'Instituicao', 'Categoria', 'Website'], catalogRows.length ? catalogRows : snapshot.shortlist.map((entry) => [entry.rank, entry.name, entry.institution, entry.category, entry.website]));
   return asBlob(await workbook.xlsx.writeBuffer(), FORMAT_CONFIG.xlsx.mimeType);
 }
