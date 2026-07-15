@@ -220,7 +220,7 @@ export default function EscolasUnificadaPage() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         item={selectedItem?._original}
-        type={selectedItem?._type}
+        type="escola"
       />
     </Box>
   );

@@ -186,8 +186,28 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
               />
             </InfoRow>
 
+            {item.descricao && (
+              <InfoRow label="Descrição">
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.75 }}>
+                  {item.descricao}
+                </Typography>
+              </InfoRow>
+            )}
+
             <InfoRow label="Diferencial">
-              <Typography variant="body2">{item.diferencial}</Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  p: 1.5,
+                  bgcolor: 'grey.50',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: 'secondary.main',
+                  lineHeight: 1.7,
+                }}
+              >
+                {item.diferencial}
+              </Typography>
             </InfoRow>
 
             <InfoRow label="Relação com o SENAI">
@@ -209,23 +229,68 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
         {type === 'escola' && (
           <>
-            <InfoRow label="Áreas de Atuação">
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {item.areas?.split(';').map((area, i) => (
-                  <Chip
-                    key={i}
-                    label={area.trim()}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                  />
-                ))}
-              </Box>
-            </InfoRow>
+            {item.areas && (
+              <InfoRow label="Áreas de Atuação">
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {item.areas.split(';').map((area, i) => (
+                    <Chip
+                      key={i}
+                      label={area.trim()}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                    />
+                  ))}
+                </Box>
+              </InfoRow>
+            )}
 
-            <InfoRow label="Relevância">
-              <Typography variant="body2">{item.relevancia}</Typography>
-            </InfoRow>
+            {item.relevancia && (
+              <InfoRow label="Perfil em destaque">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'primary.50',
+                    borderRadius: 1,
+                    borderLeft: 3,
+                    borderColor: 'primary.main',
+                    fontWeight: 500,
+                  }}
+                >
+                  {item.relevancia}
+                </Typography>
+              </InfoRow>
+            )}
+
+            {item.descricao && (
+              <InfoRow label="Descrição">
+                <Typography
+                  variant="body2"
+                  sx={{ whiteSpace: 'pre-line', lineHeight: 1.75 }}
+                >
+                  {item.descricao}
+                </Typography>
+              </InfoRow>
+            )}
+
+            {item.diferencial && (
+              <InfoRow label="Diferenciais">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    borderLeft: 3,
+                    borderColor: 'secondary.main',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {item.diferencial}
+                </Typography>
+              </InfoRow>
+            )}
           </>
         )}
 

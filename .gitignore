@@ -26,4 +26,6 @@ __pycache__/
 
 # Claude
 .claude/
-.vercel
+
+# Local brainstorming artifacts
+.superpowers/
