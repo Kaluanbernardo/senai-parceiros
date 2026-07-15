@@ -12,6 +12,7 @@ export const DIMENSION_LABELS = {
 const DIMENSIONS = Object.keys(DIMENSION_LABELS);
 const CENTER = 110;
 const RADIUS = 78;
+const SERIES_COLORS = ['#005c99', '#cc0000', '#087f8c', '#995000', '#6654e8'];
 
 function point(index, value) {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / DIMENSIONS.length;
@@ -27,7 +28,10 @@ function polygon(values) {
   }).join(' ');
 }
 
-export default function ScoreRadar({ dimensions, compact = false }) {
+export default function ScoreRadar({ dimensions, compact = false, series = [] }) {
+  const normalizedSeries = series.length
+    ? series
+    : [{ id: 'single', label: 'Avaliação selecionada', dimensions: dimensions || {} }];
   return (
     <svg viewBox="0 0 220 220" width={compact ? 180 : 220} height={compact ? 180 : 220} role="img" aria-label="Radar de dimensões">
       {[25, 50, 75, 100].map((level) => (
@@ -43,11 +47,21 @@ export default function ScoreRadar({ dimensions, compact = false }) {
           </g>
         );
       })}
-      <polygon points={polygon(dimensions || {})} fill="rgba(0, 92, 153, 0.24)" stroke="#005c99" strokeWidth="2.5" />
-      {DIMENSIONS.map((key, index) => {
-        const [x, y] = point(index, dimensions?.[key] ?? 0);
-        return <circle key={key} cx={x} cy={y} r="3" fill="#cc0000" />;
+      {normalizedSeries.map((item, seriesIndex) => {
+        const color = SERIES_COLORS[seriesIndex % SERIES_COLORS.length];
+        return (
+          <g key={item.id || seriesIndex}>
+            <title>{item.label || `Stakeholder ${seriesIndex + 1}`}</title>
+            <polygon points={polygon(item.dimensions || {})} fill={color} fillOpacity={series.length ? 0.13 : 0.24} stroke={color} strokeWidth={series.length ? 2 : 2.5} />
+            {DIMENSIONS.map((key, index) => {
+              const [x, y] = point(index, item.dimensions?.[key] ?? 0);
+              return <circle key={key} cx={x} cy={y} r="3" fill={color} />;
+            })}
+          </g>
+        );
       })}
     </svg>
   );
 }
+
+export { SERIES_COLORS };

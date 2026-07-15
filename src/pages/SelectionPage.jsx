@@ -49,7 +49,7 @@ export default function SelectionPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const questions = useMemo(() => buildInterview({ category, objective }), [category, objective]);
+  const questions = useMemo(() => buildInterview({ category, objective, context: answers.context || '' }), [category, objective, answers.context]);
   const question = questions[questionIndex];
   const currentAnswer = answers[question?.id] || '';
 

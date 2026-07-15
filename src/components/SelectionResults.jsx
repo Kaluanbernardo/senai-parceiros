@@ -16,7 +16,8 @@ import Typography from '@mui/material/Typography';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ScoreRadar, { DIMENSION_LABELS } from './ScoreRadar';
+import ScoreRadar, { DIMENSION_LABELS, SERIES_COLORS } from './ScoreRadar';
+import { getMatrixMarkers, getRadarSeries } from './selectionVisualization';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { exportSelection } from '../services/exportSelection';
 
@@ -29,6 +30,7 @@ function decisionBand(value) {
 }
 
 function DecisionMatrix({ entries }) {
+  const markers = getMatrixMarkers(entries);
   return (
     <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
       <Typography variant="subtitle1" fontWeight={700}>Matriz de decisão</Typography>
@@ -38,14 +40,15 @@ function DecisionMatrix({ entries }) {
         <Typography sx={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'text.secondary' }}>baixo valor</Typography>
         <Typography sx={{ position: 'absolute', right: 8, bottom: -26, fontSize: 11, color: 'text.secondary' }}>alta viabilidade</Typography>
         <Typography sx={{ position: 'absolute', left: 8, bottom: -26, fontSize: 11, color: 'text.secondary' }}>baixa viabilidade</Typography>
-        {entries.map((entry, index) => (
-          <Box key={entry.candidate.id} role="img" aria-label={(index + 1) + '. ' + (entry.candidate.nome || entry.candidate.instituicao) + ', valor estratégico ' + format(entry.strategicValue) + ', viabilidade ' + format(entry.viability)} title={entry.candidate.nome || entry.candidate.instituicao} sx={{ position: 'absolute', left: 'calc(' + entry.viability + '% - 15px)', bottom: 'calc(' + entry.strategicValue + '% - 15px)', width: 30, height: 30, borderRadius: '50%', bgcolor: index === 0 ? 'secondary.main' : 'primary.main', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 12, boxShadow: 2 }}>
+        {markers.map(({ entry, index, x, y, offsetX, offsetY, clusterSize }) => (
+          <Box key={entry.candidate.id} role="img" aria-label={(index + 1) + '. ' + (entry.candidate.nome || entry.candidate.instituicao) + ', valor estratégico ' + format(entry.strategicValue) + ', viabilidade ' + format(entry.viability)} title={entry.candidate.nome || entry.candidate.instituicao} sx={{ position: 'absolute', left: x + '%', bottom: y + '%', transform: 'translate(calc(-50% + ' + offsetX + 'px), calc(50% + ' + offsetY + 'px))', width: 30, height: 30, borderRadius: '50%', bgcolor: index === 0 ? 'secondary.main' : 'primary.main', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 12, boxShadow: 2, zIndex: 2 }}>
             {index + 1}
+            {clusterSize > 1 && <Box component="span" sx={{ position: 'absolute', top: -8, right: -8, minWidth: 16, height: 16, borderRadius: '50%', bgcolor: 'background.paper', color: 'text.primary', border: '1px solid', borderColor: 'divider', fontSize: 9, display: 'grid', placeItems: 'center' }}>{clusterSize}</Box>}
           </Box>
         ))}
       </Box>
       <Box component="table" sx={{ mt: 3, width: '100%', borderCollapse: 'collapse', fontSize: 12 }} aria-label="Dados da matriz de decisão">
-        <Box component="tbody">{entries.map((entry, index) => <Box component="tr" key={entry.candidate.id}><Box component="td" sx={{ py: .5 }}>{index + 1}. {entry.candidate.nome || entry.candidate.instituicao}</Box><Box component="td" sx={{ py: .5 }}>Valor {format(entry.strategicValue)}</Box><Box component="td" sx={{ py: .5 }}>Viabilidade {format(entry.viability)}</Box></Box>)}</Box>
+        <Box component="tbody">{entries.map((entry, index) => <Box component="tr" key={entry.candidate.id}><Box component="td" sx={{ py: .5, pr: 1, fontWeight: 700 }}>#{index + 1}</Box><Box component="td" sx={{ py: .5 }}>{entry.candidate.nome || entry.candidate.instituicao}</Box><Box component="td" sx={{ py: .5 }}>Valor {format(entry.strategicValue)}</Box><Box component="td" sx={{ py: .5 }}>Viabilidade {format(entry.viability)}</Box></Box>)}</Box>
       </Box>
     </Paper>
   );
@@ -95,7 +98,9 @@ export default function SelectionResults({ result, onReview, onRestart }) {
   const [selectedTab, setSelectedTab] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const shortlist = result?.shortlist || [];
-  const selected = shortlist[selectedIndex] || shortlist[0];
+  const activeIndex = Math.min(selectedIndex, Math.max(0, shortlist.length - 1));
+  const selected = shortlist[activeIndex] || shortlist[0];
+  const radarSeries = getRadarSeries(shortlist);
   const metadata = useMemo(() => ({
     title: 'Avaliação de stakeholders SENAI-SP',
     category: CATEGORY_LABELS[result?.trace?.category] || result?.trace?.category,
@@ -179,10 +184,17 @@ export default function SelectionResults({ result, onReview, onRestart }) {
           <Grid size={{ xs: 12, lg: 7 }}><DecisionMatrix entries={shortlist} /></Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
             <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-              <Typography variant="subtitle1" fontWeight={700}>Radar individual</Typography>
+              <Typography variant="subtitle1" fontWeight={700}>Comparação dos cinco primeiros</Typography>
+              <Typography variant="body2" color="text.secondary">As cores e os nomes abaixo identificam cada série do radar.</Typography>
+              <Box display="grid" placeItems="center" sx={{ mt: 1 }}><ScoreRadar series={radarSeries} /></Box>
+              <Stack spacing={.75} sx={{ mt: 1 }}>
+                {radarSeries.map((item, index) => <Stack direction="row" gap={1} alignItems="center" key={item.id}><Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: SERIES_COLORS[index % SERIES_COLORS.length] }} /><Typography variant="caption">#{item.rank} {item.label}</Typography></Stack>)}
+              </Stack>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle1" fontWeight={700}>Detalhe individual</Typography>
               <Typography variant="body2" color="text.secondary">{selected?.candidate.nome || selected?.candidate.instituicao}</Typography>
-              <Tabs value={selectedIndex} onChange={(_, value) => setSelectedIndex(value)} variant="scrollable" sx={{ mt: 1 }}>
-                {shortlist.map((entry, index) => <Tab key={entry.candidate.id} label={'#' + (index + 1)} />)}
+              <Tabs value={activeIndex} onChange={(_, value) => setSelectedIndex(value)} variant="scrollable" sx={{ mt: 1 }} aria-label="Selecionar stakeholder no radar">
+                {shortlist.map((entry, index) => <Tab key={entry.candidate.id} value={index} label={'#' + (index + 1) + ' ' + (entry.candidate.nome || entry.candidate.instituicao || '').slice(0, 18)} />)}
               </Tabs>
               <Box display="grid" placeItems="center"><ScoreRadar dimensions={selected?.dimensions} /></Box>
               <Divider sx={{ my: 1 }} />

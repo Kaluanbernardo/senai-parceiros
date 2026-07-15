@@ -17,7 +17,7 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 3. Catálogo existente de pesquisadores, escolas e organizações.
 4. Seleção guiada de stakeholders nas três categorias.
 5. Avaliação multidimensional aprofundada, shortlist diversa de cinco a dez resultados e revisão das respostas.
-6. Comparação por ranking, faixas de decisão, matriz de valor estratégico × viabilidade e radar individual.
+6. Comparação por ranking, faixas de decisão, matriz de valor estratégico × viabilidade com tratamento de sobreposição e radar comparativo + individual.
 7. Rastreabilidade de perguntas, respostas, critérios, pesos, evidências, fórmula, modelo e confiança.
 8. Exportação única em uma planilha XLSX rica e auditável.
 9. Gerador de Prompt para Deep Research com esquema padronizado por categoria.
@@ -43,10 +43,10 @@ Profissional da Gerência de Educação do SENAI-SP que procura parceiros, refer
 4. Revisar e, se necessário, alterar qualquer resposta.
 5. Avaliar apenas registros existentes no catálogo.
 6. Receber de cinco a dez resultados elegíveis; resultados abaixo da faixa recomendada aparecem como exploratórios, com lacunas explícitas.
-7. Examinar comparação, matriz, radar, ficha técnica e evidências.
+7. Examinar possibilidades materialmente distintas na comparação, matriz, radares, ficha técnica e evidências.
 8. Exportar o resultado. Nada da avaliação é persistido pela aplicação.
 
-A entrevista deve durar aproximadamente oito a doze minutos, normalmente com 14 a 18 perguntas e limite de 20. Perguntas redundantes são puladas por ramificação.
+A entrevista não possui quantidade fixa. Um planejador adaptativo usa categoria, objetivo, respostas, cobertura e incertezas para decidir o próximo aprofundamento e encerrar quando houver informação suficiente para diferenciar candidatos, com limite máximo de 20 perguntas. Perguntas redundantes são puladas e falha da IA aciona um fluxo determinístico equivalente.
 
 ## 5. Modelo de avaliação
 
@@ -98,6 +98,8 @@ O gerador não executa a pesquisa. Ele entrevista o usuário, produz um prompt i
 
 - Um usuário leigo conclui o fluxo sem ajuda em até dez minutos.
 - A lista contém de cinco a dez candidatos elegíveis; itens exploratórios são identificados e nunca apresentados como equivalentes aos recomendados.
+- Todos os integrantes da shortlist ficam individualmente visíveis na comparação, matriz e radares, mesmo quando possuem notas ou coordenadas iguais.
+- Cada candidato explicita diferenças, trade-offs e contribuição complementar em relação aos demais.
 - Quando houver dez candidatos adequados, um avaliador especialista considera ao menos oito defensáveis e materialmente distintos entre si.
 - Todo valor exibido pode ser ligado a uma resposta, critério ou campo de origem.
 - Não há afirmação factual material sem suporte nos dados fornecidos.

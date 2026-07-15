@@ -1,3 +1,5 @@
+import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver';
+
 export const CATEGORY_LABELS = {
   researcher: 'Pesquisador(a)',
   school: 'Escola ou instituição de EPT',
@@ -105,15 +107,21 @@ const objectiveQuestions = {
   },
 };
 
-export function buildInterview({ category, objective }) {
+export function buildInterview({ category, objective, context = '' }) {
   const specific = objectiveQuestions[objective] || objectiveQuestions.guided;
   const questions = [commonQuestions[0], specific, ...commonQuestions.slice(1)];
+  const coverage = getExampleCoverage({ category, objective, context });
 
   return questions.map((question) => ({
     ...question,
     category,
     objective,
+    context,
+    example: resolveExample({ questionId: question.id, category, objective, context }),
+    exampleCoverage: coverage,
     allowUnknown: true,
     answerHint: 'Você poderá voltar e revisar esta resposta antes de calcular o ranking.',
   }));
 }
+
+export { ExampleResolver, getExampleCoverage, resolveExample };
