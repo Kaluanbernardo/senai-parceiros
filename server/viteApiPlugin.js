@@ -2,12 +2,14 @@ import login from '../api/auth/login.js';
 import session from '../api/auth/session.js';
 import logout from '../api/auth/logout.js';
 import evaluate from '../api/selection/evaluate.js';
+import radarItems from '../api/radar/items.js';
 
 const handlers = {
   '/api/auth/login': login,
   '/api/auth/session': session,
   '/api/auth/logout': logout,
   '/api/selection/evaluate': evaluate,
+  '/api/radar/items': radarItems,
 };
 
 function adaptResponse(res) {

@@ -3,6 +3,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import RadarIcon from '@mui/icons-material/Radar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -48,6 +49,7 @@ export default function HomePage() {
         {[
           { icon: <SearchIcon />, title: 'Consultar catálogo', text: catalogSummary, path: '/catalogo/pesquisadores' },
           { icon: <AutoAwesomeIcon />, title: 'Gerar prompt de pesquisa', text: 'Crie um prompt provider-independent com colunas padronizadas e rastreabilidade.', path: '/gerador-prompt' },
+          { icon: <RadarIcon />, title: 'Acompanhar novidades', text: 'Pesquise atualizações acadêmicas, governamentais e internacionais sobre EPT e VET.', path: '/radar' },
         ].map((item) => (
           <Grid size={{ xs: 12, md: 6 }} key={item.title}>
             <Card variant="outlined" sx={{ height: '100%' }}>

@@ -3,9 +3,12 @@ import { createSessionToken, setSessionCookie } from './cookies.js';
 
 const attempts = new Map();
 const selectionAttempts = new Map();
+const radarAttempts = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 const MAX_SELECTION_ATTEMPTS = 12;
+const RADAR_WINDOW_MS = 10 * 60 * 1000;
+const MAX_RADAR_ATTEMPTS = 30;
 
 function clientKey(req) {
   return String(req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
@@ -31,6 +34,25 @@ export function recordSelectionAttempt(req, session) {
   const now = Date.now();
   const record = selectionAttempts.get(key);
   if (!record || record.resetAt <= now) selectionAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
+  else record.count += 1;
+}
+
+export function isRadarRateLimited(req, session) {
+  const key = selectionKey(req, session);
+  const now = Date.now();
+  const record = radarAttempts.get(key);
+  if (!record || record.resetAt <= now) {
+    radarAttempts.set(key, { count: 0, resetAt: now + RADAR_WINDOW_MS });
+    return false;
+  }
+  return record.count >= MAX_RADAR_ATTEMPTS;
+}
+
+export function recordRadarAttempt(req, session) {
+  const key = selectionKey(req, session);
+  const now = Date.now();
+  const record = radarAttempts.get(key);
+  if (!record || record.resetAt <= now) radarAttempts.set(key, { count: 1, resetAt: now + RADAR_WINDOW_MS });
   else record.count += 1;
 }
 

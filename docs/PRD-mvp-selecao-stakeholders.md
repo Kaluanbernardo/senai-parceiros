@@ -23,11 +23,11 @@ O MVP deve transformar um contexto ainda impreciso em uma shortlist defensável 
 ### Fase 2 — enriquecimento e monitoramento
 
 1. Atualização automática e periódica dos perfis públicos.
-2. Radar EPT: novas pesquisas, novidades governamentais e publicações internacionais.
+2. Radar EPT: novas pesquisas, novidades governamentais e publicações internacionais. A primeira entrega usa uma política de fontes permitidas, base curada de contingência e adaptadores live para OpenAlex/Crossref; fontes oficiais ficam preparadas para os próximos conectores.
 3. Fontes permitidas, quarentena, proveniência por campo, bloqueios manuais e rotinas de atualização.
 4. Complementação das fotos reais com registro de origem e possibilidade de substituição.
 
-Itens da fase 2 só devem começar depois que todos os fluxos da fase 1 estiverem funcionais e validados.
+O Radar já está disponível no site. A ativação de coleta acadêmica live é controlada por `RADAR_LIVE_SOURCES=true`, sem expor credenciais no navegador. Os demais itens da fase 2 devem continuar depois que os fluxos da fase 1 e o Radar estiverem validados.
 
 ## 3. Usuário principal
 

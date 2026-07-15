@@ -9,6 +9,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import SchoolIcon from '@mui/icons-material/School';
 import SearchIcon from '@mui/icons-material/Search';
 import BusinessIcon from '@mui/icons-material/Business';
+import RadarIcon from '@mui/icons-material/Radar';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -26,6 +27,7 @@ import AdminPage from './pages/AdminPage';
 import EscolasUnificadaPage from './pages/EscolasUnificadaPage';
 import OrganizacoesPage from './pages/OrganizacoesPage';
 import PesquisadoresPage from './pages/PesquisadoresPage';
+import RadarPage from './pages/RadarPage';
 import { useAuth } from './context/AuthContext';
 
 const navigation = [
@@ -35,6 +37,7 @@ const navigation = [
   { path: '/catalogo/escolas', label: 'Escolas', icon: <SchoolIcon /> },
   { path: '/catalogo/organizacoes', label: 'Organizações', icon: <BusinessIcon /> },
   { path: '/gerador-prompt', label: 'Gerador de Prompt', icon: <AutoAwesomeIcon /> },
+  { path: '/radar', label: 'Radar EPT', icon: <RadarIcon /> },
 ];
 
 function AppShell({ children }) {
@@ -85,6 +88,7 @@ export default function App() {
       <Route path="/" element={<InShell><HomePage /></InShell>} />
       <Route path="/selecionar" element={<InShell><SelectionPage /></InShell>} />
       <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
+      <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
       <Route path="/catalogo/pesquisadores" element={<InShell><PesquisadoresPage /></InShell>} />
       <Route path="/catalogo/escolas" element={<InShell><EscolasUnificadaPage /></InShell>} />
       <Route path="/catalogo/organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />
