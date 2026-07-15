@@ -31,6 +31,11 @@ export function normalizeRadarItem(item, index = 0) {
     relevanceScore: Math.max(0, Math.min(100, Number(item?.relevanceScore) || 0)),
     provider: safeText(item?.provider, 'unknown'),
     externalId,
+    status: safeText(item?.status, item?.isPlaceholder ? 'placeholder' : 'published'),
+    contentHash: safeText(item?.contentHash, externalId),
+    provenance: item?.provenance && typeof item.provenance === 'object'
+      ? { ...item.provenance }
+      : { sourceName, sourceUrl: safeText(item?.sourceUrl) || null },
     authors: Array.isArray(item?.authors) ? item.authors.filter(Boolean).map(String) : [],
     doi: safeText(item?.doi) || null,
     updatedAt: safeText(item?.updatedAt) || null,

@@ -1,68 +1,86 @@
 import React from 'react';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
-import SearchIcon from '@mui/icons-material/Search';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import Groups2Icon from '@mui/icons-material/Groups2';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import RadarIcon from '@mui/icons-material/Radar';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { getNavTools } from '../app/toolRegistry';
+import { getToolIcon } from '../app/toolIcons';
+import radarSeeds from '../data/radar-seeds.json';
+import PageHeader from '../design-system/primitives/PageHeader';
+import SectionCard from '../design-system/primitives/SectionCard';
+import ToolCard from '../design-system/primitives/ToolCard';
+
+const STEPS = [
+  { number: '1', title: 'Defina o contexto', text: 'Conte o que você precisa realizar e qual tipo de stakeholder procura.', icon: <AccountBalanceIcon /> },
+  { number: '2', title: 'Compare evidências', text: 'Revise os critérios, lacunas e sinais que explicam cada recomendação.', icon: <Groups2Icon /> },
+  { number: '3', title: 'Leve o resultado', text: 'Exporte a análise em uma planilha rica para compartilhar e aprofundar.', icon: <LibraryBooksIcon /> },
+];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { pesquisadores, escolas, stakeholders } = useData();
-  const catalogSummary = String(pesquisadores.length) + ' pesquisadores, ' + String(escolas.length) + ' escolas e ' + String(stakeholders.length) + ' organizações cadastrados.';
+  const catalogSummary = `${pesquisadores.length + escolas.length + stakeholders.length} perfis públicos no catálogo`;
+  const radarSources = new Set(radarSeeds.map((item) => item.sourceName).filter(Boolean)).size;
+  const publishedDates = radarSeeds.map((item) => item.publishedAt).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date || ''));
+  const radarLastUpdate = publishedDates.length ? publishedDates.sort().at(-1) : 'base inicial';
+
   return (
-    <Box sx={{ maxWidth: 1220, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 4, md: 7 } }}>
-      <Grid container spacing={5} alignItems="center">
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Typography variant="overline" color="secondary.main" fontWeight={800}>SENAI-SP · INTELIGÊNCIA DE STAKEHOLDERS</Typography>
-          <Typography variant="h2" sx={{ mt: 1, fontSize: { xs: '2.35rem', md: '4rem' }, lineHeight: 1.06 }}>Encontre o parceiro certo para o próximo desafio.</Typography>
-          <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ mt: 2, maxWidth: 650 }}>
-            Uma entrevista guiada transforma uma necessidade ainda pouco definida em uma shortlist técnica, comparável e rastreável.
-          </Typography>
-          <Button variant="contained" size="large" endIcon={<ArrowForwardIcon />} onClick={() => navigate('/selecionar')} sx={{ mt: 3, px: 3 }}>Começar seleção de stakeholders</Button>
-        </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Card sx={{ bgcolor: 'primary.main', color: 'white', borderRadius: 4, overflow: 'hidden' }}>
-            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-              <FactCheckOutlinedIcon sx={{ fontSize: 42, mb: 2 }} />
-              <Typography variant="h5" fontWeight={800}>Decisão explicável</Typography>
-              <Typography sx={{ mt: 1, color: 'rgba(255,255,255,.8)' }}>Veja o que foi perguntado, quais critérios pesaram, que evidências existem e onde ainda há lacunas.</Typography>
-              <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 3 }}>
-                <Box sx={{ px: 1.5, py: .75, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', fontSize: 13 }}>Até 5 resultados</Box>
-                <Box sx={{ px: 1.5, py: .75, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', fontSize: 13 }}>Sem histórico salvo</Box>
-                <Box sx={{ px: 1.5, py: .75, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', fontSize: 13 }}>4 formatos de exportação</Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      <Typography variant="h6" fontWeight={800} sx={{ mt: 8, mb: 2 }}>Outras ferramentas</Typography>
-      <Grid container spacing={2}>
-        {[
-          { icon: <SearchIcon />, title: 'Consultar catálogo', text: catalogSummary, path: '/catalogo/pesquisadores' },
-          { icon: <AutoAwesomeIcon />, title: 'Gerar prompt de pesquisa', text: 'Crie um prompt provider-independent com colunas padronizadas e rastreabilidade.', path: '/gerador-prompt' },
-          { icon: <RadarIcon />, title: 'Acompanhar novidades', text: 'Pesquise atualizações acadêmicas, governamentais e internacionais sobre EPT e VET.', path: '/radar' },
-        ].map((item) => (
-          <Grid size={{ xs: 12, md: 6 }} key={item.title}>
-            <Card variant="outlined" sx={{ height: '100%' }}>
-              <CardContent>
-                {item.icon}
-                <Typography variant="h6" fontWeight={700} sx={{ mt: 1 }}>{item.title}</Typography>
-                <Typography color="text.secondary" sx={{ mt: .5 }}>{item.text}</Typography>
-                <Button onClick={() => navigate(item.path)} sx={{ mt: 1, px: 0 }}>Abrir ferramenta <ArrowForwardIcon sx={{ fontSize: 17, ml: .5 }} /></Button>
-              </CardContent>
-            </Card>
+    <Box sx={{ maxWidth: 1220, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 4, md: 6 } }}>
+      <PageHeader
+        eyebrow="SENAI-SP · INTELIGÊNCIA EM EPT E PARCERIAS"
+        title="Central de Inteligência em EPT e Parcerias"
+        description="Um espaço para descobrir parceiros, consultar referências e acompanhar sinais importantes para o desenvolvimento da indústria paulista e da educação profissional."
+        accent="catalog"
+      />
+
+      <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 3 }}>
+        <Chip size="small" icon={<Groups2Icon />} label={catalogSummary} />
+        <Chip size="small" icon={<RadarIcon />} label={`Radar: ${radarLastUpdate}`} />
+        <Chip size="small" label={`${radarSources} fontes monitoradas`} />
+        <Chip size="small" variant="outlined" label="Resultados temporários" />
+        <Chip size="small" variant="outlined" label="Informações públicas" />
+      </Stack>
+
+      <Typography variant="h2" sx={{ mt: 6, mb: 2, fontSize: { xs: '1.55rem', md: '2rem' } }}>Escolha por onde começar</Typography>
+      <Grid container spacing={2.5} alignItems="stretch">
+        {getNavTools().map((tool) => (
+          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={tool.id}>
+            <ToolCard
+              icon={getToolIcon(tool.iconKey)}
+              label={tool.label}
+              description={tool.id === 'catalog' ? `${tool.description} ${catalogSummary}.` : tool.description}
+              themeKey={tool.themeKey}
+              onClick={() => navigate(tool.route)}
+              meta={tool.status === 'ready' ? 'Disponível' : undefined}
+            />
           </Grid>
         ))}
       </Grid>
+
+      <SectionCard sx={{ mt: 6, p: { xs: 2.5, md: 3.5 } }}>
+        <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '1.65rem' } }}>Como usar</Typography>
+        <Typography color="text.secondary" sx={{ mt: .5 }}>Você pode começar por qualquer ferramenta e voltar quando precisar.</Typography>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          {STEPS.map((step) => (
+            <Grid size={{ xs: 12, md: 4 }} key={step.number}>
+              <Stack direction="row" gap={1.5} alignItems="flex-start" sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default', height: '100%' }}>
+                <Box sx={{ minWidth: 34, height: 34, display: 'grid', placeItems: 'center', borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 800 }}>{step.number}</Box>
+                <Box>
+                  <Stack direction="row" gap={.75} alignItems="center"><Box sx={{ color: 'primary.main', display: 'flex' }}>{step.icon}</Box><Typography fontWeight={750}>{step.title}</Typography></Stack>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: .5 }}>{step.text}</Typography>
+                </Box>
+              </Stack>
+            </Grid>
+          ))}
+        </Grid>
+      </SectionCard>
     </Box>
   );
 }

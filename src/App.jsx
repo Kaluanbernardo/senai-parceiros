@@ -2,14 +2,8 @@ import React from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
-import ScienceIcon from '@mui/icons-material/Science';
-import SchoolIcon from '@mui/icons-material/School';
-import SearchIcon from '@mui/icons-material/Search';
-import BusinessIcon from '@mui/icons-material/Business';
-import RadarIcon from '@mui/icons-material/Radar';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -20,6 +14,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import HomePage from './pages/HomePage';
+import CatalogHomePage from './pages/CatalogHomePage';
 import LoginPage from './pages/LoginPage';
 import SelectionPage from './pages/SelectionPage';
 import PromptGeneratorPage from './pages/PromptGeneratorPage';
@@ -29,15 +24,18 @@ import OrganizacoesPage from './pages/OrganizacoesPage';
 import PesquisadoresPage from './pages/PesquisadoresPage';
 import RadarPage from './pages/RadarPage';
 import { useAuth } from './context/AuthContext';
+import { getNavItems } from './app/toolRegistry';
+import { getToolIcon } from './app/toolIcons';
 
 const navigation = [
-  { path: '/', label: 'Início', icon: <HomeOutlinedIcon /> },
-  { path: '/selecionar', label: 'Selecionar stakeholders', icon: <SearchIcon /> },
-  { path: '/catalogo/pesquisadores', label: 'Pesquisadores', icon: <ScienceIcon /> },
-  { path: '/catalogo/escolas', label: 'Escolas', icon: <SchoolIcon /> },
-  { path: '/catalogo/organizacoes', label: 'Organizações', icon: <BusinessIcon /> },
-  { path: '/gerador-prompt', label: 'Gerador de Prompt', icon: <AutoAwesomeIcon /> },
-  { path: '/radar', label: 'Radar EPT', icon: <RadarIcon /> },
+  { path: '/', label: 'Início', icon: <HomeOutlinedIcon />, matchPrefix: '/' },
+  ...getNavItems().map((tool) => ({
+    path: tool.route,
+    label: tool.isPrimary ? tool.navLabel : tool.label,
+    icon: getToolIcon(tool.iconKey),
+    matchPrefix: tool.matchPrefix,
+    isPrimary: tool.isPrimary,
+  })),
 ];
 
 function AppShell({ children }) {
@@ -46,7 +44,7 @@ function AppShell({ children }) {
   const { user, logout } = useAuth();
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'primary.main' }}>
+      <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'primary.main', backgroundImage: 'linear-gradient(120deg, #0B3558 0%, #1769AA 100%)' }}>
         <Toolbar sx={{ gap: 1, minHeight: { xs: 64, md: 72 } }}>
           <AccountBalanceIcon sx={{ fontSize: 30, mr: .5 }} />
           <Typography variant="h6" fontWeight={800} sx={{ whiteSpace: 'nowrap', mr: 1 }}>SENAI-SP <Box component="span" sx={{ opacity: .65, fontWeight: 400 }}>| Parceiros</Box></Typography>
@@ -55,11 +53,15 @@ function AppShell({ children }) {
           {user?.role === 'admin' && <Tooltip title="Painel administrativo"><IconButton color="inherit" onClick={() => navigate('/admin')}><AdminPanelSettingsIcon /></IconButton></Tooltip>}
           <Tooltip title="Sair"><IconButton color="inherit" onClick={logout}><LogoutIcon /></IconButton></Tooltip>
         </Toolbar>
-        <Box sx={{ overflowX: 'auto', px: { xs: 1, md: 2 }, bgcolor: 'rgba(0,0,0,.12)' }}>
+        <Box sx={{ overflowX: 'auto', px: { xs: 1, md: 2 }, bgcolor: 'rgba(0,0,0,.14)', borderTop: '1px solid rgba(255,255,255,.12)' }}>
           <Stack direction="row" sx={{ minWidth: 'max-content' }}>
             {navigation.map((item) => {
-              const selected = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
-              return <Button key={item.path} onClick={() => navigate(item.path)} startIcon={item.icon} sx={{ color: 'white', borderRadius: 0, minHeight: 48, px: 1.5, opacity: selected ? 1 : .7, borderBottom: selected ? '3px solid #fff' : '3px solid transparent', whiteSpace: 'nowrap' }}>{item.label}</Button>;
+              const selected = item.path === '/'
+                ? location.pathname === '/'
+                : item.isPrimary
+                  ? location.pathname === item.path
+                  : location.pathname.startsWith(item.matchPrefix || item.path);
+              return <Button key={item.path} onClick={() => navigate(item.path)} startIcon={item.icon} sx={{ color: 'white', borderRadius: 0, minHeight: 48, px: 1.5, opacity: selected ? 1 : .72, borderBottom: selected ? '3px solid #fff' : '3px solid transparent', whiteSpace: 'nowrap' }}>{item.label}</Button>;
             })}
           </Stack>
         </Box>
@@ -89,6 +91,7 @@ export default function App() {
       <Route path="/selecionar" element={<InShell><SelectionPage /></InShell>} />
       <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
+      <Route path="/catalogo" element={<InShell><CatalogHomePage /></InShell>} />
       <Route path="/catalogo/pesquisadores" element={<InShell><PesquisadoresPage /></InShell>} />
       <Route path="/catalogo/escolas" element={<InShell><EscolasUnificadaPage /></InShell>} />
       <Route path="/catalogo/organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />

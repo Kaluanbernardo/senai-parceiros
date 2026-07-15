@@ -12,6 +12,9 @@ export const OBJECTIVE_LABELS = {
   guided: 'Ainda não sei — quero ser guiado(a)',
 };
 
+export const CATEGORY_IDS = Object.freeze(Object.keys(CATEGORY_LABELS));
+export const OBJECTIVE_IDS = Object.freeze(Object.keys(OBJECTIVE_LABELS));
+
 const commonQuestions = [
   {
     id: 'context',
