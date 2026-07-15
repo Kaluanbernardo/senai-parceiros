@@ -1,4 +1,4 @@
-import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver';
+import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver.js';
 
 export const CATEGORY_LABELS = {
   researcher: 'Pesquisador(a)',
