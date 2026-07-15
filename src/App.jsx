@@ -24,17 +24,16 @@ import OrganizacoesPage from './pages/OrganizacoesPage';
 import PesquisadoresPage from './pages/PesquisadoresPage';
 import RadarPage from './pages/RadarPage';
 import { useAuth } from './context/AuthContext';
-import { getNavItems } from './app/toolRegistry';
+import { getNavTools } from './app/toolRegistry';
 import { getToolIcon } from './app/toolIcons';
 
 const navigation = [
   { path: '/', label: 'Início', icon: <HomeOutlinedIcon />, matchPrefix: '/' },
-  ...getNavItems().map((tool) => ({
+  ...getNavTools().map((tool) => ({
     path: tool.route,
-    label: tool.isPrimary ? tool.navLabel : tool.label,
+    label: tool.navLabel,
     icon: getToolIcon(tool.iconKey),
     matchPrefix: tool.matchPrefix,
-    isPrimary: tool.isPrimary,
   })),
 ];
 
@@ -58,9 +57,7 @@ function AppShell({ children }) {
             {navigation.map((item) => {
               const selected = item.path === '/'
                 ? location.pathname === '/'
-                : item.isPrimary
-                  ? location.pathname === item.path
-                  : location.pathname.startsWith(item.matchPrefix || item.path);
+                : location.pathname.startsWith(item.matchPrefix || item.path);
               return <Button key={item.path} onClick={() => navigate(item.path)} startIcon={item.icon} sx={{ color: 'white', borderRadius: 0, minHeight: 48, px: 1.5, opacity: selected ? 1 : .72, borderBottom: selected ? '3px solid #fff' : '3px solid transparent', whiteSpace: 'nowrap' }}>{item.label}</Button>;
             })}
           </Stack>
