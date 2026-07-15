@@ -20,7 +20,8 @@ import ScienceIcon from '@mui/icons-material/Science';
 import SchoolIcon from '@mui/icons-material/School';
 import BusinessIcon from '@mui/icons-material/Business';
 import { useData } from '../context/DataContext';
-import { buildInterview, CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
+import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
+import { InterviewPlanner, QUESTION_BANK } from '../domain/interviewPlanner';
 import { buildLocalEvaluation, getCandidatePool } from '../domain/selectionEngine';
 import SelectionResults from '../components/SelectionResults';
 
@@ -45,29 +46,36 @@ export default function SelectionPage() {
   const [objective, setObjective] = useState('');
   const [answers, setAnswers] = useState({});
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [plannerState, setPlannerState] = useState(null);
+  const [reviewing, setReviewing] = useState(false);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const questions = useMemo(() => buildInterview({ category, objective, context: answers.context || '' }), [category, objective, answers.context]);
-  const question = questions[questionIndex];
-  const currentAnswer = answers[question?.id] || '';
+  const reviewQuestions = useMemo(() => (plannerState?.askedIds || []).map((id) => QUESTION_BANK.find((item) => item.id === id)).filter(Boolean).map((item) => ({ ...item, label: item.prompt, example: 'Revise a resposta registrada e ajuste apenas o que desejar.' })), [plannerState]);
+  const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
+  const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
+  const currentAnswer = plannerState?.answers?.[question?.id] || '';
 
   function chooseCategory(value) {
     setCategory(value);
     setObjective('');
     setAnswers({});
     setError('');
+    setPlannerState(null);
+    setReviewing(false);
   }
 
   function beginInterview() {
     if (!category || !objective) return;
     setPhase('interview');
     setQuestionIndex(0);
+    setReviewing(false);
+    setPlannerState(InterviewPlanner.start({ category, objective }));
   }
 
   function setAnswer(value) {
-    setAnswers((previous) => ({ ...previous, [question.id]: value }));
+    setPlannerState((previous) => previous ? { ...previous, answers: { ...previous.answers, [question.id]: value } } : previous);
   }
 
   async function finishInterview(finalAnswers = answers) {
@@ -94,6 +102,24 @@ export default function SelectionPage() {
   }
 
   function nextQuestion() {
+    if (plannerState && !reviewing) {
+      const answeredState = InterviewPlanner.answer(plannerState, currentAnswer || 'não informado', question.id);
+      const progressed = InterviewPlanner.next(answeredState);
+      setPlannerState(progressed);
+      setAnswers(progressed.answers || {});
+      if (progressed.status === 'ready') finishInterview(InterviewPlanner.finalize(progressed).answers);
+      return;
+    }
+    if (plannerState && reviewing) {
+      const revised = InterviewPlanner.revise(plannerState, question.id, currentAnswer || 'não informado');
+      setPlannerState(revised);
+      if (questionIndex >= reviewQuestions.length - 1) {
+        setReviewing(false);
+        finishInterview(InterviewPlanner.finalize(revised).answers);
+      }
+      else setQuestionIndex((index) => index + 1);
+      return;
+    }
     const nextAnswers = { ...answers, [question.id]: currentAnswer || 'não informado' };
     setAnswers(nextAnswers);
     if (questionIndex === questions.length - 1) {
@@ -104,6 +130,15 @@ export default function SelectionPage() {
   }
 
   function previousQuestion() {
+    if (reviewing) {
+      if (questionIndex === 0) { setReviewing(false); setPhase('results'); }
+      else setQuestionIndex((index) => index - 1);
+      return;
+    }
+    if (plannerState && plannerState.askedIds.length > 1) {
+      setError('Para revisar uma resposta anterior, use “Revisar respostas” ao final da entrevista.');
+      return;
+    }
     if (questionIndex === 0) {
       setPhase('setup');
     } else {
@@ -113,6 +148,7 @@ export default function SelectionPage() {
 
   function reviewAnswers() {
     setPhase('interview');
+    setReviewing(true);
     setQuestionIndex(0);
   }
 
@@ -121,6 +157,8 @@ export default function SelectionPage() {
     setCategory('');
     setObjective('');
     setAnswers({});
+    setPlannerState(null);
+    setReviewing(false);
     setQuestionIndex(0);
     setResult(null);
     setError('');
@@ -176,9 +214,9 @@ export default function SelectionPage() {
     <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
         <Box><Typography variant="overline" color="secondary.main" fontWeight={800}>ENTREVISTA GUIADA</Typography><Typography variant="h5" fontWeight={800}>{CATEGORY_LABELS[category]}</Typography></Box>
-        <Chip label={'Pergunta ' + (questionIndex + 1) + ' de ' + questions.length} color="primary" variant="outlined" />
+        <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : 'Pergunta ' + (plannerState?.progress?.asked || 1) + ' de até ' + (plannerState?.progress?.max || 20)} color="primary" variant="outlined" />
       </Stack>
-      <LinearProgress variant="determinate" value={((questionIndex + 1) / questions.length) * 100} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
+      <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : ((plannerState?.progress?.asked || 1) / (plannerState?.progress?.max || 20)) * 100} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
       <Paper variant="outlined" sx={{ mt: 4, p: { xs: 2.5, md: 5 } }}>
         <Typography variant="h4" sx={{ fontSize: { xs: '1.65rem', md: '2.35rem' } }}>{question.label}</Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>{question.helper}</Typography>
@@ -190,7 +228,7 @@ export default function SelectionPage() {
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
         <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
           <Button startIcon={<ArrowBackIcon />} onClick={previousQuestion}>Voltar</Button>
-          <Button variant="contained" endIcon={questionIndex === questions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy}>{busy ? 'Calculando…' : questionIndex === questions.length - 1 ? 'Calcular shortlist' : 'Próxima pergunta'}</Button>
+          <Button variant="contained" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
         </Stack>
       </Paper>
     </Box>

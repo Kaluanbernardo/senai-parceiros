@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLocalEvaluation, mergeAiEvaluation } from './selectionEngine';
+import { buildLocalEvaluation, mergeAiEvaluation, selectShortlist } from './selectionEngine';
 
 const candidates = [
   {
@@ -72,5 +72,43 @@ describe('selection engine', () => {
     expect(risky.strategicValue).toBe(0);
     expect(risky.total).toBeLessThanOrEqual(50);
     expect(merged.trace.model).toBe('test/model');
+  });
+
+  it('returns up to ten candidates and keeps at least five when the catalog allows it', () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({
+      candidate: { id: index + 1, nome: `Candidato ${index + 1}`, instituicao: `Instituto ${index + 1}` },
+      dimensions: { impact: 80, alignment: 80, credibility: 80, collaboration: 80, feasibility: 80, risk: 80 },
+      strategicValue: 80,
+      viability: 80,
+      total: 80 - index,
+    }));
+    const shortlist = selectShortlist(many);
+    expect(shortlist).toHaveLength(10);
+    expect(new Set(shortlist.map((entry) => entry.candidate.id)).size).toBe(10);
+  });
+
+  it('fills the minimum with the best available records below the threshold', () => {
+    const few = Array.from({ length: 6 }, (_, index) => ({
+      candidate: { id: index + 1, nome: `Candidato ${index + 1}`, instituicao: `Instituto ${index + 1}` },
+      strategicValue: 20,
+      viability: 20,
+      total: 20 - index,
+    }));
+    expect(selectShortlist(few)).toHaveLength(6);
+    expect(selectShortlist(few).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('keeps institutions diverse before filling by score and excludes confirmed severe risk', () => {
+    const entries = [
+      { candidate: { id: 1, instituicao: 'A' }, total: 99, strategicValue: 99 },
+      { candidate: { id: 2, instituicao: 'A' }, total: 98, strategicValue: 98 },
+      { candidate: { id: 3, instituicao: 'B' }, total: 97, strategicValue: 97 },
+      { candidate: { id: 4, instituicao: 'C' }, total: 96, strategicValue: 96 },
+      { candidate: { id: 5, instituicao: 'D' }, total: 95, strategicValue: 95, severeRisk: { confirmed: true } },
+      { candidate: { id: 6, instituicao: 'E' }, total: 94, strategicValue: 94 },
+    ];
+    const shortlist = selectShortlist(entries);
+    expect(shortlist.map((entry) => entry.candidate.id)).toEqual([1, 3, 4, 6, 2]);
+    expect(shortlist.some((entry) => entry.severeRisk?.confirmed)).toBe(false);
   });
 });

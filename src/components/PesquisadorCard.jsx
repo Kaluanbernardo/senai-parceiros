@@ -4,19 +4,12 @@ import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import SchoolIcon from '@mui/icons-material/School';
 import { CountryFlag } from '../utils/countryCode';
 import { getCategoriasFromAreas } from '../utils/areaCategories';
-
-function getInitials(name) {
-  if (!name) return '?';
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return parts[0][0].toUpperCase();
-}
+import ProfileAvatar from '../design-system/primitives/ProfileAvatar';
 
 function summarize(text, maxSentences = 2) {
   if (!text) return '';
@@ -24,23 +17,8 @@ function summarize(text, maxSentences = 2) {
   return sentences.slice(0, maxSentences).join(' ').trim();
 }
 
-function nameToSlug(name) {
-  if (!name) return '';
-  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-function usePhotoWithFallback(nome, fallbackUrl) {
-  const [stage, setStage] = React.useState(0);
-  const slug = nameToSlug(nome);
-  const sources = [`/fotos/${slug}.jpg`, `/fotos/${slug}.png`, fallbackUrl];
-  const src = stage < sources.length ? sources[stage] : undefined;
-  const onError = () => setStage((s) => s + 1);
-  return { src, onError };
-}
-
 export default function PesquisadorCard({ item, onClick }) {
   const categorias = getCategoriasFromAreas(item.areas);
-  const photo = usePhotoWithFallback(item.nome, item.foto);
 
   return (
     <Card sx={{
@@ -60,25 +38,7 @@ export default function PesquisadorCard({ item, onClick }) {
           {/* Top section: photo left + identity right */}
           <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
             {/* Photo */}
-            <Avatar
-              src={photo.src}
-              alt={item.nome}
-              onError={photo.onError}
-              sx={{
-                width: 80,
-                height: 96,
-                borderRadius: 1.5,
-                bgcolor: 'secondary.light',
-                fontSize: 26,
-                fontWeight: 700,
-                flexShrink: 0,
-                border: '1px solid',
-                borderColor: 'grey.200',
-                '& img': { objectFit: 'cover' },
-              }}
-            >
-              {getInitials(item.nome)}
-            </Avatar>
+            <ProfileAvatar person={item} size={{ width: 80, height: 96 }} showStatus sx={{ borderRadius: 1.5 }} />
 
             {/* Identity info */}
             <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

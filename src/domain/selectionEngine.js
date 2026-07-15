@@ -117,11 +117,41 @@ function sortEntries(entries) {
   return [...entries].sort((a, b) => b.total - a.total || b.strategicValue - a.strategicValue);
 }
 
+/**
+ * Produces a practical shortlist: up to ten candidates, with at least five
+ * whenever the catalog has five or more eligible records. The first pass
+ * favors distinct institutions so the result does not collapse into one
+ * organization; the second pass fills remaining slots by score.
+ */
+export function selectShortlist(entries, { minimum = 5, maximum = 10, threshold = 28 } = {}) {
+  const sorted = sortEntries(entries);
+  const safeMinimum = Math.max(0, Math.min(minimum, maximum));
+  const eligible = sorted.filter((entry) => entry.total >= threshold && !entry.severeRisk?.confirmed);
+  const fallback = sorted.filter((entry) => !entry.severeRisk?.confirmed);
+  const pool = eligible.length >= safeMinimum ? eligible : fallback;
+  const target = Math.min(maximum, Math.max(safeMinimum, pool.length));
+  const selected = [];
+  const institutions = new Set();
+
+  for (const entry of pool) {
+    const institution = String(entry.candidate?.instituicao || entry.candidate?.organizacao || '').trim().toLowerCase();
+    if (selected.length >= target) break;
+    if (institution && institutions.has(institution)) continue;
+    selected.push(entry);
+    if (institution) institutions.add(institution);
+  }
+  for (const entry of pool) {
+    if (selected.length >= target) break;
+    if (!selected.includes(entry)) selected.push(entry);
+  }
+  return selected;
+}
+
 export function buildLocalEvaluation({ category, objective, answers, candidates }) {
   const input = { category, objective, answers };
   const all = sortEntries(candidates.map((candidate) => scoreCandidate({ candidate, input })));
   const candidatePool = all;
-  const shortlist = candidatePool.filter((entry) => entry.total >= 28).slice(0, 5);
+  const shortlist = selectShortlist(candidatePool);
 
   return {
     shortlist,
@@ -136,6 +166,11 @@ export function buildLocalEvaluation({ category, objective, answers, candidates 
       sourcePolicy: 'Somente campos do catálogo cadastrado; ausência de evidência reduz confiança.',
       institutionalBaseline: SENAI_STRATEGIC_BASELINE,
       catalogSize: candidates.length,
+      shortlistPolicy: { minimum: 5, maximum: 10, threshold: 28, institutionDiversity: true },
+      shortlistExcluded: candidatePool.filter((entry) => !shortlist.includes(entry)).map((entry) => ({
+        id: entry.candidate.id,
+        reason: entry.severeRisk?.confirmed ? 'severe-risk' : entry.total < 28 ? 'below-threshold' : 'capacity',
+      })),
       generatedAt: new Date().toISOString(),
       provider: 'local-fallback',
       model: null,
@@ -167,7 +202,8 @@ function recompute(entry, ai) {
 export function mergeAiEvaluation(local, aiResult = {}) {
   const aiById = new Map((aiResult.evaluations || []).map((evaluation) => [String(evaluation.id), evaluation]));
   const entries = (local.candidatePool || local.shortlist).map((entry) => recompute(entry, aiById.get(String(entry.candidate.id))));
-  const shortlist = sortEntries(entries).filter((entry) => entry.total >= 28).slice(0, 5);
+  const sortedEntries = sortEntries(entries);
+  const shortlist = selectShortlist(sortedEntries);
   return {
     ...local,
     shortlist,
@@ -179,6 +215,11 @@ export function mergeAiEvaluation(local, aiResult = {}) {
       usage: aiResult.usage || null,
       evaluatorVersion: aiResult.provider ? 'openrouter-structured-v1' : local.trace.evaluatorVersion,
       generatedAt: new Date().toISOString(),
+      shortlistPolicy: { minimum: 5, maximum: 10, threshold: 28, institutionDiversity: true },
+      shortlistExcluded: sortedEntries.filter((entry) => !shortlist.includes(entry)).map((entry) => ({
+        id: entry.candidate.id,
+        reason: entry.severeRisk?.confirmed ? 'severe-risk' : entry.total < 28 ? 'below-threshold' : 'capacity',
+      })),
     },
   };
 }

@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ScoreRadar, { DIMENSION_LABELS, SERIES_COLORS } from './ScoreRadar';
 import { getMatrixMarkers, getRadarSeries } from './selectionVisualization';
+import ProfileAvatar from '../design-system/primitives/ProfileAvatar';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { exportSelection } from '../services/exportSelection';
 
@@ -161,6 +162,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
                 <Grid container spacing={2} alignItems="center">
                   <Grid size={{ xs: 12, md: 5 }}>
                     <Stack direction="row" gap={1.5} alignItems="center">
+                      <ProfileAvatar person={entry.candidate} size={42} />
                       <Box sx={{ minWidth: 34, height: 34, borderRadius: '50%', bgcolor: index === 0 ? 'secondary.main' : 'primary.main', color: 'white', display: 'grid', placeItems: 'center', fontWeight: 700 }}>{index + 1}</Box>
                       <Box>
                         <Typography fontWeight={700}>{entry.candidate.nome || entry.candidate.instituicao}</Typography>
@@ -192,7 +194,10 @@ export default function SelectionResults({ result, onReview, onRestart }) {
               </Stack>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" fontWeight={700}>Detalhe individual</Typography>
-              <Typography variant="body2" color="text.secondary">{selected?.candidate.nome || selected?.candidate.instituicao}</Typography>
+              <Stack direction="row" gap={1} alignItems="center" sx={{ mt: .5 }}>
+                <ProfileAvatar person={selected?.candidate} size={42} showStatus />
+                <Typography variant="body2" color="text.secondary">{selected?.candidate.nome || selected?.candidate.instituicao}</Typography>
+              </Stack>
               <Tabs value={activeIndex} onChange={(_, value) => setSelectedIndex(value)} variant="scrollable" sx={{ mt: 1 }} aria-label="Selecionar stakeholder no radar">
                 {shortlist.map((entry, index) => <Tab key={entry.candidate.id} value={index} label={'#' + (index + 1) + ' ' + (entry.candidate.nome || entry.candidate.instituicao || '').slice(0, 18)} />)}
               </Tabs>
