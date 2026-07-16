@@ -703,7 +703,7 @@
     "citacoes": "5.000+",
     "pesquisa": "Professor do King's College London, é um dos principais filósofos da educação profissional no mundo. Sua pesquisa examina conceitos fundamentais como julgamento profissional, conhecimento prático e a natureza do saber vocacional, estabelecendo bases filosóficas para currículos de VET. Publicou extensamente sobre a distinção entre diferentes tipos de conhecimento (propositional, prático, de familiaridade) e suas implicações para o design curricular. Seus estudos comparativos sobre VET na Europa, especialmente entre Alemanha, França e Inglaterra, revelam como diferentes tradições filosóficas moldam sistemas de formação distintos. Contribuiu para debates sobre learning outcomes, autonomia profissional e o futuro da educação vocacional europeia.",
     "scholar": "https://scholar.google.com/citations?user=W6rzXG4AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-15-christopher-winch.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor do King's College London, é um dos principais filósofos da educação profissional no mundo.",
@@ -733,7 +733,18 @@
         "url": "https://journals.sagepub.com/doi/10.2304/eerj.2012.11.3.369",
         "ano": 2012
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-15-christopher-winch.jpg",
+      "sourceUrl": "https://www.kcl.ac.uk/people/chris-winch",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "King's College London profile: Christopher Winch",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 16,
@@ -837,7 +848,7 @@
     "citacoes": "N/A (Alto Impacto)",
     "pesquisa": "Pesquisador independente e ex-consultor do Banco Mundial, é um dos defensores mais influentes do ensino técnico na América Latina. Com décadas de experiência em organismos internacionais (BID, Banco Mundial, UNESCO), sua pesquisa critica o viés academicista dos sistemas educacionais latino-americanos e defende modelos pragmáticos de formação profissional. Publicou extensamente sobre a eficácia comparada de diferentes modelos de VET, avaliação de impacto de programas de treinamento e a relação entre educação técnica e desenvolvimento econômico. Suas análises sobre o SENAI brasileiro e sistemas similares na região são referência para formuladores de políticas. Exerceu papel consultivo em reformas educacionais em mais de 30 países.",
     "scholar": "https://independent.academia.edu/ClaudioDeMouraCastro",
-    "foto": null,
+    "foto": "/fotos/researcher-18-claudio-de-moura-castro.jpg",
     "profileType": "academia",
     "genero": "M",
     "miniBio": "Pesquisador independente e ex-consultor do Banco Mundial, é um dos defensores mais influentes do ensino técnico na América Latina.",
@@ -867,7 +878,18 @@
         "url": "https://link.springer.com/rwe/10.1007/978-3-319-49789-1_109-1",
         "ano": 2017
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-18-claudio-de-moura-castro.jpg",
+      "sourceUrl": "https://abqualidade.org.br/academico-claudio-de-moura-castro/",
+      "sourceType": "public-institutional",
+      "license": "public institutional profile",
+      "attribution": "ABQ Qualidade profile: Claudio de Moura Castro",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 19,
