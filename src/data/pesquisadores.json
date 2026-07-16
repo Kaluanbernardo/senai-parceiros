@@ -2115,7 +2115,7 @@
     "citacoes": "~7.600 ",
     "pesquisa": "Professor da Universidade de Derby, é um dos principais teóricos críticos da educação vocacional no mundo anglófono. Sua pesquisa aplica perspectivas marxistas e pós-estruturalistas para analisar como políticas de VET reproduzem desigualdades de classe, gênero e etnia. Publicou extensamente sobre a precarização do trabalho docente em further education, a mercantilização da formação profissional e as contradições entre discursos de empoderamento e realidades de exploração. Seus livros, como 'Education, Policy and Social Justice', são referência para uma leitura politizada da educação profissional. Contribui para debates sobre neoliberalismo, performatividade e resistência nas instituições de VET britânicas e internacionais.",
     "scholar": "https://scholar.google.com/citations?user=3VoLLcgAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-43-james-avis.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Universidade de Derby, é um dos principais teóricos críticos da educação vocacional no mundo anglófono.",
@@ -2145,7 +2145,18 @@
         "url": "https://www.sciencedirect.com/science/article/pii/S0001879123001173",
         "ano": 2023
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-43-james-avis.jpg",
+      "sourceUrl": "https://pure.hud.ac.uk/en/persons/james-avis",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "University of Huddersfield Research Portal profile: James Avis",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 98,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 44,
@@ -2156,7 +2167,7 @@
     "citacoes": "N/A (Alto Impacto)",
     "pesquisa": "Diretor do National Research Center for Career and Technical Education (NRCCTE) e pesquisador do SREB nos Estados Unidos, é referência em pesquisa aplicada sobre Career and Technical Education (CTE). Sua pesquisa investiga como integrar rigor acadêmico em programas de educação técnica e como modelos de 'Career Pathways' podem melhorar resultados educacionais e laborais de estudantes. Coordenou estudos longitudinais sobre a eficácia do CTE em promover conclusão escolar, entrada no ensino superior e empregabilidade. Publicou sobre a relação entre educação acadêmica e vocacional nos EUA, sobre financiamento do CTE através do Perkins Act e sobre estratégias para aumentar a atratividade da educação técnica. Suas pesquisas influenciaram reformas legislativas e políticas educacionais em nível federal e estadual nos EUA.",
     "scholar": "https://www.researchgate.net/profile/James-Iii-2",
-    "foto": null,
+    "foto": "/fotos/researcher-44-james-stone-iii.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Diretor do National Research Center for Career and Technical Education (NRCCTE) e pesquisador do SREB nos Estados Unidos, é referência em pesquisa aplicada sobre Career and Technical Education (CTE).",
@@ -2186,7 +2197,18 @@
         "url": "https://scholar.google.com/scholar?q=Paddeu+Galli+Veneau+Track-VET+France+transversal+competences+2019",
         "ano": 2019
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-44-james-stone-iii.jpg",
+      "sourceUrl": "https://www.sreb.org/profile/james-stone",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Southern Regional Education Board profile: James Stone III",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 98,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 45,
@@ -2613,13 +2635,13 @@
     ],
     "image": {
       "path": "/fotos/researcher-53-kevin-orr.jpg",
-      "sourceUrl": "https://www.hud.ac.uk/about/schools/huddersfield-business-school/about-us/our-structure-and-people/visitingprofessors/",
-      "sourceType": "institutional",
-      "license": "unknown",
-      "attribution": "University of Huddersfield",
+      "sourceUrl": "https://www.bera.ac.uk/person/kevin-orr",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "British Educational Research Association profile: Kevin Orr",
       "retrievedAt": "2026-07-16",
       "status": "approved",
-      "confidence": 95,
+      "confidence": 98,
       "reviewedAt": "2026-07-16"
     }
   },
@@ -3212,7 +3234,7 @@
     "citacoes": 20611,
     "pesquisa": "Professor emérito da Wageningen University nos Países Baixos, é um dos pesquisadores mais influentes em educação vocacional baseada em competências na Europa. Fundador da rede VETNET (dentro da EERA) e laureado com o Prêmio Europeu de Pesquisador em VET (2016), sua pesquisa definiu o campo da competência profissional em educação. Editor do Journal of Agricultural Education and Extension (JAEE) e autor de centenas de publicações, desenvolveu frameworks teóricos sobre o conceito de competência que são utilizados globalmente em design curricular e avaliação. Sua pesquisa compara como diferentes países europeus implementam abordagens baseadas em competências em seus sistemas de VET. Contribuiu para a ponte entre educação vocacional e educação superior na Europa.",
     "scholar": "https://scholar.google.com/citations?user=pw2srdQAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-66-martin-mulder.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor emérito da Wageningen University nos Países Baixos, é um dos pesquisadores mais influentes em educação vocacional baseada em competências na Europa.",
@@ -3242,7 +3264,18 @@
         "url": "https://journals.sagepub.com/doi/10.1177/0019793916660067",
         "ano": 2017
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-66-martin-mulder.jpg",
+      "sourceUrl": "https://research.wur.nl/en/persons/martin-mulder-2/",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Wageningen University & Research profile: Martin Mulder",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 98,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 67,
@@ -3253,7 +3286,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Martin Mulder (ID 66).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-67-martin-mulder.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Martin Mulder (ID 66).",
@@ -3283,7 +3316,18 @@
         "url": "https://link.springer.com/article/10.1007/s12186-017-9189-4",
         "ano": 2018
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-67-martin-mulder.jpg",
+      "sourceUrl": "https://research.wur.nl/en/persons/martin-mulder-2/",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Wageningen University & Research profile: Martin Mulder",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 98,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 68,
@@ -3923,7 +3967,7 @@
     "citacoes": "~9.500 ",
     "pesquisa": "Pesquisador sênior do Urban Institute e professor de Economia na American University, é o principal economista defensor do modelo de apprenticeship nos Estados Unidos. Sua pesquisa demonstra, através de análises rigorosas de custo-benefício, que programas de aprendizagem profissional geram retornos significativos tanto para aprendizes quanto para empregadores e governos. Publicou extensamente sobre como expandir o sistema de apprenticeship americano — historicamente restrito à construção civil — para setores como saúde, TI e serviços. Seus estudos influenciaram políticas federais de expansão de registered apprenticeships e a criação de novos modelos de aprendizagem para ocupações do século XXI. Contribui ativamente para debates sobre alternativas à via universitária tradicional como caminho para empregos de qualidade.",
     "scholar": "https://scholar.google.com/citations?user=Outz9ygAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-82-robert-lerman.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Pesquisador sênior do Urban Institute e professor de Economia na American University, é o principal economista defensor do modelo de apprenticeship nos Estados Unidos.",
@@ -3953,7 +3997,18 @@
         "url": "https://www.researchgate.net/publication/373224927_TVET_economy_and_sustainable_development",
         "ano": 2023
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-82-robert-lerman.jpg",
+      "sourceUrl": "https://www.urban.org/sites/default/files/styles/square_large_252x252/public/2025-11/Lerman_Robert.jpg?h=958132c1&itok=aBQF0O4O",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Urban Institute",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 83,
@@ -4374,7 +4429,7 @@
     "citacoes": "~34.300 ",
     "pesquisa": "Professor emérito da Griffith University na Austrália, é um dos teóricos mais influentes de aprendizagem no local de trabalho no mundo. Sua pesquisa revolucionou o campo ao redefinir o trabalho como ambiente pedagógico central, desenvolvendo o conceito de 'participação guiada' em que trabalhadores aprendem através de engajamento progressivo em atividades profissionais cada vez mais complexas. Publicou o livro seminal 'Learning Through Work', além de centenas de artigos sobre como indivíduos aprendem através da prática profissional, sobre o papel da mimese (imitação produtiva) na aprendizagem e sobre a ontogênese da expertise vocacional. Suas contribuições teóricas integraram perspectivas construtivistas, socioculturais e fenomenológicas para explicar como a aprendizagem profissional acontece. Com mais de 20.000 citações, é o pesquisador mais citado no campo de workplace learning.",
     "scholar": "https://scholar.google.com/citations?user=oU3faRcAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-93-stephen-billett.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor emérito da Griffith University na Austrália, é um dos teóricos mais influentes de aprendizagem no local de trabalho no mundo.",
@@ -4404,7 +4459,18 @@
         "url": "https://www.researchgate.net/publication/371017565_TVET_SI_Towards_Sustainable_Vocational_Education_and_Training_Thinking_beyond_the_formal",
         "ano": 2023
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-93-stephen-billett.jpg",
+      "sourceUrl": "https://www.ntu.edu.sg/media/images/librariesprovider34/default-album/billett-headshots_02_web-193b00c3847b20645b2be5dd097b9a9fdc6.tmb-small.jpg",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Nanyang Technological University / Griffith University",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 94,
@@ -4415,7 +4481,7 @@
     "citacoes": "N/A (Alto Impacto)",
     "pesquisa": "Professor da Universidade de Konstanz, é especialista em história, cultura e transferência de modelos de educação vocacional. Sua pesquisa investiga como o conceito de 'Beruflichkeit' (vocação/profissão) estrutura os sistemas de VET nos países de língua alemã e como essas tradições culturais tornam o sistema dual difícil de transferir para outros contextos. Publicou extensamente sobre a evolução histórica dos sistemas de aprendizagem na Alemanha, sobre comparações entre os modelos alemão, britânico e australiano, e sobre o papel de associações profissionais ('Kammern') na regulação da formação. Suas análises culturais e históricas demonstram que sistemas de VET são profundamente enraizados em tradições sociais e não podem ser reduzidos a arranjos técnicos.",
     "scholar": "https://www.researchgate.net/profile/Thomas-Deissinger",
-    "foto": null,
+    "foto": "/fotos/researcher-94-thomas-deissinger.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Professor da Universidade de Konstanz, é especialista em história, cultura e transferência de modelos de educação vocacional.",
@@ -4445,7 +4511,18 @@
         "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2021.1973544",
         "ano": 2021
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-94-thomas-deissinger.jpg",
+      "sourceUrl": "https://www.wiwi.uni-konstanz.de/fileadmin/_processed_/5/8/csm_Bilder-OM-Nov_2021__1_-mod_691f824754.jpg",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Konstanz",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 95,
@@ -4497,7 +4574,7 @@
     "citacoes": "1.200+",
     "pesquisa": "Professor associado de Sociologia na Universidade de Amsterdam e co-diretor do Amsterdam Centre for Inequality Studies, é um dos pesquisadores mais citados em estudos sobre estratificação educacional e VET. Sua pesquisa investiga como sistemas educacionais — particularmente o grau de diferenciação (tracking) e orientação vocacional — afetam a desigualdade de oportunidades e resultados no mercado de trabalho. Publicou sobre o valor posicional da educação, diversidade institucional em sistemas educacionais, desigualdade de gênero no desempenho educacional e diferenciais salariais por campo de estudo. Seus estudos comparativos demonstram como a expansão educacional interage com estruturas de mercado de trabalho para produzir diferentes padrões de desigualdade em diferentes países.",
     "scholar": "https://scholar.google.com/citations?user=nMP0iF4AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-96-tom-bol.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor associado de Sociologia na Universidade de Amsterdam e co-diretor do Amsterdam Centre for Inequality Studies, é um dos pesquisadores mais citados em estudos sobre estratificação educacional e VET.",
@@ -4527,7 +4604,18 @@
         "url": "https://www.sciencedirect.com/science/article/abs/pii/S0001879119300478",
         "ano": 2020
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-96-tom-bol.jpg",
+      "sourceUrl": "https://www.uva.nl/binaries/_ht_1706794796870/content/documents/personalpages/b/o/t.bol/t.bol",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Amsterdam",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 97,
@@ -4538,7 +4626,7 @@
     "citacoes": "~1.750 ",
     "pesquisa": "Professora da ETH Zurich, é criadora do KOF Education-Employment Linkage Index, a principal métrica internacional para avaliar a articulação entre sistemas de educação profissional e mercados de trabalho. Sua pesquisa investiga a governança corporativa de sistemas de VET, analisando como a participação de diferentes stakeholders (governo, empregadores, sindicatos, educadores) afeta a qualidade e relevância da formação. Desenvolveu métricas de 'permeabilidade' para medir a flexibilidade de sistemas de qualificação e publicou sobre como arranjos de governança influenciam a capacidade de sistemas de VET de se adaptarem a mudanças econômicas e tecnológicas. Suas contribuições analíticas são utilizadas por organismos internacionais e formuladores de políticas para benchmarking de sistemas de VET.",
     "scholar": "https://scholar.google.com/citations?user=RDxHdg4AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-97-ursula-renold.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da ETH Zurich, é criadora do KOF Education-Employment Linkage Index, a principal métrica internacional para avaliar a articulação entre sistemas de educação profissional e mercados de trabalho.",
@@ -4568,7 +4656,18 @@
         "url": "https://www.tandfonline.com/doi/abs/10.1080/13892240108438822",
         "ano": 2001
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-97-ursula-renold.jpg",
+      "sourceUrl": "https://ces.ethz.ch/de/mitarbeiter-team/personen-details/_jcr_content/listinfo.person-portrait.MTk3NTY4.jpg",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "ETH Zürich",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 98,
