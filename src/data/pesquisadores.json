@@ -2558,7 +2558,7 @@
     "citacoes": "1.000+",
     "pesquisa": "Professor da Universidade de Huddersfield, é especialista em liderança, políticas e práticas no setor de Further Education (FE) e educação vocacional na Inglaterra. Sua pesquisa investiga como líderes e gestores de colleges de FE navegam entre pressões políticas, demandas de mercado e necessidades pedagógicas. Publicou sobre identidade profissional de professores de VET, as contradições entre discursos de profissionalização e condições reais de trabalho docente, e sobre como reformas governamentais afetam a prática pedagógica em colleges ingleses. Suas análises etnográficas revelam as tensões cotidianas entre burocratização, performatividade e engajamento genuíno com os estudantes no setor vocacional britânico.",
     "scholar": "https://scholar.google.com/citations?user=lTKOfgsAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-53-kevin-orr.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Universidade de Huddersfield, é especialista em liderança, políticas e práticas no setor de Further Education (FE) e educação vocacional na Inglaterra.",
@@ -2588,7 +2588,18 @@
         "url": "https://dergipark.org.tr/en/pub/buefad/article/713574",
         "ano": 2020
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-53-kevin-orr.jpg",
+      "sourceUrl": "https://www.hud.ac.uk/about/schools/huddersfield-business-school/about-us/our-structure-and-people/visitingprofessors/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Huddersfield",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 54,
