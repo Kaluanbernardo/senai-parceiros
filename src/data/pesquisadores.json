@@ -3751,7 +3751,7 @@
     "citacoes": "500+ ​",
     "pesquisa": "Professor de Pedagogia da Engenharia na Universidade de Tampere, Finlândia, e líder do grupo de pesquisa em Crescimento Profissional e Aprendizagem. Com 140 publicações científicas, sua pesquisa abrange excelência vocacional e profissional, aprendizagem no local de trabalho, tecnologia educacional e métodos bayesianos aplicados à educação. Liderou projetos de grande impacto como MoVE (Modeling Vocational Excellence), PaVE (Pathways to Vocational Excellence) e NeMo (Next Move — Apprenticeships and Changing Skills Requirements). Atualmente coordena projetos financiados pela UE sobre fortalecimento de educadores vocacionais para a era digital. Suas contribuições incluem modelos de desenvolvimento de expertise e autorregulação em contextos de formação profissional finlandesa.",
     "scholar": "https://scholar.google.com/citations?user=rVtKyFkAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-77-petri-nokelainen.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor de Pedagogia da Engenharia na Universidade de Tampere, Finlândia, e líder do grupo de pesquisa em Crescimento Profissional e Aprendizagem.",
@@ -3781,7 +3781,18 @@
         "url": "https://www.academia.edu/19737233/The_Challenges_of_Education_in_Brazil",
         "ano": 2005
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-77-petri-nokelainen.jpg",
+      "sourceUrl": "https://research.tuni.fi/pgltutkimus/uutinen/pgl-tutkimusryhma-palkittiin-nemo-tutkimuksestaan-2014-2018/",
+      "sourceType": "public-professional",
+      "license": "institutional",
+      "attribution": "Fonte pública identificada",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 78,
@@ -4142,7 +4153,7 @@
     "citacoes": "~1.000 ",
     "pesquisa": "Professora da Nagoya University no Japão, é especialista em educação vocacional comparada e no papel da cultura na transferência de modelos de formação. Sua pesquisa analisa como culturas de habilidades — valores, normas e expectativas sociais sobre o trabalho e a aprendizagem — moldam sistemas de VET na Ásia e na África. Investiga a viabilidade de transferir modelos de formação profissional entre contextos culturais muito diferentes, questionando abordagens 'one-size-fits-all'. Publicou sobre educação e desenvolvimento na África, sobre cooperação japonesa em TVET e sobre como fatores culturais locais influenciam a efetividade de programas de formação profissional importados.",
     "scholar": "https://scholar.google.com/citations?user=T5nqGvYAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-86-shoko-yamada.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da Nagoya University no Japão, é especialista em educação vocacional comparada e no papel da cultura na transferência de modelos de formação.",
@@ -4172,7 +4183,18 @@
         "url": "https://journals.sagepub.com/doi/full/10.1177/03063968221093882",
         "ano": 2022
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-86-shoko-yamada.jpg",
+      "sourceUrl": "https://en.nagoya-u.ac.jp/news/articles/researchers_voice_012/",
+      "sourceType": "public-professional",
+      "license": "institutional",
+      "attribution": "Fonte pública identificada",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 87,

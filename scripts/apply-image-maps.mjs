@@ -10,9 +10,10 @@ for (const file of mapFiles) maps.push(...await readJson(path.join('tmp', file))
 let applied = 0;
 for (const item of maps) {
   const person = data.find((entry) => entry.id === item.id);
-  const imagePath = item.path?.startsWith('public/fotos/')
-    ? `/${item.path.slice('public/'.length)}`
-    : (item.path || (item.file ? `/fotos/${item.file}` : null));
+  const rawPath = item.path || item.file;
+  const imagePath = rawPath?.startsWith('public/fotos/')
+    ? `/${rawPath.slice('public/'.length)}`
+    : (rawPath?.startsWith('/fotos/') ? rawPath : (rawPath ? `/fotos/${rawPath}` : null));
   const sourceUrl = item.sourceUrl || item.source;
   if (!person || !imagePath || !sourceUrl) continue;
   try { await fs.access(path.resolve('public', `.${imagePath}`)); } catch { continue; }
