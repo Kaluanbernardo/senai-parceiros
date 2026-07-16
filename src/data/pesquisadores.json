@@ -1641,7 +1641,7 @@
     "citacoes": "2.000+ ​",
     "pesquisa": "Professor de Economia na Lancaster University Management School, é especialista em economia do trabalho e economia da educação. Sua pesquisa abrange análises de mercado de trabalho desagregadas espacialmente, relação entre competências e conteúdo ocupacional, custos e eficiência em instituições educacionais e educação vocacional ao longo da vida. Atuou como diretor da Work Foundation e é fellow associado do SKOPE em Oxford/Cardiff. Publicou sobre fórmulas de financiamento educacional, mudanças nas características e habilidades da juventude britânica e educação em países em desenvolvimento. Suas análises econômicas sobre o retorno da educação vocacional informam debates sobre política de competências no Reino Unido.",
     "scholar": "https://scholar.google.com/citations?user=DpLQXpMAAAAJ",
-    "foto": "https://ui-avatars.com/api/?name=Geraint+Johnes&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-36-geraint-johnes.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor de Economia na Lancaster University Management School, é especialista em economia do trabalho e economia da educação.",
@@ -1671,7 +1671,18 @@
         "url": "https://link.springer.com/chapter/10.1007/0-306-48077-8_2",
         "ano": 2003
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-36-geraint-johnes.jpg",
+      "sourceUrl": "https://research.lancaster-university.uk/en/persons/geraint-johnes/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Lancaster University Research Directory: Geraint Johnes",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 37,
@@ -1682,7 +1693,7 @@
     "citacoes": "1.200+",
     "pesquisa": "Professor da Fontys University of Applied Sciences nos Países Baixos, é um dos pesquisadores mais citados em clusters bibliométricos sobre educação vocacional. Sua pesquisa investiga processos de aprendizagem em contextos de VET, com foco particular em simulações práticas (hands-on) e ambientes de aprendizagem autênticos. Publicou sobre como estudantes de VET desenvolvem competências profissionais através de experiências práticas simuladas e reais, e sobre os mecanismos cognitivos e motivacionais envolvidos na aprendizagem vocacional. Seus estudos contribuem para o desenvolvimento de pedagogias baseadas em evidências para a educação profissional holandesa e europeia.",
     "scholar": "https://scholar.google.com/citations?user=GWS7UF0AAAAJ",
-    "foto": "https://ui-avatars.com/api/?name=Harmen+Schaap&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-37-harmen-schaap.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Fontys University of Applied Sciences nos Países Baixos, é um dos pesquisadores mais citados em clusters bibliométricos sobre educação vocacional.",
@@ -1712,7 +1723,18 @@
         "url": "https://www.tandfonline.com/doi/abs/10.1080/13664530802038089",
         "ano": 2008
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-37-harmen-schaap.jpg",
+      "sourceUrl": "https://www.ru.nl/personen/schaap-h",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Radboud University: Harmen Schaap",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 38,
@@ -1764,7 +1786,7 @@
     "citacoes": "1.000+ ​",
     "pesquisa": "Professora assistente na Universidade de Regensburg, Alemanha, especializada em aprendizagem autodirigida e autorregulada em contextos de educação vocacional. Sua pesquisa seminal 'The Challenge of Self-Directed and Self-Regulated Learning in Vocational Education' (2010) analisa como simulações de local de trabalho em VET exigem que estudantes desenvolvam habilidades de aprendizagem autônoma. Também atua como editora assistente do Educational Research Review. Publicou sobre perspectivas de estudantes em simulações de trabalho, estratégias de autorregulação em VET e desenvolvimento de expertise visual. Suas contribuições conectam teorias de aprendizagem autorregulada da psicologia educacional com as práticas específicas da formação profissional.",
     "scholar": "https://www.researchgate.net/profile/Helen-Jossberger",
-    "foto": "https://ui-avatars.com/api/?name=Helen+Jossberger&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-39-helen-jossberger.jpg",
     "profileType": "researchgate",
     "genero": "F",
     "miniBio": "Professora assistente na Universidade de Regensburg, Alemanha, especializada em aprendizagem autodirigida e autorregulada em contextos de educação vocacional.",
@@ -1794,7 +1816,18 @@
         "url": "https://www.researchgate.net/publication/358028349_Avis_J_2020_Vocational_education_in_the_fourth_industrial_revolution_Palgrave_Pivot",
         "ano": 2020
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-39-helen-jossberger.jpg",
+      "sourceUrl": "https://www.uni-regensburg.de/en/humanwissenschaften/fakultaet/professuren/erziehungswissenschaft/kathleen-stuermer-erziehungswissenschaft/team/dr-helen-jossberger",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Universität Regensburg: Helen Jossberger",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 40,
@@ -1805,7 +1838,7 @@
     "citacoes": "N/A (Liderança)",
     "pesquisa": "Diretor de pesquisa do BIBB (Instituto Federal de Educação e Formação Profissional) e professor da Universidade de Paderborn, é especialista em permeabilidade entre educação vocacional e ensino superior na Alemanha. Sua pesquisa investiga como criar caminhos flexíveis que permitam a transição entre formação profissional e universitária, promovendo equivalência acadêmica e vocacional. Publicou extensamente sobre reconhecimento de competências vocacionais para acesso ao ensino superior, sobre reformas que buscam reduzir a rigidez do sistema dual e sobre o papel do BIBB na modernização das qualificações profissionais. Seus estudos comparativos entre Alemanha e Reino Unido revelam diferentes abordagens para a articulação entre VET e educação terciária.",
     "scholar": "https://www.researchgate.net/scientific-contributions/Hubert-Ertl-2011030832",
-    "foto": "https://ui-avatars.com/api/?name=Hubert+Ertl&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-40-hubert-ertl.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Diretor de pesquisa do BIBB (Instituto Federal de Educação e Formação Profissional) e professor da Universidade de Paderborn, é especialista em permeabilidade entre educação vocacional e ensino superior na Alemanha.",
@@ -1835,7 +1868,18 @@
         "url": "https://scholar.lib.vt.edu/ejournals/JVER/v29n3/stone.html",
         "ano": 2004
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-40-hubert-ertl.jpg",
+      "sourceUrl": "https://www.education.ox.ac.uk/person/hubert-ertl/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Oxford Department of Education: Hubert Ertl",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 41,
