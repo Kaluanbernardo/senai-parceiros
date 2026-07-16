@@ -1206,7 +1206,7 @@
     "citacoes": "N/A (Influente)",
     "pesquisa": "Professor emérito da Universidade de Oxford e pesquisador do SKOPE (Centre on Skills, Knowledge and Organisational Performance), é um dos críticos mais influentes das políticas de competências no mundo anglo-saxão. Sua pesquisa demonstra que a ênfase exclusiva no lado da oferta de competências (educação e treinamento) é insuficiente quando o mercado de trabalho não demanda qualificações elevadas. Publicou extensamente sobre as 'falhas de demanda' no mercado de trabalho britânico, onde muitos empregadores operam com estratégias de baixa qualificação. Seus estudos influenciaram o debate sobre 'skills utilization' e sobre por que investimentos em educação nem sempre se traduzem em produtividade. Defende uma abordagem mais integrada que conecte políticas de VET com políticas industriais e de desenvolvimento econômico.",
     "scholar": "https://www.researchgate.net/profile/Ewart-Keep-2",
-    "foto": "https://ui-avatars.com/api/?name=Ewart+Keep&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-27-ewart-keep.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Professor emérito da Universidade de Oxford e pesquisador do SKOPE (Centre on Skills, Knowledge and Organisational Performance), é um dos críticos mais influentes das políticas de competências no mundo anglo-saxão.",
@@ -1236,7 +1236,18 @@
         "url": "https://link.springer.com/rwe/10.1007/978-981-97-0987-8_32",
         "ano": 2024
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-27-ewart-keep.jpg",
+      "sourceUrl": "https://www.education.ox.ac.uk/person/ewart-keep/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Oxford Department of Education: Ewart Keep",
+      "retrievedAt": "2026-07-16",
+      "status": "needs-review",
+      "confidence": 95,
+      "reviewedAt": null
+    }
   },
   {
     "id": 28,
