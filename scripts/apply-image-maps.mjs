@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const dataPath = path.resolve('src/data/pesquisadores.json');
-const readJson = async (file) => JSON.parse((await fs.readFile(file, 'utf8')).replace(/^\uFEFF/, ''));
+const readJson = async (file) => JSON.parse((await fs.readFile(file, 'utf8')).replace(/^\uFEFF/, '').replace(/\\n\s*$/, ''));
 const data = await readJson(dataPath);
 const mapFiles = (await fs.readdir('tmp')).filter((file) => file.startsWith('image-map-') && file.endsWith('.json'));
 const maps = [];
@@ -10,7 +10,7 @@ for (const file of mapFiles) maps.push(...await readJson(path.join('tmp', file))
 let applied = 0;
 for (const item of maps) {
   const person = data.find((entry) => entry.id === item.id);
-  const rawPath = item.path || item.file;
+  const rawPath = item.path || item.file || (item.filename ? `/fotos/${item.filename}` : null);
   const imagePath = rawPath?.startsWith('public/fotos/')
     ? `/${rawPath.slice('public/'.length)}`
     : (rawPath?.startsWith('/fotos/') ? rawPath : (rawPath ? `/fotos/${rawPath}` : null));

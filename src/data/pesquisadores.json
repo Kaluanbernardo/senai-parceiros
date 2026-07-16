@@ -1275,7 +1275,7 @@
     "citacoes": "~1.000 ",
     "pesquisa": "Pesquisador do KRIVET (Instituto Coreano de Pesquisa em Educação Vocacional e Treinamento), é especialista em sistemas de qualificação nacional e garantia de qualidade na Coreia do Sul. Sua pesquisa foca no desenvolvimento e implementação de Quadros Nacionais de Qualificações (NQF), avaliação de competências e reconhecimento de aprendizagens prévias no contexto asiático. Contribuiu para a modernização do sistema de qualificações coreano, integrando competências baseadas em resultados de aprendizagem com padrões industriais. Publicou sobre harmonização de qualificações na região Ásia-Pacífico e sobre benchmarking internacional de sistemas de certificação profissional.",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-26-eunsang-cho.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Pesquisador do KRIVET (Instituto Coreano de Pesquisa em Educação Vocacional e Treinamento), é especialista em sistemas de qualificação nacional e garantia de qualidade na Coreia do Sul.",
@@ -1305,7 +1305,18 @@
         "url": "https://orcid.org/0000-0002-9957-3209",
         "ano": 2022
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-26-eunsang-cho.jpg",
+      "sourceUrl": "https://faculty.txst.edu/profile/2472587",
+      "sourceType": "public-professional",
+      "license": "institutional",
+      "attribution": "Texas State University faculty profile",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 27,
@@ -2457,7 +2468,7 @@
     "citacoes": "~780 ",
     "pesquisa": "Professora da Universidade de Western Cape na África do Sul, é referência em formação e profissionalização de professores de TVET em contextos africanos. Sua pesquisa investiga como construir identidade profissional e competência pedagógica em educadores de colleges técnicos e comunitários, que frequentemente enfrentam condições precárias e baixo reconhecimento social. Dirigiu o Further Education and Training Institute (FETI), coordenando pesquisas sobre qualidade docente, desenvolvimento curricular e governança de colleges de VET. Publicou sobre os desafios específicos da educação vocacional na África do Sul pós-apartheid, incluindo a necessidade de superar desigualdades históricas no acesso à formação profissional de qualidade.",
     "scholar": "https://scholar.google.com/citations?user=qwCOtuQAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-50-joy-papier.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da Universidade de Western Cape na África do Sul, é referência em formação e profissionalização de professores de TVET em contextos africanos.",
@@ -2487,7 +2498,18 @@
         "url": "https://www.taylorfrancis.com/books/mono/10.4324/9780203946947/improving-workplace-learning-phil-hodkinson-helen-rainbird-lorna-unwin-karen-evans",
         "ano": 2006
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-50-joy-papier.jpg",
+      "sourceUrl": "https://www.uwc.ac.za/news-and-announcements/news/more-amazing-uwc-women-2018-women-in-education-577",
+      "sourceType": "public-professional",
+      "license": "institutional",
+      "attribution": "University of the Western Cape",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 51,
@@ -2810,7 +2832,7 @@
     "citacoes": "~3.200 ",
     "pesquisa": "Professor da Yogyakarta State University (UNY) na Indonésia, é especialista em e-learning e empregabilidade no contexto do TVET indonésio. Coordena o programa de doutorado em Educação Tecnológica e Vocacional da UNY e pesquisa o desenvolvimento de realidade virtual aplicada à educação vocacional (projeto VIRANTY). Investiga como tecnologias digitais podem melhorar a qualidade do ensino vocacional em um país arquipelágico com enormes desafios de acesso. Publicou sobre habilidades de empregabilidade de estudantes de escolas técnicas, parcerias sustentáveis entre escolas vocacionais e indústria, e sobre a digitalização da formação profissional na era pós-pandemia. Suas contribuições conectam inovação tecnológica com as realidades práticas do TVET no Sudeste Asiático.",
     "scholar": "https://scholar.google.com/citations?user=iaTfDPAAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-57-bruri-triyono.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Yogyakarta State University (UNY) na Indonésia, é especialista em e-learning e empregabilidade no contexto do TVET indonésio.",
@@ -2840,7 +2862,18 @@
         "url": "https://www.mmulder.nl/wp-content/uploads/2011/11/2019-Mulder-Foundations-of-Competence-Based-VET.pdf",
         "ano": 2019
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-57-bruri-triyono.jpg",
+      "sourceUrl": "https://iwgm.ui.ac.id/speakers-2023/",
+      "sourceType": "public-professional",
+      "license": "institutional",
+      "attribution": "International Workshop on UI GreenMetric / Universitas Indonesia",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 58,
@@ -4216,7 +4249,7 @@
     "citacoes": "~7.500 ",
     "pesquisa": "Professor da Universidade de Glasgow, é um dos pesquisadores mais influentes em VET para desenvolvimento e justiça social, especialmente na África e América Latina. Sua pesquisa aplica a abordagem de capacidades humanas (Amartya Sen) à educação vocacional, criticando o produtivismo que reduz VET a um instrumento de crescimento econômico. Liderou projetos como o Labour Market Intelligence Partnership na SADC e contribuiu para o UNESCO World TVET Report. Publicou extensamente sobre como a educação profissional pode expandir as liberdades e capacidades reais das pessoas, não apenas sua empregabilidade. Suas contribuições teóricas redefiniram o debate sobre o propósito da VET em contextos de desenvolvimento, influenciando políticas de organismos internacionais.",
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-87-simon-mcgrath.png",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Universidade de Glasgow, é um dos pesquisadores mais influentes em VET para desenvolvimento e justiça social, especialmente na África e América Latina.",
@@ -4246,7 +4279,18 @@
         "url": "https://www.hksmp.com/journals/vte/article/view/518",
         "ano": 2024
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-87-simon-mcgrath.png",
+      "sourceUrl": "https://www.gla.ac.uk/media/Media_830112_smxx.png",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Glasgow — Professor Simon McGrath",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 88,
@@ -4257,7 +4301,7 @@
     "citacoes": "3.000+",
     "pesquisa": "Entrada duplicada — ver Simon McGrath (ID 87).",
     "scholar": "https://scholar.google.com/citations?user=eMx0ukMAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-88-simon-mcgrath.png",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87).",
@@ -4287,7 +4331,18 @@
         "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2017.1394358",
         "ano": 2018
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-88-simon-mcgrath.png",
+      "sourceUrl": "https://www.gla.ac.uk/media/Media_830112_smxx.png",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Glasgow — Professor Simon McGrath",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 89,
@@ -4298,7 +4353,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Simon McGrath (ID 87).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-89-simon-mcgrath.png",
     "profileType": null,
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Simon McGrath (ID 87).",
@@ -4328,7 +4383,18 @@
         "url": "https://scholar.google.com/scholar?q=Eunsang+Cho+Introduction+Korea+Vocational+Qualification+System+KRIVET+2016",
         "ano": 2016
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-89-simon-mcgrath.png",
+      "sourceUrl": "https://www.gla.ac.uk/media/Media_830112_smxx.png",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Glasgow — Professor Simon McGrath",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 90,
@@ -4339,7 +4405,7 @@
     "citacoes": "~46.000** ",
     "pesquisa": "Sociólogo e pesquisador sênior do IETS e membro da Academia Brasileira de Ciências, é referência em análise baseada em dados sobre educação e políticas públicas no Brasil. Sua pesquisa investiga a eficácia e diversificação do ensino médio e técnico brasileiro, utilizando grandes bases de dados para avaliar resultados educacionais e laborais. Publicou extensamente sobre desigualdade educacional, ensino superior, ciência e tecnologia no Brasil e na América Latina. Seus estudos demonstram como o sistema educacional brasileiro reproduz desigualdades e como políticas de educação profissional podem contribuir para a mobilidade social. Contribuiu para debates sobre reforma do ensino médio e sobre a articulação entre educação técnica e desenvolvimento econômico.",
     "scholar": "https://scholar.google.com/citations?user=JrpilR0WTPcC",
-    "foto": null,
+    "foto": "/fotos/researcher-90-simon-schwartzman.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Sociólogo e pesquisador sênior do IETS e membro da Academia Brasileira de Ciências, é referência em análise baseada em dados sobre educação e políticas públicas no Brasil.",
@@ -4369,7 +4435,18 @@
         "url": "https://link.springer.com/chapter/10.1007/978-3-642-60313-6_16",
         "ano": 2002
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-90-simon-schwartzman.jpg",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q7519743",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata — Simon Schwartzman",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 91,
