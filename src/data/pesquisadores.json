@@ -755,7 +755,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Christopher Winch (ID 15).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-16-christopher-winch.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Christopher Winch (ID 15).",
@@ -785,7 +785,18 @@
         "url": "https://journals.sagepub.com/doi/10.2304/eerj.2012.11.3.369",
         "ano": 2012
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-16-christopher-winch.jpg",
+      "sourceUrl": "https://www.bera.ac.uk/person/christopher-winch",
+      "sourceType": "institutional",
+      "license": "institutional-public",
+      "attribution": "christopher-winch — fonte institucional",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 17,
@@ -1108,7 +1119,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Elly de Bruijn (ID 22).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-23-elly-de-bruijn.jpg",
     "profileType": null,
     "genero": "F",
     "miniBio": "Entrada duplicada — ver Elly de Bruijn (ID 22).",
@@ -1138,7 +1149,18 @@
         "url": "https://scholar.google.com/scholar?q=Erica+Smith+Training+Package+qualifications+skills+occupations+empirical+investigation",
         "ano": 2015
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-23-elly-de-bruijn.jpg",
+      "sourceUrl": "https://research.ou.nl/en/persons/elly-de-bruijn",
+      "sourceType": "institutional",
+      "license": "institutional-public",
+      "attribution": "elly-de-bruijn — fonte institucional",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 24,
@@ -3611,7 +3633,7 @@
     "citacoes": "~17.500 ",
     "pesquisa": "Professor do MIT Sloan School of Management, é um dos economistas do trabalho mais influentes dos Estados Unidos. Sua pesquisa investiga mercados de trabalho internos, sistemas de alto desempenho no trabalho ('High Performance Work Systems') e as falhas do mercado de treinamento que levam ao subinvestimento em qualificação de trabalhadores. Publicou obras seminais sobre precarização do trabalho, desigualdade salarial e a erosão de arranjos institucionais que sustentavam emprego estável e progressão de carreira. Seus livros como 'Gathering Power' e 'Good Jobs America' propõem reformas práticas para melhorar a qualidade dos empregos e o acesso à formação profissional. Suas análises sobre a relação entre organização do trabalho, treinamento e produtividade são referência para políticas de competências nos EUA.",
     "scholar": "https://scholar.google.com/citations?user=m9iPVYgAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-76-paul-osterman.png",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor do MIT Sloan School of Management, é um dos economistas do trabalho mais influentes dos Estados Unidos.",
@@ -3641,7 +3663,18 @@
         "url": "https://www.sciencedirect.com/science/article/pii/S0738059323001293",
         "ano": 2023
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-76-paul-osterman.png",
+      "sourceUrl": "https://mitsloan.mit.edu/sites/default/files/profile-images/2026/02/27/profile-image-41350.png",
+      "sourceType": "MIT Sloan faculty profile",
+      "license": "institutional-public",
+      "attribution": "MIT Sloan School of Management",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 99,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 77,
