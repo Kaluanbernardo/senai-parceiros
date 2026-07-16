@@ -2650,7 +2650,7 @@
     "citacoes": "~8.900 ",
     "pesquisa": "Ex-Ministro da Educação Nacional da Turquia e acadêmico, é o arquiteto das reformas de VET no país sob a Visão Educacional 2023. Graduado em Engenharia Eletrônica pelo ITU e doutor em Engenharia pela Universidade Técnica de Karadeniz, liderou transformações estruturais no ensino vocacional turco. Implementou o 'Projeto 1.000 Escolas em VET', que alcançou 25% das escolas vocacionais do país, fortalecendo cooperação com stakeholders, desenvolvimento pedagógico de professores, diversificação de programas e integração com a indústria. Publicou pesquisas sobre o futuro da educação técnica na Turquia e sobre estratégias para melhorar a percepção social e a qualidade do VET. Suas reformas incluíram regulamentações que ampliaram a remuneração de estágios e o apoio estatal à formação profissional.",
     "scholar": "https://scholar.google.com/citations?user=LNSvy6MAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-59-mahmut-ozer.png",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Ex-Ministro da Educação Nacional da Turquia e acadêmico, é o arquiteto das reformas de VET no país sob a Visão Educacional 2023.",
@@ -2680,7 +2680,18 @@
         "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2020.1847566",
         "ano": 2021
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-59-mahmut-ozer.png",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q19611864",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Mahmut Özer (cropped).png",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 85,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 60,
