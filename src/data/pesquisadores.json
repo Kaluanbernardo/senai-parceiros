@@ -2736,7 +2736,7 @@
     "citacoes": "3.000+",
     "pesquisa": "Entrada duplicada — ver Lorna Unwin (ID 55).",
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-56-lorna-unwin.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Entrada duplicada — ver Lorna Unwin (ID 55).",
@@ -2766,7 +2766,18 @@
         "url": "https://link.springer.com/chapter/10.1007/978-3-658-29924-8_2",
         "ano": 2020
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-56-lorna-unwin.jpg",
+      "sourceUrl": "https://bera.ac.uk/profile/lorna-unwin",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "BERA profile � Lorna Unwin",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 100,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 57,
@@ -3376,7 +3387,7 @@
     "citacoes": "~1.600 ",
     "pesquisa": "Professor da Universidade de Bremen e editor-chefe do International Journal of Research in Vocational Education and Training (IJRVET), é especialista em transferência e internacionalização de modelos de VET. Sua pesquisa investiga como projetos de cooperação internacional em educação profissional são geridos e quais condições determinam sua eficácia. Publicou sobre gestão de projetos de VET internacional, sobre os desafios de adaptar modelos de formação a diferentes contextos culturais e institucionais, e sobre o papel de organismos internacionais na difusão de boas práticas. Como editor do IJRVET, contribui significativamente para a consolidação do campo de pesquisa em VET como disciplina acadêmica internacional.",
     "scholar": "https://scholar.google.com/citations?user=fKPERGcAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-70-michael-gessler.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Universidade de Bremen e editor-chefe do International Journal of Research in Vocational Education and Training (IJRVET), é especialista em transferência e internacionalização de modelos de VET.",
@@ -3406,7 +3417,18 @@
         "url": "https://scholar.google.com/scholar?q=Silyte+Niavas+quality+management+VET+Lithuania",
         "ano": 2017
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-70-michael-gessler.jpg",
+      "sourceUrl": "https://www.itb.uni-bremen.de/ccm/profiles/gessler/index.de",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Universität Bremen ITB — Prof. Dr. Michael Gessler",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 100,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 71,
