@@ -1299,7 +1299,7 @@
     "citacoes": "N/A (Influente)",
     "pesquisa": "Professor emérito da Universidade de Bremen, é o criador do modelo COMET para medição de competência profissional em larga escala. Sua pesquisa revolucionou o campo da avaliação em VET ao desenvolver instrumentos que medem a capacidade de resolver tarefas profissionais reais, indo além de testes de conhecimento teórico. O modelo COMET foi implementado em estudos comparativos internacionais envolvendo dezenas de milhares de aprendizes em diversos países. Fundou o Instituto de Técnica e Educação (ITB) em Bremen e contribuiu para o desenvolvimento de currículos baseados em processos de trabalho ('Arbeitsprozesswissen'). Suas publicações sobre o conceito de 'Beruf' (profissão/vocação) e sobre a relação entre organização do trabalho e formação profissional são referência na pesquisa alemã e internacional sobre VET.",
     "scholar": "https://scholar.google.com/citations?user=jD5wj4oAAAAJ",
-    "foto": "https://ui-avatars.com/api/?name=Felix+Rauner&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-29-felix-rauner.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor emérito da Universidade de Bremen, é o criador do modelo COMET para medição de competência profissional em larga escala.",
@@ -1329,7 +1329,18 @@
         "url": "https://scholar.google.com/scholar?q=Bünning+Models+TVET+Teacher+Education+Germany+Growing+Demands",
         "ano": 2022
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-29-felix-rauner.jpg",
+      "sourceUrl": "https://www.itb.uni-bremen.de/ccm/main/archiv/mitteilungen/2021/rauner.de",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Institut Technik und Bildung, Universität Bremen: Felix Rauner",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 30,
@@ -1422,7 +1433,7 @@
     "citacoes": "N/A (Liderança)",
     "pesquisa": "Presidente do BIBB (Instituto Federal de Educação e Formação Profissional da Alemanha), é o principal gestor estratégico do sistema dual alemão. Sob sua liderança, o BIBB tem conduzido a modernização de perfis ocupacionais para atender às demandas da digitalização, sustentabilidade e Indústria 4.0. Sua pesquisa e gestão focam na atualização contínua dos regulamentos de formação (Ausbildungsordnungen), na integração de competências digitais nos currículos profissionais e no fortalecimento da atratividade do sistema dual. Coordena a cooperação internacional do BIBB com dezenas de países que buscam reformar seus sistemas de VET com base no modelo alemão. Suas contribuições incluem a promoção de equivalência entre educação vocacional e acadêmica.",
     "scholar": null,
-    "foto": "https://ui-avatars.com/api/?name=Friedrich+Hubert+Esser&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-32-friedrich-hubert-esser.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Presidente do BIBB (Instituto Federal de Educação e Formação Profissional da Alemanha), é o principal gestor estratégico do sistema dual alemão.",
@@ -1452,7 +1463,18 @@
         "url": "https://www.researchgate.net/publication/323187373_Development_of_Industry_40_-_Are_Skilled_Workers_ans_Semi-Engineers_the_Losers",
         "ano": 2018
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-32-friedrich-hubert-esser.jpg",
+      "sourceUrl": "https://www.bibb.de/de/464.php",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "BIBB: Friedrich Hubert Esser",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 33,
