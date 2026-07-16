@@ -4457,7 +4457,7 @@
     "citacoes": "N/A (Influente)",
     "pesquisa": "Economista sênior da OCDE e líder do projeto sobre Inovação em Educação, é referência global em criatividade e inovação no ensino. Sua pesquisa investiga como sistemas educacionais podem fomentar pensamento criativo, e como medir e avaliar a criatividade em contextos escolares e vocacionais. Coordenou o relatório 'Fostering Students' Creativity and Critical Thinking' da OCDE e desenvolveu instrumentos de avaliação de criatividade aplicáveis a diferentes níveis educacionais. Publicou sobre o papel da tecnologia na inovação pedagógica, sobre inteligência artificial na educação e sobre como políticas educacionais podem equilibrar padronização com espaço para inovação. Suas contribuições informam reformas educacionais em dezenas de países membros da OCDE.",
     "scholar": "https://www.researchgate.net/scientific-contributions/Stephan-Vincent-Lancrin-2099826335",
-    "foto": null,
+    "foto": "/fotos/researcher-91-stephan-vincent-lancrin.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Economista sênior da OCDE e líder do projeto sobre Inovação em Educação, é referência global em criatividade e inovação no ensino.",
@@ -4487,7 +4487,18 @@
         "url": "https://eprints.soton.ac.uk/167393/",
         "ano": 2010
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-91-stephan-vincent-lancrin.jpg",
+      "sourceUrl": "https://www.creativitycultureeducation.org/stephan-vincent-lancrin",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Creativity Culture Education profile",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 92,
