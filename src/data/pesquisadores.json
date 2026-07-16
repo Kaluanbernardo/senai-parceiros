@@ -4760,7 +4760,7 @@
     "citacoes": "~6.300 ",
     "pesquisa": "Professor da Beijing Normal University, é o principal pesquisador chinês em currículo de educação vocacional e cognição profissional. Sua pesquisa investiga como adaptar modelos de competência baseados em processos de trabalho — originalmente desenvolvidos na Alemanha — para o contexto educacional e industrial chinês. Publicou extensamente sobre design curricular para VET na China, sobre desenvolvimento cognitivo em aprendizagens profissionais e sobre a reforma do sistema de educação vocacional chinês. Coordenou projetos de cooperação sino-alemã que buscaram integrar a abordagem de 'Arbeitsprozesswissen' (conhecimento de processos de trabalho) nos currículos vocacionais chineses. Suas contribuições são centrais para entender como a China, com o maior sistema de VET do mundo, está modernizando sua formação profissional.",
     "scholar": "https://orcid.org/0009-0009-5406-9832",
-    "foto": null,
+    "foto": "/fotos/researcher-100-zhiqun-zhao.jpg",
     "profileType": "orcid",
     "genero": "M",
     "miniBio": "Professor da Beijing Normal University, é o principal pesquisador chinês em currículo de educação vocacional e cognição profissional.",
@@ -4790,6 +4790,17 @@
         "url": "https://www.emerald.com/insight/content/doi/10.1108/JARHE-06-2013-0025/full/html",
         "ano": 2014
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-100-zhiqun-zhao.jpg",
+      "sourceUrl": "https://tvet-online.asia/wp-content/uploads/2020/03/465_51ca1756aba8c.jpg",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "TVET@Asia / Beijing Normal University",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 98,
+      "reviewedAt": "2026-07-16"
+    }
   }
 ]
