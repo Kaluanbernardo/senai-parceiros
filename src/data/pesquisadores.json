@@ -1890,7 +1890,7 @@
     "citacoes": "800+ ​",
     "pesquisa": "Professor associado da School of Education na Universidade de Queensland, investiga políticas educacionais e suas manifestações em contextos institucionais. Com mais de 7.700 citações, sua pesquisa abrange educação comparada internacional em escolarização, ensino superior e educação vocacional. Atualmente examina como professores, educadores e gestores de políticas se engajam com dados em escolas da Austrália, Inglaterra, Singapura e Bangladesh. Publica sobre reforma curricular, comodificação da educação, política para estudantes internacionais e as tensões entre agendas neoliberais e práticas democráticas na educação. Suas análises sobre política educacional vocacional contribuem para entender como reformas sistêmicas afetam práticas pedagógicas no chão de escola.",
     "scholar": "https://scholar.google.com/citations?user=T8anQvgAAAAJ",
-    "foto": "https://ui-avatars.com/api/?name=Ian+Hardy&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-41-ian-hardy.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor associado da School of Education na Universidade de Queensland, investiga políticas educacionais e suas manifestações em contextos institucionais. Com mais de 7.",
@@ -1920,7 +1920,18 @@
         "url": "https://scholar.google.com/scholar?q=Jimena+Hernandez-Fernandez+informacion+politica+educativa+brechas+informativas+EMS",
         "ano": 2021
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-41-ian-hardy.jpg",
+      "sourceUrl": "https://education.uq.edu.au/profile/197/ian-hardy",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Queensland School of Education: Ian Hardy",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 42,
@@ -1931,7 +1942,7 @@
     "citacoes": "N/A (Regional)",
     "pesquisa": "Professor da HSE University (Moscou), é referência em análise dos sistemas educacionais pós-soviéticos e suas transformações. Sua pesquisa investiga como os países da ex-URSS reformaram seus sistemas de educação geral e profissional após a transição para economias de mercado. Analisa o papel da educação vocacional nas estratégias de desenvolvimento econômico da Rússia e da Ásia Central, examinando tensões entre modelos herdados do planejamento centralizado e demandas de mercado. Publicou sobre qualidade educacional, competências para o século XXI no contexto russo e reformas de governança educacional. Suas contribuições incluem análises comparativas entre sistemas educacionais pós-socialistas e modelos ocidentais de VET.",
     "scholar": "https://scholar.google.com/citations?user=6AmOSQUAAAAJ",
-    "foto": "https://ui-avatars.com/api/?name=Isak+Froumin&size=128&background=random&color=fff&bold=true&format=png",
+    "foto": "/fotos/researcher-42-isak-froumin.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da HSE University (Moscou), é referência em análise dos sistemas educacionais pós-soviéticos e suas transformações.",
@@ -1961,7 +1972,18 @@
         "url": "https://www.amazon.com/Education-Training-Development-East-Asia/dp/0415181267",
         "ano": 1999
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-42-isak-froumin.jpg",
+      "sourceUrl": "https://www.hse.ru/en/news/campus/421796119.html",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "HSE University: Isak Froumin",
+      "confidence": 95,
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 43,
