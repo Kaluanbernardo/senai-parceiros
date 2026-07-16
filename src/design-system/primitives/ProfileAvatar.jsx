@@ -46,6 +46,26 @@ export default function ProfileAvatar({ person = {}, size = 56, sx = {}, classNa
   const width = typeof size === 'object' ? size.width : size;
   const height = typeof size === 'object' ? size.height : size;
 
+  if (!source) {
+    return (
+      <Box
+        className={className}
+        role="img"
+        aria-label={`${name} - imagem indisponível`}
+        sx={{
+          width,
+          height,
+          flexShrink: 0,
+          bgcolor: 'grey.100',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1.5,
+          ...sx,
+        }}
+      />
+    );
+  }
+
   return (
     <Box className={className} sx={{ width, flexShrink: 0, textAlign: 'center' }}>
       <Avatar
@@ -64,9 +84,7 @@ export default function ProfileAvatar({ person = {}, size = 56, sx = {}, classNa
           '& img': { objectFit: 'cover' },
           ...sx,
         }}
-      >
-        {initials(name)}
-      </Avatar>
+      />
     </Box>
   );
 }
