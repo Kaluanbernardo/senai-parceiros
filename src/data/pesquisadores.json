@@ -785,7 +785,7 @@
     "citacoes": "~4.400 ",
     "pesquisa": "Pesquisadora do IDES/CONICET na Argentina, é a principal referência latino-americana em sociologia das transições juvenis e políticas de formação profissional. Sua pesquisa investiga como jovens de setores populares enfrentam trajetórias desiguais de inserção no mercado de trabalho, analisando o papel das políticas de VET na inclusão social. Coordenou extensos estudos sobre programas de formação para jovens vulneráveis na América Latina, avaliando sua eficácia em contextos de informalidade e precarização. Publicou sobre a articulação entre educação, trabalho e proteção social, e sobre as tensões entre empregabilidade individual e transformação estrutural do mercado de trabalho. Suas contribuições influenciaram políticas de juventude em diversos países da região.",
     "scholar": "https://scholar.google.com/citations?user=p-Z3Fk4AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-17-claudia-jacinto.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Pesquisadora do IDES/CONICET na Argentina, é a principal referência latino-americana em sociologia das transições juvenis e políticas de formação profissional.",
@@ -815,7 +815,18 @@
         "url": "https://www.academia.edu/33149110/INTERNATIONAL_OVERVIEW_OF_VOCATIONAL_EDUCATION_Challenges_and_Replies",
         "ano": 2016
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-17-claudia-jacinto.jpg",
+      "sourceUrl": "https://www.iaoed.org/index.php/fellows/item/72-claudia-jacinto",
+      "sourceType": "public-institutional",
+      "license": "public institutional profile",
+      "attribution": "International Academy of Education profile: Claudia Jacinto",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 18,
@@ -919,7 +930,7 @@
     "citacoes": "1.500+",
     "pesquisa": "Sociólogo da Universidade de Leicester, é pioneiro nos estudos sobre 'high skills societies' e sistemas de alto desempenho no trabalho. Com mais de 6.200 citações e 110 publicações, sua pesquisa conecta teoria e prática sobre como habilidades são desenvolvidas e utilizadas nas organizações. Co-autor de 'Supporting Workplace Learning for High Performance Working' (OIT), investigou como políticas de competências devem considerar não apenas a oferta, mas também a utilização de habilidades no nível organizacional. Participou do projeto ESRC 'Learning as Work' (2003-2008), estudando a relação entre estratégias empresariais, organização do trabalho e desenvolvimento de competências. Suas análises comparativas sobre modelos de skills em diferentes países influenciaram debates globais sobre política de competências.",
     "scholar": "https://www.researchgate.net/profile/David-Ashton-2",
-    "foto": null,
+    "foto": "/fotos/researcher-20-david-ashton.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Sociólogo da Universidade de Leicester, é pioneiro nos estudos sobre 'high skills societies' e sistemas de alto desempenho no trabalho. Com mais de 6.",
@@ -949,7 +960,18 @@
         "url": "https://www.tandfonline.com/doi/abs/10.1080/1363908990120308",
         "ano": 1999
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-20-david-ashton.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=David%20Ashton",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: David Ashton",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 21,
@@ -960,7 +982,7 @@
     "citacoes": "1.200+",
     "pesquisa": "Professor da Cardiff University no País de Gales, é especialista em identidade docente e culturas de aprendizagem em colleges de Further Education no Reino Unido. Sua pesquisa qualitativa investiga como professores de VET constroem suas identidades profissionais em contextos de reformas constantes e pressões por performatividade. Coordenou estudos etnográficos sobre culturas de sala de aula em FE colleges, revelando como dinâmicas sociais e institucionais afetam a experiência de aprendizagem de estudantes. Publicou sobre a relação entre política educacional, habitus institucional e práticas pedagógicas no setor vocacional. Suas contribuições iluminam as tensões entre discursos gerencialistas e a prática cotidiana de educadores de VET na Inglaterra e Gales.",
     "scholar": "https://scholar.google.com/citations?user=GuJUyd8AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-21-david-james.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Cardiff University no País de Gales, é especialista em identidade docente e culturas de aprendizagem em colleges de Further Education no Reino Unido.",
@@ -990,7 +1012,18 @@
         "url": "https://link.springer.com/article/10.1007/s12186-016-9150-y",
         "ano": 2016
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-21-david-james.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=David%20James",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: David James",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 22,
@@ -1001,7 +1034,7 @@
     "citacoes": "2.500+",
     "pesquisa": "Professora e pesquisadora líder na HU University of Applied Sciences Utrecht, é referência em pedagogia vocacional nos Países Baixos. Sua pesquisa foca em aprendizagem autêntica, desenvolvimento de identidade profissional de estudantes e formação de professores de VET de segunda carreira. Lidera o grupo de pesquisa em Educação Vocacional da HU, investigando como ambientes de aprendizagem híbridos (escola-trabalho) podem fortalecer a construção de competências profissionais. Publicou extensamente sobre processos de indução de novos professores de VET vindos da indústria e sobre pedagogias que integram teoria e prática profissional. Suas contribuições informam reformas curriculares e políticas de formação docente para VET nos Países Baixos e Europa.",
     "scholar": "https://scholar.google.com/citations?user=BNgrPlMAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-22-elly-de-bruijn.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora e pesquisadora líder na HU University of Applied Sciences Utrecht, é referência em pedagogia vocacional nos Países Baixos.",
@@ -1031,7 +1064,18 @@
         "url": "https://www.researchgate.net/publication/227894591_Reforming_the_training_system_in_France",
         "ano": 2001
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-22-elly-de-bruijn.jpg",
+      "sourceUrl": "https://research.ou.nl/en/persons/elly-de-bruijn",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Open Universiteit research portal: Elly de Bruijn",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 23,
@@ -1083,7 +1127,7 @@
     "citacoes": "~2.800 ",
     "pesquisa": "Pesquisador do CEREQ/CNRS na França, é um dos principais teóricos dos 'regimes de formação' na tradição sociológica francesa. Desenvolveu a 'Abordagem Societal' (Escola de Aix), que concebe a educação vocacional como construção social e política, moldada por arranjos institucionais, relações industriais e tradições culturais específicas de cada país. Sua pesquisa compara como diferentes sociedades organizam a transição entre educação e trabalho através de 'convenções' distintas de formação. Publicou sobre regulação social dos mercados de trabalho, certificação profissional e as tensões entre lógicas de mercado e solidariedade social em sistemas de VET. Suas análises influenciaram a pesquisa comparativa europeia sobre governança da formação profissional.",
     "scholar": "https://scholar.google.com/citations?user=hV_fBDMAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-24-eric-verdier.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Pesquisador do CEREQ/CNRS na França, é um dos principais teóricos dos 'regimes de formação' na tradição sociológica francesa.",
@@ -1113,7 +1157,18 @@
         "url": "https://scholar.google.com/scholar?q=Eunsang+Cho+National+Qualifications+Framework+TVET+Quality+Assurance+Asia+Pacific",
         "ano": 2015
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-24-eric-verdier.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Eric%20Verdier",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Eric Verdier",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 25,
@@ -1124,7 +1179,7 @@
     "citacoes": "~5.100 ",
     "pesquisa": "Professora da Federation University Australia, é especialista na força de trabalho docente de educação vocacional e qualidade do ensino. Sua pesquisa investiga os desafios de recrutamento, retenção e qualificação pedagógica de professores de VET, que frequentemente vêm da indústria sem formação docente formal. Publicou extensamente sobre modelos de apprenticeship na Austrália, qualidade dos programas de formação e o papel dos empregadores na educação vocacional. Coordenou estudos sobre a experiência de aprendizes em diferentes setores e sobre como garantir qualidade em sistemas descentralizados de VET. Suas contribuições incluem análises sobre gênero e educação vocacional, e sobre a profissionalização da docência em VET.",
     "scholar": "https://scholar.google.com/citations?user=frFQOEsAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-25-erica-smith.jpeg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da Federation University Australia, é especialista na força de trabalho docente de educação vocacional e qualidade do ensino.",
@@ -1154,7 +1209,18 @@
         "url": "https://www.academia.edu/122285229/Whatever_Happened_to_Skill",
         "ano": 2017
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-25-erica-smith.jpeg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Erica%20Smith",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Erica Smith",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 26,
@@ -1674,13 +1740,13 @@
     ],
     "image": {
       "path": "/fotos/researcher-36-geraint-johnes.jpg",
-      "sourceUrl": "https://research.lancaster-university.uk/en/persons/geraint-johnes/",
-      "sourceType": "institutional",
-      "license": "unknown",
-      "attribution": "Lancaster University Research Directory: Geraint Johnes",
-      "confidence": 95,
+      "sourceUrl": "https://www.lancaster.ac.uk/lums/our-departments/economics/phd-supervisor/geraint-johnes",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Lancaster University profile: Geraint Johnes",
       "retrievedAt": "2026-07-16",
       "status": "approved",
+      "confidence": 95,
       "reviewedAt": "2026-07-16"
     }
   },
@@ -1872,12 +1938,12 @@
     "image": {
       "path": "/fotos/researcher-40-hubert-ertl.jpg",
       "sourceUrl": "https://www.education.ox.ac.uk/person/hubert-ertl/",
-      "sourceType": "institutional",
-      "license": "unknown",
-      "attribution": "University of Oxford Department of Education: Hubert Ertl",
-      "confidence": 95,
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "University of Oxford profile: Hubert Ertl",
       "retrievedAt": "2026-07-16",
       "status": "approved",
+      "confidence": 95,
       "reviewedAt": "2026-07-16"
     }
   },
@@ -1923,13 +1989,13 @@
     ],
     "image": {
       "path": "/fotos/researcher-41-ian-hardy.jpg",
-      "sourceUrl": "https://education.uq.edu.au/profile/197/ian-hardy",
-      "sourceType": "institutional",
-      "license": "unknown",
-      "attribution": "University of Queensland School of Education: Ian Hardy",
-      "confidence": 95,
+      "sourceUrl": "https://about.uq.edu.au/experts/990",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "University of Queensland expert profile: Ian Hardy",
       "retrievedAt": "2026-07-16",
       "status": "approved",
+      "confidence": 95,
       "reviewedAt": "2026-07-16"
     }
   },
@@ -2158,7 +2224,7 @@
     "citacoes": "2.000+",
     "pesquisa": "Professor da Vrije Universiteit Amsterdam, é referência internacional em psicologia de carreiras e transições escola-trabalho. Sua pesquisa foca no conceito de 'career shocks' — eventos inesperados que transformam trajetórias profissionais — e nas competências de empregabilidade necessárias para navegar mercados de trabalho voláteis. Investiga como jovens em programas de VET desenvolvem recursos de carreira (adaptabilidade, identidade profissional, capital social e humano) durante e após a formação. Publicou extensamente sobre comportamento sustentável de carreira, autogestão profissional e a interface entre trabalho e bem-estar. Suas contribuições integram a psicologia organizacional com questões específicas da educação vocacional e da empregabilidade juvenil.",
     "scholar": "https://scholar.google.com/citations?user=MWkMNAUAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-47-jos-akkermans.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Vrije Universiteit Amsterdam, é referência internacional em psicologia de carreiras e transições escola-trabalho.",
@@ -2188,7 +2254,18 @@
         "url": "https://research.upjohn.org/externalpapers/23/",
         "ano": 2005
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-47-jos-akkermans.jpg",
+      "sourceUrl": "https://research.vu.nl/en/persons/jos-akkermans/",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Vrije Universiteit Amsterdam research profile: Jos Akkermans",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 48,
@@ -2199,7 +2276,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Jos Akkermans (ID 47).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-48-jos-akkermans.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Jos Akkermans (ID 47).",
@@ -2229,7 +2306,18 @@
         "url": "https://www.emerald.com/insight/content/doi/10.1108/et-09-2023-0363/full/html",
         "ano": 2024
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-48-jos-akkermans.jpg",
+      "sourceUrl": "https://www.umio.nl/people/jos-akkermans/",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Maastricht University UMIO profile: Jos Akkermans",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 49,
@@ -2322,7 +2410,7 @@
     "citacoes": "~8.300 ",
     "pesquisa": "Professora emérita do UCL Institute of Education, é criadora do conceito de 'bounded agency' (agência limitada) aplicado a transições de vida e trabalho. Sua pesquisa investiga como fatores estruturais e biográficos simultaneamente habilitam e restringem a capacidade de indivíduos de agir sobre suas trajetórias educacionais e profissionais. Publicou extensamente sobre aprendizagem ao longo da vida, competências tácitas no local de trabalho e a relação entre experiências de vida e oportunidades de aprendizagem. Coordenou projetos europeus sobre reconhecimento de aprendizagens informais e sobre como adultos com baixa qualificação podem ser apoiados em processos de requalificação. Suas contribuições teóricas sobre agência e estrutura são amplamente utilizadas em pesquisa sobre VET e transições de carreira.",
     "scholar": "https://scholar.google.com/citations?user=WB0gmGwAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-51-karen-evans.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora emérita do UCL Institute of Education, é criadora do conceito de 'bounded agency' (agência limitada) aplicado a transições de vida e trabalho.",
@@ -2352,7 +2440,18 @@
         "url": "https://tvet-online.asia/11/triyono-etal-tvet11/",
         "ano": 2018
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-51-karen-evans.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Karen%20Evans",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Karen Evans",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 52,
@@ -2363,7 +2462,7 @@
     "citacoes": "N/A (Técnico)",
     "pesquisa": "Pesquisador sênior do W.E. Upjohn Institute for Employment Research nos Estados Unidos, é referência em avaliação de impacto líquido de programas de força de trabalho e treinamento. Sua pesquisa desenvolveu métodos rigorosos — considerados 'padrão ouro' no campo — para medir o retorno sobre investimento de programas de educação e treinamento vocacional. Publicou sobre custo-benefício de programas de community colleges, eficácia de programas de workforce development e métodos quase-experimentais para avaliação de políticas de emprego. Seus estudos demonstram que programas vocacionais bem desenhados geram retornos positivos significativos tanto para participantes quanto para o Estado. Suas metodologias influenciaram a cultura de avaliação de políticas de VET nos EUA e internacionalmente.",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-52-kevin-hollenbeck.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Pesquisador sênior do W. E.",
@@ -2393,7 +2492,18 @@
         "url": "https://www.emerald.com/insight/content/doi/10.1108/jwl-02-2023-0025/full/html",
         "ano": 2023
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-52-kevin-hollenbeck.jpg",
+      "sourceUrl": "https://www.upjohn.org/about/upjohn-team/staff/kevin-m-hollenbeck",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "W.E. Upjohn Institute profile: Kevin Hollenbeck",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 53,
@@ -2486,7 +2596,7 @@
     "citacoes": "~11.700 ",
     "pesquisa": "Professora emérita do UCL Institute of Education, é co-criadora do modelo 'Expansivo-Restritivo' para avaliar a qualidade de programas de aprendizagem profissional (apprenticeships). Junto com Alison Fuller, desenvolveu um framework que distingue ambientes de aprendizagem que expandem oportunidades (acesso a conhecimento, participação em comunidades de prática, progressão) daqueles que as restringem. Sua pesquisa investiga as condições organizacionais que promovem aprendizagem de qualidade no local de trabalho, com ênfase em setores como saúde, manufatura e serviços. Publicou extensamente sobre a história e evolução do sistema de apprenticeship britânico e sobre como redesenhá-lo para o século XXI. Suas contribuições fundamentam políticas de qualidade em programas de aprendizagem profissional internacionalmente.",
     "scholar": "https://scholar.google.com/citations?user=2jtU0scAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-55-lorna-unwin.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora emérita do UCL Institute of Education, é co-criadora do modelo 'Expansivo-Restritivo' para avaliar a qualidade de programas de aprendizagem profissional (apprenticeships).",
@@ -2516,7 +2626,18 @@
         "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2020.1829009",
         "ano": 2021
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-55-lorna-unwin.jpg",
+      "sourceUrl": "https://www.bera.ac.uk/person/lorna-unwin",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "British Educational Research Association profile: Lorna Unwin",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 56,
@@ -2609,7 +2730,7 @@
     "citacoes": "500+ ​",
     "pesquisa": "Cientista social interdisciplinar com doutorado pela Universidade de Glasgow sobre organizações de aprendizagem e compartilhamento de conhecimento tácito. Atua como pesquisador na HAN University of Applied Sciences e na Open Universiteit nos Países Baixos. Sua pesquisa investiga como profissionais compartilham conhecimento tácito em contextos educacionais e organizacionais, com foco em colaboração entre colegas, aprendizagem em equipe e desenvolvimento profissional. Trabalhou em educação vocacional e superior como professor, coordenador e educador, investigando contextos e práticas de aprendizagem profissional. Suas publicações abordam questões interpessoais no compartilhamento de conhecimento e o papel da discrição profissional em comunidades de aprendizagem.",
     "scholar": "https://scholar.google.com/citations?user=w0MPlXQAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-58-maarten-van-houten.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Cientista social interdisciplinar com doutorado pela Universidade de Glasgow sobre organizações de aprendizagem e compartilhamento de conhecimento tácito.",
@@ -2639,7 +2760,18 @@
         "url": "https://journals.sagepub.com/doi/abs/10.1177/13623613231208579",
         "ano": 2024
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-58-maarten-van-houten.jpg",
+      "sourceUrl": "https://research.ou.nl/en/persons/maarten-matheus-van-houten/",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Open Universiteit research portal: Maarten van Houten",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 59,
@@ -2702,7 +2834,7 @@
     "citacoes": "~2.600 ",
     "pesquisa": "Diretora do Centro UNEVOC (Hong Kong) da UNESCO e professora associada na Education University of Hong Kong, é pioneira global em competências verdes (green skills) para a educação vocacional. Com doutorados na Rússia e na Austrália, sua pesquisa revelou que países da Ásia-Pacífico carecem das competências verdes necessárias para implementar economias de baixo carbono. Coordenou projetos do Banco Asiático de Desenvolvimento (2012-2014) mapeando práticas de green skills em TVET na Indonésia, Índia, Sri Lanka e Vietnã, e liderou projeto da UNESCO (2014-2018) sobre condições para desenvolvimento de competências verdes em sete países. Desenvolveu frameworks sistemáticos para integrar reconhecimento, validação e acreditação de competências verdes em políticas e currículos de TVET.",
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-60-margarita-pavlova.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Diretora do Centro UNEVOC (Hong Kong) da UNESCO e professora associada na Education University of Hong Kong, é pioneira global em competências verdes (green skills) para a educação vocacional.",
@@ -2732,7 +2864,18 @@
         "url": "https://scholar.google.com/scholar?q=Gessler+scoping+review+boundary+learning+working+bibliometric+IJRVET+2021",
         "ano": 2021
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-60-margarita-pavlova.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Margarita%20Pavlova",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Margarita Pavlova",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 61,
@@ -2743,7 +2886,7 @@
     "citacoes": 2609,
     "pesquisa": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
     "scholar": "https://scholar.google.com/citations?user=YAr3MxoAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-61-margarita-pavlova.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
@@ -2773,7 +2916,18 @@
         "url": "https://www.tandfonline.com/doi/full/10.1080/13636820.2017.1392995",
         "ano": 2017
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-61-margarita-pavlova.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Margarita%20Pavlova",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Margarita Pavlova",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 62,
@@ -2784,7 +2938,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-62-margarita-pavlova.jpg",
     "profileType": null,
     "genero": "F",
     "miniBio": "Entrada duplicada — ver Margarita Pavlova (ID 60).",
@@ -2814,7 +2968,18 @@
         "url": "https://scholar.google.com/scholar?q=Morgan+Lewis+dual+concurrent+enrollment+postsecondary+CTE",
         "ano": 2007
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-62-margarita-pavlova.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Margarita%20Pavlova",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Margarita Pavlova",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 63,
@@ -3071,7 +3236,7 @@
     "citacoes": "~4.400 ",
     "pesquisa": "Professor da Universidade de Colônia, é um dos principais pesquisadores em VET comparada e transferência de modelos de formação profissional. Sua pesquisa investiga a viabilidade de exportar o sistema dual alemão para contextos não-europeus, demonstrando que transferências diretas raramente funcionam sem adaptações profundas às condições locais. Coordenou extensos estudos comparativos sobre sistemas de VET na Índia, China, Sudeste Asiático e América Latina. Publicou sobre os fatores institucionais, culturais e econômicos que determinam o sucesso ou fracasso de reformas de VET inspiradas em modelos estrangeiros. Suas contribuições incluem frameworks analíticos para estudos de transferência de políticas educacionais e análises sobre cooperação internacional em VET.",
     "scholar": "https://scholar.google.com/citations?user=qPaXkB0AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-69-matthias-pilz.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da Universidade de Colônia, é um dos principais pesquisadores em VET comparada e transferência de modelos de formação profissional.",
@@ -3101,7 +3266,18 @@
         "url": "https://www.tandfonline.com/doi/abs/10.1080/13636820.2013.783612",
         "ano": 2013
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-69-matthias-pilz.jpg",
+      "sourceUrl": "https://wiso.uni-koeln.de/en/research/professors/prof-dr-matthias-pilz",
+      "sourceType": "University of Cologne",
+      "license": "Institutional page; use subject to source terms",
+      "attribution": "Universit?t zu K?ln / Lisa Beller",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 70,
@@ -3235,7 +3411,7 @@
     "citacoes": "2.000+",
     "pesquisa": "Professor da Universidade de Stirling no Reino Unido, é especialista em competência organizacional e aprendizagem no local de trabalho em contextos de VET. Sua pesquisa integra filosofia prática com estudos empíricos sobre como organizações desenvolvem capacidade coletiva de resolver problemas complexos. Publicou sobre a natureza do conhecimento profissional, sobre como competências se distribuem entre indivíduos e equipes em ambientes de trabalho, e sobre as implicações dessas dinâmicas para o design de programas de formação. Seus estudos sobre 'competência organizacional' vão além da competência individual para examinar como times e organizações aprendem e se adaptam. Contribuiu para debates teóricos sobre a relação entre aprendizagem informal no trabalho e formação formal em VET.",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-73-nick-boreham.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Professor da Universidade de Stirling no Reino Unido, é especialista em competência organizacional e aprendizagem no local de trabalho em contextos de VET.",
@@ -3265,7 +3441,18 @@
         "url": "https://www.researchgate.net/publication/364051120_A_Green_Skills_Framework_for_TVET_Curricula",
         "ano": 2022
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-73-nick-boreham.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Nick%20Boreham",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Nick Boreham",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 74,
@@ -3440,7 +3627,7 @@
     "citacoes": "2.500+",
     "pesquisa": "Professor da Universidade de Zurique, é um dos maiores especialistas na história e evolução do sistema dual suíço-alemão de educação profissional. Sua pesquisa investiga as raízes históricas, filosóficas e culturais que fundamentam a tradição de formação profissional na Suíça e nos países de língua alemã. Publicou extensamente sobre como o conceito de 'Beruflichkeit' (vocacionalidade) molda a identidade profissional e as instituições de VET na região. Analisou a expansão e adaptação do modelo dual suíço ao longo dos séculos, incluindo seus desafios contemporâneos frente à digitalização e globalização. Suas contribuições históricas são fundamentais para entender por que o sistema dual funciona em certos contextos e as dificuldades de transferi-lo para outros.",
     "scholar": "https://www.researchgate.net/profile/Philipp-Gonon",
-    "foto": null,
+    "foto": "/fotos/researcher-78-philipp-gonon.jpg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Professor da Universidade de Zurique, é um dos maiores especialistas na história e evolução do sistema dual suíço-alemão de educação profissional.",
@@ -3470,7 +3657,18 @@
         "url": "https://scholar.google.com/scholar?q=Vincent-Lancrin+Cross-border+Tertiary+Education+Capacity+Development+OECD",
         "ano": 2007
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-78-philipp-gonon.jpg",
+      "sourceUrl": "https://www.wikidata.org/w/w/index.php?search=Philipp%20Gonon",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Wikimedia Commons via Wikidata: Philipp Gonon",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 80,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 79,
