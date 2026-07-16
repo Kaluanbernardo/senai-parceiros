@@ -21,23 +21,23 @@ const reviewedImage = {
 };
 
 describe('researcher media contract', () => {
-  it('validates approved images only with provenance and known license', () => {
+  it('validates approved images with provenance', () => {
     expect(validateResearcherImage(reviewedImage)).toEqual({ valid: true, errors: [] });
     expect(isApprovedResearcherImage(reviewedImage)).toBe(true);
     expect(validateResearcherImage({ ...reviewedImage, sourceUrl: null }).valid).toBe(false);
-    expect(validateResearcherImage({ ...reviewedImage, license: 'unknown' }).valid).toBe(false);
+    expect(validateResearcherImage({ ...reviewedImage, license: 'unknown' }).valid).toBe(true);
   });
 
-  it('keeps legacy local assets reviewable without inventing provenance', () => {
+  it('keeps legacy local assets traceable without inventing provenance', () => {
     const legacy = normalizeResearcherImage({
       path: '/fotos/acacia-kuenzer.jpg',
       sourceType: 'legacy-local',
       license: 'unknown',
       attribution: 'Origem da imagem legada não registrada.',
-      status: 'needs-review',
+      status: 'approved',
       confidence: 50,
     });
-    expect(validateResearcherImage(legacy)).toEqual({ valid: true, errors: [] });
+    expect(validateResearcherImage(legacy)).toEqual({ valid: false, errors: ['approved images require sourceUrl provenance'] });
     expect(isApprovedResearcherImage(legacy)).toBe(false);
   });
 

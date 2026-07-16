@@ -1,7 +1,6 @@
 import React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 
 function nameToSlug(name = '') {
   return String(name)
@@ -36,7 +35,7 @@ export function getLocalProfileSources(person = {}) {
   ].filter(Boolean))];
 }
 
-export default function ProfileAvatar({ person = {}, size = 56, showStatus = false, sx = {}, className }) {
+export default function ProfileAvatar({ person = {}, size = 56, sx = {}, className }) {
   const name = person.nome || person.name || 'Perfil sem nome';
   const [sourceIndex, setSourceIndex] = React.useState(0);
   const sources = React.useMemo(() => getLocalProfileSources(person), [person]);
@@ -44,11 +43,6 @@ export default function ProfileAvatar({ person = {}, size = 56, showStatus = fal
   React.useEffect(() => { setSourceIndex(0); }, [person]);
 
   const source = sources[sourceIndex];
-  const isLocal = Boolean(source);
-  const imageStatus = person.image?.status;
-  const status = isLocal
-    ? (imageStatus === 'approved' ? 'Foto local - aprovada' : 'Foto local - em revisao')
-    : 'Fallback - iniciais';
   const width = typeof size === 'object' ? size.width : size;
   const height = typeof size === 'object' ? size.height : size;
 
@@ -56,7 +50,7 @@ export default function ProfileAvatar({ person = {}, size = 56, showStatus = fal
     <Box className={className} sx={{ width, flexShrink: 0, textAlign: 'center' }}>
       <Avatar
         src={source}
-        alt={`${name} - ${status}`}
+        alt={name}
         onError={() => setSourceIndex((current) => current + 1)}
         sx={{
           width,
@@ -73,7 +67,6 @@ export default function ProfileAvatar({ person = {}, size = 56, showStatus = fal
       >
         {initials(name)}
       </Avatar>
-      {showStatus && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: .35, lineHeight: 1.1 }}>{status}</Typography>}
     </Box>
   );
 }

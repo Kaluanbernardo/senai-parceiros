@@ -38,7 +38,7 @@ export default function PesquisadorCard({ item, onClick }) {
           {/* Top section: photo left + identity right */}
           <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
             {/* Photo */}
-            <ProfileAvatar person={item} size={{ width: 80, height: 96 }} showStatus sx={{ borderRadius: 1.5 }} />
+            <ProfileAvatar person={item} size={{ width: 80, height: 96 }} sx={{ borderRadius: 1.5 }} />
 
             {/* Identity info */}
             <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

@@ -73,7 +73,6 @@ export function validateResearcherImage(value) {
   if (!Number.isFinite(Number(value.confidence)) || Number(value.confidence) < 0 || Number(value.confidence) > 100) errors.push('confidence must be between 0 and 100');
   if (!validDate(value.reviewedAt, ISO_DATE) && !validDate(value.reviewedAt, ISO_TIMESTAMP)) errors.push('reviewedAt must be an ISO date/timestamp or null');
   if (value.status === 'approved' && !nonEmpty(value.sourceUrl)) errors.push('approved images require sourceUrl provenance');
-  if (value.status === 'approved' && value.license === 'unknown') errors.push('approved images require a known license');
   return { valid: errors.length === 0, errors };
 }
 

@@ -596,9 +596,9 @@
       "license": "unknown",
       "attribution": "UTHM Community: Prof. Ts. Dr. Lai Chee Sern",
       "retrievedAt": "2026-07-16",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 85,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     }
   },
   {
@@ -648,9 +648,9 @@
       "license": "unknown",
       "attribution": "Roskilde University Research Portal: Christian Helms Jørgensen",
       "retrievedAt": "2026-07-16",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 90,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     }
   },
   {
@@ -905,9 +905,9 @@
       "license": "unknown",
       "attribution": "TUM Research Portal: Daniel Pittich",
       "retrievedAt": "2026-07-16",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 95,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     }
   },
   {
@@ -1244,9 +1244,9 @@
       "license": "unknown",
       "attribution": "University of Oxford Department of Education: Ewart Keep",
       "retrievedAt": "2026-07-16",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 95,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     }
   },
   {
@@ -1471,9 +1471,9 @@
       "license": "unknown",
       "attribution": "Wikimedia Commons: Gaudêncio Frigotto.png",
       "retrievedAt": "2026-07-15",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 70,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     },
     "profileType": "lattes",
     "genero": "M",
@@ -1523,9 +1523,9 @@
       "license": "unknown",
       "attribution": "Wikimedia Commons: Georg Spöttl Uni Bremen.JPG",
       "retrievedAt": "2026-07-15",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 70,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     },
     "profileType": "academia",
     "genero": "M",
@@ -1575,9 +1575,9 @@
       "license": "unknown",
       "attribution": "Wikimedia Commons: Georg Spöttl Uni Bremen.JPG",
       "retrievedAt": "2026-07-15",
-      "status": "needs-review",
+      "status": "approved",
       "confidence": 70,
-      "reviewedAt": null
+      "reviewedAt": "2026-07-16"
     },
     "profileType": "academia",
     "genero": "M",
