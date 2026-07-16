@@ -3899,7 +3899,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Piety Runhaar (ID 80).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-79-piety-runhaar.jpg",
     "profileType": null,
     "genero": "F",
     "miniBio": "Entrada duplicada — ver Piety Runhaar (ID 80).",
@@ -3929,7 +3929,18 @@
         "url": "https://www.researchgate.net/publication/309162411_Labour_market_outcomes_of_national_qualifications_frameworks_in_six_countries",
         "ano": 2016
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-79-piety-runhaar.jpg",
+      "sourceUrl": "https://loop.frontiersin.org/people/2427155/overview",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Frontiers Loop profile",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 92,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 80,
@@ -3940,7 +3951,7 @@
     "citacoes": "1.500+",
     "pesquisa": "Professora da Wageningen University nos Países Baixos, é especialista em desenvolvimento profissional de professores e gestão de recursos humanos (HRM) em colleges de educação vocacional. Sua pesquisa investiga como liderança transformacional, autoeficácia docente e práticas de HRM afetam a qualidade do ensino em instituições de VET holandesas. Publicou sobre como gestores de escolas vocacionais podem criar condições que estimulem o desenvolvimento profissional contínuo dos professores, incluindo práticas de feedback, reflexão coletiva e aprendizagem em equipe. Seus estudos sobre motivação e engajamento de educadores de VET contribuem para entender como políticas de gestão de pessoas impactam a qualidade da formação profissional.",
     "scholar": "https://scholar.google.com/citations?user=1gCIUBcAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-80-piety-runhaar.jpg",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da Wageningen University nos Países Baixos, é especialista em desenvolvimento profissional de professores e gestão de recursos humanos (HRM) em colleges de educação vocacional.",
@@ -3970,7 +3981,18 @@
         "url": "https://link.springer.com/book/10.1007/978-94-007-1954-5",
         "ano": 2011
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-80-piety-runhaar.jpg",
+      "sourceUrl": "https://loop.frontiersin.org/people/2427155/overview",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "Frontiers Loop profile",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 92,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 81,
