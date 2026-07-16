@@ -1833,7 +1833,7 @@
     "citacoes": "-",
     "pesquisa": "Entrada duplicada — ver Harmen Schaap (ID 37).",
     "scholar": null,
-    "foto": null,
+    "foto": "/fotos/researcher-38-harmen-schaap.jpg",
     "profileType": null,
     "genero": "M",
     "miniBio": "Entrada duplicada — ver Harmen Schaap (ID 37).",
@@ -1863,7 +1863,18 @@
         "url": "https://foresight-journal.hse.ru/article/view/19246",
         "ano": 2019
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-38-harmen-schaap.jpg",
+      "sourceUrl": "https://www.ru.nl/personen/schaap-h",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Radboud Universiteit",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 39,
@@ -2164,7 +2175,7 @@
     "citacoes": "N/A (Emergente)",
     "pesquisa": "Pesquisadora da Universidad Iberoamericana no México, é especialista na implementação do modelo de formação dual mexicano e seu impacto na empregabilidade juvenil. Sua pesquisa avalia como a adaptação do modelo dual alemão ao contexto mexicano enfrenta desafios culturais, institucionais e econômicos específicos da América Latina. Investiga a articulação entre universidades, empresas e governo na criação de programas de aprendizagem profissional efetivos para jovens. Publicou sobre transições escola-trabalho, empregabilidade de graduados e a relação entre educação superior tecnológica e demandas do mercado de trabalho mexicano. Suas contribuições informam debates sobre a viabilidade de modelos de apprenticeship em países de renda média.",
     "scholar": "https://scholar.google.com/citations?user=rJKzif8AAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-45-jimena-hernandez-fernandez.png",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Pesquisadora da Universidad Iberoamericana no México, é especialista na implementação do modelo de formação dual mexicano e seu impacto na empregabilidade juvenil.",
@@ -2194,7 +2205,18 @@
         "url": "https://www.academia.edu/55827948/JOVACET_Volume_1_Issue_1",
         "ano": 2018
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-45-jimena-hernandez-fernandez.png",
+      "sourceUrl": "https://departamentoeducacion.ibero.mx/dra-jimena-hernandez-fernandez/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "Universidad Iberoamericana",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 46,
@@ -2577,7 +2599,7 @@
     "citacoes": "~5.900 ",
     "pesquisa": "Professora da Universidade de Toronto, é uma das vozes mais influentes na defesa do acesso ao 'conhecimento poderoso' na educação vocacional. Fundamentada no realismo social de Basil Bernstein e Karl Maton, argumenta que currículos de VET devem incluir conhecimento teórico abstrato — não apenas habilidades práticas — para promover justiça social e mobilidade dos estudantes. Sua pesquisa demonstra que a exclusão de conhecimento disciplinar dos currículos vocacionais limita as possibilidades futuras dos alunos e reforça desigualdades. Publicou o livro 'Why Knowledge Matters in Curriculum', referência no debate sobre currículo vocacional. Suas contribuições influenciaram debates sobre qualificações, currículo e equidade em VET na Austrália, Canadá, África do Sul e Europa.",
     "scholar": "https://scholar.google.com/citations?user=oV7sDPkAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-54-leesa-wheelahan.png",
     "profileType": "scholar",
     "genero": "F",
     "miniBio": "Professora da Universidade de Toronto, é uma das vozes mais influentes na defesa do acesso ao 'conhecimento poderoso' na educação vocacional.",
@@ -2607,7 +2629,18 @@
         "url": "https://link.springer.com/book/10.1007/978-981-19-2072-1",
         "ano": 2022
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-54-leesa-wheelahan.png",
+      "sourceUrl": "https://media.utoronto.ca/bluebook/leesa-wheelahan/",
+      "sourceType": "institutional",
+      "license": "unknown",
+      "attribution": "University of Toronto",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 55,
