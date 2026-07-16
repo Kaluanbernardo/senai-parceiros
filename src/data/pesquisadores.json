@@ -3617,7 +3617,7 @@
     "citacoes": "N/A (Prático)",
     "pesquisa": "Diretor do Cometa VET Centre na Itália, é pesquisador e praticante no campo da 'excelência inclusiva' na educação vocacional. Sua pesquisa baseada na prática investiga como programas de VET podem simultaneamente alcançar altos padrões de excelência profissional e promover inclusão social de grupos vulneráveis — migrantes, jovens em risco e pessoas com deficiência. Coordena projetos que demonstram como ambientes de aprendizagem vocacional de alta qualidade podem ser ferramentas poderosas de integração social. Publicou sobre modelos italianos de alternância escola-trabalho, sobre empreendedorismo social como horizonte formativo e sobre como comunidades de prática podem acolher e desenvolver talentos diversos.",
     "scholar": "https://www.researchgate.net/profile/Paolo-Nardi-3",
-    "foto": null,
+    "foto": "/fotos/researcher-74-paolo-nardi.jpeg",
     "profileType": "researchgate",
     "genero": "M",
     "miniBio": "Diretor do Cometa VET Centre na Itália, é pesquisador e praticante no campo da 'excelência inclusiva' na educação vocacional.",
@@ -3647,7 +3647,18 @@
         "url": "https://www.jstor.org/stable/24480791",
         "ano": 2014
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-74-paolo-nardi.jpeg",
+      "sourceUrl": "https://cometaresearch.org/author/paolo-nardi/?lang=it",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Cometa Research profile: Paolo Nardi",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 95,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 75,
@@ -3785,12 +3796,12 @@
     "image": {
       "path": "/fotos/researcher-77-petri-nokelainen.jpg",
       "sourceUrl": "https://research.tuni.fi/pgltutkimus/uutinen/pgl-tutkimusryhma-palkittiin-nemo-tutkimuksestaan-2014-2018/",
-      "sourceType": "public-professional",
-      "license": "institutional",
-      "attribution": "Fonte pública identificada",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Tampere University research page: Petri Nokelainen",
       "retrievedAt": "2026-07-16",
       "status": "approved",
-      "confidence": 80,
+      "confidence": 95,
       "reviewedAt": "2026-07-16"
     }
   },
@@ -4187,12 +4198,12 @@
     "image": {
       "path": "/fotos/researcher-86-shoko-yamada.jpg",
       "sourceUrl": "https://en.nagoya-u.ac.jp/news/articles/researchers_voice_012/",
-      "sourceType": "public-professional",
-      "license": "institutional",
-      "attribution": "Fonte pública identificada",
+      "sourceType": "public-institutional",
+      "license": "institutional profile image",
+      "attribution": "Nagoya University researcher profile: Shoko Yamada",
       "retrievedAt": "2026-07-16",
       "status": "approved",
-      "confidence": 80,
+      "confidence": 95,
       "reviewedAt": "2026-07-16"
     }
   },
