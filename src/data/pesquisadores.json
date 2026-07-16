@@ -4676,7 +4676,7 @@
     "citacoes": "~10.400 ",
     "pesquisa": "Professor da TU Dortmund, é especialista em cooperação internacional em TVET e na profissionalização de docentes de educação vocacional. Sua pesquisa e gestão de projetos focam em parcerias entre instituições alemãs e países da Ásia, África e América Latina para modernizar sistemas de formação profissional. Publicou sobre modelos de capacitação de instrutores de TVET, sobre a gestão de projetos internacionais de cooperação técnica em educação e sobre como adaptar abordagens alemãs de formação docente para diferentes contextos culturais. Coordenou programas de mestrado internacional em educação vocacional que conectam universidades alemãs com instituições parceiras no mundo em desenvolvimento.",
     "scholar": "https://scholar.google.com/citations?user=vv7S7oIAAAAJ",
-    "foto": null,
+    "foto": "/fotos/researcher-95-thomas-schroeder.jpg",
     "profileType": "scholar",
     "genero": "M",
     "miniBio": "Professor da TU Dortmund, é especialista em cooperação internacional em TVET e na profissionalização de docentes de educação vocacional.",
@@ -4706,7 +4706,18 @@
         "url": "https://www.researchgate.net/publication/274633407_Interactive_Research_on_Innovations_in_Vocational_Education_and_Training_VET_Lessons_from_Dutch_and_German_cases",
         "ano": 2015
       }
-    ]
+    ],
+    "image": {
+      "path": "/fotos/researcher-95-thomas-schroeder.jpg",
+      "sourceUrl": "https://tvet-online.asia/author/tschroeder/page/2/?et_blog=",
+      "sourceType": "public-professional",
+      "license": "unknown",
+      "attribution": "TVET@Asia author profile",
+      "retrievedAt": "2026-07-16",
+      "status": "approved",
+      "confidence": 90,
+      "reviewedAt": "2026-07-16"
+    }
   },
   {
     "id": 96,
