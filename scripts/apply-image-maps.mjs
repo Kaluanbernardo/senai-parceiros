@@ -13,12 +13,13 @@ for (const item of maps) {
   const imagePath = item.path?.startsWith('public/fotos/')
     ? `/${item.path.slice('public/'.length)}`
     : (item.path || (item.file ? `/fotos/${item.file}` : null));
-  if (!person || !imagePath || !item.sourceUrl) continue;
+  const sourceUrl = item.sourceUrl || item.source;
+  if (!person || !imagePath || !sourceUrl) continue;
   try { await fs.access(path.resolve('public', `.${imagePath}`)); } catch { continue; }
   person.foto = imagePath;
   person.image = {
     path: imagePath,
-    sourceUrl: item.sourceUrl,
+    sourceUrl,
     sourceType: item.sourceType || 'public-professional',
     license: item.license || 'unknown',
     attribution: item.attribution || 'Fonte pública identificada',
