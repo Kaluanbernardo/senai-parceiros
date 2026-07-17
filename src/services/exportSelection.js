@@ -79,7 +79,7 @@ function shortlistRows(snapshot) {
 
 function traceRows(snapshot) {
   const trace = snapshot.trace || {};
-  const rows = [['Fórmula', safeString(trace.formula)], ['Pesos', safeString(trace.weights)], ['Modelo', safeString(trace.model || snapshot.metadata.model)], ['Provedor', safeString(trace.provider || snapshot.metadata.provider)], ['Uso de tokens', safeString(trace.usage)], ['Pré-seleção do provider', safeString(trace.providerPreselection)], ['Baseline institucional', safeString(trace.institutionalBaseline)], ['Versão', safeString(trace.version || snapshot.version)]];
+  const rows = [['Fórmula', safeString(trace.formula)], ['Pesos', safeString(trace.weights)], ['Modelo', safeString(trace.model || snapshot.metadata.model)], ['Provedor', safeString(trace.provider || snapshot.metadata.provider)], ['Uso de tokens', safeString(trace.usage)], ['Orçamento de IA', safeString(trace.budget)], ['Pré-seleção do provider', safeString(trace.providerPreselection)], ['Baseline institucional', safeString(trace.institutionalBaseline)], ['Versão', safeString(trace.version || snapshot.version)]];
   Object.entries(snapshot.answers || {}).forEach(([question, answer]) => rows.push([`Resposta: ${question}`, safeString(answer, 'Não informado')]));
   if (Array.isArray(trace.interview)) trace.interview.forEach((entry, index) => rows.push([`Transição ${index + 1}`, safeString(entry)]));
   return rows;

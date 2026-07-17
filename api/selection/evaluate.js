@@ -8,6 +8,7 @@ import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
+import { canUseAi, getUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -31,12 +32,16 @@ export default async function handler(req, res) {
     const candidates = getCatalog(payload.category);
     const evaluationInput = { ...payload, brief, candidates };
     const local = await buildLocalEvaluation(evaluationInput);
+    if (!canUseAi('selection')) {
+      return res.status(200).json({ ...local, trace: { ...local.trace, provider: 'local-fallback', model: 'budget-fallback', fallback: true, budget: getUsageBudget('selection') } });
+    }
     let ai = null;
     let fallback = false;
     try {
       const providerPool = rankProviderCandidates(local.candidatePool, 30);
       ai = await evaluateWithProvider({ input: evaluationInput, candidates: providerPool.map((entry) => entry.candidate) });
       ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
+      ai.budget = recordAiUsage('selection', ai.usage);
       ai.evaluations = ai.evaluations.map((evaluation) => ({
         ...evaluation,
         id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,
@@ -60,6 +65,7 @@ export default async function handler(req, res) {
         routing: ai.routing || null,
         usage: ai.usage || null,
         providerPreselection: ai.providerPreselection || result.trace?.providerPreselection || null,
+        budget: ai.budget || getUsageBudget('selection'),
       },
     });
   } catch (error) {

@@ -28,7 +28,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 61 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 62 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
@@ -36,7 +36,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico e rollback; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
 3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob`, faltando ampliar a allowlist editorial.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
-5. A autenticação corporativa/Entra ID, rate limit compartilhado, quotas, alertas e o adapter Azure ainda precisam ser ligados sem levar credenciais pessoais.
+5. A autenticação corporativa/Entra ID, rate limit compartilhado e alertas operacionais ainda precisam ser ligados sem levar credenciais pessoais; o MVP já tem teto diário de tokens, custo estimado e requisições no adapter server-only.
 
 ## Decisões de produto vigentes
 
@@ -128,7 +128,7 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
 2. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
 3. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
-4. Consolidar Entra ID, rate limit/quotas compartilhados, alertas, smoke visual e runbook de rotação/backup/restore para o handoff Azure.
+4. Consolidar Entra ID, rate limit compartilhado/alertas, smoke visual e runbook de rotação/backup/restore para o handoff Azure.
 
 O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
 

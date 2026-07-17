@@ -5,6 +5,7 @@ import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
 import { getExampleCoverage } from '../../src/domain/exampleResolver.js';
+import { canUseAi, getUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
 
 const MAX_ANSWER_LENGTH = 4000;
 
@@ -104,6 +105,7 @@ export default async function handler(req, res) {
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
     const local = localFallback(answeredState, 'provider_unavailable');
     if (local.state.status === 'ready') return res.status(200).json(local);
+    if (!canUseAi('interview')) return res.status(200).json(localFallback(answeredState, 'ai_budget_exceeded'));
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 18000);
@@ -119,14 +121,15 @@ export default async function handler(req, res) {
         coverage: coverageFor(answeredState),
         remainingGaps: answeredState.validation?.missing || [],
       }, { signal: controller.signal });
+      const budget = recordAiUsage('interview', ai.trace?.usage);
       const askedCount = answeredState.askedIds.length;
       if (ai.shouldStop && askedCount >= MIN_QUESTIONS && !(answeredState.validation?.missing || []).length) {
         const ready = { ...answeredState, currentQuestion: null, status: 'ready', validation: { ...answeredState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };
-        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, stopReason: ai.stopReason } });
+        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, stopReason: ai.stopReason, budget } });
       }
       const question = asQuestion(ai, answeredState);
       if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(local);
-      return res.status(200).json({ state: withAdaptiveQuestion(answeredState, question), question, trace: { ...ai.trace, fallback: false, remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted } });
+      return res.status(200).json({ state: withAdaptiveQuestion(answeredState, question), question, trace: { ...ai.trace, fallback: false, remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return res.status(200).json(localFallback(answeredState, reason));
