@@ -7,7 +7,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 - Branch de referência: `codex/enriquece-perfis-institucionais`.
 - Autenticação provisória: dois papéis (`admin` e `user`) com credenciais server-only.
 - IA: OpenAI Platform, OpenRouter (`openrouter/auto`) ou Azure OpenAI por adapter, escolhidos por `AI_PROVIDER`.
-- Catálogo/Radar: memória para desenvolvimento; `file` para execução controlada local; `vercel_blob` para armazenamento privado compartilhado.
+- Catálogo/Radar: memória para desenvolvimento e MVP público; `file` para execução controlada local; `vercel_blob` para armazenamento privado compartilhado na etapa corporativa.
 - Rate limit e orçamento de IA: o contrato atômico server-only já está implementado; `file` usa lock exclusivo e `vercel_blob` usa compare-and-swap (`ifMatch`) com retry. A configuração compartilhada ainda precisa ser ligada no ambiente corporativo.
 - Alertas: adapter server-only opcional por webhook HTTPS, com payload sanitizado e deduplicação; nenhum prompt, resposta, token ou IP é enviado.
 - Radar: refresh protegido em `/api/radar/refresh`, agendado a cada seis horas em `vercel.json`.
@@ -27,7 +27,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
 9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs. O bloco `handoff` resume a prontidão do MVP (`handoff.mvp`) e lista os bloqueadores corporativos (`handoff.corporate.blockers`), incluindo Entra ID, armazenamento atômico, alertas, cron e feeds definitivos.
 10. Para alertas, definir `OPS_ALERT_WEBHOOK_URL` somente com endpoint HTTPS corporativo e, opcionalmente, `OPS_ALERT_COOLDOWN_SECONDS`/`AI_ALERT_THRESHOLD`. Testar um evento de orçamento em ambiente de homologação antes de ativar produção.
-11. Antes de liberar o ambiente, executar `npm run handoff:preflight:corporate` (equivalente a `node scripts/handoff-preflight.mjs --profile=corporate`). O comando retorna somente checks e status sanitizado; deve terminar com `ok: true` sem imprimir valores de ambiente.
+11. Para aceitar o MVP atual, executar `npm run handoff:preflight:mvp`; o comando retorna somente checks e status sanitizado e deve terminar com `ok: true` sem imprimir valores de ambiente. Quando o TI provisionar Azure/Entra, executar adicionalmente `npm run handoff:preflight:corporate` para validar a migração futura.
 
 ## Migração para Azure
 
@@ -85,6 +85,8 @@ O repositório não deve receber `client_secret`, certificado, token ou valor de
 5. Remover `.env.local` e qualquer cópia local antes de transferir o repositório.
 6. Confirmar que o build e os testes passam sem nenhuma variável pessoal.
 
-## Gate de aceite
+## Gate de aceite do MVP
 
-`npm test -- --run` e `npm run build` devem passar. Depois, validar login, seleção, importação XLSX com replay idempotente, rollback, Radar com fonte indisponível e refresh autenticado. A revisão visual deve ser feita no navegador corporativo antes da publicação.
+`npm test -- --run`, `npm run build` e `npm run handoff:preflight:mvp` devem passar. Depois, validar login, seleção, importação XLSX com replay idempotente, rollback, Radar com fonte indisponível e refresh autenticado. A revisão visual deve ser feita antes da publicação do MVP.
+
+O preflight corporativo não bloqueia esta entrega; ele é o gate da migração futura e permanece documentado para o time de TI.

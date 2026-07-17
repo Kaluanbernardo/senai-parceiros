@@ -20,6 +20,7 @@ export function getOperationalStatus() {
   const sharedStorageReady = [catalog, radarStore, rateLimit, budgetStore].every((store) => store.durable);
   const atomicStoresReady = Boolean(rateLimit.atomic && budgetStore.atomic);
   const radarCronConfigured = configured('RADAR_CRON_SECRET') || configured('CRON_SECRET');
+  const mvpReady = Boolean(configured('AUTH_SESSION_SECRET') && configured('PUBLIC_APP_ORIGIN') && radarFeeds.ready);
   const corporateBlockers = [];
   if (!sharedStorageReady) corporateBlockers.push('shared_storage_pending');
   if (!radarCronConfigured) corporateBlockers.push('radar_cron_secret_pending');
@@ -56,7 +57,7 @@ export function getOperationalStatus() {
       mvp: {
         durableStores: sharedStorageReady,
         radarCronConfigured,
-        ready: Boolean(configured('AUTH_SESSION_SECRET') && configured('PUBLIC_APP_ORIGIN') && sharedStorageReady && radarCronConfigured),
+        ready: mvpReady,
       },
       corporate: {
         status: 'pending',
