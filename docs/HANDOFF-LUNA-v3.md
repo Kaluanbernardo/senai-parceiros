@@ -8,10 +8,10 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- HEAD funcional de referência: `3f0a9da` (`fix: torna o preflight do MVP o gate atual`). Use sempre o commit mais recente da branch `codex/enriquece-perfis-institucionais` ao retomar.
+- HEAD funcional de referência: `e31ad57` (`fix: agenda radar diariamente no vercel hobby`). Use sempre o commit mais recente da branch `codex/enriquece-perfis-institucionais` ao retomar.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
 - Baseline + ondas incrementais: 91 testes aprovados, preflight MVP com `ok: true` e build Vite aprovado em 17/07/2026.
-- Preview: publicar a branch atual no projeto Vercel `senai-parceiros` e registrar a URL retornada no fechamento da execução.
+- Preview Vercel desta entrega: `https://senai-parceiros-7guupps7b-kaluanbernardos-projects.vercel.app`.
 - Produção não deve ser publicada sem solicitação explícita.
 
 ## Documentos de continuidade
