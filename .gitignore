@@ -9,6 +9,9 @@ dist/
 .env.local
 .env.production
 
+# Runtime stores (catalog, Radar, rate limits and AI budget)
+.data/
+
 # IDE
 .vscode/
 .idea/
