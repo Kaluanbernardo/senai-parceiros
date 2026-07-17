@@ -21,7 +21,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 4. Definir `CATALOG_BLOB_PATH` e `RADAR_BLOB_PATH` com caminhos estáveis.
 5. Definir `RADAR_CRON_SECRET`/`CRON_SECRET` como segredo aleatório rotacionável.
 6. Cadastrar feeds adicionais somente em `RADAR_EXTRA_FEEDS_JSON`; o servidor aceita apenas fontes oficiais já allowlisted e URLs HTTPS. As páginas HTML institucionais padrão já estão no código e também são observadas no status do Radar.
-7. Definir `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`.
+7. Definir `AUTH_PROVIDER=local` no MVP, `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`. Ao iniciar a integração corporativa, trocar para `AUTH_PROVIDER=entra`; até que o adapter exista, o login falhará fechado em vez de aceitar credenciais locais.
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
 9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs. O bloco `handoff` resume a prontidão do MVP (`handoff.mvp`) e lista os bloqueadores corporativos (`handoff.corporate.blockers`), incluindo Entra ID, armazenamento atômico, alertas, cron e feeds definitivos.
 

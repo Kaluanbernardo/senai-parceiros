@@ -1,6 +1,6 @@
 import { getCatalogStoreStatus } from './catalogImport.js';
 import { getRadarStoreStatus } from './radar.js';
-import { getRateLimitStoreStatus } from './auth.js';
+import { getAuthProvider, getRateLimitStoreStatus } from './auth.js';
 import { getUsageBudgetStatus } from './usageBudget.js';
 
 function configured(name) {
@@ -40,6 +40,7 @@ export function getOperationalStatus() {
     security: {
       publicOriginConfigured: configured('PUBLIC_APP_ORIGIN'),
       sessionSecretConfigured: configured('AUTH_SESSION_SECRET'),
+      authProvider: getAuthProvider(),
     },
     handoff: {
       mvp: {

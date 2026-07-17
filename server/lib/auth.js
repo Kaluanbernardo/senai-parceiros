@@ -105,7 +105,12 @@ function credentials() {
   ].filter((credential) => credential.password);
 }
 
+export function getAuthProvider() {
+  return String(process.env.AUTH_PROVIDER || 'local').trim().toLowerCase() || 'local';
+}
+
 export function authenticate(username, password) {
+  if (getAuthProvider() !== 'local') return null;
   const match = credentials().find((credential) => safeEqual(credential.username, username) && safeEqual(credential.password, password));
   if (!match) return null;
   return {
