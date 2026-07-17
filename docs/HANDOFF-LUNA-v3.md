@@ -83,6 +83,17 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 5. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
 6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback e login Entra, revisar diff e só então solicitar preview Vercel.
 
+### Evolução prevista: atualização automática dos perfis
+
+Esta etapa fica deliberadamente depois da estabilização da seleção e do Radar. O desenho de handoff deve preservar uma fronteira de coleta substituível:
+
+- um job agendado consulta apenas fontes públicas allowlisted e registra `sourceUrl`, data de consulta, hash do conteúdo e evidências alteradas;
+- OpenAlex/Crossref/ORCID e páginas institucionais podem enriquecer identidade, afiliação, produção e descrição; Google Scholar serve somente para conferência de identidade e não para coleta de fotos;
+- a normalização usa os mesmos identificadores, domínios e aliases do catálogo para evitar duplicar pesquisadores, escolas ou organizações;
+- cada alteração vira proposta com diff, confiança, lacunas e proveniência; a aplicação não sobrescreve silenciosamente um perfil nem transforma inferência em fato;
+- no Azure, o job pode ser um Timer/Function com fila e Blob/Storage Table (ou banco corporativo), mantendo retenção, rollback e segredos server-only;
+- fotos, avatares e qualquer dado privado continuam fora do modelo de pesquisadores.
+
 ### Critério específico da nova feature de importação
 
 O Luna deve tratar a planilha XLSX produzida pelo Gerador de Prompt como uma entrada de catálogo de primeira classe: o prompt, o template, a prévia administrativa, a confirmação, a deduplicação, o histórico e o rollback precisam usar o mesmo contrato `senai_catalog_v1`. A planilha pode conter pesquisadores, escolas ou organizações; não pode conter fotos, avatares, credenciais ou dados privados. Reenviar a mesma planilha deve ser idempotente e nunca substituir o catálogo inteiro.

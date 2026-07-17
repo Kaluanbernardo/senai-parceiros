@@ -162,4 +162,4 @@ O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna de
 - allowlist editorial final e responsáveis por revisar itens em quarentena;
 - parâmetros corporativos de Entra ID, rede, observabilidade e retenção;
 - templates oficiais de planilha e relatórios, quando forem enviados pelo usuário;
-- atualização automática dos perfis públicos, que entra depois da estabilidade da seleção e do Radar.
+- atualização automática dos perfis públicos, que entra depois da estabilidade da seleção e do Radar; deve usar job agendado, fontes allowlisted, diffs/proveniência, os mesmos aliases de deduplicação e aprovação antes de sobrescrever o catálogo, sem fotos ou dados privados.
