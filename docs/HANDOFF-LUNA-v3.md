@@ -8,7 +8,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- HEAD atual publicado: `3d8452a` (`feat: adiciona status operacional administrativo`).
+- HEAD atual publicado: `49f8ee1` (`docs: evita retomada por handoff historico`). A última implementação de produto está em `3d8452a` (`feat: adiciona status operacional administrativo`); o commit seguinte apenas atualizou a documentação de continuidade.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
 - Baseline + ondas incrementais: 68 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
@@ -78,6 +78,10 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
 4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
 5. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
+
+### Critério específico da nova feature de importação
+
+O Luna deve tratar a planilha XLSX produzida pelo Gerador de Prompt como uma entrada de catálogo de primeira classe: o prompt, o template, a prévia administrativa, a confirmação, a deduplicação, o histórico e o rollback precisam usar o mesmo contrato `senai_catalog_v1`. A planilha pode conter pesquisadores, escolas ou organizações; não pode conter fotos, avatares, credenciais ou dados privados. Reenviar a mesma planilha deve ser idempotente e nunca substituir o catálogo inteiro.
 
 ## Variáveis previstas
 

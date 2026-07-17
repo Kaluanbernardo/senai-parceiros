@@ -15,6 +15,10 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 7. mantém um radar alimentado por fontes acadêmicas, governamentais e internacionais;
 8. preserva fronteiras substituíveis para futura migração ao Azure do SENAI-SP.
 
+### Feature adicionada ao escopo
+
+**Importação de stakeholders via XLSX** é parte do fluxo principal, não um utilitário isolado. O profissional deve conseguir usar o Gerador de Prompt para orientar uma pesquisa externa, receber uma planilha estruturada com as mesmas colunas do catálogo e, no painel administrativo, importar esse arquivo com prévia, validação, deduplicação, decisões por linha, confirmação, histórico e rollback. O contrato compartilhado deve ser a fonte única para o prompt, o template, o importador e o catálogo; nenhum campo de foto/avatar pode ser criado para pesquisadores.
+
 ## Estado confirmado do produto
 
 ### Concluído ou suficientemente encaminhado
