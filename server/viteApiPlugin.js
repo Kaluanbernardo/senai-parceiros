@@ -9,6 +9,7 @@ import catalogImportPreview from '../api/admin/catalog-import-preview.js';
 import catalogImportCommit from '../api/admin/catalog-import-commit.js';
 import catalogImportRollback from '../api/admin/catalog-import-rollback.js';
 import catalogImportBatches from '../api/admin/catalog-import-batches.js';
+import adminStatus from '../api/admin/status.js';
 
 const handlers = {
   '/api/auth/login': login,
@@ -22,6 +23,7 @@ const handlers = {
   '/api/admin/catalog/import-commit': catalogImportCommit,
   '/api/admin/catalog/import-rollback': catalogImportRollback,
   '/api/admin/catalog/import-batches': catalogImportBatches,
+  '/api/admin/status': adminStatus,
 };
 
 function adaptResponse(res) {

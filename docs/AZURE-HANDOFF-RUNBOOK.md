@@ -22,6 +22,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 6. Cadastrar feeds adicionais somente em `RADAR_EXTRA_FEEDS_JSON`; o servidor aceita apenas fontes oficiais já allowlisted e URLs HTTPS. As páginas HTML institucionais padrão já estão no código e também são observadas no status do Radar.
 7. Definir `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`.
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
+9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs.
 
 ## Migração para Azure
 
