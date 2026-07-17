@@ -56,6 +56,12 @@ O Google Scholar permanece útil para confirmar identidade, afiliação e produ�
 
 Invariante: nenhum registro de pesquisador deve conter `foto` ou `image`, e nenhum componente deve renderizar avatar, iniciais ou espaço reservado para imagem de pesquisador.
 
+### 5. A importação administrativa ainda não aceita o XLSX das pesquisas
+
+O painel atual importa somente arrays JSON para o estado em memória, substitui a coleção escolhida e perde a alteração ao recarregar. O Gerador de Prompt já pede colunas estruturadas, mas ainda não compartilha um contrato versionado com o catálogo.
+
+Consequência: o resultado de uma deep research não pode entrar no catálogo com segurança, prévia, deduplicação ou persistência. O plano vigente resolve isso em `docs/luna-v3/03b-importacao-xlsx.md`.
+
 ## Decisões de arquitetura
 
 ### Provedor de IA
@@ -238,16 +244,19 @@ Testes de aceite:
 6. `feat: aplica catálogo canônico de pesquisadores`
 7. `feat: cria catálogo canônico de escolas`
 8. `data: consolida aliases e duplicatas de escolas`
-9. `feat: habilita fontes acadêmicas ao vivo no radar`
-10. `feat: adiciona coletores oficiais e armazenamento do radar`
-11. `chore: documenta variáveis e handoff para Azure`
+9. `feat: compartilha schema entre prompt e importação XLSX`
+10. `feat: adiciona prévia e persistência de imports do catálogo`
+11. `feat: habilita fontes acadêmicas ao vivo no radar`
+12. `feat: adiciona coletores oficiais e armazenamento do radar`
+13. `chore: documenta variáveis e handoff para Azure`
 
 ## Ordem de prioridade
 
 1. Entrevista adaptativa — é parte da funcionalidade principal de seleção.
 2. Deduplicação de pesquisadores — afeta diretamente credibilidade e ranking.
 3. Deduplicação de escolas — afeta catálogo e qualidade do ranking.
-4. Radar real — importante, mas complementar à seleção.
+4. Importação XLSX — conecta as pesquisas externas ao catálogo canônico.
+5. Radar real — importante, mas complementar à seleção.
 
 ## Definição de pronto deste ciclo
 
@@ -258,6 +267,7 @@ O ciclo só termina quando:
 - nenhuma resposta da entrevista fica persistida;
 - pesquisadores duplicados foram consolidados e a interface continua sem mídia de perfil;
 - catálogo e ranking usam escolas canônicas sem duplicatas da mesma entidade;
+- XLSX produzido conforme o Gerador de Prompt passa por prévia, deduplicação e persiste no catálogo após confirmação administrativa;
 - as três seções do radar recebem dados externos atuais;
 - testes unitários, integração e build passam;
 - preview Vercel foi revisado;
@@ -265,7 +275,7 @@ O ciclo só termina quando:
 
 ## Prompt para retomar no outro computador
 
-> Leia `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preserve arquivos não relacionados e depois avance para a entrevista adaptativa. Não persista respostas, não exponha segredos e mantenha pesquisadores sem mídia de perfil. Use OpenAI Platform API somente se houver `OPENAI_API_KEY` faturada; caso contrário, configure OpenRouter. Teste, revise, faça commit e push por ticket; preview Vercel apenas após os gates locais.
+> Leia `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preserve arquivos não relacionados e depois avance para a entrevista adaptativa. Após os catálogos canônicos, execute `docs/luna-v3/03b-importacao-xlsx.md` para alinhar o Gerador de Prompt ao importador. Não persista respostas, não exponha segredos e mantenha pesquisadores sem mídia de perfil. Use OpenAI Platform API somente se houver `OPENAI_API_KEY` faturada; caso contrário, configure OpenRouter. Teste, revise, faça commit e push por ticket; preview Vercel apenas após os gates locais.
 
 ## Skills sugeridas para a próxima sessão
 

@@ -29,3 +29,7 @@ Garantir que catálogo, busca e ranking compartilhem entidades canônicas e nunc
 - SENAI Nacional, SENAI-SP e unidade local não são fundidos indevidamente;
 - busca por alias encontra o registro canônico;
 - relatório explica cada fusão e o pool de seleção usa a mesma fonte da UI.
+
+## Próximo desbloqueio
+
+Desbloqueia `Importar stakeholders de planilhas XLSX`, que deve reutilizar os mesmos schemas, aliases e regras de identidade.

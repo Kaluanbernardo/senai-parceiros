@@ -10,7 +10,8 @@ Encerrar o ciclo com um único artefato exportável útil e uma arquitetura segu
 2. Garantir igualdade entre UI e workbook para candidatos, notas, pesos, evidências, lacunas, exclusões e regras.
 3. Validar hyperlinks, filtros, painéis congelados, Unicode e proteção contra formula injection.
 4. Fazer smoke em Excel e LibreOffice.
-5. Depois do gate, apagar builders de PDF, DOCX e PPTX e remover `jspdf`, `jspdf-autotable`, `docx` e `pptxgenjs`.
+5. Confirmar que o XLSX de resultado da seleção e o XLSX de importação usam contratos distintos e nomes de arquivo/abas inequívocos.
+6. Depois do gate, apagar builders de PDF, DOCX e PPTX e remover `jspdf`, `jspdf-autotable`, `docx` e `pptxgenjs`.
 
 ## Hardening e Azure
 

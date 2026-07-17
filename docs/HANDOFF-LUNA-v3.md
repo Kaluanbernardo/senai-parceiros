@@ -19,8 +19,9 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 2. entrevista semanticamente adaptativa;
 3. avaliação e shortlist mais diferenciadas;
 4. catálogos canônicos de pesquisadores e escolas;
-5. thin slice real do Radar;
-6. XLSX, remoção de exportadores legados e hardening Azure.
+5. importação XLSX integrada ao Gerador de Prompt;
+6. thin slice real do Radar;
+7. XLSX, remoção de exportadores legados e hardening Azure.
 
 Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não devem atrasar a entrevista, que é a feature principal.
 
@@ -35,9 +36,11 @@ Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não
 7. Não expor chain-of-thought; registrar apenas justificativas e reason tags estruturados.
 8. Pesquisadores nunca exibem foto, avatar, iniciais ou placeholder de mídia e não possuem campos `foto`/`image`.
 9. Scholar serve para verificação de identidade, não para coleta de fotos.
-10. Não adicionar scripts temporários, `.playwright-cli`, `output`, `tmp` ou arquivos exploratórios aos commits.
-11. Preservar modificações locais não relacionadas, especialmente `scripts/collect-image-batch.ps1` e `src/data/apply_stake_desc_1.cjs`.
-12. Publicar preview Vercel somente após testes, build, smoke e revisão do diff.
+10. Importações são administrativas, usam schema compartilhado com o Gerador de Prompt e exigem prévia antes de persistir.
+11. Nunca substituir o catálogo inteiro com o conteúdo de um arquivo nem gravar importações somente na memória do navegador.
+12. Não adicionar scripts temporários, `.playwright-cli`, `output`, `tmp` ou arquivos exploratórios aos commits.
+13. Preservar modificações locais não relacionadas, especialmente `scripts/collect-image-batch.ps1` e `src/data/apply_stake_desc_1.cjs`.
+14. Publicar preview Vercel somente após testes, build, smoke e revisão do diff.
 
 ## Primeira sessão recomendada
 
@@ -66,4 +69,4 @@ Valores nunca devem aparecer em documentação, saída, teste ou commit. O adapt
 
 ## Prompt direto para o Luna
 
-> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preservando todos os arquivos locais não relacionados. Use TDD, não persista entrevistas, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Depois do commit do baseline, avance para `docs/luna-v3/01-entrevista-adaptativa.md`. Paralelize catálogos e Radar somente quando isso não disputar os mesmos arquivos. Faça testes, build, smoke, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.
+> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preservando todos os arquivos locais não relacionados. Use TDD, não persista entrevistas, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Depois do commit do baseline, avance para `docs/luna-v3/01-entrevista-adaptativa.md`. Paralelize catálogos e Radar somente quando isso não disputar os mesmos arquivos. Após os catálogos canônicos, execute `docs/luna-v3/03b-importacao-xlsx.md` para alinhar o Gerador de Prompt ao importador. Faça testes, build, smoke, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.

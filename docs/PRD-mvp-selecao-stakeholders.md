@@ -21,6 +21,7 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 7. Rastreabilidade de perguntas, respostas, critérios, pesos, evidências, fórmula, modelo e confiança.
 8. Exportação única em uma planilha XLSX rica e auditável.
 9. Gerador de Prompt para Deep Research com esquema padronizado por categoria.
+10. Importação administrativa do XLSX resultante para o catálogo, com prévia, validação e deduplicação.
 
 ### Fase 2 — enriquecimento e monitoramento
 
@@ -87,14 +88,27 @@ O valor estratégico institucional considera competitividade e desenvolvimento s
 
 O gerador não executa a pesquisa. Ele entrevista o usuário, produz um prompt independente de fornecedor e exige:
 
-- nomes, ordem e tipos exatos das colunas;
+- schema versionado compartilhado com o importador, com nomes, ordem e tipos exatos das colunas;
 - planilha XLSX quando suportada e CSV UTF-8 como alternativa obrigatória;
 - fontes públicas, evidências e data de consulta;
 - indicação “não localizado” para ausência de informação;
 - proibição de inventar colunas ou fatos;
 - núcleo comum e campos específicos para pesquisador, escola ou organização.
 
-## 9. Critérios de aceite
+O XLSX importável usa uma aba `Stakeholders`, sem prosa, fórmulas, macros, células mescladas ou colunas extras. Contexto e limitações ficam em uma aba opcional `Metadados`.
+
+## 9. Importação de stakeholders
+
+- Disponível apenas para administrador.
+- Aceita `.xlsx` conforme o schema vigente e oferece template vazio por categoria.
+- Mostra prévia com novos registros, atualizações, possíveis duplicatas, conflitos e linhas inválidas.
+- Nunca substitui silenciosamente o catálogo completo; conflitos exigem decisão explícita.
+- Usa identificadores públicos, aliases e regras canônicas para deduplicação.
+- Persiste o lote no servidor com rastreabilidade e possibilidade de rollback seguro.
+- Registros importados passam a ser consumidos pelo catálogo, busca e seleção.
+- Somente informações públicas podem ser incorporadas.
+
+## 10. Critérios de aceite
 
 - Um usuário leigo conclui o fluxo sem ajuda em até dez minutos.
 - A lista contém de cinco a dez candidatos elegíveis; itens exploratórios são identificados e nunca apresentados como equivalentes aos recomendados.
@@ -105,10 +119,11 @@ O gerador não executa a pesquisa. Ele entrevista o usuário, produz um prompt i
 - Não há afirmação factual material sem suporte nos dados fornecidos.
 - Alterar uma resposta recalcula toda a avaliação de forma coerente.
 - A planilha XLSX abre sem reparo e representa integralmente contexto, shortlist, subcritérios, evidências, riscos, respostas e metodologia.
+- Uma planilha produzida conforme o Gerador de Prompt entra no catálogo sem remapeamento manual e sem criar duplicatas silenciosas.
 - Sem configuração de IA, o fallback local conclui o fluxo.
 - A chave do OpenRouter nunca aparece no pacote do navegador ou no repositório.
 
-## 10. Fora do escopo da fase 1
+## 11. Fora do escopo da fase 1
 
 - descoberta automática de novos stakeholders para o ranking;
 - histórico de avaliações, contas individuais ou banco de respostas;

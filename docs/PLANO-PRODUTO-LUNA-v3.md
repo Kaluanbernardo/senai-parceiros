@@ -11,8 +11,9 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 3. recomenda de 5 a 10 pesquisadores, escolas ou organizações já cadastrados;
 4. mostra diferenças, evidências, riscos, lacunas e rastreabilidade completa;
 5. exporta uma planilha XLSX rica, sem persistir entrevista ou resultado;
-6. mantém um radar alimentado por fontes acadêmicas, governamentais e internacionais;
-7. preserva fronteiras substituíveis para futura migração ao Azure do SENAI-SP.
+6. importa para o catálogo planilhas XLSX geradas por pesquisas orientadas pelo Gerador de Prompt;
+7. mantém um radar alimentado por fontes acadêmicas, governamentais e internacionais;
+8. preserva fronteiras substituíveis para futura migração ao Azure do SENAI-SP.
 
 ## Estado confirmado do produto
 
@@ -38,6 +39,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 5. Escolas são concatenadas de duas bases sem catálogo canônico; SENAI, SENAC e outras redes podem aparecer duplicados.
 6. O Radar publicado usa seeds por padrão. OpenAlex/Crossref são opcionais e não existem coletores completos para fontes governamentais e internacionais.
 7. Os builders e pacotes antigos de PDF, DOCX e PPTX ainda existem, embora não apareçam mais na interface.
+8. O painel administrativo importa somente JSON para o estado em memória, substitui a coleção inteira e não persiste após recarga; ainda não importa o XLSX produzido pelas pesquisas.
 
 ## Decisões de produto vigentes
 
@@ -52,6 +54,8 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - Nada da entrevista, ranking ou resultado é persistido. A pessoa pode revisar respostas e exportar a rastreabilidade.
 - Pesquisadores permanecem sem qualquer mídia de perfil. Google Scholar serve apenas para identidade, afiliação e produção.
 - Apenas informações públicas entram no catálogo e no Radar.
+- Importação XLSX é exclusiva do administrador, sempre passa por prévia e não sobrescreve registros automaticamente.
+- O Gerador de Prompt e o importador usam o mesmo schema versionado; mudanças de colunas não podem ocorrer em apenas um dos lados.
 - A aplicação nunca recebe credenciais pessoais no código. Segredos ficam somente no servidor e devem ser removidos/rotacionados no handoff.
 
 ## Estratégia de IA
@@ -80,16 +84,18 @@ Os tickets abaixo são o trabalho pronto para execução. A ordem indicada por d
 2. [Tornar a entrevista semanticamente adaptativa](luna-v3/01-entrevista-adaptativa.md) — bloqueado pelo baseline.
 3. [Aprofundar avaliação e diferenciação da shortlist](luna-v3/02-avaliacao-e-shortlist.md) — bloqueado pela entrevista adaptativa.
 4. [Canonizar e deduplicar pesquisadores e escolas](luna-v3/03-catalogos-canonicos.md) — bloqueado pelo baseline; pode avançar em paralelo com a entrevista.
-5. [Colocar o Radar em ingestão real](luna-v3/04-radar-real.md) — bloqueado pelo baseline; pode avançar em paralelo, sem atrasar a seleção.
-6. [Consolidar XLSX, segurança e handoff Azure](luna-v3/05-xlsx-hardening-azure.md) — bloqueado pela shortlist e pelos catálogos; a parte Azure final também depende do Radar.
+5. [Importar stakeholders de planilhas XLSX](luna-v3/03b-importacao-xlsx.md) — bloqueado pelos catálogos canônicos; atualiza também o Gerador de Prompt.
+6. [Colocar o Radar em ingestão real](luna-v3/04-radar-real.md) — bloqueado pelo baseline; pode avançar em paralelo, sem atrasar a seleção.
+7. [Consolidar XLSX, segurança e handoff Azure](luna-v3/05-xlsx-hardening-azure.md) — bloqueado pela shortlist, pelos catálogos e pela importação; a parte Azure final também depende do Radar.
 
 ## Ordem de valor recomendada
 
 1. Entrevista adaptativa.
 2. Diferenciação e rastreabilidade do ranking.
 3. Deduplicação dos catálogos.
-4. Radar real com um thin slice por seção.
-5. Remoção dos exportadores legados e hardening Azure.
+4. Importação XLSX integrada ao Gerador de Prompt.
+5. Radar real com um thin slice por seção.
+6. Remoção dos exportadores legados e hardening Azure.
 
 ## Gates comuns
 
@@ -110,6 +116,7 @@ Cada ticket termina somente quando:
 - entrevista vaga aprofunda e entrevista completa evita redundância, sempre entre 8 e 20 perguntas;
 - shortlist contém possibilidades realmente diferentes e explica seus trade-offs;
 - nenhuma pessoa ou escola canônica aparece duas vezes no catálogo ou ranking;
+- uma pesquisa orientada pelo Gerador de Prompt produz um XLSX aceito pelo importador, com prévia, deduplicação e persistência;
 - XLSX permite reconstruir briefing, pesos, notas, evidências, lacunas, exclusões e proveniência;
 - as três seções do Radar exibem itens externos atuais, clicáveis e deduplicados;
 - troca futura de OpenRouter/Vercel por provider e infraestrutura Azure ocorre por adapters e configuração;
