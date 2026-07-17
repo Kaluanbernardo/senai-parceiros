@@ -128,7 +128,10 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
 2. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
 3. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
-4. Consolidar Entra ID, rate limit compartilhado/alertas, smoke visual e runbook de rotação/backup/restore para o handoff Azure.
+4. Consolidar Entra ID, rate limit compartilhado/alertas e o runbook de rotação/backup/restore para o handoff Azure.
+5. Executar smoke visual desktop/mobile e validação operacional final antes de qualquer preview Vercel.
+
+O fluxo de **importação de stakeholders** é parte da entrega atual: o Gerador de Prompt orienta a pesquisa para produzir o schema `senai_catalog_v1`; o administrador importa o XLSX, revisa a prévia, resolve duplicidades, confirma o lote e pode consultar histórico ou fazer rollback. A mesma definição de colunas deve permanecer como fonte única no prompt, no template, na prévia, no catálogo e na exportação da seleção.
 
 O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
 

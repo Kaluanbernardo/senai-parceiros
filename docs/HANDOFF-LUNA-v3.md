@@ -8,10 +8,16 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- Commit-base validado: `8c54066` (`feat: aplica limites de uso de ia`).
+- Commit-base validado: `6ede89a` (`docs: atualiza ponto de retomada do handoff`).
 - Baseline + ondas incrementais: 62 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
+
+## Documentos de continuidade
+
+- Plano canônico: [`docs/PLANO-PRODUTO-LUNA-v3.md`](./PLANO-PRODUTO-LUNA-v3.md).
+- Runbook de infraestrutura, segurança, backup e migração: [`docs/AZURE-HANDOFF-RUNBOOK.md`](./AZURE-HANDOFF-RUNBOOK.md).
+- Contrato de importação: [`docs/luna-v3/03b-importacao-xlsx.md`](./luna-v3/03b-importacao-xlsx.md).
 
 ## Prioridade do Luna
 
@@ -21,7 +27,8 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 4. catálogos canônicos de pesquisadores e escolas;
 5. importação XLSX integrada ao Gerador de Prompt;
 6. thin slice real do Radar;
-7. XLSX, remoção de exportadores legados e hardening Azure.
+7. Configuração corporativa do armazenamento e autenticação, mantendo adapters substituíveis.
+8. XLSX, remoção de exportadores legados e hardening Azure.
 
 Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem regredir a entrevista e a seleção, que são a feature principal.
 
@@ -61,6 +68,14 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O uso de IA já tem teto server-only por dia (requisições, tokens e custo estimado), sem guardar prompts ou respostas; os limites são configuráveis e o próximo ambiente deve trocar o contador em memória por um contador compartilhado.
 - Próximo bloco recomendado: ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e executar o hardening Azure/Entra ID.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
+
+## Próximas ondas para execução
+
+1. **Configuração corporativa (TI):** Blob privado no MVP, segredos server-only, Entra ID e mapeamento dos papéis `user`/`admin`.
+2. **Operação compartilhada:** rate limit e orçamento em Redis/Storage com operação atômica, alertas de custo/erro e retenção de logs sem prompts ou respostas.
+3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
+4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
+5. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
 
 ## Variáveis previstas
 
