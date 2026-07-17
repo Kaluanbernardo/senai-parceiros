@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 76 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 77 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -69,6 +69,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`, sem guardar prompts, respostas ou IP bruto; o próximo ambiente deve ligar uma implementação compartilhada/atômica corporativa e alertas.
 - O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo; `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
+- O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
 - Próximo bloco recomendado: ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e executar o hardening Azure/Entra ID.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 

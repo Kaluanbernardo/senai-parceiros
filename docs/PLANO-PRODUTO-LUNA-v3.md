@@ -34,7 +34,7 @@ O Gerador de Prompt deve orientar um output diretamente importável: uma aba `St
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 76 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 77 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 

@@ -26,6 +26,13 @@ describe('radar domain', () => {
     expect(normalizeRadarItem({ title: 'sem data', publishedAt: 'não é data' }).publishedAt).toBeNull();
   });
 
+  it('keeps curated official government items available when live sources fail', async () => {
+    const result = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.every((item) => item.section === 'government')).toBe(true);
+    expect(result.items.some((item) => item.provider.startsWith('curated-'))).toBe(true);
+  });
+
   it('accepts only allowlisted official HTTPS feeds from configuration', () => {
     const previous = process.env.RADAR_EXTRA_FEEDS_JSON;
     process.env.RADAR_EXTRA_FEEDS_JSON = JSON.stringify([

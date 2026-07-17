@@ -379,8 +379,11 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   await radarStore.hydrate({ force: live });
   const feedPolicy = getRadarFeedPolicy();
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
+  const isAllowedItem = (item) => allowedSources.has(item.sourceName)
+    || feedPolicy.some((feed) => feed.name === item.sourceName)
+    || /^curated-/.test(item.provider);
   const stored = radarStore.getSnapshot();
-  let items = (stored?.items || seedItems).map(normalizeRadarItem).filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
+  let items = (stored?.items || seedItems).map(normalizeRadarItem).filter(isAllowedItem);
   let liveProvider = false;
   let currentItems = [];
   const sourceStatus = {};
@@ -398,7 +401,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       ? providerStatus('Pesquisadores cadastrados', 'ok', { count: tracked.length })
       : providerStatus('Pesquisadores cadastrados', 'error', { error: String(trackedItems.reason?.message || 'source_unavailable').slice(0, 160) });
     currentItems.push(...(openAlexItems.status === 'fulfilled' ? openAlexItems.value : []), ...(crossrefItems.status === 'fulfilled' ? crossrefItems.value : []), ...tracked);
-    items = [...currentItems, ...items].filter((item) => allowedSources.has(item.sourceName));
+    items = [...currentItems, ...items].filter(isAllowedItem);
     liveProvider = currentItems.length > 0;
   }
   if (live) {
@@ -413,7 +416,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       if (result.status === 'fulfilled') feedItems.push(...result.value);
     });
     currentItems.push(...feedItems);
-    items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || feedPolicy.some((feed) => feed.name === item.sourceName));
+    items = [...feedItems, ...items].filter(isAllowedItem);
     liveProvider = liveProvider || feedItems.length > 0;
 
     const webSources = RADAR_WEB_POLICY.filter((source) => !filters.section || source.section === filters.section);
@@ -427,7 +430,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       if (result.status === 'fulfilled') webItems.push(...result.value);
     });
     currentItems.push(...webItems);
-    items = [...webItems, ...items].filter((item) => allowedSources.has(item.sourceName));
+    items = [...webItems, ...items].filter(isAllowedItem);
     liveProvider = liveProvider || webItems.length > 0;
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
