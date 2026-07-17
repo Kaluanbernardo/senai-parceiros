@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mergeSchoolSources } from './schoolCatalog';
+import schools from '../data/escolas.json';
+import stakeholders from '../data/stakeholders.json';
 
 describe('school catalog', () => {
   it('merges SENAI/SENAC variants while preserving source provenance', () => {
@@ -55,5 +57,16 @@ describe('school catalog', () => {
     expect(records.find((record) => record.nome === 'Ivy Tech').hasPartnership).toBe(false);
     expect(records.find((record) => record.nome === 'Instituto parceiro').hasPartnership).toBe(true);
     expect(records.find((record) => record.nome === 'ITS Academy').hasPartnership).toBe(false);
+  });
+
+  it('merges known cross-source multilingual duplicates without collapsing separate institutions', () => {
+    const records = mergeSchoolSources({ schools, stakeholders });
+    const byIdentity = new Map(records.map((record) => [record.catalogIdentity, record]));
+
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:shenzhen-polytechnic-university|'))?.[1].sourceRecords).toHaveLength(2);
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:iti-system|'))?.[1].sourceRecords).toHaveLength(2);
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:tvet-colleges-system|'))?.[1].sourceRecords).toHaveLength(2);
+    expect(records.filter((record) => record.catalogIdentity === 'alias:senai')).toHaveLength(1);
+    expect(records.filter((record) => record.catalogIdentity === 'alias:senac')).toHaveLength(1);
   });
 });

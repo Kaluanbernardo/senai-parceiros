@@ -32,9 +32,12 @@ const ALIASES = [
   [/\bsena\b|servicio nacional de aprendizaje/, 'sena'],
   [/\btafe nsw\b/, 'tafe-nsw'],
   [/\btvtc\b|technical and vocational training corporation/, 'tvtc'],
+  [/\bshenzhen polytechnic university\b/, 'shenzhen-polytechnic-university'],
+  [/\bindustrial training institutes\b|\biti system\b|\bsistema de itis\b/, 'iti-system'],
+  [/\btvet colleges\b/, 'tvet-colleges-system'],
 ];
 
-function aliasKey(name) {
+function aliasKey(name, website = '', country = '') {
   const value = fold(name);
   const alias = ALIASES.find(([pattern]) => pattern.test(value))?.[1] || '';
   if (!alias) return '';
@@ -49,6 +52,14 @@ function aliasKey(name) {
   const namedUnit = Boolean(canonicalNetworkName && acronym.test(value) && !canonicalNetworkName.test(value));
   const localScope = namedUnit || /\b(sp|sao paulo|regional|departamento|unidade|campus|etec|fatec)\b/.test(value);
   if (localScope) return `scoped:${alias}:${value}`;
+  // These generic labels are used by several national systems. Keep the
+  // official domain/country in the identity so an imported ITI or TVET
+  // network from another country cannot be merged accidentally.
+  if (['shenzhen-polytechnic-university', 'iti-system', 'tvet-colleges-system'].includes(alias)) {
+    const host = domain(website);
+    const scope = [host, fold(country)].filter(Boolean).join('|');
+    return scope ? `${alias}|${scope}` : `${alias}|${value}`;
+  }
   return alias;
 }
 
@@ -87,7 +98,7 @@ function normalizeRecord(record, source) {
 }
 
 function matchKey(record) {
-  const alias = aliasKey(record.nome);
+  const alias = aliasKey(record.nome, record.website, record.pais);
   if (alias) return `alias:${alias}`;
   const normalizedName = fold(record.nome);
   const host = domain(record.website);

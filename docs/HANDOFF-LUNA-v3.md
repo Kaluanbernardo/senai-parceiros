@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 78 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 79 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -63,7 +63,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 ## Estado apos a execucao inicial
 
 - Baseline, entrevista adaptativa, provider OpenAI/OpenRouter com fallback local e deduplicacao dos catalogos ja foram implementados nesta branch.
-- A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC.
+- A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC. A auditoria de produção também consolidou variantes multilíngues por domínio/país e deixou 154 registros escolares canônicos sem nomes normalizados repetidos.
 - O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback protegido contra alterações posteriores. O catálogo persistido é reidratado após autenticação e atualizações importadas são mescladas por identidade/ID sem duplicar a interface. Os adapters `file` e `vercel_blob` tornam o lote durável quando configurados; o próximo Luna deve conectar a credencial corporativa e, depois, Azure Blob/Storage Table.
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`, sem guardar prompts, respostas ou IP bruto; o próximo ambiente deve ligar uma implementação compartilhada/atômica corporativa e alertas.
@@ -79,7 +79,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 2. **Operação compartilhada:** substituir os adapters duráveis do MVP por Redis/Storage com operação atômica, alertas de custo/erro e retenção de logs sem prompts ou respostas.
 3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
 4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
-5. **Deduplicação residual:** revisar escolas e organizações com mesmo domínio ou nomes multilíngues entre fontes; registrar aliases e manter separados os escopos nacional, regional e local.
+5. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
 6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
 
 ### Critério específico da nova feature de importação

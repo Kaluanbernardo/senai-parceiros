@@ -42,12 +42,13 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - navegação principal por ferramentas: Início, Seleção, Catálogo, Radar e Prompt;
 - Home sem privilegiar uma única feature;
 - catálogo unificado com pesquisadores, escolas e organizações;
+- auditoria de produção sem nomes canônicos repetidos: variantes cross-source e multilíngues de escolas usam alias com domínio/país, enquanto redes e escopos distintos permanecem separados;
 - gerador de prompt para deep research com saída estruturada;
 - shortlist local com testes para 5 a 10 resultados, diversidade e risco grave;
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 78 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 79 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
@@ -145,7 +146,7 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 ### Proximos passos para o Luna
 
 1. Fechar avaliação e shortlist: fazer as notas diferenciarem trade-offs, risco, evidências e lacunas, mantendo de 5 a 10 resultados somente do catálogo.
-2. Concluir a auditoria de deduplicação: resolver variantes residuais de escolas e organizações (mesmo domínio, nomes multilíngues e registros vindos de `escolas` e `stakeholders`) sem fundir redes, regionais ou unidades locais que sejam entidades distintas.
+2. Manter a auditoria de deduplicação como gate de importações futuras: usar domínio/país para aliases ambíguos e não fundir redes, regionais ou unidades locais distintas.
 3. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
 4. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
 5. Consolidar Entra ID, rate limit compartilhado/alertas e o runbook de rotação/backup/restore para o handoff Azure.
