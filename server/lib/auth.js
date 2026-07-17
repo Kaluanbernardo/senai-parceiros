@@ -67,6 +67,26 @@ export function recordLoginAttempt(req) {
   record(`login:${clientKey(req)}`, WINDOW_MS);
 }
 
+// The async variants use one atomic read/modify/write transaction when the
+// shared adapter is configured (file lock or Blob CAS). They are the API
+// boundary used by serverless handlers; the sync functions above remain for
+// local tests and the in-process fallback.
+export async function consumeSelectionAttempt(req, session) {
+  return rateLimitStore.consume(`selection:${selectionKey(req, session)}`, MAX_SELECTION_ATTEMPTS, WINDOW_MS);
+}
+
+export async function consumeInterviewAttempt(req, session) {
+  return rateLimitStore.consume(`interview:${selectionKey(req, session)}`, MAX_INTERVIEW_ATTEMPTS, WINDOW_MS);
+}
+
+export async function consumeRadarAttempt(req, session) {
+  return rateLimitStore.consume(`radar:${selectionKey(req, session)}`, MAX_RADAR_ATTEMPTS, RADAR_WINDOW_MS);
+}
+
+export async function consumeLoginAttempt(req) {
+  return rateLimitStore.consume(`login:${clientKey(req)}`, MAX_ATTEMPTS, WINDOW_MS);
+}
+
 export async function hydrateRateLimitStore({ force = false } = {}) {
   return rateLimitStore.hydrate({ force });
 }

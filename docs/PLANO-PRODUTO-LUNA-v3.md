@@ -48,7 +48,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 81 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 84 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
@@ -56,7 +56,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico, rollback protegido contra conflito e reidratação do catálogo após login; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
 3. O Radar já consulta fontes RSS e páginas HTML institucionais allowlisted, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob` e allowlist adicional configurável por `RADAR_EXTRA_FEEDS_JSON`, faltando cadastrar e revisar os feeds corporativos definitivos.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
-5. O adapter server-side Entra ID já valida assinatura RS256, JWKS, tenant, audiência, emissor, expiração, `nbf` e grupos, e troca o token por sessão HttpOnly em `POST /api/auth/entra`; ainda faltam o registro corporativo do aplicativo/grupos, a ativação por variáveis de ambiente, a operação atômica compartilhada e os alertas operacionais. O MVP já tem rate limit, teto diário de IA e endpoint administrativo de status, todos server-only com adapters `memory`, `file` e `vercel_blob`, sem prompts, respostas ou IPs brutos persistidos.
+5. O adapter server-side Entra ID já valida assinatura RS256, JWKS, tenant, audiência, emissor, expiração, `nbf` e grupos, e troca o token por sessão HttpOnly em `POST /api/auth/entra`; ainda faltam o registro corporativo do aplicativo/grupos e a ativação por variáveis de ambiente. Rate limit e teto diário de IA já possuem caminhos atômicos server-only (`file` com lock e `vercel_blob` com CAS/retry), e o adapter de alertas HTTPS sanitizados está pronto, faltando apenas a configuração corporativa.
 
 ## Decisões de produto vigentes
 

@@ -1,8 +1,9 @@
 import { getCatalogStoreStatus } from './catalogImport.js';
-import { getRadarStoreStatus } from './radar.js';
+import { getRadarFeedReadiness, getRadarStoreStatus } from './radar.js';
 import { getAuthProvider, getRateLimitStoreStatus } from './auth.js';
 import { getUsageBudgetStatus } from './usageBudget.js';
 import { getEntraAdapterStatus } from './entra.js';
+import { getAlertStatus } from './alerts.js';
 
 function configured(name) {
   return Boolean(String(process.env[name] || '').trim());
@@ -11,17 +12,21 @@ function configured(name) {
 export function getOperationalStatus() {
   const catalog = getCatalogStoreStatus();
   const radarStore = getRadarStoreStatus();
+  const radarFeeds = getRadarFeedReadiness();
   const rateLimit = getRateLimitStoreStatus();
   const budgetStore = getUsageBudgetStatus();
   const entra = getEntraAdapterStatus();
+  const alerts = getAlertStatus();
   const sharedStorageReady = [catalog, radarStore, rateLimit, budgetStore].every((store) => store.durable);
+  const atomicStoresReady = Boolean(rateLimit.atomic && budgetStore.atomic);
   const radarCronConfigured = configured('RADAR_CRON_SECRET') || configured('CRON_SECRET');
   const corporateBlockers = [];
   if (!sharedStorageReady) corporateBlockers.push('shared_storage_pending');
   if (!radarCronConfigured) corporateBlockers.push('radar_cron_secret_pending');
-  if (!configured('RADAR_EXTRA_FEEDS_JSON')) corporateBlockers.push('definitive_feeds_pending');
+  if (!radarFeeds.ready) corporateBlockers.push('definitive_feeds_pending');
   if (!entra.ready) corporateBlockers.push('entra_id_adapter_pending');
-  corporateBlockers.push('atomic_rate_limit_and_alerts_pending');
+  if (!atomicStoresReady) corporateBlockers.push('atomic_rate_limit_pending');
+  if (!alerts.valid) corporateBlockers.push('operational_alerts_pending');
   return {
     generatedAt: new Date().toISOString(),
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
@@ -36,6 +41,7 @@ export function getOperationalStatus() {
       liveSources: process.env.RADAR_LIVE_SOURCES !== 'false',
       cronConfigured: radarCronConfigured,
       store: radarStore,
+      feeds: radarFeeds,
     },
     catalog,
     rateLimit,
@@ -44,6 +50,7 @@ export function getOperationalStatus() {
       sessionSecretConfigured: configured('AUTH_SESSION_SECRET'),
       authProvider: getAuthProvider(),
       entraAdapter: entra,
+      alerts,
     },
     handoff: {
       mvp: {
@@ -55,8 +62,8 @@ export function getOperationalStatus() {
         status: 'pending',
         blockers: corporateBlockers,
         identityAdapter: entra.ready ? 'entra_oidc_jwt' : 'local_hmac_until_entra_id_handoff',
-        atomicStores: false,
-        alerts: false,
+        atomicStores: atomicStoresReady,
+        alerts: alerts.valid,
       },
     },
   };

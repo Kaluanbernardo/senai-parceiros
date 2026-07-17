@@ -4,11 +4,11 @@ import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selectio
 import { evaluateWithProvider } from '../../server/lib/ai.js';
 import { getCatalog } from '../../server/lib/catalog.js';
 import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
-import { flushRateLimitStore, hydrateRateLimitStore, isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
+import { consumeSelectionAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
-import { canUseAi, flushUsageBudget, getUsageBudget, hydrateUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
+import { canUseAi, getUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../server/lib/usageBudget.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -17,7 +17,6 @@ export default async function handler(req, res) {
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
   await hydrateRateLimitStore({ force: true });
-  if (isSelectionRateLimited(req, session)) return res.status(429).json({ error: 'selection_rate_limited' });
   try {
     const payload = await readJson(req);
     const validAnswers = payload?.answers && typeof payload.answers === 'object' && !Array.isArray(payload.answers)
@@ -26,8 +25,11 @@ export default async function handler(req, res) {
     if (!payload || !payload.category || !payload.objective || !['researcher', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
-    recordSelectionAttempt(req, session);
-    await flushRateLimitStore();
+    try {
+      if (await consumeSelectionAttempt(req, session)) return res.status(429).json({ error: 'selection_rate_limited' });
+    } catch {
+      return res.status(503).json({ error: 'rate_limit_unavailable' });
+    }
     await hydrateCatalogStore({ force: true });
     await hydrateUsageBudget({ force: true });
     const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
@@ -44,8 +46,7 @@ export default async function handler(req, res) {
       const providerPool = rankProviderCandidates(local.candidatePool, 30);
       ai = await evaluateWithProvider({ input: evaluationInput, candidates: providerPool.map((entry) => entry.candidate) });
       ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
-      ai.budget = recordAiUsage('selection', ai.usage);
-      await flushUsageBudget();
+      ai.budget = await recordAiUsageAtomic('selection', ai.usage);
       ai.evaluations = ai.evaluations.map((evaluation) => ({
         ...evaluation,
         id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,
@@ -73,7 +74,8 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    const status = error.message === 'local_engine_unavailable' ? 503 : 400;
-    return res.status(status).json({ error: status === 503 ? 'selection_engine_unavailable' : 'invalid_selection_request' });
+    const unavailable = error.message === 'local_engine_unavailable' || String(error?.message || '').startsWith('store_') || error?.message === 'atomic_lock_timeout';
+    const status = unavailable ? 503 : 400;
+    return res.status(status).json({ error: error.message === 'local_engine_unavailable' ? 'selection_engine_unavailable' : unavailable ? 'rate_limit_unavailable' : 'invalid_selection_request' });
   }
 }

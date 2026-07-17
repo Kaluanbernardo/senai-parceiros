@@ -1,11 +1,11 @@
 import { getSession } from '../../server/lib/cookies.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { flushRateLimitStore, hydrateRateLimitStore, isInterviewRateLimited, recordInterviewAttempt } from '../../server/lib/auth.js';
+import { consumeInterviewAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
 import { getExampleCoverage } from '../../src/domain/exampleResolver.js';
-import { canUseAi, flushUsageBudget, getUsageBudget, hydrateUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
+import { canUseAi, getUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../server/lib/usageBudget.js';
 
 const MAX_ANSWER_LENGTH = 4000;
 
@@ -92,7 +92,6 @@ export default async function handler(req, res) {
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
   await hydrateRateLimitStore({ force: true });
-  if (isInterviewRateLimited(req, session)) return res.status(429).json({ error: 'interview_rate_limited' });
 
   try {
     const payload = await readJson(req);
@@ -102,8 +101,11 @@ export default async function handler(req, res) {
     if (!validState(state) || !questionId || questionId !== state.currentQuestion.id || answer.length > MAX_ANSWER_LENGTH) {
       return res.status(400).json({ error: 'invalid_interview_payload' });
     }
-    recordInterviewAttempt(req, session);
-    await flushRateLimitStore();
+    try {
+      if (await consumeInterviewAttempt(req, session)) return res.status(429).json({ error: 'interview_rate_limited' });
+    } catch {
+      return res.status(503).json({ error: 'rate_limit_unavailable' });
+    }
     await hydrateUsageBudget({ force: true });
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
     const local = localFallback(answeredState, 'provider_unavailable');
@@ -124,8 +126,7 @@ export default async function handler(req, res) {
         coverage: coverageFor(answeredState),
         remainingGaps: answeredState.validation?.missing || [],
       }, { signal: controller.signal });
-      const budget = recordAiUsage('interview', ai.trace?.usage);
-      await flushUsageBudget();
+      const budget = await recordAiUsageAtomic('interview', ai.trace?.usage);
       const askedCount = answeredState.askedIds.length;
       if (ai.shouldStop && askedCount >= MIN_QUESTIONS && !(answeredState.validation?.missing || []).length) {
         const ready = { ...answeredState, currentQuestion: null, status: 'ready', validation: { ...answeredState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };
@@ -140,7 +141,8 @@ export default async function handler(req, res) {
     } finally {
       clearTimeout(timeout);
     }
-  } catch {
+  } catch (error) {
+    if (String(error?.message || '').startsWith('store_') || error?.message === 'atomic_lock_timeout') return res.status(503).json({ error: 'rate_limit_unavailable' });
     return res.status(400).json({ error: 'invalid_interview_request' });
   }
 }

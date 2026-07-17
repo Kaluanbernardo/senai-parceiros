@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 81 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 84 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -66,18 +66,18 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC. A auditoria de produção também consolidou variantes multilíngues por domínio/país e deixou 154 registros escolares canônicos sem nomes normalizados repetidos.
 - O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback protegido contra alterações posteriores. O catálogo persistido é reidratado após autenticação e atualizações importadas são mescladas por identidade/ID sem duplicar a interface. Os adapters `file` e `vercel_blob` tornam o lote durável quando configurados; o próximo Luna deve conectar a credencial corporativa e, depois, Azure Blob/Storage Table.
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
-- O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`, sem guardar prompts, respostas ou IP bruto; o próximo ambiente deve ligar uma implementação compartilhada/atômica corporativa e alertas.
+- O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`; os caminhos transacionais usam lock exclusivo ou CAS com retry, sem guardar prompts, respostas ou IP bruto. O adapter de alertas HTTPS sanitizados também está pronto, faltando apenas o endpoint corporativo.
 - O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo e `security.entraAdapter` mostra a prontidão segura do adapter (sem valores sensíveis); `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
-- Próximo bloco recomendado: registrar o aplicativo/grupos no tenant corporativo e ativar o adapter Entra ID, depois ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e substituir rate limits/alertas por operação atômica.
+- Próximo bloco recomendado: registrar o aplicativo/grupos no tenant corporativo e ativar o adapter Entra ID, ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron e o webhook de alertas, e revisar o manifesto versionado de feeds.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 
 ## Próximas ondas para execução
 
 1. **Configuração corporativa (TI):** Blob privado no MVP, segredos server-only, registro do aplicativo/grupos Entra ID e preenchimento das variáveis `ENTRA_*` para ativar `POST /api/auth/entra`.
-2. **Operação compartilhada:** substituir os adapters duráveis do MVP por Redis/Storage com operação atômica, alertas de custo/erro e retenção de logs sem prompts ou respostas.
-3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
+2. **Operação compartilhada:** configurar os adapters duráveis/atômicos do MVP ou substituí-los por Redis/Storage corporativo, ativar alertas de custo/erro e manter retenção de logs sem prompts ou respostas.
+3. **Radar editorial:** revisar o manifesto de feeds `2026-07-17.v1`, ampliar a allowlist de fontes nacionais, estaduais e internacionais quando aprovado, e manter quarentena, deduplicação, snapshot e refresh agendado.
 4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
 5. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
 6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback e login Entra, revisar diff e só então solicitar preview Vercel.
@@ -106,6 +106,9 @@ ENTRA_ADMIN_GROUP_ID=
 ENTRA_USER_GROUP_ID=
 ENTRA_ISSUER=
 ENTRA_JWKS_URL=
+OPS_ALERT_WEBHOOK_URL=
+OPS_ALERT_COOLDOWN_SECONDS=300
+AI_ALERT_THRESHOLD=0.8
 ```
 
 Valores nunca devem aparecer em documentação, saída, teste ou commit. O adapter corporativo futuro deve respeitar os mesmos contratos.

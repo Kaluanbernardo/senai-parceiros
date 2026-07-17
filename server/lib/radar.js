@@ -38,6 +38,8 @@ export const RADAR_FEED_POLICY = [
   { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
 ];
 
+export const RADAR_FEED_MANIFEST_VERSION = '2026-07-17.v1';
+
 export const RADAR_WEB_POLICY = [
   { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' },
   { name: 'Governo do Estado de São Paulo', section: 'government', url: 'https://www.educacao.sp.gov.br/educacao/noticias/', official: true, geography: 'São Paulo' },
@@ -90,6 +92,27 @@ export function getRadarFeedPolicy() {
     seen.add(key);
     return true;
   });
+}
+
+export function getRadarFeedReadiness() {
+  const feeds = getRadarFeedPolicy();
+  const sources = RADAR_SOURCE_POLICY;
+  const sections = {
+    research: sources.some((source) => source.kind === 'research'),
+    government: feeds.some((feed) => feed.section === 'government' && feed.official === true),
+    international: feeds.some((feed) => feed.section === 'international' && feed.official === true),
+  };
+  const validUrls = feeds.every((feed) => {
+    try { return feed.official === true && new URL(feed.url).protocol === 'https:'; } catch { return false; }
+  });
+  return {
+    manifestVersion: RADAR_FEED_MANIFEST_VERSION,
+    ready: Object.values(sections).every(Boolean) && validUrls,
+    sections,
+    builtInCount: RADAR_FEED_POLICY.length,
+    configuredCount: Math.max(0, feeds.length - RADAR_FEED_POLICY.length),
+    totalCount: feeds.length,
+  };
 }
 
 function htmlText(value) {

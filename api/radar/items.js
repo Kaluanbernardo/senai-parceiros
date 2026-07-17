@@ -1,6 +1,6 @@
 import { getSession } from '../../server/lib/cookies.js';
-import { getRadarItems, getRadarFeedPolicy, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
-import { flushRateLimitStore, hydrateRateLimitStore, isRadarRateLimited, recordRadarAttempt } from '../../server/lib/auth.js';
+import { getRadarItems, getRadarFeedPolicy, getRadarFeedReadiness, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
+import { consumeRadarAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 
 function bool(value) {
   return String(value).toLowerCase() === 'true';
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
   await hydrateRateLimitStore({ force: true });
-  if (isRadarRateLimited(req, session)) return res.status(429).json({ error: 'radar_rate_limited' });
   const url = new URL(req.url || '/api/radar/items', 'http://localhost');
   const section = url.searchParams.get('section') || undefined;
   if (section && !RADAR_SECTIONS.includes(section)) return res.status(400).json({ error: 'invalid_radar_section' });
@@ -30,8 +29,11 @@ export default async function handler(req, res) {
     source: url.searchParams.get('source') || '',
     sort: url.searchParams.get('sort') || 'relevance',
   };
-  recordRadarAttempt(req, session);
-  await flushRateLimitStore();
+  try {
+    if (await consumeRadarAttempt(req, session)) return res.status(429).json({ error: 'radar_rate_limited' });
+  } catch {
+    return res.status(503).json({ error: 'rate_limit_unavailable' });
+  }
   try {
     const result = await getRadarItems({
       filters,
@@ -40,6 +42,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ...result,
       sourcePolicy: [...RADAR_SOURCE_POLICY, ...getRadarFeedPolicy(), ...RADAR_WEB_POLICY],
+      feedReadiness: getRadarFeedReadiness(),
       mode: result.liveProvider ? 'live+curated' : 'curated-fallback',
     });
   } catch {

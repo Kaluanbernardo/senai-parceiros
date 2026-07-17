@@ -8,6 +8,8 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 - Autenticação provisória: dois papéis (`admin` e `user`) com credenciais server-only.
 - IA: OpenAI Platform, OpenRouter (`openrouter/auto`) ou Azure OpenAI por adapter, escolhidos por `AI_PROVIDER`.
 - Catálogo/Radar: memória para desenvolvimento; `file` para execução controlada local; `vercel_blob` para armazenamento privado compartilhado.
+- Rate limit e orçamento de IA: o contrato atômico server-only já está implementado; `file` usa lock exclusivo e `vercel_blob` usa compare-and-swap (`ifMatch`) com retry. A configuração compartilhada ainda precisa ser ligada no ambiente corporativo.
+- Alertas: adapter server-only opcional por webhook HTTPS, com payload sanitizado e deduplicação; nenhum prompt, resposta, token ou IP é enviado.
 - Radar: refresh protegido em `/api/radar/refresh`, agendado a cada seis horas em `vercel.json`.
 - O `vite preview` local também monta os handlers `/api/*`, permitindo testar o build de produção com autenticação, catálogo, Radar e status antes do deploy.
 - Seleção: respostas, briefings e resultados não são persistidos; somente a planilha exportada sai pelo navegador.
@@ -24,6 +26,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 7. Definir `AUTH_PROVIDER=local` no MVP, `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`. O adapter server-only de Entra ID já está implementado em `server/lib/entra.js`, com entrada em `POST /api/auth/entra`; para ativá-lo, registrar o aplicativo e os grupos no tenant corporativo, preencher as variáveis `ENTRA_*` abaixo e trocar para `AUTH_PROVIDER=entra`. O login local continuará desabilitado nesse modo.
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
 9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs. O bloco `handoff` resume a prontidão do MVP (`handoff.mvp`) e lista os bloqueadores corporativos (`handoff.corporate.blockers`), incluindo Entra ID, armazenamento atômico, alertas, cron e feeds definitivos.
+10. Para alertas, definir `OPS_ALERT_WEBHOOK_URL` somente com endpoint HTTPS corporativo e, opcionalmente, `OPS_ALERT_COOLDOWN_SECONDS`/`AI_ALERT_THRESHOLD`. Testar um evento de orçamento em ambiente de homologação antes de ativar produção.
 
 ## Migração para Azure
 
@@ -34,7 +37,7 @@ Substituir somente adapters e configuração:
 - IA: `AI_PROVIDER=azure`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION` e segredo em Key Vault.
 - Refresh: Azure Timer/Functions chama o mesmo contrato do endpoint protegido, com identidade gerenciada e sem segredo no código.
 - Autenticação: ativar o adapter server-side de Entra ID, mantendo os papéis de usuário e administrador mapeados por grupo. O contrato de sessão e os endpoints protegidos permanecem os mesmos.
-- Rate limit/orçamento: o MVP já oferece adapters `memory`, `file` e `vercel_blob` para rate limit e teto diário de IA, sem IP bruto, prompts ou respostas; na Azure, substituir por Redis/Storage com operação atômica e alertas.
+- Rate limit/orçamento: o MVP oferece adapters `memory`, `file` e `vercel_blob`; os caminhos compartilhados usam transação atômica (lock de arquivo ou CAS de Blob), sem IP bruto, prompts ou respostas. Na Azure, substituir o mesmo contrato por Redis/Storage e manter os alertas sanitizados.
 
 ### Contrato mínimo de Entra ID
 

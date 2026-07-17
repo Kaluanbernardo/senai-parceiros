@@ -1,130 +1,100 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { AtomicJsonStore } from './atomicJsonStore.js';
 
 function emptyState() {
   return { entries: {} };
 }
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
 function normalizeState(value) {
-  const state = emptyState();
-  if (value?.entries && typeof value.entries === 'object' && !Array.isArray(value.entries)) state.entries = value.entries;
-  return state;
+  return value?.entries && typeof value.entries === 'object' && !Array.isArray(value.entries)
+    ? { entries: value.entries }
+    : emptyState();
 }
 
-class RateLimitStore {
+function defaultFilePath() {
+  return process.env.RATE_LIMIT_STORE_FILE || path.join(process.cwd(), '.data', 'rate-limit-store.json');
+}
+
+export class RateLimitStore {
   constructor() {
-    this.driver = String(process.env.RATE_LIMIT_STORE_DRIVER || (process.env.RATE_LIMIT_STORE_FILE ? 'file' : 'memory')).toLowerCase();
-    this.filePath = process.env.RATE_LIMIT_STORE_FILE || path.join(process.cwd(), '.data', 'rate-limit-store.json');
-    this.blobPath = process.env.RATE_LIMIT_BLOB_PATH || 'senai/security/rate-limits.json';
-    this.state = emptyState();
-    this.loaded = false;
-    this.remoteHydrated = false;
-    this.remoteEtag = null;
-    this.lastError = null;
+    this.store = new AtomicJsonStore({ name: 'rate-limit', emptyState, normalizeState });
+    this.configure();
   }
 
   configure({ driver, filePath, blobPath } = {}) {
-    if (driver) this.driver = String(driver).toLowerCase();
-    if (filePath) this.filePath = filePath;
-    if (blobPath) this.blobPath = blobPath;
-    this.state = emptyState();
-    this.loaded = false;
-    this.remoteHydrated = false;
-    this.remoteEtag = null;
-    this.lastError = null;
-    this.load();
+    const selectedDriver = String(driver || process.env.RATE_LIMIT_STORE_DRIVER || (process.env.RATE_LIMIT_STORE_FILE ? 'file' : 'memory')).toLowerCase();
+    this.store.configure({
+      driver: selectedDriver,
+      filePath: filePath || defaultFilePath(),
+      blobPath: blobPath || process.env.RATE_LIMIT_BLOB_PATH || 'senai/security/rate-limits.json',
+    });
     return this.status();
   }
 
-  status() {
-    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob', remoteHydrated: this.remoteHydrated, lastError: this.lastError };
-  }
+  status() { return this.store.status(); }
 
-  load() {
-    if (this.loaded) return;
-    this.loaded = true;
-    if (this.driver !== 'file') return;
-    try {
-      this.state = normalizeState(JSON.parse(fs.readFileSync(this.filePath, 'utf8')));
-    } catch (error) {
-      if (error?.code !== 'ENOENT') {
-        this.lastError = 'store_read_failed';
-        console.warn('[rate-limit-store] failed to load store', error.message);
-      }
-    }
-  }
-
-  persist() {
-    this.load();
-    if (this.driver !== 'file') return;
-    fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
-    const temporaryPath = `${this.filePath}.tmp`;
-    fs.writeFileSync(temporaryPath, JSON.stringify(this.state), 'utf8');
-    fs.renameSync(temporaryPath, this.filePath);
-  }
-
-  get(key) {
-    this.load();
-    return this.state.entries[key] ? clone(this.state.entries[key]) : null;
-  }
+  get(key) { return this.store.get(key); }
 
   set(key, value) {
-    this.load();
-    this.state.entries[key] = clone(value);
-    this.persist();
-    return this.get(key);
+    const result = this.store.set(key, value);
+    if (this.store.driver === 'file') {
+      fs.mkdirSync(path.dirname(this.store.filePath), { recursive: true });
+      const temporaryPath = `${this.store.filePath}.${process.pid}.tmp`;
+      fs.writeFileSync(temporaryPath, JSON.stringify(this.store.state), 'utf8');
+      fs.renameSync(temporaryPath, this.store.filePath);
+    }
+    return result;
   }
 
-  resetForTests() {
-    this.state = emptyState();
-    this.loaded = true;
-    this.remoteHydrated = false;
-    this.remoteEtag = null;
-    this.lastError = null;
-    if (this.driver === 'file') {
-      try { fs.rmSync(this.filePath, { force: true }); } catch { /* test cleanup */ }
-    }
+  async consume(key, limit, windowMs) {
+    const now = Date.now();
+    let limited = false;
+    await this.store.update((state) => {
+      const current = state.entries?.[key];
+      if (!current || current.resetAt <= now) {
+        state.entries[key] = { count: 1, resetAt: now + windowMs };
+        return state;
+      }
+      if (current.count >= limit) {
+        limited = true;
+        return state;
+      }
+      state.entries[key] = { ...current, count: current.count + 1 };
+      return state;
+    });
+    return limited;
   }
 
   async hydrate({ force = false } = {}) {
-    if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
+    if (this.store.driver !== 'vercel_blob' || (!force && this.store.remoteHydrated)) return this.status();
     try {
-      const { get } = await import('@vercel/blob');
-      const result = await get(this.blobPath, { access: 'private', useCache: false });
-      if (result?.statusCode === 200 && result.stream) {
-        this.state = normalizeState(JSON.parse(await new Response(result.stream).text()));
-        this.remoteEtag = result.blob?.etag || null;
-      }
-      this.lastError = null;
-    } catch (error) {
-      this.lastError = 'store_hydrate_failed';
-      console.warn('[rate-limit-store] failed to hydrate store', error.message);
+      const current = await this.store.readBlob();
+      this.store.state = current.state;
+      this.store.remoteEtag = current.etag;
+      this.store.remoteHydrated = true;
+      this.store.lastError = null;
+    } catch {
+      this.store.lastError = 'store_hydrate_failed';
+      this.store.remoteHydrated = true;
     }
-    this.remoteHydrated = true;
-    this.loaded = true;
     return this.status();
   }
 
   async flush() {
-    if (this.driver !== 'vercel_blob') return this.status();
+    if (this.store.driver !== 'vercel_blob') return this.status();
     try {
-      const { put } = await import('@vercel/blob');
-      const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
-      if (this.remoteEtag) options.ifMatch = this.remoteEtag;
-      const result = await put(this.blobPath, JSON.stringify(this.state), options);
-      this.remoteEtag = result.etag || this.remoteEtag;
-      this.lastError = null;
-    } catch (error) {
-      this.lastError = 'store_flush_failed';
-      console.warn('[rate-limit-store] failed to flush store', error.message);
+      const result = await this.store.writeBlob(this.store.state, this.store.remoteEtag);
+      this.store.remoteEtag = result?.etag || this.store.remoteEtag;
+      this.store.remoteHydrated = true;
+      this.store.lastError = null;
+    } catch {
+      this.store.lastError = 'store_flush_failed';
     }
-    this.remoteHydrated = true;
     return this.status();
   }
+
+  resetForTests() { this.store.resetForTests(); }
 }
 
 export const rateLimitStore = new RateLimitStore();
