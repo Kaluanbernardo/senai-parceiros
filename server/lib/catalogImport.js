@@ -159,7 +159,7 @@ export function commitCatalogImport(batchId, decisions = {}) {
     if (existingIndex >= 0) records[existingIndex] = record;
     else records.push(record);
     catalogStore.markRowHash(preview.category, row.hash);
-    applied.push({ rowNumber: row.rowNumber, id: record.id, action: existingIndex >= 0 ? (decision === 'merge' ? 'merged' : 'updated') : 'created' });
+    applied.push({ rowNumber: row.rowNumber, id: record.id, rowHash: row.hash, action: existingIndex >= 0 ? (decision === 'merge' ? 'merged' : 'updated') : 'created' });
     appliedRecords.push(record);
   }
   catalogStore.replaceCategory(preview.category, records, [...before.rowHashes, ...applied.map((item) => preview.rows.find((row) => row.rowNumber === item.rowNumber)?.hash).filter(Boolean)]);
@@ -172,9 +172,37 @@ export function commitCatalogImport(batchId, decisions = {}) {
 export function rollbackCatalogImport(batchId) {
   const batch = catalogStore.getCommitted(batchId);
   if (!batch) throw new Error('import_batch_not_found');
-  catalogStore.restore(batch.category, batch.before);
+  const applied = Array.isArray(batch.applied) ? batch.applied : [];
+  const current = catalogStore.getRecords(batch.category);
+  const conflicts = [];
+  for (const change of applied) {
+    const currentRecord = current.find((record) => String(record.id) === String(change.id));
+    if (!currentRecord || currentRecord.importBatchId !== batchId || currentRecord.importRowHash !== change.rowHash) {
+      conflicts.push({ rowNumber: change.rowNumber, id: change.id, reason: 'record_changed_after_batch' });
+    }
+  }
+  if (conflicts.length) {
+    const error = new Error('rollback_conflict');
+    error.conflicts = conflicts;
+    throw error;
+  }
+  const restored = [...current];
+  for (const change of applied) {
+    const index = restored.findIndex((record) => String(record.id) === String(change.id));
+    if (index < 0) continue;
+    if (change.action === 'created') {
+      restored.splice(index, 1);
+      continue;
+    }
+    const previous = (batch.before?.records || []).find((record) => String(record.id) === String(change.id));
+    if (previous) restored[index] = previous;
+    else restored.splice(index, 1);
+  }
+  const changedHashes = new Set(applied.map((change) => change.rowHash).filter(Boolean));
+  const remainingHashes = (catalogStore.snapshot(batch.category).rowHashes || []).filter((hash) => !changedHashes.has(hash));
+  catalogStore.replaceCategory(batch.category, restored, remainingHashes);
   catalogStore.deleteCommitted(batchId);
-  return { batchId, rolledBack: true };
+  return { batchId, rolledBack: true, restored: applied.length };
 }
 
 export function getImportedRecords(category) {

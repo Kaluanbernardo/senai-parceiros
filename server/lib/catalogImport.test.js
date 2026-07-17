@@ -89,4 +89,44 @@ describe('catalog XLSX import', () => {
     catalogStore.configure({ driver: 'memory' });
     fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
   });
+
+  it('rolls back only its own rows and preserves a later independent batch', async () => {
+    const category = 'organization';
+    const headers = getCatalogHeaders(category);
+    const makeContent = async (name) => {
+      const values = Object.fromEntries(headers.map((header) => [header, '']));
+      values.schema_version = CATALOG_SCHEMA_VERSION;
+      values.tipo_registro = category;
+      values.nome = name;
+      values.pais = 'Brasil';
+      return workbookBase64(category, headers.map((header) => values[header]));
+    };
+    const first = previewCatalogImport(await parseCatalogWorkbook({ filename: 'first.xlsx', contentBase64: await makeContent('Primeira') }), []);
+    commitCatalogImport(first.batchId);
+    const second = previewCatalogImport(await parseCatalogWorkbook({ filename: 'second.xlsx', contentBase64: await makeContent('Segunda') }), []);
+    commitCatalogImport(second.batchId);
+    expect(rollbackCatalogImport(first.batchId).rolledBack).toBe(true);
+    expect(catalogStore.getRecords(category).map((record) => record.nome)).toEqual(['Segunda']);
+  });
+
+  it('blocks rollback when a later batch changed the same record', async () => {
+    const category = 'organization';
+    const headers = getCatalogHeaders(category);
+    const values = Object.fromEntries(headers.map((header) => [header, '']));
+    values.schema_version = CATALOG_SCHEMA_VERSION;
+    values.tipo_registro = category;
+    values.nome = 'Registro Mutável';
+    values.pais = 'Brasil';
+    const contentBase64 = await workbookBase64(category, headers.map((header) => values[header]));
+    const first = previewCatalogImport(await parseCatalogWorkbook({ filename: 'first.xlsx', contentBase64 }), []);
+    const firstCommit = commitCatalogImport(first.batchId);
+    const updated = { ...values, descricao: 'Atualização posterior' };
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(CATALOG_SHEET_NAME);
+    sheet.addRow(headers);
+    sheet.addRow(headers.map((header) => updated[header] || ''));
+    const second = previewCatalogImport(await parseCatalogWorkbook({ filename: 'second.xlsx', contentBase64: Buffer.from(await workbook.xlsx.writeBuffer()).toString('base64') }), []);
+    commitCatalogImport(second.batchId, { '2': 'merge' });
+    expect(() => rollbackCatalogImport(firstCommit.batchId)).toThrow('rollback_conflict');
+  });
 });
