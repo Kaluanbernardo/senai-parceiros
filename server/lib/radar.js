@@ -38,6 +38,41 @@ export const RADAR_FEED_POLICY = [
   { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
 ];
 
+const RADAR_SECTION_SET = new Set(RADAR_SECTIONS);
+
+function configuredExtraFeeds() {
+  const raw = String(process.env.RADAR_EXTRA_FEEDS_JSON || '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const knownSources = new Set(RADAR_SOURCE_POLICY.filter((source) => source.official).map((source) => source.name));
+    return parsed
+      .filter((feed) => feed && knownSources.has(feed.name) && RADAR_SECTION_SET.has(feed.section) && feed.official === true)
+      .map((feed) => ({
+        name: String(feed.name),
+        section: String(feed.section),
+        url: String(feed.url || ''),
+        official: true,
+        geography: String(feed.geography || 'Internacional'),
+      }))
+      .filter((feed) => /^https:\/\//i.test(feed.url));
+  } catch {
+    return [];
+  }
+}
+
+export function getRadarFeedPolicy() {
+  const feeds = [...RADAR_FEED_POLICY, ...configuredExtraFeeds()];
+  const seen = new Set();
+  return feeds.filter((feed) => {
+    const key = `${feed.name}:${feed.url}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const liveCache = new Map();
 const LIVE_CACHE_TTL = 10 * 60 * 1000;
 const LIVE_CACHE_MAX = 24;
@@ -225,6 +260,7 @@ function providerStatus(name, status, extra = {}) {
 
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
   await radarStore.hydrate({ force: live });
+  const feedPolicy = getRadarFeedPolicy();
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
   const stored = radarStore.getSnapshot();
   let items = (stored?.items || seedItems).map(normalizeRadarItem).filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
@@ -249,7 +285,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     liveProvider = currentItems.length > 0;
   }
   if (live) {
-    const feeds = RADAR_FEED_POLICY.filter((feed) => !filters.section || feed.section === filters.section);
+    const feeds = feedPolicy.filter((feed) => !filters.section || feed.section === filters.section);
     const feedResults = await Promise.allSettled(feeds.map((feed) => fetchFeedItems(feed)));
     const feedItems = [];
     feedResults.forEach((result, index) => {
@@ -260,7 +296,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       if (result.status === 'fulfilled') feedItems.push(...result.value);
     });
     currentItems.push(...feedItems);
-    items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
+    items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || feedPolicy.some((feed) => feed.name === item.sourceName));
     liveProvider = liveProvider || feedItems.length > 0;
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
+import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -24,6 +24,21 @@ describe('radar domain', () => {
     expect(item.section).toBe('research');
     expect(item.relevanceScore).toBe(100);
     expect(normalizeRadarItem({ title: 'sem data', publishedAt: 'não é data' }).publishedAt).toBeNull();
+  });
+
+  it('accepts only allowlisted official HTTPS feeds from configuration', () => {
+    const previous = process.env.RADAR_EXTRA_FEEDS_JSON;
+    process.env.RADAR_EXTRA_FEEDS_JSON = JSON.stringify([
+      { name: 'OCDE', section: 'international', url: 'https://example.org/oecd.xml', official: true, geography: 'Internacional' },
+      { name: 'Fonte desconhecida', section: 'research', url: 'https://example.org/unknown.xml', official: true },
+      { name: 'OIT', section: 'international', url: 'http://insecure.example.org/oit.xml', official: true },
+    ]);
+    const configured = getRadarFeedPolicy();
+    expect(configured).toContainEqual(expect.objectContaining({ name: 'OCDE', url: 'https://example.org/oecd.xml' }));
+    expect(configured.some((feed) => feed.name === 'Fonte desconhecida')).toBe(false);
+    expect(configured.some((feed) => feed.url.startsWith('http://'))).toBe(false);
+    if (previous === undefined) delete process.env.RADAR_EXTRA_FEEDS_JSON;
+    else process.env.RADAR_EXTRA_FEEDS_JSON = previous;
   });
 
   it('ingests an institutional RSS item with provenance and section', async () => {
