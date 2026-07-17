@@ -36,8 +36,6 @@ class CatalogStore {
     this.loaded = false;
     this.remoteHydrated = false;
     this.remoteEtag = null;
-    this.remoteHydrated = false;
-    this.remoteEtag = null;
   }
 
   configure({ driver, filePath } = {}) {
