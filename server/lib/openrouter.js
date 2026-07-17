@@ -75,10 +75,8 @@ function parseContent(content) {
   return JSON.parse(text);
 }
 
-export async function evaluateWithOpenRouter({ input, candidates, signal }) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('openrouter_not_configured');
-  const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, endpoint, provider, headers = {}, plugins, providerOptions }) {
+  if (!apiKey) throw new Error(`${provider}_not_configured`);
   const tradeoff = Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF));
   const { candidates: _catalog, ...inputContext } = input || {};
   const prompt = [
@@ -91,37 +89,66 @@ export async function evaluateWithOpenRouter({ input, candidates, signal }) {
     'Em evidence, cite somente nomes de campos ou URLs que aparecem no perfil fornecido.',
     JSON.stringify({ input: inputContext, candidates }),
   ].join('\n');
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const response = await fetch(endpoint, {
     method: 'POST',
     signal,
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://senai-parceiros.vercel.app',
-      'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Parceiros',
-      'X-OpenRouter-Metadata': 'enabled',
+      ...headers,
     },
     body: JSON.stringify({
       model,
       messages: [{ role: 'system', content: 'Responda somente JSON válido conforme o schema solicitado.' }, { role: 'user', content: prompt }],
       temperature: 0.1,
-      plugins: [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, tradeoff)) }],
-      provider: { require_parameters: true },
+      ...(plugins ? { plugins } : {}),
+      ...(providerOptions ? { provider: providerOptions } : {}),
       response_format: { type: 'json_schema', json_schema: { name: 'selection_evaluation', strict: true, schema: evaluationSchema } },
     }),
   });
-  if (!response.ok) throw new Error(`openrouter_http_${response.status}`);
+  if (!response.ok) throw new Error(`${provider}_http_${response.status}`);
   const payload = await response.json();
   const choice = payload.choices?.[0];
   const result = normalizeEvaluation(parseContent(choice?.message?.content));
   return {
     ...result,
     model: payload.model || model,
-    provider: 'openrouter',
-    costQualityTradeoff: tradeoff,
-    routing: payload.openrouter_metadata || null,
+    provider,
+    costQualityTradeoff: provider === 'openrouter' ? tradeoff : null,
+    routing: provider === 'openrouter' ? payload.openrouter_metadata || null : null,
     usage: payload.usage || null,
   };
+}
+
+export async function evaluateWithOpenRouter({ input, candidates, signal }) {
+  return evaluateWithEndpoint({
+    input,
+    candidates,
+    signal,
+    apiKey: process.env.OPENROUTER_API_KEY,
+    model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    provider: 'openrouter',
+    headers: {
+      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://senai-parceiros.vercel.app',
+      'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Parceiros',
+      'X-OpenRouter-Metadata': 'enabled',
+    },
+    plugins: [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) }],
+    providerOptions: { require_parameters: true },
+  });
+}
+
+export async function evaluateWithOpenAI({ input, candidates, signal }) {
+  return evaluateWithEndpoint({
+    input,
+    candidates,
+    signal,
+    apiKey: process.env.OPENAI_API_KEY,
+    model: process.env.OPENAI_MODEL || 'gpt-5-mini',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    provider: 'openai',
+  });
 }
 
 export { evaluationSchema };

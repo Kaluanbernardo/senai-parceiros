@@ -3,6 +3,7 @@ import { CATEGORY_IDS, OBJECTIVE_IDS } from './interview';
 
 const CATEGORIES = CATEGORY_IDS;
 const OBJECTIVES = OBJECTIVE_IDS;
+const INTERVIEW_DIMENSIONS = Object.freeze(['impact', 'alignment', 'credibility', 'collaboration', 'feasibility', 'risk']);
 
 function isObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -14,6 +15,32 @@ function nonEmpty(value) {
 
 function result(valid, errors) {
   return { valid, errors };
+}
+
+export function validateInterviewQuestion(value) {
+  const errors = [];
+  if (!isObject(value)) return result(false, ['question must be an object']);
+  if (!nonEmpty(value.id)) errors.push('question id is required');
+  if (!nonEmpty(value.prompt) || String(value.prompt).length > 600) errors.push('question prompt must contain 1–600 characters');
+  if (!nonEmpty(value.helper) || String(value.helper).length > 500) errors.push('question helper must contain 1–500 characters');
+  if (!nonEmpty(value.example) || String(value.example).length > 500) errors.push('question example must contain 1–500 characters');
+  if (!nonEmpty(value.reasonTag)) errors.push('question reasonTag is required');
+  if (!['text', 'textarea', 'multiline'].includes(value.kind)) errors.push('question kind is invalid');
+  if (value.dimensions && (!Array.isArray(value.dimensions) || value.dimensions.some((item) => !INTERVIEW_DIMENSIONS.includes(item)))) errors.push('question dimensions are invalid');
+  return result(errors.length === 0, errors);
+}
+
+export function validateInterviewState(value) {
+  const errors = [];
+  if (!isObject(value)) return result(false, ['interview state must be an object']);
+  if (!CATEGORIES.includes(value.category)) errors.push('interview category is invalid');
+  if (!OBJECTIVES.includes(value.objective)) errors.push('interview objective is invalid');
+  if (!isObject(value.answers)) errors.push('interview answers must be an object');
+  else if (Object.keys(value.answers).length > 20 || Object.values(value.answers).some((answer) => typeof answer !== 'string' || answer.length > 4000)) errors.push('interview answers exceed limits');
+  if (!Array.isArray(value.askedIds) || value.askedIds.length > 20 || new Set(value.askedIds || []).size !== (value.askedIds || []).length) errors.push('interview askedIds exceed limits or contain duplicates');
+  if (value.currentQuestion !== null && value.currentQuestion !== undefined && !validateInterviewQuestion(value.currentQuestion).valid) errors.push('interview currentQuestion is invalid');
+  if (value.status === 'active' && !value.currentQuestion) errors.push('active interview requires a current question');
+  return result(errors.length === 0, errors);
 }
 
 /** @typedef {{category:string, objective:string, context:string, desiredOutcomes:string[], audience:string, themes:string[], contributionTypes:string[], evidencePreferences:string[], collaborationModel:string, feasibility:Record<string, unknown>, hardConstraints:string[], riskRules:Record<string, unknown>, diversityPreferences:Record<string, unknown>, dimensionWeights:Record<string, number>, uncertainties:string[], answers:Record<string, unknown>}} SelectionBrief */

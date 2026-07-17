@@ -139,6 +139,7 @@ const DEFAULT_WEIGHTS = Object.freeze({ impact: 0.18, alignment: 0.24, credibili
 function safeCategory(category) { return CATEGORY_IDS.includes(category) ? category : 'organization'; }
 function safeObjective(objective) { return OBJECTIVE_IDS.includes(objective) ? objective : 'guided'; }
 function questionById(id) { return QUESTION_BANK.find((question) => question.id === id) || null; }
+function definitionFor(state, id) { return state?.questionDefinitions?.[id] || questionById(id); }
 function answerText(value) {
   if (Array.isArray(value)) return value.filter(Boolean).map(String).join('; ');
   if (value === null || value === undefined) return '';
@@ -235,7 +236,8 @@ function withNext(state) {
   const nextQuestion = nextQuestionFor(state);
   if (!nextQuestion) return { ...state, currentQuestion: null, status: 'ready', validation: validationFor(state), progress: { asked: state.askedIds.length, max: MAX_QUESTIONS } };
   const askedIds = addUnique(state.askedIds, nextQuestion.id);
-  return { ...state, askedIds, currentQuestion: questionForState(nextQuestion, state), lastStage: nextQuestion.stage, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
+  const questionDefinitions = { ...(state.questionDefinitions || {}), [nextQuestion.id]: questionForState(nextQuestion, state) };
+  return { ...state, askedIds, questionDefinitions, currentQuestion: questionDefinitions[nextQuestion.id], lastStage: nextQuestion.stage, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
 }
 
 export function start({ category, objective, context = '', gaps = [] } = {}) {
@@ -248,6 +250,7 @@ export function start({ category, objective, context = '', gaps = [] } = {}) {
     answers: context ? { context: answerText(context) } : {},
     askedIds: context ? ['context'] : [],
     history: [],
+    questionDefinitions: {},
     gaps: Array.isArray(gaps) ? gaps.filter(Boolean).map(String) : [],
     uncertainties: [],
     status: 'active',
@@ -280,10 +283,11 @@ export function next(state) {
 }
 
 export function revise(state, questionId, value) {
-  if (!state || !state.askedIds?.includes(questionId) || !questionById(questionId)) return state;
+  const definition = definitionFor(state, questionId);
+  if (!state || !state.askedIds?.includes(questionId) || !definition) return state;
   const answers = { ...state.answers, [questionId]: answerText(value) };
   const uncertainties = isUnknown(value) ? addUnique(state.uncertainties, questionId) : state.uncertainties.filter((item) => item !== questionId);
-  return { ...state, answers, uncertainties, status: 'active', currentQuestion: questionForState(questionById(questionId), { ...state, answers }), validation: validationFor({ ...state, answers }) };
+  return { ...state, answers, uncertainties, status: 'active', currentQuestion: questionForState(definition, { ...state, answers }), validation: validationFor({ ...state, answers }) };
 }
 
 export function finalize(state) {

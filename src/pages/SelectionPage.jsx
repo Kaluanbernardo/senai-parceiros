@@ -51,8 +51,9 @@ export default function SelectionPage() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [interviewTrace, setInterviewTrace] = useState([]);
 
-  const reviewQuestions = useMemo(() => (plannerState?.askedIds || []).map((id) => QUESTION_BANK.find((item) => item.id === id)).filter(Boolean).map((item) => ({ ...item, label: item.prompt, example: 'Revise a resposta registrada e ajuste apenas o que desejar.' })), [plannerState]);
+  const reviewQuestions = useMemo(() => (plannerState?.askedIds || []).map((id) => plannerState?.questionDefinitions?.[id] || QUESTION_BANK.find((item) => item.id === id)).filter(Boolean).map((item) => ({ ...item, label: item.prompt, example: 'Revise a resposta registrada e ajuste apenas o que desejar.' })), [plannerState]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
   const currentAnswer = plannerState?.answers?.[question?.id] || '';
@@ -64,6 +65,7 @@ export default function SelectionPage() {
     setError('');
     setPlannerState(null);
     setReviewing(false);
+    setInterviewTrace([]);
   }
 
   function beginInterview() {
@@ -71,6 +73,7 @@ export default function SelectionPage() {
     setPhase('interview');
     setQuestionIndex(0);
     setReviewing(false);
+    setInterviewTrace([]);
     setPlannerState(InterviewPlanner.start({ category, objective }));
   }
 
@@ -78,7 +81,7 @@ export default function SelectionPage() {
     setPlannerState((previous) => previous ? { ...previous, answers: { ...previous.answers, [question.id]: value } } : previous);
   }
 
-  async function finishInterview(finalAnswers = answers, brief = null) {
+  async function finishInterview(finalAnswers = answers, brief = null, traceEntries = interviewTrace) {
     const pool = getCandidatePool({ category, data });
     const local = buildLocalEvaluation({ category, objective, answers: finalAnswers, candidates: pool });
     if (brief) local.trace.selectionBrief = brief;
@@ -93,25 +96,57 @@ export default function SelectionPage() {
       });
       if (!response.ok) throw new Error('ai_unavailable');
       const payload = await response.json();
-      setResult(payload);
+      setResult({ ...payload, trace: { ...(payload.trace || {}), interview: traceEntries } });
     } catch {
-      setResult(local);
+      setResult({ ...local, trace: { ...(local.trace || {}), interview: traceEntries } });
     } finally {
       setBusy(false);
       setPhase('results');
     }
   }
 
-  function nextQuestion() {
+  async function advanceWithAdaptiveProvider(state, answerValue) {
+    setBusy(true);
+    setError('');
+    const requestState = { ...state, questionDefinitions: { ...(state.questionDefinitions || {}), [state.currentQuestion?.id]: state.currentQuestion } };
+    const answeredState = InterviewPlanner.answer(requestState, answerValue, requestState.currentQuestion?.id);
+    let nextState = InterviewPlanner.next(answeredState);
+    let providerTrace = { provider: 'local-fallback', model: 'deterministic-planner-v1', fallback: true, fallbackReason: 'request_failed' };
+    try {
+      const response = await fetch('/api/selection/interview/next', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ state: answeredState, questionId: answeredState.lastAnswered, answer: answerValue }),
+      });
+      if (!response.ok) throw new Error('adaptive_interview_unavailable');
+      const payload = await response.json();
+      if (!payload?.state) throw new Error('adaptive_interview_invalid_response');
+      nextState = payload.state;
+      providerTrace = payload.trace || providerTrace;
+    } catch {
+      // O planejador local mantém o fluxo quando a IA não está configurada ou está indisponível.
+    }
+    const traceEntry = {
+      questionId: answeredState.lastAnswered,
+      answer: answerValue,
+      nextQuestionId: nextState.currentQuestion?.id || null,
+      ...providerTrace,
+    };
+    const nextTrace = [...interviewTrace, traceEntry];
+    setInterviewTrace(nextTrace);
+    setPlannerState(nextState);
+    setAnswers(nextState.answers || {});
+    setBusy(false);
+    if (nextState.status === 'ready') {
+      const brief = InterviewPlanner.finalize(nextState);
+      await finishInterview(brief.answers, brief, nextTrace);
+    }
+  }
+
+  async function nextQuestion() {
     if (plannerState && !reviewing) {
-      const answeredState = InterviewPlanner.answer(plannerState, currentAnswer || 'não informado', question.id);
-      const progressed = InterviewPlanner.next(answeredState);
-      setPlannerState(progressed);
-      setAnswers(progressed.answers || {});
-      if (progressed.status === 'ready') {
-        const brief = InterviewPlanner.finalize(progressed);
-        finishInterview(brief.answers, brief);
-      }
+      await advanceWithAdaptiveProvider(plannerState, currentAnswer || 'não informado');
       return;
     }
     if (plannerState && reviewing) {
@@ -167,6 +202,7 @@ export default function SelectionPage() {
     setQuestionIndex(0);
     setResult(null);
     setError('');
+    setInterviewTrace([]);
   }
 
   if (phase === 'results') {

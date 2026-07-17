@@ -2,6 +2,7 @@ import login from '../api/auth/login.js';
 import session from '../api/auth/session.js';
 import logout from '../api/auth/logout.js';
 import evaluate from '../api/selection/evaluate.js';
+import interviewNext from '../api/selection/interview-next.js';
 import radarItems from '../api/radar/items.js';
 
 const handlers = {
@@ -9,6 +10,7 @@ const handlers = {
   '/api/auth/session': session,
   '/api/auth/logout': logout,
   '/api/selection/evaluate': evaluate,
+  '/api/selection/interview/next': interviewNext,
   '/api/radar/items': radarItems,
 };
 

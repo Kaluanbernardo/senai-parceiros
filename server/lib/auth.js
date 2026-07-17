@@ -3,10 +3,12 @@ import { createSessionToken, setSessionCookie } from './cookies.js';
 
 const attempts = new Map();
 const selectionAttempts = new Map();
+const interviewAttempts = new Map();
 const radarAttempts = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 const MAX_SELECTION_ATTEMPTS = 12;
+const MAX_INTERVIEW_ATTEMPTS = 40;
 const RADAR_WINDOW_MS = 10 * 60 * 1000;
 const MAX_RADAR_ATTEMPTS = 30;
 
@@ -34,6 +36,25 @@ export function recordSelectionAttempt(req, session) {
   const now = Date.now();
   const record = selectionAttempts.get(key);
   if (!record || record.resetAt <= now) selectionAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
+  else record.count += 1;
+}
+
+export function isInterviewRateLimited(req, session) {
+  const key = selectionKey(req, session);
+  const now = Date.now();
+  const record = interviewAttempts.get(key);
+  if (!record || record.resetAt <= now) {
+    interviewAttempts.set(key, { count: 0, resetAt: now + WINDOW_MS });
+    return false;
+  }
+  return record.count >= MAX_INTERVIEW_ATTEMPTS;
+}
+
+export function recordInterviewAttempt(req, session) {
+  const key = selectionKey(req, session);
+  const now = Date.now();
+  const record = interviewAttempts.get(key);
+  if (!record || record.resetAt <= now) interviewAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
   else record.count += 1;
 }
 
