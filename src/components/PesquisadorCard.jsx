@@ -9,7 +9,6 @@ import IconButton from '@mui/material/IconButton';
 import SchoolIcon from '@mui/icons-material/School';
 import { CountryFlag } from '../utils/countryCode';
 import { getCategoriasFromAreas } from '../utils/areaCategories';
-import ProfileAvatar from '../design-system/primitives/ProfileAvatar';
 
 function summarize(text, maxSentences = 2) {
   if (!text) return '';
@@ -35,47 +34,24 @@ export default function PesquisadorCard({ item, onClick }) {
       <CardActionArea onClick={onClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
 
-          {/* Top section: photo left + identity right */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
-            {/* Photo */}
-            <ProfileAvatar person={item} size={{ width: 80, height: 96 }} sx={{ borderRadius: 1.5 }} />
-
-            {/* Identity info */}
-            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.8, lineHeight: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+              <Typography variant="caption" color="secondary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>
                 Pesquisador EPT
               </Typography>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3, mt: 0.5 }}>
-                {item.nome}
+              {item.h_index ? <Chip label={`h-index ${item.h_index}`} size="small" color="secondary" variant="outlined" sx={{ height: 23, fontWeight: 700 }} /> : null}
+            </Box>
+            <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.25 }}>
+              {item.nome}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4, mt: 0.5 }}>
+              {item.instituicao}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
+              <CountryFlag pais={item.pais} size={14} />
+              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                {item.pais}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.3, mt: 0.25 }}>
-                {item.instituicao}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5 }}>
-                <CountryFlag pais={item.pais} size={13} />
-                <Typography variant="caption" color="text.secondary">
-                  {item.pais}
-                </Typography>
-              </Box>
-              {item.h_index && (
-                <Box sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  mt: 0.75,
-                  px: 1,
-                  py: 0.2,
-                  bgcolor: 'grey.100',
-                  border: '1px solid',
-                  borderColor: 'secondary.main',
-                  borderRadius: 10,
-                  alignSelf: 'flex-start',
-                }}>
-                  <Typography variant="caption" fontWeight={700} color="secondary.main">
-                    h-index {item.h_index}
-                  </Typography>
-                </Box>
-              )}
             </Box>
           </Box>
 

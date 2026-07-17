@@ -37,8 +37,7 @@ const FIELD_CONFIGS = {
     { key: 'h_index', label: 'h-index', gridSize: 4 },
     { key: 'areas', label: 'Areas de Pesquisa (separar com ;)', gridSize: 4 },
     { key: 'pesquisa', label: 'Descricao da Pesquisa', multiline: true, rows: 4, gridSize: 12 },
-    { key: 'scholar', label: 'Google Scholar (URL)', gridSize: 6 },
-    { key: 'foto', label: 'Foto (URL)', gridSize: 6 },
+    { key: 'scholar', label: 'Google Scholar (URL)', gridSize: 12 },
   ],
 };
 
@@ -90,8 +89,8 @@ export default function EditDialog({ open, onClose, onSave, item, type, isNew })
     onClose();
   };
 
-  const previewUrl = type === 'pesquisador' ? form.foto : form.logo;
-  const previewName = type === 'pesquisador' ? form.nome : (form.nome || form.instituicao);
+  const previewUrl = form.logo;
+  const previewName = form.nome || form.instituicao;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -99,17 +98,16 @@ export default function EditDialog({ open, onClose, onSave, item, type, isNew })
         {isNew ? 'Adicionar' : 'Editar'} {type === 'stakeholder' ? 'Stakeholder' : type === 'escola' ? 'Escola' : 'Pesquisador'}
       </DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 1 }}>
-          <Avatar
-            src={previewUrl || undefined}
-            sx={{ width: 48, height: 48, bgcolor: 'primary.light' }}
-          >
-            {previewName ? previewName.charAt(0).toUpperCase() : '?'}
-          </Avatar>
-          <Typography variant="body2" color="text.secondary">
-            Preview do avatar. Altere a URL da {type === 'pesquisador' ? 'foto' : 'logo'} para atualizar.
-          </Typography>
-        </Box>
+        {type !== 'pesquisador' ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 1 }}>
+            <Avatar src={previewUrl || undefined} sx={{ width: 48, height: 48, bgcolor: 'primary.light' }}>
+              {previewName ? previewName.charAt(0).toUpperCase() : '?'}
+            </Avatar>
+            <Typography variant="body2" color="text.secondary">
+              Preview do logo. Altere a URL para atualizar.
+            </Typography>
+          </Box>
+        ) : null}
 
         <Grid container spacing={2}>
           {fields.map(f => (

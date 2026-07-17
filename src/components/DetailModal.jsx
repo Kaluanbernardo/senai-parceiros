@@ -39,31 +39,8 @@ const profileLabels = {
   academia: 'Academia.edu',
 };
 
-function getInitials(name) {
-  if (!name) return '?';
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return parts[0][0].toUpperCase();
-}
-
-function nameToSlug(name) {
-  if (!name) return '';
-  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-function usePhotoWithFallback(nome, fallbackUrl) {
-  const [stage, setStage] = React.useState(0);
-  React.useEffect(() => { setStage(0); }, [nome, fallbackUrl]);
-  const slug = nameToSlug(nome);
-  const sources = [`/fotos/${slug}.jpg`, `/fotos/${slug}.png`, fallbackUrl].filter(Boolean);
-  const src = stage < sources.length ? sources[stage] : undefined;
-  const onError = () => setStage((s) => s + 1);
-  return { src, onError };
-}
-
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
   const [imgError, setImgError] = React.useState(false);
-  const pesqPhoto = usePhotoWithFallback(item?.nome, item?.foto);
 
   // Reset error state when item changes
   React.useEffect(() => { setImgError(false); }, [item]);
@@ -78,45 +55,33 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
   const subtitle =
     type === 'pesquisador' ? item.instituicao : null;
 
-  const imageUrl =
-    type === 'pesquisador' ? pesqPhoto.src :
-    (item.logo || undefined);
-
-  const imageOnError =
-    type === 'pesquisador' ? pesqPhoto.onError :
-    () => setImgError(true);
-
-  const initial = type === 'pesquisador' ? '' : (title ? title.charAt(0) : '?');
-
-  const avatarBg =
-    type === 'pesquisador' ? 'secondary.light' : 'primary.light';
+  const imageUrl = item.logo || undefined;
+  const initial = title ? title.charAt(0) : '?';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
       <DialogTitle sx={{ pr: 6, pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {imageUrl || (type !== 'pesquisador' && !imgError) ? (
+          {type !== 'pesquisador' ? (
             <Avatar
-              src={type === 'pesquisador' ? imageUrl : (!imgError && imageUrl ? imageUrl : undefined)}
+              src={!imgError && imageUrl ? imageUrl : undefined}
               alt={title}
-              onError={imageOnError}
+              onError={() => setImgError(true)}
               sx={{
                 width: 56,
                 height: 56,
-                bgcolor: imageUrl && !imgError && type !== 'pesquisador' ? '#fff' : avatarBg,
+                bgcolor: imageUrl && !imgError ? '#fff' : 'primary.light',
                 fontSize: 22,
                 fontWeight: 700,
-                border: imageUrl && !imgError && type !== 'pesquisador' ? '1px solid' : 'none',
+                border: imageUrl && !imgError ? '1px solid' : 'none',
                 borderColor: 'grey.200',
-                '& img': { objectFit: 'contain', width: type !== 'pesquisador' ? '70%' : '100%', height: type !== 'pesquisador' ? '70%' : '100%', imageRendering: 'auto' },
+                '& img': { objectFit: 'contain', width: '70%', height: '70%', imageRendering: 'auto' },
                 overflow: 'hidden',
               }}
             >
               {initial}
             </Avatar>
-          ) : (
-            <Box role="img" aria-label={`${title} - imagem indisponível`} sx={{ width: 56, height: 56, bgcolor: 'grey.100', border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }} />
-          )}
+          ) : null}
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6" component="div" fontWeight={700}>
               {title}

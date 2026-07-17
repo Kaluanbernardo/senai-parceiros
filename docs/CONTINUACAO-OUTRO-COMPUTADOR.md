@@ -9,7 +9,7 @@ Atualizado em 16/07/2026. Este documento registra o próximo ciclo de implementa
 - Commit publicado no início deste plano: `9b1fee9`
 - Preview Vercel: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Documentos de referência: `docs/PRD-mvp-selecao-stakeholders.md`, `docs/ARQUITETURA-v2-feedbacks.md`, `docs/PLANO-ONDAS-2-6.md` e `docs/HANDOFF-LUNA-v2.md`.
-- Estado das fotos: 78 perfis possuem imagem aprovada e 22 continuam pendentes. A busca de imagens foi pausada por decisão do usuário.
+- Decisão visual vigente: pesquisadores não usam fotos, avatares, iniciais ou placeholders de mídia. Os arquivos e metadados de fotos foram removidos em 17/07/2026.
 
 No novo computador:
 
@@ -44,26 +44,17 @@ Consequência: a interface e os filtros existem, mas o radar normalmente opera c
 
 Consequência: redes como SENAI e SENAC aparecem mais de uma vez com diferenças de grafia, sigla ou abrangência.
 
-### 4. Há pesquisadores duplicados e algumas fotos pertencem a homônimos
+### 4. Há pesquisadores duplicados
 
-`src/data/pesquisadores.json` contém entradas repetidas da mesma pessoa, em alguns casos com IDs, grafias, artigos ou fotos diferentes. A coleta anterior também encontrou homônimos e fontes que não garantem identidade; portanto, a presença de um arquivo em `public/fotos` não prova que a imagem esteja correta.
+`src/data/pesquisadores.json` contém entradas repetidas da mesma pessoa, em alguns casos com IDs, grafias ou artigos diferentes.
 
-Consequência: o catálogo e a shortlist podem mostrar a mesma pessoa mais de uma vez, enquanto uma imagem errada compromete a credibilidade do relatório.
+Consequência: o catálogo e a shortlist podem mostrar a mesma pessoa mais de uma vez.
 
-#### Papel do Google Scholar na auditoria
+#### Papel do Google Scholar
 
-Perfis públicos do Google Scholar podem conter uma foto profissional enviada pelo próprio autor e são úteis para confirmar identidade, afiliação e produção. Porém, o Google Scholar não oferece uma API oficial para reutilização em massa dessas fotos. A visibilidade pública também não transfere automaticamente os direitos da imagem, e o acesso automatizado deve respeitar as instruções de máquina e os termos do Google.
+O Google Scholar permanece útil para confirmar identidade, afiliação e produção, mas não deve ser usado para coletar fotos. A interface deve continuar funcionando sem qualquer mídia de perfil.
 
-Decisão para este projeto:
-
-- usar o perfil público do Google Scholar como fonte primária de **verificação de identidade**;
-- preferir baixar a mesma foto de uma página institucional, Wikimedia ou outra fonte com atribuição clara;
-- aceitar a foto exibida no Scholar apenas como fallback manual e documentado, nunca por scraping em massa;
-- não fazer hotlink da imagem do Google: armazenar uma cópia local otimizada e registrar URL do perfil, data de consulta e situação dos direitos;
-- marcar `license: unknown` quando não houver permissão identificável e manter o item substituível;
-- não utilizar foto de perfil privado, miniatura de resultado sem perfil público ou correspondência baseada apenas no nome.
-
-Referências: `https://scholar.google.com/intl/en/scholar/citations.html` e `https://policies.google.com/terms`.
+Invariante: nenhum registro de pesquisador deve conter `foto` ou `image`, e nenhum componente deve renderizar avatar, iniciais ou espaço reservado para imagem de pesquisador.
 
 ## Decisões de arquitetura
 
@@ -156,7 +147,7 @@ Aceite: testes atuais verdes e três fixtures de regressão criadas.
 
 ### Onda 2 — Qualidade e identidade do catálogo
 
-#### Onda 2A — Deduplicação dos pesquisadores e auditoria das fotos
+#### Onda 2A — Deduplicação dos pesquisadores
 
 1. Criar `scripts/audit-researcher-duplicates.mjs` para produzir candidatos a duplicata sem alterar a base automaticamente.
 2. Usar como sinais, nesta ordem:
@@ -169,26 +160,18 @@ Aceite: testes atuais verdes e três fixtures de regressão criadas.
    - preservar todos os artigos e URLs únicos;
    - escolher a biografia mais completa sem repetir conteúdo;
    - preservar aliases de nome e histórico de instituições;
-   - selecionar uma única foto verificada;
    - manter redirecionamento de IDs antigos para não quebrar relatórios ou links.
 5. Criar um catálogo canônico consumido pela página de pesquisadores e por `getCandidatePool()`; a shortlist nunca deve receber dois registros da mesma pessoa.
-6. Auditar todas as imagens atuais, começando pelas duplicatas e pelas fotos coletadas de fontes de menor confiança:
-   - abrir o perfil Scholar já registrado no campo `scholar`;
-   - comparar rosto, nome, afiliação e área com uma segunda fonte pública sempre que houver homônimo;
-   - classificar cada foto como `verified`, `replace` ou `unresolved`;
-   - remover a associação da foto errada antes de inserir a substituta;
-   - registrar fonte, atribuição, licença, data e confiança no objeto `image`.
-7. Criar `scripts/audit-researcher-images.mjs` para verificar arquivo existente, dimensões, duplicidade de arquivo/hash, origem e campos obrigatórios. O script não deve raspar o Scholar.
-8. Gerar uma planilha/JSON de revisão com: ID, nome, Scholar, instituição, imagem atual, fonte, decisão, motivo e substituição proposta.
+6. Usar o perfil Scholar somente para validar identidade e distinguir homônimos; não coletar imagens.
+7. Preservar o invariante de UX sem mídia em catálogo, detalhes, shortlist, radar individual e painel administrativo.
 
 Testes de aceite:
 
 - uma pessoa aparece uma única vez no catálogo e na shortlist;
 - IDs antigos resolvem para o registro canônico;
 - artigos e informações complementares não são perdidos na fusão;
-- nenhuma foto classificada como incorreta continua associada ao perfil;
-- cada foto ativa possui fonte e decisão de auditoria;
-- correspondências ambíguas ficam sem foto até confirmação, sem avatar gerado.
+- nenhum pesquisador possui campos de mídia ou renderização de avatar;
+- o layout permanece equilibrado sem reservar espaço para imagens.
 
 #### Onda 2B — Catálogo canônico e deduplicação de escolas
 
@@ -251,7 +234,7 @@ Testes de aceite:
 2. `refactor: cria contrato de providers de IA`
 3. `feat: gera próxima pergunta adaptativa no servidor`
 4. `feat: conecta entrevista guiada ao planejador de IA`
-5. `data: audita duplicatas e imagens de pesquisadores`
+5. `data: audita e consolida duplicatas de pesquisadores`
 6. `feat: aplica catálogo canônico de pesquisadores`
 7. `feat: cria catálogo canônico de escolas`
 8. `data: consolida aliases e duplicatas de escolas`
@@ -262,7 +245,7 @@ Testes de aceite:
 ## Ordem de prioridade
 
 1. Entrevista adaptativa — é parte da funcionalidade principal de seleção.
-2. Deduplicação de pesquisadores e correção das fotos — afeta diretamente credibilidade e ranking.
+2. Deduplicação de pesquisadores — afeta diretamente credibilidade e ranking.
 3. Deduplicação de escolas — afeta catálogo e qualidade do ranking.
 4. Radar real — importante, mas complementar à seleção.
 
@@ -273,7 +256,7 @@ O ciclo só termina quando:
 - a próxima pergunta é realmente gerada a partir do conteúdo da resposta anterior;
 - há fallback local e rastreabilidade de provider/modelo;
 - nenhuma resposta da entrevista fica persistida;
-- pesquisadores duplicados foram consolidados e todas as fotos ativas passaram pela auditoria de identidade;
+- pesquisadores duplicados foram consolidados e a interface continua sem mídia de perfil;
 - catálogo e ranking usam escolas canônicas sem duplicatas da mesma entidade;
 - as três seções do radar recebem dados externos atuais;
 - testes unitários, integração e build passam;
@@ -282,7 +265,7 @@ O ciclo só termina quando:
 
 ## Prompt para retomar no outro computador
 
-> Leia `docs/CONTINUACAO-OUTRO-COMPUTADOR.md` e execute o plano a partir da Onda 0. Trabalhe na branch `codex/enriquece-perfis-institucionais`, preserve arquivos que não pertencem ao escopo, implemente e teste a entrevista adaptativa antes da qualidade do catálogo e do radar. Deduplique pesquisadores e escolas, audite as fotos contra os perfis públicos do Google Scholar e fontes institucionais, e não use scraping em massa do Scholar. Não grave segredos no repositório. Use OpenAI Platform API se houver `OPENAI_API_KEY`; caso contrário, configure OpenRouter. Publique uma nova preview no Vercel ao concluir cada onda funcional.
+> Leia `docs/CONTINUACAO-OUTRO-COMPUTADOR.md` e execute o plano a partir da Onda 0. Trabalhe na branch `codex/enriquece-perfis-institucionais`, preserve arquivos que não pertencem ao escopo, implemente e teste a entrevista adaptativa antes da qualidade do catálogo e do radar. Deduplique pesquisadores e escolas e preserve a decisão de não exibir fotos, avatares, iniciais ou placeholders de mídia para pesquisadores. Não grave segredos no repositório. Use OpenAI Platform API se houver `OPENAI_API_KEY`; caso contrário, configure OpenRouter. Publique uma nova preview no Vercel ao concluir cada onda funcional.
 
 ## Skills sugeridas para a próxima sessão
 
