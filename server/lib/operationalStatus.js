@@ -8,6 +8,18 @@ function configured(name) {
 }
 
 export function getOperationalStatus() {
+  const catalog = getCatalogStoreStatus();
+  const radarStore = getRadarStoreStatus();
+  const rateLimit = getRateLimitStoreStatus();
+  const budgetStore = getUsageBudgetStatus();
+  const sharedStorageReady = [catalog, radarStore, rateLimit, budgetStore].every((store) => store.durable);
+  const radarCronConfigured = configured('RADAR_CRON_SECRET') || configured('CRON_SECRET');
+  const corporateBlockers = [];
+  if (!sharedStorageReady) corporateBlockers.push('shared_storage_pending');
+  if (!radarCronConfigured) corporateBlockers.push('radar_cron_secret_pending');
+  if (!configured('RADAR_EXTRA_FEEDS_JSON')) corporateBlockers.push('definitive_feeds_pending');
+  corporateBlockers.push('entra_id_adapter_pending');
+  corporateBlockers.push('atomic_rate_limit_and_alerts_pending');
   return {
     generatedAt: new Date().toISOString(),
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
@@ -16,18 +28,32 @@ export function getOperationalStatus() {
       openaiConfigured: configured('OPENAI_API_KEY'),
       openrouterConfigured: configured('OPENROUTER_API_KEY'),
       azureConfigured: configured('AZURE_OPENAI_ENDPOINT') && configured('AZURE_OPENAI_API_KEY') && configured('AZURE_OPENAI_DEPLOYMENT'),
-      budgetStore: getUsageBudgetStatus(),
+      budgetStore,
     },
     radar: {
       liveSources: process.env.RADAR_LIVE_SOURCES !== 'false',
-      cronConfigured: configured('RADAR_CRON_SECRET') || configured('CRON_SECRET'),
-      store: getRadarStoreStatus(),
+      cronConfigured: radarCronConfigured,
+      store: radarStore,
     },
-    catalog: getCatalogStoreStatus(),
-    rateLimit: getRateLimitStoreStatus(),
+    catalog,
+    rateLimit,
     security: {
       publicOriginConfigured: configured('PUBLIC_APP_ORIGIN'),
       sessionSecretConfigured: configured('AUTH_SESSION_SECRET'),
+    },
+    handoff: {
+      mvp: {
+        durableStores: sharedStorageReady,
+        radarCronConfigured,
+        ready: Boolean(configured('AUTH_SESSION_SECRET') && configured('PUBLIC_APP_ORIGIN') && sharedStorageReady && radarCronConfigured),
+      },
+      corporate: {
+        status: 'pending',
+        blockers: corporateBlockers,
+        identityAdapter: 'local_hmac_until_entra_id_handoff',
+        atomicStores: false,
+        alerts: false,
+      },
     },
   };
 }
