@@ -33,6 +33,11 @@ describe('radar domain', () => {
     expect(result.items.some((item) => item.provider.startsWith('curated-'))).toBe(true);
   });
 
+  it('does not expose placeholder provider labels from the curated seed', async () => {
+    const result = await getRadarItems({ filters: {}, live: false, persist: false });
+    expect(result.items.some((item) => item.provider === 'seed-placeholder')).toBe(false);
+  });
+
   it('accepts only allowlisted official HTTPS feeds from configuration', () => {
     const previous = process.env.RADAR_EXTRA_FEEDS_JSON;
     process.env.RADAR_EXTRA_FEEDS_JSON = JSON.stringify([

@@ -115,7 +115,7 @@
     "geography": "Internacional",
     "official": false,
     "relevanceScore": 78,
-    "provider": "seed-placeholder",
+    "provider": "curated-research",
     "isPlaceholder": true,
     "externalId": "research-openalex-ept"
   },
@@ -133,7 +133,7 @@
     "geography": "Internacional",
     "official": false,
     "relevanceScore": 72,
-    "provider": "seed-placeholder",
+    "provider": "curated-research",
     "isPlaceholder": true,
     "externalId": "research-crossref-ept"
   }
