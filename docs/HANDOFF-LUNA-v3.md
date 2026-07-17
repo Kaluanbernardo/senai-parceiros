@@ -8,7 +8,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- HEAD atual publicado: `49f8ee1` (`docs: evita retomada por handoff historico`). A última implementação de produto está em `3d8452a` (`feat: adiciona status operacional administrativo`); o commit seguinte apenas atualizou a documentação de continuidade.
+- HEAD atual publicado: `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). O commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
 - Baseline + ondas incrementais: 70 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
