@@ -5,7 +5,7 @@ import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
 import { getExampleCoverage } from '../../src/domain/exampleResolver.js';
-import { canUseAi, getUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
+import { canUseAi, flushUsageBudget, getUsageBudget, hydrateUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
 
 const MAX_ANSWER_LENGTH = 4000;
 
@@ -102,6 +102,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invalid_interview_payload' });
     }
     recordInterviewAttempt(req, session);
+    await hydrateUsageBudget({ force: true });
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
     const local = localFallback(answeredState, 'provider_unavailable');
     if (local.state.status === 'ready') return res.status(200).json(local);
@@ -122,6 +123,7 @@ export default async function handler(req, res) {
         remainingGaps: answeredState.validation?.missing || [],
       }, { signal: controller.signal });
       const budget = recordAiUsage('interview', ai.trace?.usage);
+      await flushUsageBudget();
       const askedCount = answeredState.askedIds.length;
       if (ai.shouldStop && askedCount >= MIN_QUESTIONS && !(answeredState.validation?.missing || []).length) {
         const ready = { ...answeredState, currentQuestion: null, status: 'ready', validation: { ...answeredState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };

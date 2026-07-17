@@ -1,4 +1,4 @@
-const daily = new Map();
+import { usageStore } from './usageStore.js';
 
 function dayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -15,8 +15,9 @@ function limits() {
 
 function usageFor(kind) {
   const key = `${dayKey()}:${kind}`;
-  if (!daily.has(key)) daily.set(key, { kind, date: dayKey(), requests: 0, tokens: 0, costUsd: 0 });
-  return daily.get(key);
+  const existing = usageStore.get(key);
+  if (existing) return existing;
+  return usageStore.set(key, { kind, date: dayKey(), requests: 0, tokens: 0, costUsd: 0 });
 }
 
 function tokenCount(usage) {
@@ -41,9 +42,22 @@ export function recordAiUsage(kind = 'selection', usage = null) {
   current.requests += 1;
   current.tokens += tokens;
   current.costUsd += (tokens / 1000) * cap.costPer1kUsd;
+  usageStore.set(`${dayKey()}:${kind}`, current);
   return getUsageBudget(kind);
 }
 
+export async function hydrateUsageBudget({ force = false } = {}) {
+  return usageStore.hydrate({ force });
+}
+
+export async function flushUsageBudget() {
+  return usageStore.flush();
+}
+
+export function getUsageBudgetStatus() {
+  return usageStore.status();
+}
+
 export function resetUsageBudgetForTests() {
-  daily.clear();
+  usageStore.resetForTests();
 }

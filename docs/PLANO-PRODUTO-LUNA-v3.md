@@ -28,7 +28,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 62 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 63 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
@@ -36,7 +36,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico e rollback; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
 3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob`, faltando ampliar a allowlist editorial.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
-5. A autenticação corporativa/Entra ID, rate limit compartilhado e alertas operacionais ainda precisam ser ligados sem levar credenciais pessoais; o MVP já tem teto diário de tokens, custo estimado e requisições no adapter server-only.
+5. A autenticação corporativa/Entra ID, rate limit compartilhado e alertas operacionais ainda precisam ser ligados sem levar credenciais pessoais; o MVP já tem teto diário server-only com adapters `memory`, `file` e `vercel_blob`, sem prompts ou respostas persistidos.
 
 ## Decisões de produto vigentes
 
@@ -121,7 +121,7 @@ Cada ticket termina somente quando:
 
 ## Estado de execucao em 17/07/2026
 
-As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação XLSX e ingestão RSS foram implementadas nesta branch. A seleção agora registra diferenciais comparativos, trade-offs, calibração por objetivo e pré-seleção diversa para o provider; a entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, a importação é idempotente e auditável, o Radar mantém snapshot e refresh protegido, e a exportação da seleção ficou restrita a uma planilha rica XLSX.
+As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação XLSX e ingestão RSS foram implementadas nesta branch. A seleção agora registra diferenciais comparativos, trade-offs, calibração por objetivo e pré-seleção diversa para o provider; a entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, a importação é idempotente e auditável, o Radar mantém snapshot e refresh protegido, o orçamento de IA possui adapter durável opcional, e a exportação da seleção ficou restrita a uma planilha rica XLSX.
 
 ### Proximos passos para o Luna
 

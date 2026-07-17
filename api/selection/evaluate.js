@@ -8,7 +8,7 @@ import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
-import { canUseAi, getUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
+import { canUseAi, flushUsageBudget, getUsageBudget, hydrateUsageBudget, recordAiUsage } from '../../server/lib/usageBudget.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     }
     recordSelectionAttempt(req, session);
     await hydrateCatalogStore({ force: true });
+    await hydrateUsageBudget({ force: true });
     const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
     if (!validateSelectionBrief(brief).valid) return res.status(400).json({ error: 'invalid_selection_brief' });
     const candidates = getCatalog(payload.category);
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
       ai = await evaluateWithProvider({ input: evaluationInput, candidates: providerPool.map((entry) => entry.candidate) });
       ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
       ai.budget = recordAiUsage('selection', ai.usage);
+      await flushUsageBudget();
       ai.evaluations = ai.evaluations.map((evaluation) => ({
         ...evaluation,
         id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,
