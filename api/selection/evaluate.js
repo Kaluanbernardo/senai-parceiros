@@ -7,6 +7,7 @@ import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
 import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
+import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -24,6 +25,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
     recordSelectionAttempt(req, session);
+    await hydrateCatalogStore({ force: true });
     const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
     if (!validateSelectionBrief(brief).valid) return res.status(400).json({ error: 'invalid_selection_brief' });
     const candidates = getCatalog(payload.category);

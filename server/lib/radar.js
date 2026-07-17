@@ -224,6 +224,7 @@ function providerStatus(name, status, extra = {}) {
 }
 
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
+  await radarStore.hydrate({ force: live });
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
   const stored = radarStore.getSnapshot();
   let items = (stored?.items || seedItems).map(normalizeRadarItem).filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
@@ -268,8 +269,10 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   if (persist && liveProvider) {
     radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });
     radarStore.recordRun({ status: 'ok', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
+    await radarStore.flush();
   } else if (persist && live && !liveProvider) {
     radarStore.recordRun({ status: stored ? 'stale' : 'failed', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
+    await radarStore.flush();
   }
   return { items: filterRadarItems(snapshotItems, filters), liveProvider, stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
 }
@@ -283,9 +286,11 @@ export async function refreshRadarSnapshot({ filters = {} } = {}) {
     if (result.liveProvider) radarStore.writeSnapshot(snapshot);
     const retained = result.liveProvider ? snapshot : previous;
     radarStore.recordRun({ status: result.liveProvider ? 'ok' : 'failed', fetchedAt: result.fetchedAt, itemCount: retained?.items?.length || 0, sourceStatus: result.sourceStatus, durationMs: Date.now() - startedAt });
+    await radarStore.flush();
     return { ...result, items: retained?.items || snapshot.items, refreshed: result.liveProvider, stale: !result.liveProvider && Boolean(previous), durationMs: Date.now() - startedAt, lastRun: radarStore.getLastRun() };
   } catch (error) {
     const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus: {}, error: String(error?.message || 'radar_refresh_failed').slice(0, 160), durationMs: Date.now() - startedAt });
+    await radarStore.flush();
     return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: 'radar_refresh_failed' };
   }
 }

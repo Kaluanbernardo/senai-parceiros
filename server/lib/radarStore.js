@@ -9,8 +9,11 @@ class RadarStore {
   constructor() {
     this.driver = String(process.env.RADAR_STORE_DRIVER || (process.env.RADAR_STORE_FILE ? 'file' : 'memory')).toLowerCase();
     this.filePath = process.env.RADAR_STORE_FILE || path.join(process.cwd(), '.data', 'radar-store.json');
+    this.blobPath = process.env.RADAR_BLOB_PATH || 'senai/radar/snapshot.json';
     this.state = { snapshot: null, lastRun: null };
     this.loaded = false;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
   }
 
   configure({ driver, filePath } = {}) {
@@ -18,12 +21,14 @@ class RadarStore {
     if (filePath) this.filePath = filePath;
     this.state = { snapshot: null, lastRun: null };
     this.loaded = false;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
     this.load();
     return this.status();
   }
 
   status() {
-    return { driver: this.driver, durable: this.driver === 'file' };
+    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' };
   }
 
   load() {
@@ -74,9 +79,36 @@ class RadarStore {
   resetForTests() {
     this.state = { snapshot: null, lastRun: null };
     this.loaded = true;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
     if (this.driver === 'file') {
       try { fs.rmSync(this.filePath, { force: true }); } catch { /* test cleanup */ }
     }
+  }
+
+  async hydrate({ force = false } = {}) {
+    if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
+    const { get } = await import('@vercel/blob');
+    const result = await get(this.blobPath, { access: 'private', useCache: false });
+    if (result?.statusCode === 200 && result.stream) {
+      const parsed = JSON.parse(await new Response(result.stream).text());
+      this.state = { snapshot: parsed.snapshot || null, lastRun: parsed.lastRun || null };
+      this.remoteEtag = result.blob?.etag || null;
+    }
+    this.remoteHydrated = true;
+    this.loaded = true;
+    return this.status();
+  }
+
+  async flush() {
+    if (this.driver !== 'vercel_blob') return this.status();
+    const { put } = await import('@vercel/blob');
+    const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
+    if (this.remoteEtag) options.ifMatch = this.remoteEtag;
+    const result = await put(this.blobPath, JSON.stringify(this.state), options);
+    this.remoteEtag = result.etag || this.remoteEtag;
+    this.remoteHydrated = true;
+    return this.status();
   }
 }
 

@@ -33,8 +33,8 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 ### Lacunas críticas remanescentes
 
 1. O ranking já recebe o briefing e faz pré-seleção diversa para a IA, mas ainda precisa de calibração com casos reais para ampliar a diferença entre trade-offs.
-2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico e rollback; o adapter durável por arquivo está pronto para MVP controlado, mas Vercel Blob/Azure Blob ainda precisa ser ligado por credencial corporativa.
-3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; falta ampliar a allowlist editorial e ligar armazenamento compartilhado.
+2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico e rollback; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
+3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob`, faltando ampliar a allowlist editorial.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
 5. A autenticação corporativa/Entra ID, rate limit compartilhado, quotas, alertas e o adapter Azure ainda precisam ser ligados sem levar credenciais pessoais.
 
@@ -126,8 +126,8 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 ### Proximos passos para o Luna
 
 1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
-2. Ligar o adapter de catálogo ao Vercel Blob privado no MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
-3. Ligar o snapshot do Radar a armazenamento compartilhado, ampliar allowlist e configurar o cron com segredo rotacionável.
+2. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
+3. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
 4. Consolidar Entra ID, rate limit/quotas compartilhados, alertas, smoke visual e runbook de rotação/backup/restore para o handoff Azure.
 
 O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.

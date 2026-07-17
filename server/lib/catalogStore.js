@@ -31,8 +31,13 @@ class CatalogStore {
   constructor() {
     this.driver = String(process.env.CATALOG_STORE_DRIVER || (process.env.CATALOG_STORE_FILE ? 'file' : 'memory')).toLowerCase();
     this.filePath = process.env.CATALOG_STORE_FILE || path.join(process.cwd(), '.data', 'catalog-store.json');
+    this.blobPath = process.env.CATALOG_BLOB_PATH || 'senai/catalog/manifest.json';
     this.state = emptyState();
     this.loaded = false;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
   }
 
   configure({ driver, filePath } = {}) {
@@ -45,7 +50,7 @@ class CatalogStore {
   }
 
   status() {
-    return { driver: this.driver, durable: this.driver === 'file' };
+    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' };
   }
 
   load() {
@@ -155,9 +160,35 @@ class CatalogStore {
   resetForTests() {
     this.state = emptyState();
     this.loaded = true;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
     if (this.driver === 'file') {
       try { fs.rmSync(this.filePath, { force: true }); } catch { /* test cleanup */ }
     }
+  }
+
+  async hydrate({ force = false } = {}) {
+    if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
+    const { get } = await import('@vercel/blob');
+    const result = await get(this.blobPath, { access: 'private', useCache: false });
+    if (result?.statusCode === 200 && result.stream) {
+      this.state = normalizeState(JSON.parse(await new Response(result.stream).text()));
+      this.remoteEtag = result.blob?.etag || null;
+    }
+    this.remoteHydrated = true;
+    this.loaded = true;
+    return this.status();
+  }
+
+  async flush() {
+    if (this.driver !== 'vercel_blob') return this.status();
+    const { put } = await import('@vercel/blob');
+    const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
+    if (this.remoteEtag) options.ifMatch = this.remoteEtag;
+    const result = await put(this.blobPath, JSON.stringify(this.state), options);
+    this.remoteEtag = result.etag || this.remoteEtag;
+    this.remoteHydrated = true;
+    return this.status();
   }
 }
 

@@ -193,4 +193,12 @@ export function getCatalogStoreStatus() {
   return catalogStore.status();
 }
 
+export async function hydrateCatalogStore(options) {
+  return catalogStore.hydrate(options);
+}
+
+export async function flushCatalogStore() {
+  return catalogStore.flush();
+}
+
 export const IMPORT_LIMITS = Object.freeze({ maxFileBytes: MAX_FILE_BYTES, maxRows: MAX_ROWS });
