@@ -1,3 +1,5 @@
+import { formatInstitutionName } from './institutionName.js';
+
 function fold(value) {
   return String(value || '')
     .normalize('NFD')
@@ -79,7 +81,7 @@ function normalizeRecord(record, source) {
       : 'national_or_network';
   return {
     id: `${source}:${record.id}`,
-    nome: name,
+    nome: formatInstitutionName(name),
     descricao: record.descricao || record.diferencial || record.relevancia || '',
     pais: record.pais || '',
     logo: record.logo || '',
@@ -135,10 +137,14 @@ function mergeGroup(records) {
 }
 
 export function mergeSchoolSources({ schools = [], stakeholders = [] } = {}) {
-  const records = [
+  let records = [
     ...schools.map((record) => normalizeRecord(record, 'escolas')),
     ...stakeholders.filter((record) => fold(record.categoria).includes('escola')).map((record) => normalizeRecord(record, 'stakeholders')),
   ];
+  const hasFederalNetwork = records.some((record) => /^rede federal de educacao profissional cientifica e tecnologica\b/.test(fold(record.nome)) || /^rede federal de ept\b/.test(fold(record.nome)));
+  if (hasFederalNetwork) {
+    records = records.filter((record) => !/^cefet(?: mg| rj)\b/.test(fold(record.nome)));
+  }
   const groups = new Map();
   for (const record of records) {
     const key = matchKey(record);

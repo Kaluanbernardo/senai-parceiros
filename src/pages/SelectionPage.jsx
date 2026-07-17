@@ -111,13 +111,13 @@ export default function SelectionPage() {
     const requestState = { ...state, questionDefinitions: { ...(state.questionDefinitions || {}), [state.currentQuestion?.id]: state.currentQuestion } };
     const answeredState = InterviewPlanner.answer(requestState, answerValue, requestState.currentQuestion?.id);
     let nextState = InterviewPlanner.next(answeredState);
-    let providerTrace = { provider: 'local-fallback', model: 'deterministic-planner-v1', fallback: true, fallbackReason: 'request_failed' };
+    let providerTrace = { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: 'request_failed' };
     try {
       const response = await fetch('/api/selection/interview/next', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ state: answeredState, questionId: answeredState.lastAnswered, answer: answerValue }),
+        body: JSON.stringify({ state: requestState, questionId: requestState.currentQuestion?.id, answer: answerValue }),
       });
       if (!response.ok) throw new Error('adaptive_interview_unavailable');
       const payload = await response.json();

@@ -74,11 +74,14 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
 - Próximo bloco recomendado no MVP: calibrar a seleção com casos reais, evoluir a cobertura editorial do Radar e implementar a atualização pública de perfis. Azure/Entra, armazenamento corporativo e alertas ficam para a migração futura.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
+- Correção de qualidade de 17/07/2026: o Radar usa manifesto `2026-07-17.v2`, corrigiu a ordenação do OpenAlex, limita coletas aos últimos 12 meses, rejeita notícias gerais sem sinal real de EPT/VET e obtém publicações da OCDE por metadados DOI públicos. A UI explica a nota como tema (50) + recência (30) + qualidade da fonte (20), diferencia “Novo” e “Recente” e mostra falhas parciais de fonte de forma discreta.
+- A entrevista local está no `semantic-planner-v2` e o envio duplicado da resposta ao servidor foi corrigido. Sem `OPENAI_API_KEY` ou `OPENROUTER_API_KEY`, ela adapta o ramo e a formulação por sinais semânticos locais; perguntas livremente geradas pela IA continuam dependendo de um segredo server-side configurado diretamente no ambiente, nunca no navegador ou repositório.
+- O catálogo não exibe letras, avatares ou placeholders de mídia. Instituições usam cards textuais no padrão dos pesquisadores, siglas conhecidas aparecem antes do nome extenso e a entrada nacional da Rede Federal substitui os dois CEFETs individuais no catálogo combinado.
 
 ## Próximas ondas para execução
 
 1. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
-2. **Radar editorial:** revisar o manifesto de feeds `2026-07-17.v1`, ampliar a allowlist de fontes nacionais, estaduais e internacionais quando aprovado, e manter quarentena, deduplicação, snapshot e refresh agendado.
+2. **Radar editorial:** revisar o manifesto de feeds `2026-07-17.v2`, ampliar a allowlist de fontes nacionais, estaduais e internacionais quando aprovado, e manter quarentena, deduplicação, snapshot e refresh agendado.
 3. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
 4. **Atualização pública de perfis:** implementar o job agendado descrito abaixo, com diff, proveniência, aprovação e sem fotos de pesquisadores.
 5. **QA do MVP:** executar smoke visual desktop/mobile, validar importação/replay/rollback, revisar o diff e publicar um preview Vercel após os gates locais.

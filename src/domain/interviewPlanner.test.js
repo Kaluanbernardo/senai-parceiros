@@ -29,6 +29,20 @@ describe('InterviewPlanner', () => {
     expect(state.askedIds.length).toBeLessThanOrEqual(20);
   });
 
+  it('uses the meaning of the answer to choose and phrase the next question', () => {
+    let benchmarking = start({ category: 'school', objective: 'benchmark' });
+    benchmarking = answerAndNext(benchmarking, 'Quero comparar gestão curricular e integração das escolas com empresas industriais.');
+
+    let event = start({ category: 'researcher', objective: 'speaker' });
+    event = answerAndNext(event, 'Será um evento sobre economia circular para instrutores do SENAI-SP.');
+
+    expect(benchmarking.currentQuestion.id).toBe('benchmark_focus');
+    expect(benchmarking.currentQuestion.prompt).toMatch(/gestão curricular|integração/i);
+    expect(event.currentQuestion.id).toBe('audience');
+    expect(event.currentQuestion.prompt).toMatch(/economia circular|instrutores/i);
+    expect(event.currentQuestion.prompt).not.toBe(benchmarking.currentQuestion.prompt);
+  });
+
   it('prioritizes a discovery follow-up when a required answer is unknown', () => {
     let state = start({ category: 'researcher', objective: 'speaker' });
     state = answerAndNext(state, 'não sei ainda');

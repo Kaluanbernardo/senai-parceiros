@@ -9,11 +9,10 @@ import SchoolIcon from '@mui/icons-material/School';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { CountryFlag } from '../utils/countryCode';
-import { getDisplayLogoUrl } from '../utils/media';
+import { formatInstitutionName } from '../domain/institutionName';
 
 function InfoRow({ label, children }) {
   return (
@@ -41,48 +40,21 @@ const profileLabels = {
 };
 
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
-  const [imgError, setImgError] = React.useState(false);
-
-  // Reset error state when item changes
-  React.useEffect(() => { setImgError(false); }, [item]);
-
   if (!item) return null;
 
-  const title =
+  const rawTitle =
     type === 'stakeholder' ? item.nome :
     type === 'pesquisador' ? item.nome :
     item.instituicao;
+  const title = type === 'pesquisador' ? rawTitle : formatInstitutionName(rawTitle);
 
   const subtitle =
     type === 'pesquisador' ? item.instituicao : null;
-
-  const imageUrl = getDisplayLogoUrl(item.logo) || undefined;
-  const initial = title ? title.charAt(0) : '?';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
       <DialogTitle sx={{ pr: 6, pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {type !== 'pesquisador' ? (
-            <Avatar
-              src={!imgError && imageUrl ? imageUrl : undefined}
-              alt={title}
-              onError={() => setImgError(true)}
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: imageUrl && !imgError ? '#fff' : 'primary.light',
-                fontSize: 22,
-                fontWeight: 700,
-                border: imageUrl && !imgError ? '1px solid' : 'none',
-                borderColor: 'grey.200',
-                '& img': { objectFit: 'contain', width: '70%', height: '70%', imageRendering: 'auto' },
-                overflow: 'hidden',
-              }}
-            >
-              {initial}
-            </Avatar>
-          ) : null}
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6" component="div" fontWeight={700}>
               {title}

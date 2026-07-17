@@ -1,7 +1,7 @@
 import { CATEGORY_IDS, OBJECTIVE_IDS } from './interview.js';
 import { getExampleCoverage, resolveExample } from './exampleResolver.js';
 
-export const INTERVIEW_PLANNER_VERSION = 'deterministic-planner-v1';
+export const INTERVIEW_PLANNER_VERSION = 'semantic-planner-v2';
 export const MAX_QUESTIONS = 20;
 export const MIN_QUESTIONS = 8;
 
@@ -173,12 +173,29 @@ function questionAllowed(question, state) {
 
 function missingRequired(state) { return requiredIds(state).filter((id) => !answered(state, id)); }
 
+function semanticQuestionBoost(question, state) {
+  const answer = answerText(state.answers?.[state.lastAnswered]).toLocaleLowerCase('pt-BR');
+  if (!answer || isUnknown(answer)) return 0;
+  const signals = [
+    { pattern: /benchmark|compar|refer[eê]ncia|boa pr[aá]tica|gest[aã]o|curr[ií]cul/, ids: ['benchmark_focus', 'evidence_preferences'] },
+    { pattern: /evento|palestra|mesa|oficina|instrutor|estudante|p[uú]blico|audi[eê]ncia/, ids: ['audience', 'communication_style'] },
+    { pattern: /parceria|projeto|piloto|coopera|construir|desenvolver em conjunto/, ids: ['partnership_model', 'contribution_types'] },
+    { pattern: /urgente|prazo|data|semana|m[eê]s|trimestre/, ids: ['timeframe', 'constraints'] },
+    { pattern: /presencial|remoto|h[ií]brido|idioma|internacional|exterior/, ids: ['geography', 'language_modality'] },
+    { pattern: /evid[eê]ncia|resultado|indicador|impacto|publica[cç][aã]o|caso/, ids: ['evidence_preferences', 'success_indicators'] },
+  ];
+  const matched = signals.filter((signal) => signal.pattern.test(answer)).flatMap((signal) => signal.ids);
+  const index = matched.indexOf(question.id);
+  return index === -1 ? 0 : Math.max(560, 760 - index * 60);
+}
+
 function scoreQuestion(question, state) {
   let score = 0;
   const missing = missingRequired(state);
   // Follow-ups to an explicit uncertainty come first; otherwise the planner
   // must always collect the next required field before optional branches.
   if (question.followUpFor?.some((id) => needsFollowUp(state, id))) score += 1000;
+  score += semanticQuestionBoost(question, state);
   if (missing.includes(question.id)) score += 500;
   if (question.objectives?.includes(state.objective)) score += 30;
   if (question.stage === state.lastStage) score -= 5;
@@ -200,12 +217,19 @@ function nextQuestionFor(state) {
 
 function questionForState(question, state) {
   const coverage = getExampleCoverage({ category: state.category, objective: state.objective, context: state.answers?.context || state.context });
+  const previousAnswer = answerText(state.answers?.[state.lastAnswered]);
+  const clippedAnswer = previousAnswer.slice(0, 120).trim();
+  const quotedAnswer = previousAnswer.length > 120 ? `${clippedAnswer}…` : clippedAnswer.replace(/[.!?;:]+$/u, '');
+  const contextualPrompt = previousAnswer && !isUnknown(previousAnswer)
+    ? `Você mencionou “${quotedAnswer}”. ${question.prompt}`
+    : question.prompt;
   return {
     ...question,
     category: state.category,
     objective: state.objective,
     context: state.answers?.context || state.context || '',
-    label: question.prompt,
+    prompt: contextualPrompt,
+    label: contextualPrompt,
     example: resolveExample({ questionId: question.id, category: state.category, objective: state.objective, context: state.answers?.context || state.context }),
     exampleCoverage: coverage,
     allowUnknown: true,

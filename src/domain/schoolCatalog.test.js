@@ -69,4 +69,17 @@ describe('school catalog', () => {
     expect(records.filter((record) => record.catalogIdentity === 'alias:senai')).toHaveLength(1);
     expect(records.filter((record) => record.catalogIdentity === 'alias:senac')).toHaveLength(1);
   });
+
+  it('uses the national Federal Network entry instead of duplicating its two CEFET members', () => {
+    const records = mergeSchoolSources({
+      schools: [
+        { id: 1, instituicao: 'Rede Federal de Educação Profissional, Científica e Tecnológica', pais: 'Brasil' },
+        { id: 2, instituicao: 'CEFET-RJ — Centro Federal de Educação Tecnológica Celso Suckow da Fonseca', pais: 'Brasil' },
+        { id: 3, instituicao: 'CEFET-MG — Centro Federal de Educação Tecnológica de Minas Gerais', pais: 'Brasil' },
+      ],
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0].nome).toMatch(/^Rede Federal/);
+  });
 });

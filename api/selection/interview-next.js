@@ -40,7 +40,7 @@ function localFallback(answeredState, reason = 'provider_unavailable') {
   return {
     state: nextState,
     question: nextState.currentQuestion,
-    trace: { provider: 'local-fallback', model: 'deterministic-planner-v1', fallback: true, fallbackReason: reason },
+    trace: { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: reason },
   };
 }
 

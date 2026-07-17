@@ -145,6 +145,8 @@ Cada ticket termina somente quando:
 
 As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação XLSX e ingestão RSS foram implementadas nesta branch. A seleção agora registra diferenciais comparativos, trade-offs, calibração por objetivo e pré-seleção diversa para o provider; a entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, a importação é idempotente e auditável, o Radar mantém snapshot e refresh protegido, o orçamento de IA possui adapter durável opcional, e a exportação da seleção ficou restrita a uma planilha rica XLSX.
 
+Em 17/07/2026, o Radar recebeu um gate editorial de novidade: somente itens datados dos últimos 12 meses e com sinal temático real entram na leitura. OpenAlex passou a usar janela de publicação válida; a OCDE é coletada por metadados DOI públicos; relevância é explicada como aderência temática (0–50), recência (0–30) e qualidade da fonte (0–20). O catálogo combinado passou a preferir a Rede Federal nacional aos dois CEFETs individuais, a interface removeu avatares de iniciais e os nomes institucionais conhecidos seguem `SIGLA (nome extenso)`.
+
 ### Proximos passos para o Luna
 
 1. Fechar avaliação e shortlist: fazer as notas diferenciarem trade-offs, risco, evidências e lacunas, mantendo de 5 a 10 resultados somente do catálogo.

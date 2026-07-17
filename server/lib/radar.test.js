@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, fetchFeedItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -22,8 +22,29 @@ describe('radar domain', () => {
   it('normalizes unsupported sections and scores safely', () => {
     const item = normalizeRadarItem({ section: 'unknown', title: 'x', relevanceScore: 120 });
     expect(item.section).toBe('research');
-    expect(item.relevanceScore).toBe(100);
+    expect(item.relevanceScore).toBe(15);
+    expect(item.relevanceScore).toBe(item.relevanceBreakdown.thematic + item.relevanceBreakdown.recency + item.relevanceBreakdown.sourceQuality);
     expect(normalizeRadarItem({ title: 'sem data', publishedAt: 'não é data' }).publishedAt).toBeNull();
+  });
+
+  it('explains relevance as theme, recency and source quality', () => {
+    const result = calculateRadarRelevance({
+      title: 'Nova política de educação profissional para a indústria',
+      summaryPt: 'Formação técnica, competências digitais e aprendizagem industrial.',
+      publishedAt: '2026-07-10',
+      provider: 'institutional-web',
+      official: true,
+    }, { now: new Date('2026-07-17T12:00:00Z') });
+
+    expect(result.score).toBe(result.breakdown.thematic + result.breakdown.recency + result.breakdown.sourceQuality);
+    expect(result.breakdown).toEqual(expect.objectContaining({ thematic: expect.any(Number), recency: 30, sourceQuality: 20 }));
+    expect(result.explanation).toMatch(/tema|recência|fonte/i);
+  });
+
+  it('marks undated hubs as references instead of news', () => {
+    const item = normalizeRadarItem({ title: 'Portal permanente de EPT', sourceName: 'MEC', official: true });
+    expect(item.noveltyStatus).toBe('reference');
+    expect(item.isNews).toBe(false);
   });
 
   it('keeps curated official government items available when live sources fail', async () => {
@@ -61,6 +82,51 @@ describe('radar domain', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ section: 'government', sourceName: 'Fonte governamental de teste', provider: 'rss', publishedAt: '2026-07-16' });
     expect(items[0].provenance.feedUrl).toBe('https://example.org/feed.xml');
+  });
+
+  it('rejects recent institutional feed items that are not about EPT or VET', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<rss><channel><item><title>Funcionamento de restaurantes no fim de semana</title><link>https://example.org/servico</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Confira horários e endereços das unidades.</description><guid>item-geral</guid></item></channel></rss>', { status: 200 })));
+
+    const items = await fetchFeedItems({ name: 'Fonte pública de teste', section: 'government', url: 'https://example.org/feed-geral.xml', official: true, geography: 'Brasil' }, { limit: 5 });
+
+    expect(items).toHaveLength(0);
+  });
+
+  it('uses the supported OpenAlex descending sort and returns recent works', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ results: [{
+      id: 'https://openalex.org/W1',
+      display_name: 'Vocational education for advanced manufacturing',
+      publication_date: '2026-07-15',
+      type: 'article',
+      relevance_score: 8.2,
+      authorships: [],
+      topics: [{ display_name: 'Vocational education' }],
+    }] }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const items = await fetchOpenAlexItems({ limit: 3 });
+
+    expect(items).toHaveLength(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('sort=publication_date%3Adesc');
+    expect(fetchMock.mock.calls[0][0]).toContain('to_publication_date');
+    expect(items[0]).toMatchObject({ sourceName: 'OpenAlex', publishedAt: '2026-07-15', isNews: true });
+  });
+
+  it('retrieves OECD VET publications through public DOI metadata', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: { items: [{
+      DOI: '10.1787/example',
+      title: ['Developing Vocational Education and Training with Artificial Intelligence'],
+      URL: 'https://doi.org/10.1787/example',
+      publisher: 'OECD Publishing',
+      published: { 'date-parts': [[2026, 6, 23]] },
+      type: 'book',
+      author: [{ given: 'OECD', family: 'Publishing' }],
+    }] } }), { status: 200 })));
+
+    const items = await fetchOecdItems({ limit: 3 });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ section: 'international', sourceName: 'OCDE', publishedAt: '2026-06-23', isNews: true });
   });
 
   it('ingests allowlisted institutional HTML pages without accepting external links', async () => {
