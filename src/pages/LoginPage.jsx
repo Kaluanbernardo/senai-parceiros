@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { login, error: authError } = useAuth();
+  const { login, provider, refresh, error: authError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -39,10 +39,21 @@ export default function LoginPage() {
         <Typography color="text.secondary" textAlign="center" sx={{ mt: 1, mb: 3 }}>
           Acesso restrito à ferramenta de seleção e pesquisa.
         </Typography>
-        {(error || authError) && <Alert severity="error" sx={{ mb: 2 }}>{error || authError}</Alert>}
-        <TextField fullWidth label="Usuário" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" autoFocus sx={{ mb: 2 }} />
-        <TextField fullWidth label="Senha" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" sx={{ mb: 2.5 }} />
-        <Button type="submit" fullWidth size="large" variant="contained" disabled={busy || !username || !password}>{busy ? 'Entrando…' : 'Entrar'}</Button>
+        {provider === 'entra' ? (
+          <>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              O acesso corporativo é gerenciado pelo ambiente do SENAI-SP. Abra esta aplicação pelo Azure Easy Auth ou pela integração corporativa configurada pelo TI.
+            </Alert>
+            <Button type="button" fullWidth size="large" variant="contained" onClick={refresh}>Verificar autenticação corporativa</Button>
+          </>
+        ) : (
+          <>
+            {(error || authError) && <Alert severity="error" sx={{ mb: 2 }}>{error || authError}</Alert>}
+            <TextField fullWidth label="Usuário" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" autoFocus sx={{ mb: 2 }} />
+            <TextField fullWidth label="Senha" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" sx={{ mb: 2.5 }} />
+            <Button type="submit" fullWidth size="large" variant="contained" disabled={busy || !username || !password}>{busy ? 'Entrando…' : 'Entrar'}</Button>
+          </>
+        )}
         <Typography variant="caption" color="text.secondary" display="block" textAlign="center" sx={{ mt: 2 }}>
           As avaliações não ficam salvas na ferramenta.
         </Typography>

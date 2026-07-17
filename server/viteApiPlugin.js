@@ -1,4 +1,5 @@
 import login from '../api/auth/login.js';
+import entra from '../api/auth/entra.js';
 import session from '../api/auth/session.js';
 import logout from '../api/auth/logout.js';
 import evaluate from '../api/selection/evaluate.js';
@@ -14,6 +15,7 @@ import catalog from '../api/catalog.js';
 
 const handlers = {
   '/api/auth/login': login,
+  '/api/auth/entra': entra,
   '/api/auth/session': session,
   '/api/auth/logout': logout,
   '/api/selection/evaluate': evaluate,

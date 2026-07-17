@@ -9,7 +9,9 @@ export default async function handler(req, res) {
   if (getAuthProvider() !== 'entra') return res.status(404).json({ error: 'corporate_identity_login_disabled' });
   await hydrateRateLimitStore({ force: true });
   try {
-    const { token } = await readJson(req);
+    const body = await readJson(req).catch(() => ({}));
+    const bearer = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '').trim();
+    const token = body?.token || bearer;
     if (await consumeLoginAttempt(req)) return res.status(429).json({ error: 'too_many_attempts' });
     const identity = await authenticateEntraToken(token);
     return res.status(200).json({ user: completeLogin(res, identity) });

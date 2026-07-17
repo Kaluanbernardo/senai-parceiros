@@ -99,4 +99,20 @@ describe('POST /api/auth/entra', () => {
     await handler(request({ token: tokenFor(privateKey, { _claim_names: { groups: 'src1' }, hasgroups: true }) }), overageRes);
     expect(overageRes.statusCode).toBe(401);
   });
+
+  it('accepts an Authorization bearer token for Azure Easy Auth or a corporate proxy', async () => {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'test-key', alg: 'RS256', use: 'sig' };
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ keys: [jwk] }) })));
+    process.env.AUTH_PROVIDER = 'entra';
+    process.env.AUTH_SESSION_SECRET = 'test-session-secret-that-is-long-enough-123';
+    process.env.ENTRA_TENANT_ID = 'tenant-123';
+    process.env.ENTRA_CLIENT_ID = 'client-123';
+    process.env.ENTRA_ADMIN_GROUP_ID = 'admin-group';
+    process.env.ENTRA_USER_GROUP_ID = 'user-group';
+    const res = response();
+    await handler(request({}, { headers: { host: 'app.test', origin: 'http://app.test', authorization: `Bearer ${tokenFor(privateKey)}` } }), res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.user.role).toBe('user');
+  });
 });

@@ -41,7 +41,7 @@ Substituir somente adapters e configuração:
 
 ### Contrato mínimo de Entra ID
 
-O adapter corporativo já substitui o login local HMAC sem exigir mudança nas páginas React ou nos endpoints protegidos. O cliente corporativo deve obter um token OIDC pela integração aprovada pelo time de TI e enviá-lo uma única vez, no corpo JSON, para `POST /api/auth/entra`; o servidor valida o token e devolve apenas a sessão HttpOnly.
+O adapter corporativo já substitui o login local HMAC sem exigir mudança nas páginas React ou nos endpoints protegidos. O cliente corporativo deve obter um token OIDC pela integração aprovada pelo time de TI e enviá-lo uma única vez para `POST /api/auth/entra`, no corpo JSON (`{"token":"..."}`) ou no header `Authorization: Bearer ...`; o servidor valida o token e devolve apenas a sessão HttpOnly. O segundo formato permite usar Azure Easy Auth ou um proxy corporativo sem expor token ao React.
 
 - validar assinatura e claims (`iss`, `aud`, `exp`, `nbf`) contra o tenant corporativo e JWKS oficial;
 - mapear grupos corporativos para os papéis `admin` e `user`; ausência de grupo autorizado resulta em resposta genérica `401` no endpoint de troca de token (sem revelar se o grupo existe);
@@ -49,6 +49,7 @@ O adapter corporativo já substitui o login local HMAC sem exigir mudança nas p
 - manter `requireSession(req, res, roles)` como fronteira única para as APIs existentes;
 - emitir apenas uma sessão HttpOnly, Secure e SameSite apropriada, sem devolver token ao frontend;
 - desabilitar o formulário de usuário/senha quando `AUTH_PROVIDER=entra`; o fallback local só pode existir explicitamente no ambiente MVP;
+- se Azure Easy Auth ou um proxy corporativo for usado, definir `ENTRA_TRUST_PROXY_HEADERS=true` somente atrás desse proxy; o endpoint de sessão aceitará o header `x-ms-token-aad-id-token` e fará a mesma validação antes de criar a sessão;
 - usar identidade gerenciada/Key Vault para segredos e registrar somente eventos operacionais, nunca tokens ou claims integrais. Tokens com group overage (`_claim_names.groups`/`hasgroups`) são rejeitados até que TI forneça uma integração Graph aprovada.
 
 Configuração mínima (valores de produção ficam somente no ambiente corporativo):
@@ -61,6 +62,7 @@ ENTRA_ADMIN_GROUP_ID=<group GUID>
 ENTRA_USER_GROUP_ID=<group GUID>
 ENTRA_ISSUER=https://login.microsoftonline.com/<tenant GUID>/v2.0
 ENTRA_JWKS_URL=https://login.microsoftonline.com/<tenant GUID>/discovery/v2.0/keys
+ENTRA_TRUST_PROXY_HEADERS=false
 ```
 
 O repositório não deve receber `client_secret`, certificado, token ou valor de produção. A Microsoft documenta os claims de acesso e o discovery OIDC/JWKS usados por essa validação: [claims de access token](https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference) e [OIDC/discovery](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc).

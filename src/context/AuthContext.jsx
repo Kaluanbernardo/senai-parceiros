@@ -4,6 +4,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [provider, setProvider] = useState('local');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -11,6 +12,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch('/api/auth/session', { credentials: 'include' });
       const payload = await response.json();
+      setProvider(payload.provider || 'local');
       setUser(payload.authenticated ? payload.user : null);
     } catch {
       setUser(null);
@@ -46,7 +48,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, error, login, logout, refresh }), [user, loading, error, login, logout, refresh]);
+  const value = useMemo(() => ({ user, provider, loading, error, login, logout, refresh }), [user, provider, loading, error, login, logout, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

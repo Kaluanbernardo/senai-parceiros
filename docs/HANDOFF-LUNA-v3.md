@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 84 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 87 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -67,7 +67,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback protegido contra alterações posteriores. O catálogo persistido é reidratado após autenticação e atualizações importadas são mescladas por identidade/ID sem duplicar a interface. Os adapters `file` e `vercel_blob` tornam o lote durável quando configurados; o próximo Luna deve conectar a credencial corporativa e, depois, Azure Blob/Storage Table.
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`; os caminhos transacionais usam lock exclusivo ou CAS com retry, sem guardar prompts, respostas ou IP bruto. O adapter de alertas HTTPS sanitizados também está pronto, faltando apenas o endpoint corporativo.
-- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo e `security.entraAdapter` mostra a prontidão segura do adapter (sem valores sensíveis); `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
+- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo e `security.entraAdapter` mostra a prontidão segura do adapter (sem valores sensíveis); `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs, inclusive `POST /api/auth/entra`, é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
 - Próximo bloco recomendado: registrar o aplicativo/grupos no tenant corporativo e ativar o adapter Entra ID, ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron e o webhook de alertas, e revisar o manifesto versionado de feeds.
@@ -106,6 +106,7 @@ ENTRA_ADMIN_GROUP_ID=
 ENTRA_USER_GROUP_ID=
 ENTRA_ISSUER=
 ENTRA_JWKS_URL=
+ENTRA_TRUST_PROXY_HEADERS=false
 OPS_ALERT_WEBHOOK_URL=
 OPS_ALERT_COOLDOWN_SECONDS=300
 AI_ALERT_THRESHOLD=0.8
