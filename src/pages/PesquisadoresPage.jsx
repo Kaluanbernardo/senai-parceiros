@@ -38,6 +38,7 @@ export default function PesquisadoresPage() {
       const matchSearch =
         !q ||
         item.nome.toLowerCase().includes(q) ||
+        (item.aliases || []).some((alias) => alias.toLowerCase().includes(q)) ||
         (item.instituicao && item.instituicao.toLowerCase().includes(q)) ||
         (item.areas && item.areas.toLowerCase().includes(q)) ||
         (item.pais && item.pais.toLowerCase().includes(q)) ||

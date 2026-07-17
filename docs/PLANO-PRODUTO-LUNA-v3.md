@@ -122,6 +122,20 @@ Cada ticket termina somente quando:
 - troca futura de OpenRouter/Vercel por provider e infraestrutura Azure ocorre por adapters e configuração;
 - nenhum pesquisador volta a exibir foto, avatar, iniciais ou placeholder de mídia.
 
+## Estado de execucao em 17/07/2026
+
+As ondas de baseline, entrevista adaptativa e catalogos canonicos foram implementadas nesta branch e estao em validacao final. A entrevista ja pode consultar OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas; pesquisadores e escolas passam por deduplicacao antes de alimentar catalogo e selecao.
+
+### Proximos passos para o Luna
+
+1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
+2. Implementar importacao XLSX administrativa com previa, deduplicacao, conflitos, confirmacao e rollback. O importador deve aceitar a planilha gerada pelo Gerador de Prompt sem remapeamento manual.
+3. Substituir os schemas isolados do Gerador de Prompt pelo contrato compartilhado `senai_catalog_v1`, com colunas exatas por categoria e aba `Metadados` separada da tabela importavel.
+4. Tornar o Radar realmente alimentado por fontes publicas externas, iniciando por um thin slice de fontes academicas, governamentais e internacionais, sempre com fallback e deduplicacao.
+5. Consolidar XLSX, persistencia server-side substituivel por Azure, seguranca, remocao de exportadores legados e smoke visual.
+
+O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
+
 ## Fog — decisões que não bloqueiam o próximo ticket
 
 - banco definitivo do Radar no MVP e serviço equivalente na Azure;

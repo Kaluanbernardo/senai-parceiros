@@ -2,13 +2,15 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import stakeholdersRaw from '../data/stakeholders.json';
 import escolasRaw from '../data/escolas.json';
 import pesquisadoresRaw from '../data/pesquisadores.json';
+import { canonicalizeResearchers, resolveResearcherId } from '../domain/researcherCatalog';
 
 const DataContext = createContext();
+const researcherCatalog = canonicalizeResearchers(pesquisadoresRaw);
 
 export function DataProvider({ children }) {
   const [stakeholders, setStakeholders] = useState(() => [...stakeholdersRaw]);
   const [escolas, setEscolas] = useState(() => [...escolasRaw]);
-  const [pesquisadores, setPesquisadores] = useState(() => [...pesquisadoresRaw]);
+  const [pesquisadores, setPesquisadores] = useState(() => researcherCatalog.records);
 
   // Generic CRUD helpers
   const updateItem = useCallback((collection, setCollection, id, updates) => {
@@ -64,6 +66,8 @@ export function DataProvider({ children }) {
 
   const value = {
     stakeholders, escolas, pesquisadores,
+    researcherAliases: researcherCatalog.aliases,
+    resolveResearcherId: (id) => resolveResearcherId(pesquisadores, id),
     updateStakeholder, addStakeholder, deleteStakeholder,
     updateEscola, addEscola, deleteEscola,
     updatePesquisador, addPesquisador, deletePesquisador,

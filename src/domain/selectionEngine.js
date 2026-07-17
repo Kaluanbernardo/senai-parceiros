@@ -1,3 +1,5 @@
+import { mergeSchoolSources } from './schoolCatalog';
+
 const STOPWORDS = new Set([
   'para', 'como', 'uma', 'com', 'que', 'dos', 'das', 'por', 'sobre', 'entre', 'mais',
   'esse', 'essa', 'este', 'esta', 'isso', 'ainda', 'não', 'nao', 'sem',
@@ -134,7 +136,7 @@ export function selectShortlist(entries, { minimum = 5, maximum = 10, threshold 
   const institutions = new Set();
 
   for (const entry of pool) {
-    const institution = String(entry.candidate?.instituicao || entry.candidate?.organizacao || '').trim().toLowerCase();
+    const institution = String(entry.candidate?.instituicao || entry.candidate?.organizacao || entry.candidate?.catalogIdentity || entry.candidate?.nome || '').trim().toLowerCase();
     if (selected.length >= target) break;
     if (institution && institutions.has(institution)) continue;
     selected.push(entry);
@@ -226,6 +228,6 @@ export function mergeAiEvaluation(local, aiResult = {}) {
 
 export function getCandidatePool({ category, data }) {
   if (category === 'researcher') return data.pesquisadores || [];
-  if (category === 'school') return data.escolas || [];
+  if (category === 'school') return mergeSchoolSources({ schools: data.escolas || [], stakeholders: data.stakeholders || [] });
   return data.stakeholders || [];
 }

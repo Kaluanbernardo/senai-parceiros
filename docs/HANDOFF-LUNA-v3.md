@@ -52,6 +52,13 @@ Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não
 6. Fazer commit coeso do baseline.
 7. Iniciar imediatamente a entrevista adaptativa se nenhum bloqueio real existir.
 
+## Estado apos a execucao inicial
+
+- Baseline, entrevista adaptativa, provider OpenAI/OpenRouter com fallback local e deduplicacao dos catalogos ja foram implementados nesta branch.
+- A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC.
+- Proximo bloco recomendado: avaliacao/shortlist, seguido do importador XLSX administrativo e do contrato compartilhado `senai_catalog_v1` no Gerador de Prompt.
+- O importador e o Gerador de Prompt devem evoluir juntos: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
+
 ## Variáveis previstas
 
 ```text
