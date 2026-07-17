@@ -2,6 +2,7 @@ import { getCatalogStoreStatus } from './catalogImport.js';
 import { getRadarStoreStatus } from './radar.js';
 import { getAuthProvider, getRateLimitStoreStatus } from './auth.js';
 import { getUsageBudgetStatus } from './usageBudget.js';
+import { getEntraAdapterStatus } from './entra.js';
 
 function configured(name) {
   return Boolean(String(process.env[name] || '').trim());
@@ -12,13 +13,14 @@ export function getOperationalStatus() {
   const radarStore = getRadarStoreStatus();
   const rateLimit = getRateLimitStoreStatus();
   const budgetStore = getUsageBudgetStatus();
+  const entra = getEntraAdapterStatus();
   const sharedStorageReady = [catalog, radarStore, rateLimit, budgetStore].every((store) => store.durable);
   const radarCronConfigured = configured('RADAR_CRON_SECRET') || configured('CRON_SECRET');
   const corporateBlockers = [];
   if (!sharedStorageReady) corporateBlockers.push('shared_storage_pending');
   if (!radarCronConfigured) corporateBlockers.push('radar_cron_secret_pending');
   if (!configured('RADAR_EXTRA_FEEDS_JSON')) corporateBlockers.push('definitive_feeds_pending');
-  corporateBlockers.push('entra_id_adapter_pending');
+  if (!entra.ready) corporateBlockers.push('entra_id_adapter_pending');
   corporateBlockers.push('atomic_rate_limit_and_alerts_pending');
   return {
     generatedAt: new Date().toISOString(),
@@ -41,6 +43,7 @@ export function getOperationalStatus() {
       publicOriginConfigured: configured('PUBLIC_APP_ORIGIN'),
       sessionSecretConfigured: configured('AUTH_SESSION_SECRET'),
       authProvider: getAuthProvider(),
+      entraAdapter: entra,
     },
     handoff: {
       mvp: {
@@ -51,7 +54,7 @@ export function getOperationalStatus() {
       corporate: {
         status: 'pending',
         blockers: corporateBlockers,
-        identityAdapter: 'local_hmac_until_entra_id_handoff',
+        identityAdapter: entra.ready ? 'entra_oidc_jwt' : 'local_hmac_until_entra_id_handoff',
         atomicStores: false,
         alerts: false,
       },

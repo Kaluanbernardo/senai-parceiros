@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 79 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 81 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -28,7 +28,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 4. catálogos canônicos de pesquisadores e escolas;
 5. importação XLSX integrada ao Gerador de Prompt;
 6. thin slice real do Radar;
-7. Configuração corporativa do armazenamento e autenticação, mantendo adapters substituíveis.
+7. Configuração corporativa do armazenamento, ativação do adapter Entra ID e autenticação, mantendo adapters substituíveis.
 8. XLSX, remoção de exportadores legados e hardening Azure.
 
 Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem regredir a entrevista e a seleção, que são a feature principal.
@@ -67,20 +67,20 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback protegido contra alterações posteriores. O catálogo persistido é reidratado após autenticação e atualizações importadas são mescladas por identidade/ID sem duplicar a interface. Os adapters `file` e `vercel_blob` tornam o lote durável quando configurados; o próximo Luna deve conectar a credencial corporativa e, depois, Azure Blob/Storage Table.
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`, sem guardar prompts, respostas ou IP bruto; o próximo ambiente deve ligar uma implementação compartilhada/atômica corporativa e alertas.
-- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo; `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
+- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo e `security.entraAdapter` mostra a prontidão segura do adapter (sem valores sensíveis); `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
-- Próximo bloco recomendado: ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e executar o hardening Azure/Entra ID.
+- Próximo bloco recomendado: registrar o aplicativo/grupos no tenant corporativo e ativar o adapter Entra ID, depois ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e substituir rate limits/alertas por operação atômica.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 
 ## Próximas ondas para execução
 
-1. **Configuração corporativa (TI):** Blob privado no MVP, segredos server-only, Entra ID e mapeamento dos papéis `user`/`admin`.
+1. **Configuração corporativa (TI):** Blob privado no MVP, segredos server-only, registro do aplicativo/grupos Entra ID e preenchimento das variáveis `ENTRA_*` para ativar `POST /api/auth/entra`.
 2. **Operação compartilhada:** substituir os adapters duráveis do MVP por Redis/Storage com operação atômica, alertas de custo/erro e retenção de logs sem prompts ou respostas.
 3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
 4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
 5. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
-6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
+6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback e login Entra, revisar diff e só então solicitar preview Vercel.
 
 ### Critério específico da nova feature de importação
 
@@ -99,10 +99,17 @@ OPENROUTER_MODEL=openrouter/auto
 OPENROUTER_COST_QUALITY_TRADEOFF=7
 RADAR_LIVE_SOURCES=true|false
 RADAR_CRON_SECRET=
+AUTH_PROVIDER=local|entra
+ENTRA_TENANT_ID=
+ENTRA_CLIENT_ID=
+ENTRA_ADMIN_GROUP_ID=
+ENTRA_USER_GROUP_ID=
+ENTRA_ISSUER=
+ENTRA_JWKS_URL=
 ```
 
 Valores nunca devem aparecer em documentação, saída, teste ou commit. O adapter corporativo futuro deve respeitar os mesmos contratos.
 
 ## Prompt direto para o Luna
 
-> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e os tickets ainda pendentes. Retome na branch `codex/enriquece-perfis-institucionais` a partir do commit-base indicado acima, preservando todos os arquivos locais não relacionados. O baseline, entrevista adaptativa, catálogos canônicos, importação XLSX, Radar live, calibração da shortlist e adapters privados MVP (`file`/`vercel_blob`) já estão implementados. A integração corporativa Azure/Entra ID, armazenamento atômico, alertas e feeds definitivos ainda dependem de configuração/implementação do time de TI. Use TDD, não persista entrevistas/resultados da seleção, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Priorize agora concluir as integrações corporativas documentadas e validar o runbook de handoff. Faça testes, build, smoke visual quando o navegador estiver disponível, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.
+> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e os tickets ainda pendentes. Retome na branch `codex/enriquece-perfis-institucionais` a partir do commit-base indicado acima, preservando todos os arquivos locais não relacionados. O baseline, entrevista adaptativa, catálogos canônicos, importação XLSX, Radar live, calibração da shortlist, adapters privados MVP (`file`/`vercel_blob`) e o adapter server-side Entra/OIDC (`server/lib/entra.js`, `POST /api/auth/entra`) já estão implementados. Ainda dependem de TI o registro do aplicativo/grupos no tenant, armazenamento atômico, alertas e feeds definitivos. Use TDD, não persista entrevistas/resultados da seleção, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Priorize agora concluir a configuração corporativa documentada e validar o runbook de handoff. Faça testes, build, smoke visual quando o navegador estiver disponível, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.

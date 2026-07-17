@@ -21,7 +21,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 4. Definir `CATALOG_BLOB_PATH` e `RADAR_BLOB_PATH` com caminhos estáveis.
 5. Definir `RADAR_CRON_SECRET`/`CRON_SECRET` como segredo aleatório rotacionável.
 6. Cadastrar feeds adicionais somente em `RADAR_EXTRA_FEEDS_JSON`; o servidor aceita apenas fontes oficiais já allowlisted e URLs HTTPS. As páginas HTML institucionais padrão já estão no código e também são observadas no status do Radar.
-7. Definir `AUTH_PROVIDER=local` no MVP, `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`. Ao iniciar a integração corporativa, trocar para `AUTH_PROVIDER=entra`; até que o adapter exista, o login falhará fechado em vez de aceitar credenciais locais.
+7. Definir `AUTH_PROVIDER=local` no MVP, `AUTH_SESSION_SECRET`, credenciais provisórias e limites de IA no ambiente de produção, nunca em `VITE_*`. O adapter server-only de Entra ID já está implementado em `server/lib/entra.js`, com entrada em `POST /api/auth/entra`; para ativá-lo, registrar o aplicativo e os grupos no tenant corporativo, preencher as variáveis `ENTRA_*` abaixo e trocar para `AUTH_PROVIDER=entra`. O login local continuará desabilitado nesse modo.
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
 9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs. O bloco `handoff` resume a prontidão do MVP (`handoff.mvp`) e lista os bloqueadores corporativos (`handoff.corporate.blockers`), incluindo Entra ID, armazenamento atômico, alertas, cron e feeds definitivos.
 
@@ -33,22 +33,34 @@ Substituir somente adapters e configuração:
 - `RadarStore`: Blob/Cosmos/SQL com snapshot imutável, checkpoint e retenção definida.
 - IA: `AI_PROVIDER=azure`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION` e segredo em Key Vault.
 - Refresh: Azure Timer/Functions chama o mesmo contrato do endpoint protegido, com identidade gerenciada e sem segredo no código.
-- Autenticação: substituir a sessão provisória por Entra ID, mantendo os papéis de usuário e administrador mapeados por grupo.
+- Autenticação: ativar o adapter server-side de Entra ID, mantendo os papéis de usuário e administrador mapeados por grupo. O contrato de sessão e os endpoints protegidos permanecem os mesmos.
 - Rate limit/orçamento: o MVP já oferece adapters `memory`, `file` e `vercel_blob` para rate limit e teto diário de IA, sem IP bruto, prompts ou respostas; na Azure, substituir por Redis/Storage com operação atômica e alertas.
 
 ### Contrato mínimo de Entra ID
 
-O adapter corporativo deve substituir o login local HMAC sem exigir mudança nas páginas React ou nos endpoints protegidos:
+O adapter corporativo já substitui o login local HMAC sem exigir mudança nas páginas React ou nos endpoints protegidos. O cliente corporativo deve obter um token OIDC pela integração aprovada pelo time de TI e enviá-lo uma única vez, no corpo JSON, para `POST /api/auth/entra`; o servidor valida o token e devolve apenas a sessão HttpOnly.
 
 - validar assinatura e claims (`iss`, `aud`, `exp`, `nbf`) contra o tenant corporativo e JWKS oficial;
-- mapear grupos corporativos para os papéis `admin` e `user`; ausência de grupo autorizado deve resultar em `403`;
+- mapear grupos corporativos para os papéis `admin` e `user`; ausência de grupo autorizado resulta em resposta genérica `401` no endpoint de troca de token (sem revelar se o grupo existe);
 - rejeitar tokens expirados, de outro tenant, de outra aplicação ou com assinatura inválida;
 - manter `requireSession(req, res, roles)` como fronteira única para as APIs existentes;
 - emitir apenas uma sessão HttpOnly, Secure e SameSite apropriada, sem devolver token ao frontend;
 - desabilitar o formulário de usuário/senha quando `AUTH_PROVIDER=entra`; o fallback local só pode existir explicitamente no ambiente MVP;
-- usar identidade gerenciada/Key Vault para segredos e registrar somente eventos operacionais, nunca tokens ou claims integrais.
+- usar identidade gerenciada/Key Vault para segredos e registrar somente eventos operacionais, nunca tokens ou claims integrais. Tokens com group overage (`_claim_names.groups`/`hasgroups`) são rejeitados até que TI forneça uma integração Graph aprovada.
 
-Variáveis e nomes exatos devem ser definidos pelo time de TI no ambiente corporativo. O repositório não deve receber `client_secret`, certificado, token ou valor de produção.
+Configuração mínima (valores de produção ficam somente no ambiente corporativo):
+
+```text
+AUTH_PROVIDER=entra
+ENTRA_TENANT_ID=<tenant GUID>
+ENTRA_CLIENT_ID=<application/client ID>
+ENTRA_ADMIN_GROUP_ID=<group GUID>
+ENTRA_USER_GROUP_ID=<group GUID>
+ENTRA_ISSUER=https://login.microsoftonline.com/<tenant GUID>/v2.0
+ENTRA_JWKS_URL=https://login.microsoftonline.com/<tenant GUID>/discovery/v2.0/keys
+```
+
+O repositório não deve receber `client_secret`, certificado, token ou valor de produção. A Microsoft documenta os claims de acesso e o discovery OIDC/JWKS usados por essa validação: [claims de access token](https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference) e [OIDC/discovery](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc).
 
 ## Backup, restore e rollback
 

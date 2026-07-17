@@ -48,7 +48,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 79 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 81 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
@@ -56,7 +56,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico, rollback protegido contra conflito e reidratação do catálogo após login; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
 3. O Radar já consulta fontes RSS e páginas HTML institucionais allowlisted, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob` e allowlist adicional configurável por `RADAR_EXTRA_FEEDS_JSON`, faltando cadastrar e revisar os feeds corporativos definitivos.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
-5. A autenticação corporativa/Entra ID, operação atômica compartilhada e alertas operacionais ainda precisam ser ligados sem levar credenciais pessoais; o MVP já tem rate limit, teto diário de IA e endpoint administrativo de status, todos server-only com adapters `memory`, `file` e `vercel_blob`, sem prompts, respostas ou IPs brutos persistidos.
+5. O adapter server-side Entra ID já valida assinatura RS256, JWKS, tenant, audiência, emissor, expiração, `nbf` e grupos, e troca o token por sessão HttpOnly em `POST /api/auth/entra`; ainda faltam o registro corporativo do aplicativo/grupos, a ativação por variáveis de ambiente, a operação atômica compartilhada e os alertas operacionais. O MVP já tem rate limit, teto diário de IA e endpoint administrativo de status, todos server-only com adapters `memory`, `file` e `vercel_blob`, sem prompts, respostas ou IPs brutos persistidos.
 
 ## Decisões de produto vigentes
 
@@ -149,7 +149,7 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 2. Manter a auditoria de deduplicação como gate de importações futuras: usar domínio/país para aliases ambíguos e não fundir redes, regionais ou unidades locais distintas.
 3. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
 4. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
-5. Consolidar Entra ID, rate limit compartilhado/alertas e o runbook de rotação/backup/restore para o handoff Azure.
+5. Concluir o registro/ativação do Entra ID com TI, consolidar rate limit compartilhado/alertas e executar o runbook de rotação/backup/restore para o handoff Azure.
 6. Executar smoke visual desktop/mobile e validação operacional final antes de qualquer preview Vercel.
 
 O fluxo de **importação de stakeholders** é parte da entrega atual: o Gerador de Prompt orienta a pesquisa para produzir o schema `senai_catalog_v1`; o administrador importa o XLSX, revisa a prévia, resolve duplicidades, confirma o lote e pode consultar histórico ou fazer rollback. A mesma definição de colunas deve permanecer como fonte única no prompt, no template, na prévia, no catálogo e na exportação da seleção.
