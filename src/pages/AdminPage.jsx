@@ -33,6 +33,8 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import HistoryIcon from '@mui/icons-material/History';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import AdminTable from '../components/AdminTable';
@@ -56,6 +58,10 @@ export default function AdminPage() {
   const [xlsxPreview, setXlsxPreview] = useState(null);
   const [xlsxDecisions, setXlsxDecisions] = useState({});
   const [xlsxBusy, setXlsxBusy] = useState(false);
+  const [batchesOpen, setBatchesOpen] = useState(false);
+  const [batches, setBatches] = useState([]);
+  const [batchesBusy, setBatchesBusy] = useState(false);
+  const [rollbackBatch, setRollbackBatch] = useState(null);
 
   const showSnack = (message, severity = 'success') => {
     setSnack({ open: true, message, severity });
@@ -133,6 +139,49 @@ export default function AdminPage() {
   const handleXlsxClick = () => {
     setMenuAnchor(null);
     setTimeout(() => xlsxInputRef.current?.click(), 100);
+  };
+
+  const loadImportBatches = async () => {
+    setBatchesBusy(true);
+    try {
+      const response = await fetch('/api/admin/catalog/import-batches', { credentials: 'include' });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao carregar histórico.');
+      setBatches(body.batches || []);
+    } catch (error) {
+      showSnack(error.message || 'Falha ao carregar histórico.', 'error');
+    } finally {
+      setBatchesBusy(false);
+    }
+  };
+
+  const handleBatchesClick = () => {
+    setMenuAnchor(null);
+    setBatchesOpen(true);
+    loadImportBatches();
+  };
+
+  const handleRollbackConfirm = async () => {
+    if (!rollbackBatch) return;
+    setBatchesBusy(true);
+    try {
+      const response = await fetch('/api/admin/catalog/import-rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ batchId: rollbackBatch.batchId }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao desfazer lote.');
+      await data.refreshCatalog();
+      setRollbackBatch(null);
+      showSnack('Lote desfeito e catálogo atualizado.', 'info');
+      await loadImportBatches();
+    } catch (error) {
+      showSnack(error.message || 'Falha ao desfazer lote.', 'error');
+    } finally {
+      setBatchesBusy(false);
+    }
   };
 
   const handleXlsxFileChange = async (event) => {
@@ -249,6 +298,10 @@ export default function AdminPage() {
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
               <ListItemText primary="Stakeholders XLSX" secondary="Prévia e confirmação administrativa" />
             </MenuItem>
+            <MenuItem onClick={handleBatchesClick}>
+              <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Histórico de importações" secondary="Consultar lotes e desfazer quando permitido" />
+            </MenuItem>
             <Divider />
             <MenuItem onClick={() => handleImportClick('stakeholders')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
@@ -324,6 +377,25 @@ export default function AdminPage() {
         <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
       </Dialog>
 
+      <Dialog open={batchesOpen} onClose={() => !batchesBusy && setBatchesOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>Histórico de importações</DialogTitle>
+        <DialogContent dividers>
+          {batchesBusy && <Alert severity="info" sx={{ mb: 2 }}>Carregando lotes…</Alert>}
+          {!batchesBusy && !batches.length && <Alert severity="info">Nenhum lote confirmado neste ambiente.</Alert>}
+          <List dense>
+            {batches.map((batch) => (
+              <ListItem key={batch.batchId} divider secondaryAction={<Button size="small" color="warning" startIcon={<RestoreIcon />} onClick={() => setRollbackBatch(batch)} disabled={batchesBusy}>Desfazer</Button>}>
+                <ListItemText
+                  primary={`${batch.filename || 'Planilha'} · ${batch.category}`}
+                  secondary={`${batch.committedAt ? new Date(batch.committedAt).toLocaleString('pt-BR') : 'data não informada'} · aplicados: ${batch.applied?.length || 0} · ignorados: ${batch.ignored?.length || 0}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions><Button onClick={() => setBatchesOpen(false)} disabled={batchesBusy}>Fechar</Button><Button onClick={loadImportBatches} disabled={batchesBusy}>Atualizar</Button></DialogActions>
+      </Dialog>
+
       {/* Edit Dialog */}
       <EditDialog
         open={!!editType}
@@ -341,6 +413,14 @@ export default function AdminPage() {
         onConfirm={handleDeleteConfirm}
         title="Excluir registro"
         message={`Tem certeza que deseja excluir "${deleteItem?.nome || deleteItem?.instituicao || ''}"? Esta acao nao pode ser desfeita.`}
+      />
+
+      <ConfirmDialog
+        open={Boolean(rollbackBatch)}
+        onClose={() => !batchesBusy && setRollbackBatch(null)}
+        onConfirm={handleRollbackConfirm}
+        title="Desfazer importação"
+        message={`Desfazer o lote "${rollbackBatch?.filename || rollbackBatch?.batchId || ''}"? O catálogo voltará ao estado anterior, se não houver conflito posterior.`}
       />
 
       {/* Snackbar */}
