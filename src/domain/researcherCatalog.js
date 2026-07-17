@@ -151,6 +151,7 @@ export function normalizeResearcherName(value) {
 }
 
 export function resolveResearcherId(records = [], id) {
+  const rawId = String(id);
   const numericId = Number(id);
-  return records.find((record) => record.id === numericId || (record.legacyIds || []).includes(numericId)) || null;
+  return records.find((record) => String(record.id) === rawId || (record.legacyIds || []).some((legacyId) => String(legacyId) === rawId || legacyId === numericId)) || null;
 }

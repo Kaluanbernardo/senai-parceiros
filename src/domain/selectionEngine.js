@@ -73,7 +73,8 @@ function sourceFields(candidate) {
 }
 
 function scoreCandidate({ candidate, input }) {
-  const contextText = Object.values(input.answers || {}).join(' ') + ' ' + SENAI_STRATEGIC_BASELINE.join(' ');
+  const briefText = [input.brief?.context, ...(input.brief?.themes || []), ...(input.brief?.desiredOutcomes || []), ...(input.brief?.contributionTypes || []), input.brief?.audience, input.brief?.collaborationModel].filter(Boolean).join(' ');
+  const contextText = Object.values(input.answers || {}).join(' ') + ' ' + briefText + ' ' + SENAI_STRATEGIC_BASELINE.join(' ');
   const contextTokens = [...new Set(tokens(contextText))];
   const candidateTokens = new Set(tokens(candidateText(candidate)));
   const overlap = contextTokens.filter((token) => candidateTokens.has(token));
@@ -82,11 +83,13 @@ function scoreCandidate({ candidate, input }) {
   const completeness = sourceFields(candidate).length / 11;
   const credibility = Math.min(100, 35 + Math.min(45, Math.log10(citations + 1) * 16) + completeness * 20);
   const hasWebsite = Boolean(candidate.website || candidate.scholar);
-  const collaboration = 44 + (hasWebsite ? 18 : 0) + (candidate.relacao && !fold(candidate.relacao).includes('sem registro') ? 20 : 0);
-  const geography = fold(input.answers?.geography);
+  const confirmedPartnership = Boolean(candidate.hasPartnership) || /^(?:✅|🔗)|^parceiro de projetos|^parceiro irmão/i.test(String(candidate.relacao || '').trim());
+  const collaboration = 44 + (hasWebsite ? 18 : 0) + (confirmedPartnership ? 20 : 0) + (input.brief?.collaborationModel ? 6 : 0);
+  const geography = fold(input.brief?.feasibility?.geography || input.answers?.geography);
   const sameCountry = geography && candidate.pais && geography.includes(fold(candidate.pais));
-  const feasibility = 48 + (sameCountry ? 18 : 0) + (fold(input.answers?.constraints).includes('remot') ? 12 : 0);
-  const risk = 72;
+  const feasibility = 48 + (sameCountry ? 18 : 0) + (fold(input.brief?.hardConstraints?.join(' ') || input.answers?.constraints).includes('remot') ? 12 : 0);
+  const riskSignals = [candidate.risco, candidate.risk, candidate.relacao].filter(Boolean).join(' ');
+  const risk = clamp(78 - (fold(riskSignals).includes('sem evid') || fold(riskSignals).includes('conflito') ? 22 : 0) - (sourceFields(candidate).length < 5 ? 8 : 0));
   const impact = clamp(42 + relevance * 0.55 + (candidate.relevancia ? 12 : 0));
   const alignment = clamp(30 + relevance * 0.7);
 
@@ -109,7 +112,7 @@ function scoreCandidate({ candidate, input }) {
     viability,
     total,
     confidence: clamp(35 + completeness * 50 + Math.min(overlap.length * 3, 15)),
-    summary: overlap.length ? 'Aderência encontrada nos termos: ' + overlap.slice(0, 6).join(', ') + '.' : 'Aderência contextual ainda precisa de validação humana.',
+    summary: overlap.length ? 'Aderência encontrada nos termos: ' + overlap.slice(0, 6).join(', ') + (candidate.pais ? `. Diferencial de contexto: atuação em ${candidate.pais}.` : '.') : 'Aderência contextual ainda precisa de validação humana.',
     evidence: sourceFields(candidate).slice(0, 6),
     gaps: sourceFields(candidate).length < 5 ? ['Perfil público com campos incompletos.'] : [],
   };
@@ -117,6 +120,24 @@ function scoreCandidate({ candidate, input }) {
 
 function sortEntries(entries) {
   return [...entries].sort((a, b) => b.total - a.total || b.strategicValue - a.strategicValue);
+}
+
+export function rankProviderCandidates(entries, limit = 30) {
+  const sorted = sortEntries(entries);
+  const selected = [];
+  const groups = new Set();
+  for (const entry of sorted) {
+    if (selected.length >= limit) break;
+    const group = String(entry.candidate?.instituicao || entry.candidate?.organizacao || entry.candidate?.pais || entry.candidate?.catalogIdentity || entry.candidate?.nome || '').trim().toLowerCase();
+    if (group && groups.has(group)) continue;
+    selected.push(entry);
+    if (group) groups.add(group);
+  }
+  for (const entry of sorted) {
+    if (selected.length >= limit) break;
+    if (!selected.includes(entry)) selected.push(entry);
+  }
+  return selected;
 }
 
 /**
@@ -149,8 +170,8 @@ export function selectShortlist(entries, { minimum = 5, maximum = 10, threshold 
   return selected;
 }
 
-export function buildLocalEvaluation({ category, objective, answers, candidates }) {
-  const input = { category, objective, answers };
+export function buildLocalEvaluation({ category, objective, answers, candidates, brief }) {
+  const input = { category, objective, answers, brief };
   const all = sortEntries(candidates.map((candidate) => scoreCandidate({ candidate, input })));
   const candidatePool = all;
   const shortlist = selectShortlist(candidatePool);
@@ -163,12 +184,14 @@ export function buildLocalEvaluation({ category, objective, answers, candidates 
       category,
       objective,
       answers,
+      brief: brief || null,
       weights: FORMULA_WEIGHTS,
       formula: 'valor estratégico × 0,58 + viabilidade × 0,42; risco grave confirmado zera o valor estratégico',
       sourcePolicy: 'Somente campos do catálogo cadastrado; ausência de evidência reduz confiança.',
       institutionalBaseline: SENAI_STRATEGIC_BASELINE,
       catalogSize: candidates.length,
       shortlistPolicy: { minimum: 5, maximum: 10, threshold: 28, institutionDiversity: true },
+      providerPreselection: { limit: 30, selected: rankProviderCandidates(candidatePool, 30).map((entry) => entry.candidate.id) },
       shortlistExcluded: candidatePool.filter((entry) => !shortlist.includes(entry)).map((entry) => ({
         id: entry.candidate.id,
         reason: entry.severeRisk?.confirmed ? 'severe-risk' : entry.total < 28 ? 'below-threshold' : 'capacity',

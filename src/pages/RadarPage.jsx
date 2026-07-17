@@ -130,7 +130,7 @@ export default function RadarPage() {
         </CardContent>
       </Card>
 
-      {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Modo curado de demonstração: os itens sem data são fontes oficiais de monitoramento, não uma notícia nova. Ao habilitar as fontes live no ambiente, pesquisas acadêmicas serão atualizadas automaticamente por OpenAlex e Crossref; os conectores governamentais e internacionais entram na próxima rotina de ingestão.</Alert>}
+      {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>As fontes externas estão indisponíveis nesta consulta. Exibindo a base curada; as fontes live incluem OpenAlex, Crossref e feeds institucionais governamentais e internacionais.</Alert>}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
       {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box> : (

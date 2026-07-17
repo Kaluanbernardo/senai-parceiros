@@ -1,5 +1,5 @@
 import { getSession } from '../../server/lib/cookies.js';
-import { getRadarItems, RADAR_SECTIONS, RADAR_SOURCE_POLICY } from '../../server/lib/radar.js';
+import { getRadarItems, RADAR_FEED_POLICY, RADAR_SECTIONS, RADAR_SOURCE_POLICY } from '../../server/lib/radar.js';
 import { isRadarRateLimited, recordRadarAttempt } from '../../server/lib/auth.js';
 
 function bool(value) {
@@ -33,11 +33,11 @@ export default async function handler(req, res) {
   try {
     const result = await getRadarItems({
       filters,
-      live: bool(process.env.RADAR_LIVE_SOURCES),
+      live: process.env.RADAR_LIVE_SOURCES === undefined ? true : bool(process.env.RADAR_LIVE_SOURCES),
     });
     return res.status(200).json({
       ...result,
-      sourcePolicy: RADAR_SOURCE_POLICY,
+      sourcePolicy: [...RADAR_SOURCE_POLICY, ...RADAR_FEED_POLICY],
       mode: result.liveProvider ? 'live+curated' : 'curated-fallback',
     });
   } catch {

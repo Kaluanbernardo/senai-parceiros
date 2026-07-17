@@ -3,8 +3,10 @@ import { readJson, methodNotAllowed } from '../../server/lib/http.js';
 import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selection.js';
 import { evaluateWithProvider } from '../../server/lib/ai.js';
 import { getCatalog } from '../../server/lib/catalog.js';
+import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
 import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
+import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -21,13 +23,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
     recordSelectionAttempt(req, session);
+    const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
+    if (!validateSelectionBrief(brief).valid) return res.status(400).json({ error: 'invalid_selection_brief' });
     const candidates = getCatalog(payload.category);
-    const evaluationInput = { ...payload, candidates };
+    const evaluationInput = { ...payload, brief, candidates };
     const local = await buildLocalEvaluation(evaluationInput);
     let ai = null;
     let fallback = false;
     try {
-      ai = await evaluateWithProvider({ input: evaluationInput, candidates: local.candidatePool.map((entry) => entry.candidate) });
+      const providerPool = rankProviderCandidates(local.candidatePool, 30);
+      ai = await evaluateWithProvider({ input: evaluationInput, candidates: providerPool.map((entry) => entry.candidate) });
+      ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
       ai.evaluations = ai.evaluations.map((evaluation) => ({
         ...evaluation,
         id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,
@@ -50,6 +56,7 @@ export default async function handler(req, res) {
         costQualityTradeoff: ai.costQualityTradeoff ?? null,
         routing: ai.routing || null,
         usage: ai.usage || null,
+        providerPreselection: ai.providerPreselection || result.trace?.providerPreselection || null,
       },
     });
   } catch (error) {

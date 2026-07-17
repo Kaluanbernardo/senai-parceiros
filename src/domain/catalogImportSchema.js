@@ -1,0 +1,179 @@
+export const CATALOG_SCHEMA_VERSION = 'senai_catalog_v1';
+export const CATALOG_SHEET_NAME = 'Stakeholders';
+export const CATALOG_METADATA_SHEET_NAME = 'Metadados';
+
+const COMMON_COLUMNS = [
+  { name: 'schema_version', type: 'texto', required: true, description: 'Valor fixo: senai_catalog_v1.' },
+  { name: 'tipo_registro', type: 'texto', required: true, description: 'researcher, school ou organization.' },
+  { name: 'nome', type: 'texto', required: true, description: 'Nome oficial ou nome completo.' },
+  { name: 'pais', type: 'texto', required: true, description: 'País de atuação principal.' },
+  { name: 'cidade_estado', type: 'texto', required: false, description: 'Cidade e estado/província, quando públicos.' },
+  { name: 'resumo', type: 'texto', required: false, description: 'Resumo curto baseado em fatos públicos.' },
+  { name: 'descricao', type: 'texto', required: false, description: 'Descrição detalhada e pública.' },
+  { name: 'areas_temas', type: 'lista', required: false, description: 'Temas separados por ponto e vírgula.' },
+  { name: 'aderencia_contexto', type: 'texto', required: false, description: 'Aderência ao contexto pesquisado.' },
+  { name: 'website_oficial', type: 'url', required: false, description: 'URL institucional.' },
+  { name: 'contato_publico', type: 'texto', required: false, description: 'Contato profissional publicado.' },
+  { name: 'fontes', type: 'lista', required: false, description: 'URLs separadas por ponto e vírgula.' },
+  { name: 'data_consulta', type: 'data', required: false, description: 'Data no formato AAAA-MM-DD.' },
+  { name: 'confianca', type: 'numero_0_100', required: false, description: 'Confiança da coleta entre 0 e 100.' },
+  { name: 'dados_nao_localizados', type: 'lista', required: false, description: 'Campos não localizados, separados por ponto e vírgula.' },
+];
+
+const CATEGORY_COLUMNS = {
+  researcher: [
+    { name: 'instituicao_atual', type: 'texto', description: 'Instituição e vínculo atual.' },
+    { name: 'cargo', type: 'texto', description: 'Cargo ou função pública atual.' },
+    { name: 'areas_especialidade', type: 'lista', description: 'Áreas de especialidade.' },
+    { name: 'linhas_pesquisa', type: 'texto', description: 'Linhas de pesquisa relacionadas.' },
+    { name: 'publicacoes_relevantes', type: 'lista', description: 'Título | URL | ano; ...' },
+    { name: 'citacoes', type: 'numero', description: 'Citações públicas, quando localizadas.' },
+    { name: 'orcid', type: 'texto', description: 'ORCID público.' },
+    { name: 'google_scholar_url', type: 'url', description: 'Perfil público no Google Scholar.' },
+    { name: 'openalex_id', type: 'texto', description: 'Identificador OpenAlex.' },
+  ],
+  school: [
+    { name: 'tipo_instituicao', type: 'texto', description: 'Tipo e natureza da instituição.' },
+    { name: 'nivel_rede', type: 'texto', description: 'national, regional ou local.' },
+    { name: 'areas_formacao', type: 'lista', description: 'Áreas de formação.' },
+    { name: 'niveis_oferta', type: 'lista', description: 'Níveis e modalidades de EPT.' },
+    { name: 'relacao_industria', type: 'texto', description: 'Evidências da relação com indústria e trabalho.' },
+    { name: 'escala', type: 'texto', description: 'Alcance, unidades ou público atendido.' },
+    { name: 'acreditacoes', type: 'lista', description: 'Acreditações e reconhecimentos.' },
+    { name: 'dominio_oficial', type: 'texto', description: 'Domínio institucional normalizado.' },
+    { name: 'identificador_publico', type: 'texto', description: 'Identificador público, quando existir.' },
+  ],
+  organization: [
+    { name: 'natureza_juridica', type: 'texto', description: 'Pública, privada, terceiro setor ou outra.' },
+    { name: 'setor', type: 'texto', description: 'Setor de atividade.' },
+    { name: 'atuacao', type: 'texto', description: 'Atuação e alcance.' },
+    { name: 'programas_relevantes', type: 'lista', description: 'Programas relacionados ao contexto.' },
+    { name: 'parcerias_industriais', type: 'lista', description: 'Parcerias e relação com a indústria.' },
+    { name: 'alcance_geografico', type: 'texto', description: 'Alcance territorial.' },
+    { name: 'dominio_oficial', type: 'texto', description: 'Domínio institucional normalizado.' },
+    { name: 'identificador_publico', type: 'texto', description: 'Identificador público, quando existir.' },
+  ],
+};
+
+export const CATALOG_COLUMNS = Object.freeze(Object.fromEntries(
+  Object.entries(CATEGORY_COLUMNS).map(([category, specific]) => [category, Object.freeze([...COMMON_COLUMNS, ...specific])]),
+));
+
+export const CATALOG_CATEGORIES = Object.freeze(Object.keys(CATALOG_COLUMNS));
+
+export function getCatalogColumns(category) {
+  return CATALOG_COLUMNS[category] || CATALOG_COLUMNS.organization;
+}
+
+export function getCatalogHeaders(category) {
+  return getCatalogColumns(category).map((column) => column.name);
+}
+
+export function parseListCell(value) {
+  return String(value || '').split(';').map((item) => item.trim()).filter(Boolean);
+}
+
+export function serializeList(value) {
+  return Array.isArray(value) ? value.filter(Boolean).join('; ') : String(value || '');
+}
+
+export function normalizeCell(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'object' && value.text) return String(value.text);
+  return String(value).trim();
+}
+
+export function validateCatalogHeaders(headers, category) {
+  const expected = getCatalogHeaders(category);
+  const actual = headers.map((header) => String(header || '').trim());
+  const errors = [];
+  if (actual.length !== expected.length) errors.push(`Cabeçalho deve ter ${expected.length} colunas; recebido ${actual.length}.`);
+  expected.forEach((header, index) => {
+    if (actual[index] !== header) errors.push(`Coluna ${index + 1}: esperado "${header}", recebido "${actual[index] || '(vazio)'}".`);
+  });
+  return { valid: errors.length === 0, errors, expected, actual };
+}
+
+export function validateCatalogRow(row, category, rowNumber = 2) {
+  const columns = getCatalogColumns(category);
+  const errors = [];
+  if (row.schema_version !== CATALOG_SCHEMA_VERSION) errors.push(`Linha ${rowNumber}: schema_version deve ser ${CATALOG_SCHEMA_VERSION}.`);
+  if (row.tipo_registro !== category) errors.push(`Linha ${rowNumber}: tipo_registro deve ser ${category}.`);
+  for (const column of columns.filter((column) => column.required)) {
+    if (!String(row[column.name] || '').trim()) errors.push(`Linha ${rowNumber}: ${column.name} é obrigatório.`);
+  }
+  for (const field of ['website_oficial', 'google_scholar_url']) {
+    if (!row[field]) continue;
+    try {
+      const url = new URL(row[field]);
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('protocol');
+    } catch {
+      errors.push(`Linha ${rowNumber}: ${field} deve ser uma URL http(s).`);
+    }
+  }
+  if (row.data_consulta && !/^\d{4}-\d{2}-\d{2}$/.test(row.data_consulta)) errors.push(`Linha ${rowNumber}: data_consulta deve usar AAAA-MM-DD.`);
+  if (row.confianca !== '' && (Number.isNaN(Number(row.confianca)) || Number(row.confianca) < 0 || Number(row.confianca) > 100)) errors.push(`Linha ${rowNumber}: confianca deve estar entre 0 e 100.`);
+  return { valid: errors.length === 0, errors };
+}
+
+export function rowToCanonical(row) {
+  const category = row.tipo_registro;
+  const list = parseListCell;
+  const base = {
+    nome: row.nome,
+    pais: row.pais,
+    website: row.website_oficial,
+    website_oficial: row.website_oficial,
+    cidade_estado: row.cidade_estado,
+    descricao: row.descricao || row.resumo,
+    diferencial: row.resumo,
+    areas: list(row.areas_temas),
+    fontes: list(row.fontes),
+    data_consulta: row.data_consulta,
+    confianca: row.confianca === '' ? null : Number(row.confianca),
+    dados_nao_localizados: list(row.dados_nao_localizados),
+    aderencia_contexto: row.aderencia_contexto,
+    contato_publico: row.contato_publico,
+    categoria: category === 'researcher' ? 'Pesquisador' : category === 'school' ? 'Escola' : 'Organização',
+    importSchemaVersion: CATALOG_SCHEMA_VERSION,
+  };
+  if (category === 'researcher') return {
+    ...base,
+    instituicao: row.instituicao_atual,
+    pesquisa: row.linhas_pesquisa,
+    miniBio: row.descricao || row.resumo,
+    citacoes: row.citacoes,
+    scholar: row.google_scholar_url,
+    orcid: row.orcid,
+    openalex_id: row.openalex_id,
+    artigos: list(row.publicacoes_relevantes).map((value) => {
+      const [titulo, url, ano] = value.split('|').map((part) => part.trim());
+      return { titulo, url, ano };
+    }).filter((article) => article.titulo || article.url),
+  };
+  if (category === 'school') return {
+    ...base,
+    instituicao: row.nome,
+    areas_formacao: list(row.areas_formacao),
+    niveis_oferta: list(row.niveis_oferta),
+    tipo_instituicao: row.tipo_instituicao,
+    nivel_rede: row.nivel_rede,
+    relacao_industria: row.relacao_industria,
+    escala: row.escala,
+    acreditacoes: list(row.acreditacoes),
+    dominio_oficial: row.dominio_oficial,
+    identificador_publico: row.identificador_publico,
+  };
+  return {
+    ...base,
+    atuacao: row.atuacao,
+    natureza_juridica: row.natureza_juridica,
+    setor: row.setor,
+    programas_relevantes: list(row.programas_relevantes),
+    parcerias_industriais: list(row.parcerias_industriais),
+    alcance_geografico: row.alcance_geografico,
+    dominio_oficial: row.dominio_oficial,
+    identificador_publico: row.identificador_publico,
+  };
+}

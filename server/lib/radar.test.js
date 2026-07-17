@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { dedupeRadarItems, filterRadarItems, normalizeRadarItem } from './radar.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem } from './radar.js';
 
 const baseItems = [
   normalizeRadarItem({ id: 'a', section: 'research', title: 'IA na indústria', summaryPt: 'Competências para manufatura', publishedAt: '2026-07-10', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['IA', 'indústria'], relevanceScore: 90, externalId: 'doi:a' }),
@@ -7,6 +7,7 @@ const baseItems = [
 ];
 
 describe('radar domain', () => {
+  afterEach(() => vi.restoreAllMocks());
   it('deduplicates by DOI or external identifier', () => {
     expect(dedupeRadarItems([...baseItems, { ...baseItems[0], id: 'copy' }])).toHaveLength(2);
     expect(dedupeRadarItems([{ title: 'Sem identificador', sourceName: 'Fonte' }, { title: 'Sem identificador', sourceName: 'Fonte' }])).toHaveLength(1);
@@ -22,5 +23,13 @@ describe('radar domain', () => {
     expect(item.section).toBe('research');
     expect(item.relevanceScore).toBe(100);
     expect(normalizeRadarItem({ title: 'sem data', publishedAt: 'não é data' }).publishedAt).toBeNull();
+  });
+
+  it('ingests an institutional RSS item with provenance and section', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<rss><channel><item><title>Nova política de EPT</title><link>https://example.org/noticia</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Educação profissional e aprendizagem.</description><guid>item-1</guid></item></channel></rss>', { status: 200 })));
+    const items = await fetchFeedItems({ name: 'Fonte governamental de teste', section: 'government', url: 'https://example.org/feed.xml', official: true, geography: 'Brasil' }, { limit: 5 });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ section: 'government', sourceName: 'Fonte governamental de teste', provider: 'rss', publishedAt: '2026-07-16' });
+    expect(items[0].provenance.feedUrl).toBe('https://example.org/feed.xml');
   });
 });

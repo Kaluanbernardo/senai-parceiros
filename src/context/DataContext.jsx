@@ -64,6 +64,13 @@ export function DataProvider({ children }) {
     setterMap[type](jsonArray);
   }, []);
 
+  const mergeImportedRecords = useCallback((category, records = []) => {
+    if (!Array.isArray(records) || !records.length) return;
+    if (category === 'researcher') setPesquisadores((previous) => canonicalizeResearchers([...previous, ...records]).records);
+    else if (category === 'school') setEscolas((previous) => [...previous, ...records]);
+    else if (category === 'organization') setStakeholders((previous) => [...previous, ...records]);
+  }, []);
+
   const value = {
     stakeholders, escolas, pesquisadores,
     researcherAliases: researcherCatalog.aliases,
@@ -72,6 +79,7 @@ export function DataProvider({ children }) {
     updateEscola, addEscola, deleteEscola,
     updatePesquisador, addPesquisador, deletePesquisador,
     exportData, exportAll, importData,
+    mergeImportedRecords,
     setStakeholders, setEscolas, setPesquisadores,
   };
 

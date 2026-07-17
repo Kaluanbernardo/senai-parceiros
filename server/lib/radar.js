@@ -28,6 +28,13 @@ export const RADAR_SOURCE_POLICY = [
   { name: 'BID', kind: 'international', url: 'https://www.iadb.org/en/topics/education', official: true },
 ];
 
+export const RADAR_FEED_POLICY = [
+  { name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos/noticias/RSS', official: true, geography: 'Brasil' },
+  { name: 'Governo do Estado de São Paulo', section: 'government', url: 'https://www.educacao.sp.gov.br/educacao/noticias/RSS', official: true, geography: 'São Paulo' },
+  { name: 'OIT', section: 'international', url: 'https://www.ilo.org/rss/whatsnew.xml', official: true, geography: 'Internacional' },
+  { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
+];
+
 const liveCache = new Map();
 const LIVE_CACHE_TTL = 10 * 60 * 1000;
 const LIVE_CACHE_MAX = 24;
@@ -47,6 +54,57 @@ function cacheSet(key, items) {
   for (const [entryKey, entry] of liveCache) if (entry.expiresAt <= now) liveCache.delete(entryKey);
   while (liveCache.size >= LIVE_CACHE_MAX) liveCache.delete(liveCache.keys().next().value);
   liveCache.set(key, { items, expiresAt: now + LIVE_CACHE_TTL });
+}
+
+function xmlText(block, tag) {
+  const match = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, 'i'));
+  return match ? match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim() : '';
+}
+
+function xmlLink(block) {
+  const href = block.match(/<link[^>]+href=["']([^"']+)["'][^>]*>/i)?.[1];
+  return href || xmlText(block, 'link');
+}
+
+function feedItem(block, feed, index) {
+  const title = xmlText(block, 'title');
+  const sourceUrl = xmlLink(block);
+  const published = xmlText(block, 'pubDate') || xmlText(block, 'published') || xmlText(block, 'updated');
+  const parsedDate = published ? new Date(published) : null;
+  const publishedAt = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString().slice(0, 10) : null;
+  const externalId = xmlText(block, 'guid') || sourceUrl || `${feed.name}:${title}:${index}`;
+  const summary = xmlText(block, 'description') || xmlText(block, 'summary') || 'Atualização pública recuperada do feed institucional.';
+  const haystack = `${title} ${summary}`.toLocaleLowerCase('pt-BR');
+  const relevanceScore = Math.min(100, 55 + ['educação profissional', 'educacao profissional', 'vocational', 'technical education', 'skills', 'qualificação', 'qualification', 'aprendizagem', 'apprenticeship', 'vet', 'tvet'].filter((term) => haystack.includes(term)).length * 8);
+  return normalizeRadarItem({
+    section: feed.section,
+    title,
+    summaryPt: summary,
+    publishedAt,
+    sourceName: feed.name,
+    sourceUrl,
+    contentType: 'notícia institucional',
+    topics: ['EPT', 'VET'],
+    geography: feed.geography,
+    official: feed.official,
+    relevanceScore,
+    provider: 'rss',
+    externalId,
+    provenance: { feedUrl: feed.url, fetchedAt: new Date().toISOString() },
+  });
+}
+
+export async function fetchFeedItems(feed, { limit = 10 } = {}) {
+  const cacheKey = `feed:${feed.url}`;
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+  const response = await fetch(feed.url, { headers: { Accept: 'application/rss+xml, application/atom+xml, text/xml' }, signal: AbortSignal.timeout(7000) });
+  if (!response.ok) throw new Error(`feed_${response.status}`);
+  const xml = await response.text();
+  const blocks = [...xml.matchAll(/<(?:item|entry)\b[\s\S]*?<\/(?:item|entry)>/gi)].map((match) => match[0]);
+  const items = blocks.map((block, index) => feedItem(block, feed, index)).filter((item) => item.title && item.sourceUrl).slice(0, limit);
+  cacheSet(cacheKey, items);
+  return items;
 }
 
 function openAlexItem(work) {
@@ -151,6 +209,13 @@ export async function getRadarItems({ filters = {}, live = false } = {}) {
     } catch {
       liveProvider = false;
     }
+  }
+  if (live) {
+    const feeds = RADAR_FEED_POLICY.filter((feed) => !filters.section || feed.section === filters.section);
+    const feedResults = await Promise.allSettled(feeds.map((feed) => fetchFeedItems(feed)));
+    const feedItems = feedResults.flatMap((result) => result.status === 'fulfilled' ? result.value : []);
+    items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
+    liveProvider = liveProvider || feedItems.length > 0;
   }
   return { items: filterRadarItems(items, filters), liveProvider, fetchedAt: new Date().toISOString() };
 }

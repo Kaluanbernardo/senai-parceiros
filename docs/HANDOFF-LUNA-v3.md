@@ -8,8 +8,8 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- Commit-base validado: `6e2fa14`
-- Baseline: 31 testes aprovados e build Vite aprovado em 17/07/2026.
+- Commit-base validado: último commit desta branch após os gates locais desta sessão.
+- Baseline + ondas incrementais: 50 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -23,7 +23,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 6. thin slice real do Radar;
 7. XLSX, remoção de exportadores legados e hardening Azure.
 
-Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não devem atrasar a entrevista, que é a feature principal.
+Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem regredir a entrevista e a seleção, que são a feature principal.
 
 ## Regras invioláveis
 
@@ -56,8 +56,10 @@ Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não
 
 - Baseline, entrevista adaptativa, provider OpenAI/OpenRouter com fallback local e deduplicacao dos catalogos ja foram implementados nesta branch.
 - A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC.
-- Proximo bloco recomendado: avaliacao/shortlist, seguido do importador XLSX administrativo e do contrato compartilhado `senai_catalog_v1` no Gerador de Prompt.
-- O importador e o Gerador de Prompt devem evoluir juntos: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
+- O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação básica e rollback. A persistência atual do lote é em memória do processo e deve ser substituída no próximo bloco.
+- O Radar ja consome OpenAlex/Crossref e feeds RSS institucionais de Governo, OIT e UNESCO-UNEVOC, com fallback curado e rastreabilidade de fonte.
+- Próximo bloco recomendado: calibrar avaliação/shortlist, resolver conflitos de importação contra registros-seed, adicionar persistência compartilhada/idempotência e agendar a ingestão do Radar.
+- O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 
 ## Variáveis previstas
 

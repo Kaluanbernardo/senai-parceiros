@@ -16,6 +16,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { CATEGORY_LABELS } from '../domain/interview';
 import { generateResearchPrompt } from '../domain/promptGenerator';
+import { buildCatalogTemplate, downloadTemplateBuffer } from '../services/catalogTemplate';
 
 export default function PromptGeneratorPage() {
   const [form, setForm] = useState({ category: 'researcher', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '' });
@@ -45,6 +46,16 @@ export default function PromptGeneratorPage() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  async function downloadTemplate() {
+    try {
+      const buffer = await buildCatalogTemplate(form.category);
+      downloadTemplateBuffer(buffer, form.category);
+      setSnack('Template XLSX baixado.');
+    } catch (error) {
+      setSnack(error.message || 'Não foi possível gerar o template.');
+    }
+  }
+
   return (
     <Box sx={{ maxWidth: 1160, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
       <Typography variant="overline" color="secondary.main" fontWeight={800}>GERADOR DE PROMPT</Typography>
@@ -67,6 +78,7 @@ export default function PromptGeneratorPage() {
               <TextField fullWidth type="number" label="Quantidade máxima" value={form.quantity} onChange={(event) => change('quantity', event.target.value)} sx={{ mb: 2 }} />
               <TextField fullWidth multiline minRows={3} label="Critérios que você gostaria de considerar" value={form.extraCriteria} onChange={(event) => change('extraCriteria', event.target.value)} placeholder="Se não souber, deixe vazio. O prompt já inclui critérios públicos e institucionais." />
               <Button fullWidth variant="contained" startIcon={<AutoAwesomeIcon />} onClick={generate} sx={{ mt: 2 }}>Gerar prompt</Button>
+              <Button fullWidth variant="outlined" startIcon={<DownloadIcon />} onClick={downloadTemplate} sx={{ mt: 1 }}>Baixar template XLSX</Button>
             </CardContent>
           </Card>
         </Grid>

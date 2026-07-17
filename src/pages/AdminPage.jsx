@@ -10,10 +10,16 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import SchoolIcon from '@mui/icons-material/School';
@@ -42,7 +48,10 @@ export default function AdminPage() {
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const fileInputRef = useRef(null);
+  const xlsxInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
+  const [xlsxPreview, setXlsxPreview] = useState(null);
+  const [xlsxBusy, setXlsxBusy] = useState(false);
 
   const showSnack = (message, severity = 'success') => {
     setSnack({ open: true, message, severity });
@@ -117,6 +126,58 @@ export default function AdminPage() {
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
+  const handleXlsxClick = () => {
+    setMenuAnchor(null);
+    setTimeout(() => xlsxInputRef.current?.click(), 100);
+  };
+
+  const handleXlsxFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setXlsxBusy(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]);
+      const response = await fetch('/api/admin/catalog/import-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
+      setXlsxPreview(body);
+    } catch (error) {
+      showSnack(error.message || 'Falha na prévia da importação.', 'error');
+    } finally {
+      setXlsxBusy(false);
+    }
+  };
+
+  const commitXlsx = async () => {
+    if (!xlsxPreview) return;
+    setXlsxBusy(true);
+    try {
+      const decisions = Object.fromEntries((xlsxPreview.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing']));
+      const response = await fetch('/api/admin/catalog/import-commit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
+      data.mergeImportedRecords(body.category, body.records || []);
+      showSnack(`Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).`);
+      setXlsxPreview(null);
+    } catch (error) {
+      showSnack(error.message || 'Falha ao confirmar a importação.', 'error');
+    } finally {
+      setXlsxBusy(false);
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file || !importType) return;
@@ -179,6 +240,11 @@ export default function AdminPage() {
             <MenuItem disabled>
               <Typography variant="caption" fontWeight={700}>IMPORTAR</Typography>
             </MenuItem>
+            <MenuItem onClick={handleXlsxClick}>
+              <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Stakeholders XLSX" secondary="Prévia e confirmação administrativa" />
+            </MenuItem>
+            <Divider />
             <MenuItem onClick={() => handleImportClick('stakeholders')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Stakeholders JSON</ListItemText>
@@ -238,6 +304,20 @@ export default function AdminPage() {
         accept=".json"
         onChange={handleFileChange}
       />
+      <input type="file" ref={xlsxInputRef} style={{ display: 'none' }} accept=".xlsx" onChange={handleXlsxFileChange} />
+
+      <Dialog open={Boolean(xlsxPreview)} onClose={() => !xlsxBusy && setXlsxPreview(null)} fullWidth maxWidth="md">
+        <DialogTitle>Prévia da importação XLSX</DialogTitle>
+        <DialogContent dividers>
+          {xlsxPreview && <>
+            <Alert severity="info" sx={{ mb: 2 }}>Categoria: {xlsxPreview.category} · {xlsxPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
+            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {xlsxPreview.counts.new} · Possíveis duplicatas: {xlsxPreview.counts.possibleDuplicate} · Inválidos: {xlsxPreview.counts.invalid}</Typography>
+            <List dense>{xlsxPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider><ListItemText primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
+            {xlsxPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
+          </>}
+        </DialogContent>
+        <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.counts?.new}>Confirmar novos registros</Button></DialogActions>
+      </Dialog>
 
       {/* Edit Dialog */}
       <EditDialog

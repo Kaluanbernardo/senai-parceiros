@@ -28,18 +28,15 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 31 testes automatizados aprovados e build de produção aprovado no commit `6e2fa14`.
+- 50 testes automatizados aprovados e build de produção aprovado na execução atual.
 
-### Lacunas críticas
+### Lacunas críticas remanescentes
 
-1. A entrevista ainda é planejada localmente e não interpreta semanticamente cada resposta. Não existe `POST /api/selection/interview/next`.
-2. O provider de IA só implementa avaliação via OpenRouter; não há contrato completo para gerar a próxima pergunta nem implementação OpenAI.
-3. O ranking ainda depende de um briefing pouco profundo e pode produzir candidatos com notas e justificativas semelhantes.
-4. Há 10 grupos óbvios de pesquisadores duplicados por nome, totalizando 22 registros envolvidos.
-5. Escolas são concatenadas de duas bases sem catálogo canônico; SENAI, SENAC e outras redes podem aparecer duplicados.
-6. O Radar publicado usa seeds por padrão. OpenAlex/Crossref são opcionais e não existem coletores completos para fontes governamentais e internacionais.
-7. Os builders e pacotes antigos de PDF, DOCX e PPTX ainda existem, embora não apareçam mais na interface.
-8. O painel administrativo importa somente JSON para o estado em memória, substitui a coleção inteira e não persiste após recarga; ainda não importa o XLSX produzido pelas pesquisas.
+1. O ranking já recebe o briefing e faz pré-seleção diversa para a IA, mas ainda precisa de calibração com casos reais para ampliar a diferença entre trade-offs.
+2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha e rollback; falta persistência server-side durável, idempotência entre instâncias e conflito explícito contra registros-seed.
+3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref com fallback; falta ingestão agendada, allowlist editorial mais ampla, classificação de relevância e observabilidade de falhas.
+4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
+5. O armazenamento definitivo, autenticação corporativa/CSRF e limites operacionais ainda devem ser trocados por adapters Azure sem levar credenciais pessoais.
 
 ## Decisões de produto vigentes
 
@@ -124,15 +121,14 @@ Cada ticket termina somente quando:
 
 ## Estado de execucao em 17/07/2026
 
-As ondas de baseline, entrevista adaptativa e catalogos canonicos foram implementadas nesta branch e estao em validacao final. A entrevista ja pode consultar OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas; pesquisadores e escolas passam por deduplicacao antes de alimentar catalogo e selecao.
+As ondas de baseline, entrevista adaptativa, catalogos canonicos, importacao XLSX e primeira ingestao RSS foram implementadas nesta branch. A entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas; pesquisadores e escolas passam por deduplicacao antes de alimentar catalogo e selecao. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, e a exportacao da selecao ficou restrita a uma planilha rica XLSX.
 
 ### Proximos passos para o Luna
 
 1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
-2. Implementar importacao XLSX administrativa com previa, deduplicacao, conflitos, confirmacao e rollback. O importador deve aceitar a planilha gerada pelo Gerador de Prompt sem remapeamento manual.
-3. Substituir os schemas isolados do Gerador de Prompt pelo contrato compartilhado `senai_catalog_v1`, com colunas exatas por categoria e aba `Metadados` separada da tabela importavel.
-4. Tornar o Radar realmente alimentado por fontes publicas externas, iniciando por um thin slice de fontes academicas, governamentais e internacionais, sempre com fallback e deduplicacao.
-5. Consolidar XLSX, persistencia server-side substituivel por Azure, seguranca, remocao de exportadores legados e smoke visual.
+2. Endurecer a importacao XLSX administrativa: conflitos por registro-seed, persistencia compartilhada, idempotencia entre instancias e decisoes explicitas por linha.
+3. Endurecer o Radar: ampliar allowlist de feeds, ingestao agendada, classificacao de relevancia e observabilidade das fontes que falharam.
+4. Consolidar persistencia server-side substituivel por Azure, seguranca/CSRF, remocao de exportadores legados e smoke visual.
 
 O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
 

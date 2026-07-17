@@ -83,7 +83,7 @@ export default function SelectionPage() {
 
   async function finishInterview(finalAnswers = answers, brief = null, traceEntries = interviewTrace) {
     const pool = getCandidatePool({ category, data });
-    const local = buildLocalEvaluation({ category, objective, answers: finalAnswers, candidates: pool });
+    const local = buildLocalEvaluation({ category, objective, answers: finalAnswers, brief, candidates: pool });
     if (brief) local.trace.selectionBrief = brief;
     setBusy(true);
     setError('');

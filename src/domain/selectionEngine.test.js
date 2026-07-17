@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLocalEvaluation, mergeAiEvaluation, selectShortlist } from './selectionEngine';
+import { buildLocalEvaluation, mergeAiEvaluation, rankProviderCandidates, selectShortlist } from './selectionEngine';
 
 const candidates = [
   {
@@ -110,5 +110,15 @@ describe('selection engine', () => {
     const shortlist = selectShortlist(entries);
     expect(shortlist.map((entry) => entry.candidate.id)).toEqual([1, 3, 4, 6, 2]);
     expect(shortlist.some((entry) => entry.severeRisk?.confirmed)).toBe(false);
+  });
+
+  it('preselects a bounded and institution-diverse provider pool', () => {
+    const entries = Array.from({ length: 40 }, (_, index) => ({
+      candidate: { id: index + 1, nome: `Candidato ${index + 1}`, instituicao: `Instituto ${index % 20}` },
+      total: 100 - index,
+    }));
+    const selected = rankProviderCandidates(entries, 30);
+    expect(selected).toHaveLength(30);
+    expect(new Set(selected.slice(0, 20).map((entry) => entry.candidate.instituicao)).size).toBe(20);
   });
 });
