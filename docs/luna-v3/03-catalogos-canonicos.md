@@ -20,6 +20,7 @@ Garantir que catálogo, busca e ranking compartilhem entidades canônicas e nunc
 4. Criar aliases auditáveis, começando por SENAI e SENAC.
 5. Fundir grafias da mesma entidade, mas manter entidades de escopo distinto quando relevantes.
 6. Preservar proveniência e regras de precedência dos campos.
+7. Auditar duplicatas semânticas residuais entre `escolas.json` e `stakeholders.json`, inclusive nomes multilíngues e traduções que apontem para o mesmo domínio oficial (ex.: variantes de ITI/TVET e Shenzhen Polytechnic). A fusão só deve ocorrer quando identidade, domínio e contexto confirmarem a mesma entidade; redes, órgãos coordenadores e unidades com escopo diferente permanecem separados.
 
 ## Aceite
 
@@ -29,6 +30,7 @@ Garantir que catálogo, busca e ranking compartilhem entidades canônicas e nunc
 - SENAI Nacional, SENAI-SP e unidade local não são fundidos indevidamente;
 - busca por alias encontra o registro canônico;
 - relatório explica cada fusão e o pool de seleção usa a mesma fonte da UI.
+- a auditoria de produção não deixa duas entradas canônicas para a mesma entidade quando os registros têm identificador ou domínio oficial coincidente;
 
 ## Próximo desbloqueio
 

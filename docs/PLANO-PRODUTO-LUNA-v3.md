@@ -21,6 +21,19 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 
 O Gerador de Prompt deve orientar um output diretamente importável: uma aba `Stakeholders` com uma entidade por linha e as colunas do tipo escolhido (`researcher`, `school` ou `organization`), mais uma aba `Metadados` para contexto, critérios, limitações, fontes consultadas e data da pesquisa. Os campos precisam cobrir não só identidade e descrição, mas também aderência ao contexto, evidências, proveniência, confiança e lacunas — elementos usados pelo catálogo e pela seleção para diferenciar candidatos. Essa definição vive em `src/domain/catalogImportSchema.js` e não deve ser duplicada na UI ou em prompts alternativos.
 
+### Critério adicional — o XLSX precisa alimentar o catálogo, não apenas armazenar pesquisa
+
+O resultado do Gerador de Prompt deve ser imediatamente útil para a busca e para a seleção. Além da identidade e da descrição, cada linha importável precisa preservar os sinais que o catálogo usa para diferenciar candidatos:
+
+- relação pública com o SENAI-SP ou com a indústria, quando existir;
+- temas, áreas de atuação e aderência ao contexto pesquisado;
+- evidências e URLs por afirmação relevante;
+- confiança, data de consulta e lacunas/dados não localizados;
+- sinais de risco ou conflito de interesse, sem transformar inferência em fato;
+- identificadores estáveis para deduplicação (Scholar/ORCID/OpenAlex para pesquisadores; domínio/identificador público para escolas e organizações).
+
+Esses campos devem ser representados no contrato versionado e mapeados para os campos canônicos consumidos por `selectionEngine`, `schoolCatalog` e `researcherCatalog`. Se uma coluna nova for necessária, ela deve ser criada no schema compartilhado e refletida ao mesmo tempo no prompt, no template, no parser, na prévia, no catálogo e nos testes de round-trip.
+
 ## Estado confirmado do produto
 
 ### Concluído ou suficientemente encaminhado
@@ -86,7 +99,7 @@ Os tickets abaixo são o trabalho pronto para execução. A ordem indicada por d
 1. [Estabelecer baseline e contratos de regressão](luna-v3/00-baseline-e-contratos.md) — primeiro ticket obrigatório.
 2. [Tornar a entrevista semanticamente adaptativa](luna-v3/01-entrevista-adaptativa.md) — bloqueado pelo baseline.
 3. [Aprofundar avaliação e diferenciação da shortlist](luna-v3/02-avaliacao-e-shortlist.md) — bloqueado pela entrevista adaptativa.
-4. [Canonizar e deduplicar pesquisadores e escolas](luna-v3/03-catalogos-canonicos.md) — bloqueado pelo baseline; pode avançar em paralelo com a entrevista.
+4. [Canonizar e deduplicar pesquisadores e escolas](luna-v3/03-catalogos-canonicos.md) — bloqueado pelo baseline; pode avançar em paralelo com a entrevista. A próxima revisão deve cobrir duplicatas semânticas residuais por identificador, domínio e variantes multilíngues.
 5. [Importar stakeholders de planilhas XLSX](luna-v3/03b-importacao-xlsx.md) — bloqueado pelos catálogos canônicos; atualiza também o Gerador de Prompt.
 6. [Colocar o Radar em ingestão real](luna-v3/04-radar-real.md) — bloqueado pelo baseline; pode avançar em paralelo, sem atrasar a seleção.
 7. [Consolidar XLSX, segurança e handoff Azure](luna-v3/05-xlsx-hardening-azure.md) — bloqueado pela shortlist, pelos catálogos e pela importação; a parte Azure final também depende do Radar.
@@ -118,7 +131,7 @@ Cada ticket termina somente quando:
 - duas respostas semanticamente distintas produzem próximas perguntas materialmente distintas;
 - entrevista vaga aprofunda e entrevista completa evita redundância, sempre entre 8 e 20 perguntas;
 - shortlist contém possibilidades realmente diferentes e explica seus trade-offs;
-- nenhuma pessoa ou escola canônica aparece duas vezes no catálogo ou ranking;
+- nenhuma pessoa ou escola canônica aparece duas vezes no catálogo ou ranking; a auditoria deve cobrir também registros de fontes diferentes com o mesmo domínio oficial e nomes multilíngues;
 - uma pesquisa orientada pelo Gerador de Prompt produz um XLSX aceito pelo importador, com prévia, deduplicação, idempotência e persistência quando o adapter durável está configurado;
 - XLSX permite reconstruir briefing, pesos, notas, evidências, lacunas, exclusões e proveniência;
 - as três seções do Radar exibem itens externos atuais, clicáveis e deduplicados;
@@ -131,11 +144,12 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 
 ### Proximos passos para o Luna
 
-1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
-2. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
-3. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
-4. Consolidar Entra ID, rate limit compartilhado/alertas e o runbook de rotação/backup/restore para o handoff Azure.
-5. Executar smoke visual desktop/mobile e validação operacional final antes de qualquer preview Vercel.
+1. Fechar avaliação e shortlist: fazer as notas diferenciarem trade-offs, risco, evidências e lacunas, mantendo de 5 a 10 resultados somente do catálogo.
+2. Concluir a auditoria de deduplicação: resolver variantes residuais de escolas e organizações (mesmo domínio, nomes multilíngues e registros vindos de `escolas` e `stakeholders`) sem fundir redes, regionais ou unidades locais que sejam entidades distintas.
+3. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
+4. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
+5. Consolidar Entra ID, rate limit compartilhado/alertas e o runbook de rotação/backup/restore para o handoff Azure.
+6. Executar smoke visual desktop/mobile e validação operacional final antes de qualquer preview Vercel.
 
 O fluxo de **importação de stakeholders** é parte da entrega atual: o Gerador de Prompt orienta a pesquisa para produzir o schema `senai_catalog_v1`; o administrador importa o XLSX, revisa a prévia, resolve duplicidades, confirma o lote e pode consultar histórico ou fazer rollback. A mesma definição de colunas deve permanecer como fonte única no prompt, no template, na prévia, no catálogo e na exportação da seleção.
 

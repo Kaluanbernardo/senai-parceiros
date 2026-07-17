@@ -13,7 +13,8 @@ O trabalho restante deste ticket é operacional e de QA:
 - configurar o adapter durável privado no ambiente MVP e preparar a troca por Azure Blob/Storage Table;
 - validar o round-trip com planilhas reais produzidas pelo Gerador de Prompt para pesquisador, escola e organização;
 - confirmar no handoff que a mesma definição de colunas é usada pelo prompt, template, prévia, catálogo e exportação;
-- revisar limites, retenção e rotação de credenciais sem persistir dados privados, fotos ou avatares.
+- revisar limites, retenção e rotação de credenciais sem persistir dados privados, fotos ou avatares;
+- confirmar que os campos usados pela seleção (aderência, relação pública, evidências, riscos e lacunas) chegam ao modelo canônico sem remapeamento manual.
 
 ## Contrato compartilhado
 
@@ -25,6 +26,7 @@ O trabalho restante deste ticket é operacional e de QA:
 4. Colunas comuns obrigatórias ou recomendadas:
    - `schema_version`, `tipo_registro`, `nome`, `pais`, `cidade_estado`;
    - `resumo`, `descricao`, `areas_temas`, `aderencia_contexto`;
+   - `relacao_publica`, `evidencias_publicas`, `riscos_sinais`;
    - `website_oficial`, `contato_publico`;
    - `fontes`, `data_consulta`, `confianca`, `dados_nao_localizados`.
 5. Identificadores devem ter colunas próprias, não uma lista opaca:
@@ -34,8 +36,9 @@ O trabalho restante deste ticket é operacional e de QA:
    - pesquisador: `instituicao_atual`, `cargo`, `areas_especialidade`, `linhas_pesquisa`, `publicacoes_relevantes`, `citacoes`;
    - escola: `tipo_instituicao`, `nivel_rede`, `areas_formacao`, `niveis_oferta`, `relacao_industria`, `escala`, `acreditacoes`;
    - organização: `natureza_juridica`, `categoria`, `setor`, `atuacao`, `programas_relevantes`, `parcerias_industriais`, `alcance_geografico`.
-7. Listas usam `;` como separador. Publicações usam formato documentado e parseável: `Título | URL | ano; ...`.
-8. O contrato não contém foto, avatar ou qualquer campo de mídia para pesquisadores.
+8. Campos de julgamento não podem ser confundidos com fatos: `aderencia_contexto`, `confianca`, `riscos_sinais` e `dados_nao_localizados` devem preservar a origem e a justificativa pública; quando não houver evidência, usar `não localizado`.
+9. Listas usam `;` como separador. Publicações usam formato documentado e parseável: `Título | URL | ano; ...`.
+10. O contrato não contém foto, avatar ou qualquer campo de mídia para pesquisadores.
 
 ## Atualização do Gerador de Prompt
 
@@ -93,6 +96,7 @@ O trabalho restante deste ticket é operacional e de QA:
 - pesquisador, escola e organização passam por round-trip `template → pesquisa → XLSX → prévia → catálogo`;
 - cabeçalho divergente aponta coluna exata e não grava nada;
 - duplicata por Scholar/ORCID/domínio é detectada antes do commit;
+- variante multilíngue com o mesmo domínio oficial é detectada antes do commit, com decisão explícita de mesclar ou manter separada;
 - lote misto mostra novos, atualizações, conflitos e erros separadamente;
 - reenviar o mesmo arquivo não duplica registros;
 - rollback restaura o estado anterior quando permitido;

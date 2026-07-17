@@ -61,6 +61,10 @@ function candidateText(candidate) {
     candidate.diferencial,
     candidate.relevancia,
     candidate.relacao,
+    candidate.relacao_publica,
+    candidate.aderencia_contexto,
+    candidate.evidencias_publicas,
+    candidate.riscos_sinais,
     candidate.miniBio,
     ...(candidate.artigos || []).map((article) => article.titulo),
   ].filter(Boolean).join(' ');
@@ -68,7 +72,7 @@ function candidateText(candidate) {
 
 function sourceFields(candidate) {
   return Object.entries(candidate)
-    .filter(([key, value]) => value && ['nome', 'instituicao', 'pais', 'areas', 'pesquisa', 'descricao', 'diferencial', 'relevancia', 'relacao', 'website', 'scholar'].includes(key))
+    .filter(([key, value]) => value && ['nome', 'instituicao', 'pais', 'areas', 'pesquisa', 'descricao', 'diferencial', 'relevancia', 'relacao', 'relacao_publica', 'aderencia_contexto', 'evidencias_publicas', 'riscos_sinais', 'website', 'scholar'].includes(key))
     .map(([key]) => key);
 }
 

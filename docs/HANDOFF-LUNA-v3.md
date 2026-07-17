@@ -79,11 +79,14 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 2. **Operação compartilhada:** substituir os adapters duráveis do MVP por Redis/Storage com operação atômica, alertas de custo/erro e retenção de logs sem prompts ou respostas.
 3. **Radar editorial:** ampliar e revisar a allowlist de fontes nacionais, estaduais e internacionais; manter quarentena, deduplicação, snapshot e refresh agendado.
 4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
-5. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
+5. **Deduplicação residual:** revisar escolas e organizações com mesmo domínio ou nomes multilíngues entre fontes; registrar aliases e manter separados os escopos nacional, regional e local.
+6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback, revisar diff e só então solicitar preview Vercel.
 
 ### Critério específico da nova feature de importação
 
 O Luna deve tratar a planilha XLSX produzida pelo Gerador de Prompt como uma entrada de catálogo de primeira classe: o prompt, o template, a prévia administrativa, a confirmação, a deduplicação, o histórico e o rollback precisam usar o mesmo contrato `senai_catalog_v1`. A planilha pode conter pesquisadores, escolas ou organizações; não pode conter fotos, avatares, credenciais ou dados privados. Reenviar a mesma planilha deve ser idempotente e nunca substituir o catálogo inteiro.
+
+O round-trip só é considerado pronto quando as colunas `aderencia_contexto`, `relacao_publica`, `evidencias_publicas`, `riscos_sinais`, `confianca` e `dados_nao_localizados` chegam ao modelo canônico e influenciam a seleção sem remapeamento manual. O próximo Luna deve executar essa validação para `researcher`, `school` e `organization`.
 
 ## Variáveis previstas
 
