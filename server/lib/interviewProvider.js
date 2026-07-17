@@ -91,11 +91,11 @@ function interviewPrompt(state) {
   ].join('\n');
 }
 
-async function callProvider({ endpoint, apiKey, model, headers, body, signal, plugins, providerOptions }) {
+async function callProvider({ endpoint, apiKey, model, headers, authHeaders, body, signal, plugins, providerOptions }) {
   const response = await fetch(endpoint, {
     method: 'POST',
     signal,
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', ...(authHeaders || { Authorization: `Bearer ${apiKey}` }), ...headers },
     body: JSON.stringify({
       model,
       messages: [
@@ -116,7 +116,14 @@ async function callProvider({ endpoint, apiKey, model, headers, body, signal, pl
 
 export async function generateNextQuestionWithProvider(state, { signal } = {}) {
   const preferred = String(process.env.AI_PROVIDER || '').toLowerCase();
-  const providers = preferred === 'openai'
+  const azureEndpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
+  const azureDeployment = encodeURIComponent(process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || '');
+  const azureUrl = azureEndpoint && azureDeployment
+    ? (azureEndpoint.includes('/openai/deployments/') ? `${azureEndpoint}${azureEndpoint.includes('?') ? '&' : '?'}api-version=${encodeURIComponent(process.env.AZURE_OPENAI_API_VERSION || '2024-10-21')}` : `${azureEndpoint}/openai/deployments/${azureDeployment}/chat/completions?api-version=${encodeURIComponent(process.env.AZURE_OPENAI_API_VERSION || '2024-10-21')}`)
+    : '';
+  const providers = preferred === 'azure'
+    ? [{ id: 'azure', key: process.env.AZURE_OPENAI_API_KEY, model: process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || azureDeployment, endpoint: azureUrl }]
+    : preferred === 'openai'
     ? [{ id: 'openai', key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL, endpoint: 'https://api.openai.com/v1/chat/completions' }]
     : preferred === 'openrouter'
       ? [{ id: 'openrouter', key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL, endpoint: 'https://openrouter.ai/api/v1/chat/completions' }]
@@ -124,7 +131,7 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
         { id: 'openai', key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL, endpoint: 'https://api.openai.com/v1/chat/completions' },
         { id: 'openrouter', key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL, endpoint: 'https://openrouter.ai/api/v1/chat/completions' },
       ];
-  const provider = providers.find((item) => item.key);
+  const provider = providers.find((item) => item.key && item.endpoint);
   if (!provider) throw new Error('ai_not_configured');
   const headers = provider.id === 'openrouter'
     ? {
@@ -138,6 +145,7 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
     apiKey: provider.key,
     model: provider.model,
     headers,
+    authHeaders: provider.id === 'azure' ? { 'api-key': provider.key } : undefined,
     body: interviewPrompt(state),
     signal,
     plugins: provider.id === 'openrouter' ? [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) }] : undefined,

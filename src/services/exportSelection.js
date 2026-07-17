@@ -39,6 +39,9 @@ function normalizeEntry(entry, index) {
     confidence: round(entry?.confidence),
     dimensions: Object.fromEntries(DIMENSION_KEYS.map((key) => [key, round(dimensions[key])])),
     summary: safeString(entry?.summary || entry?.justification || entry?.reason),
+    comparativeEdge: safeString(entry?.comparativeEdge),
+    tradeoffs: (Array.isArray(entry?.tradeoffs) ? entry.tradeoffs : entry?.tradeoffs ? [entry.tradeoffs] : []).map((value) => safeString(value)),
+    dimensionRationale: entry?.dimensionRationale && typeof entry.dimensionRationale === 'object' ? Object.fromEntries(Object.entries(entry.dimensionRationale).map(([key, value]) => [key, safeString(value)])) : {},
     gaps: (Array.isArray(entry?.gaps) ? entry.gaps : entry?.gaps ? [entry.gaps] : []).map((gap) => safeString(gap)),
     risk: { severe: Boolean(severeRisk?.confirmed || entry?.severeRisk?.confirmed), evidence: safeString(severeRisk?.evidence) },
     sources: (Array.isArray(entry?.sources) ? entry.sources : [candidate.website, candidate.scholar, ...(candidate.artigos || []).map((article) => article?.url)]).filter(Boolean).map((source) => safeString(source)),
@@ -71,7 +74,7 @@ function shortlistColumns() {
 }
 
 function shortlistRows(snapshot) {
-  return snapshot.shortlist.map((entry) => [entry.rank, entry.name, entry.institution, entry.country, entry.total, entry.confidence, ...DIMENSION_KEYS.map((key) => entry.dimensions[key]), entry.risk.severe ? 'Sim' : 'Não', entry.summary, entry.gaps.join('; '), entry.sources.join('; ')]);
+  return snapshot.shortlist.map((entry) => [entry.rank, entry.name, entry.institution, entry.country, entry.total, entry.confidence, ...DIMENSION_KEYS.map((key) => entry.dimensions[key]), entry.risk.severe ? 'Sim' : 'Não', entry.summary, entry.comparativeEdge, entry.tradeoffs.join('; '), entry.gaps.join('; '), entry.sources.join('; ')]);
 }
 
 function traceRows(snapshot) {
@@ -109,9 +112,9 @@ async function buildRichXlsx(snapshot) {
   };
   addTable('Leia-me', ['Campo', 'Orientação'], [['Objetivo', 'Apoiar a seleção de stakeholders para educação profissional e desenvolvimento da indústria paulista.'], ['Como usar', 'Valide a Shortlist, leia as Evidências e confirme as fontes antes de contatar qualquer organização.'], ['Rastreabilidade', 'As abas preservam respostas, critérios, fontes, lacunas e regras do processamento.'], ['Privacidade', 'Este arquivo é uma exportação pontual; a ferramenta não salva a entrevista.']]);
   addTable('Contexto', ['Campo', 'Valor'], metadataRows(snapshot).concat([['Respostas completas', safeString(snapshot.answers)]]));
-  addTable('Shortlist', shortlistColumns(), shortlistRows(snapshot));
-  addTable('Comparação detalhada', ['Stakeholder', 'Instituição', 'Pontuação total', 'Confiança', ...DIMENSION_KEYS.map((key) => DIMENSION_LABELS[key])], snapshot.shortlist.map((entry) => [entry.name, entry.institution, entry.total, entry.confidence, ...DIMENSION_KEYS.map((key) => entry.dimensions[key])]));
-  addTable('Evidências', ['Stakeholder', 'Resumo da justificativa', 'Fonte'], snapshot.shortlist.flatMap((entry) => (entry.sources.length ? entry.sources : ['']).map((source) => [entry.name, entry.summary, source])));
+  addTable('Shortlist', [...shortlistColumns().slice(0, -2), 'Diferencial comparativo', 'Trade-offs', 'Lacunas', 'Fontes'], shortlistRows(snapshot));
+  addTable('Comparação detalhada', ['Stakeholder', 'Instituição', 'Pontuação total', 'Confiança', ...DIMENSION_KEYS.map((key) => DIMENSION_LABELS[key]), 'Diferencial comparativo', 'Trade-offs'], snapshot.shortlist.map((entry) => [entry.name, entry.institution, entry.total, entry.confidence, ...DIMENSION_KEYS.map((key) => entry.dimensions[key]), entry.comparativeEdge, entry.tradeoffs.join('; ')]));
+  addTable('Evidências', ['Stakeholder', 'Resumo da justificativa', 'Diferencial', 'Fonte'], snapshot.shortlist.flatMap((entry) => (entry.sources.length ? entry.sources : ['']).map((source) => [entry.name, entry.summary, entry.comparativeEdge, source])));
   addTable('Riscos e lacunas', ['Stakeholder', 'Risco grave confirmado', 'Evidência de risco', 'Lacunas'], snapshot.shortlist.map((entry) => [entry.name, entry.risk.severe ? 'Sim' : 'Não', entry.risk.evidence, entry.gaps.join('; ')]));
   addTable('Respostas', ['Pergunta', 'Resposta'], Object.entries(snapshot.answers || {}).map(([question, answer]) => [question, safeString(answer, 'Não informado')]));
   addTable('Metodologia', ['Campo', 'Valor'], traceRows(snapshot));

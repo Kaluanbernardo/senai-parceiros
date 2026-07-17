@@ -1,11 +1,12 @@
 import { requireSession } from '../../server/lib/cookies.js';
-import { readJson, methodNotAllowed } from '../../server/lib/http.js';
+import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
 import { commitCatalogImport } from '../../server/lib/catalogImport.js';
 import { getCatalog } from '../../server/lib/catalog.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return methodNotAllowed(res);
+  if (!requireSameOrigin(req, res)) return;
   const session = requireSession(req, res, ['admin']);
   if (!session) return;
   try {

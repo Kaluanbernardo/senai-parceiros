@@ -121,4 +121,12 @@ describe('selection engine', () => {
     expect(selected).toHaveLength(30);
     expect(new Set(selected.slice(0, 20).map((entry) => entry.candidate.instituicao)).size).toBe(20);
   });
+
+  it('exposes a candidate-specific differential and trade-offs', () => {
+    const result = buildLocalEvaluation({ ...input, brief: { context: input.answers.context, themes: ['IA', 'manufatura'], feasibility: { geography: 'Brasil' }, collaborationModel: 'palestra' }, candidates });
+    const first = result.shortlist[0];
+    expect(first.comparativeEdge).toContain('Diferencia-se');
+    expect(first.dimensionRationale).toEqual(expect.objectContaining({ impact: expect.any(String), risk: expect.any(String) }));
+    expect(Array.isArray(first.tradeoffs)).toBe(true);
+  });
 });

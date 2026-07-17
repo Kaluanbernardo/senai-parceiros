@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
+  ],
+  "crons": [
+    { "path": "/api/radar/refresh", "schedule": "0 */6 * * *" }
   ]
 }

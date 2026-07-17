@@ -9,7 +9,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
 - Commit-base validado: `7b1912a` (`feat: integra importacao xlsx e radar live`).
-- Baseline + ondas incrementais: 50 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 61 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -56,9 +56,9 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 
 - Baseline, entrevista adaptativa, provider OpenAI/OpenRouter com fallback local e deduplicacao dos catalogos ja foram implementados nesta branch.
 - A base de pesquisadores foi reduzida de 100 linhas legadas para 88 registros canonicos, com 12 aliases rastreaveis; escolas usam identidade canonica para evitar duplicatas de redes como SENAI e SENAC.
-- O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação básica e rollback. A persistência atual do lote é em memória do processo e deve ser substituída no próximo bloco.
-- O Radar ja consome OpenAlex/Crossref e feeds RSS institucionais de Governo, OIT e UNESCO-UNEVOC, com fallback curado e rastreabilidade de fonte.
-- Próximo bloco recomendado: calibrar avaliação/shortlist, resolver conflitos de importação contra registros-seed, adicionar persistência compartilhada/idempotência e agendar a ingestão do Radar.
+- O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback. O adapter `file` torna o lote durável quando configurado; o próximo Luna deve ligar Blob/Azure compartilhado.
+- O Radar já consome OpenAlex/Crossref e feeds RSS institucionais de Governo, OIT e UNESCO-UNEVOC, com fallback curado, snapshot válido, status por fonte e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
+- Próximo bloco recomendado: ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e executar o hardening Azure/Entra ID.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 
 ## Variáveis previstas
@@ -78,4 +78,4 @@ Valores nunca devem aparecer em documentação, saída, teste ou commit. O adapt
 
 ## Prompt direto para o Luna
 
-> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preservando todos os arquivos locais não relacionados. Use TDD, não persista entrevistas, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Depois do commit do baseline, avance para `docs/luna-v3/01-entrevista-adaptativa.md`. Paralelize catálogos e Radar somente quando isso não disputar os mesmos arquivos. Após os catálogos canônicos, execute `docs/luna-v3/03b-importacao-xlsx.md` para alinhar o Gerador de Prompt ao importador. Faça testes, build, smoke, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.
+> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e os tickets ainda pendentes. Retome na branch `codex/enriquece-perfis-institucionais` a partir do commit-base indicado acima, preservando todos os arquivos locais não relacionados. O baseline, entrevista adaptativa, catálogos canônicos, importação XLSX, Radar live, calibração da shortlist e adapters Azure já estão implementados. Use TDD, não persista entrevistas/resultados da seleção, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Priorize agora Blob/Azure shared stores, cron/observabilidade, Entra ID/rate limits e o runbook de handoff. Faça testes, build, smoke visual quando o navegador estiver disponível, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.

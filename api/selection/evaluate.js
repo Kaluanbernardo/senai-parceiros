@@ -1,5 +1,5 @@
 import { getSession } from '../../server/lib/cookies.js';
-import { readJson, methodNotAllowed } from '../../server/lib/http.js';
+import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
 import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selection.js';
 import { evaluateWithProvider } from '../../server/lib/ai.js';
 import { getCatalog } from '../../server/lib/catalog.js';
@@ -11,6 +11,7 @@ import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/c
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return methodNotAllowed(res);
+  if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
   if (isSelectionRateLimited(req, session)) return res.status(429).json({ error: 'selection_rate_limited' });

@@ -17,6 +17,9 @@ import DialogActions from '@mui/material/DialogActions';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -51,6 +54,7 @@ export default function AdminPage() {
   const xlsxInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
   const [xlsxPreview, setXlsxPreview] = useState(null);
+  const [xlsxDecisions, setXlsxDecisions] = useState({});
   const [xlsxBusy, setXlsxBusy] = useState(false);
 
   const showSnack = (message, severity = 'success') => {
@@ -150,6 +154,7 @@ export default function AdminPage() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
       setXlsxPreview(body);
+      setXlsxDecisions(Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing'])));
     } catch (error) {
       showSnack(error.message || 'Falha na prévia da importação.', 'error');
     } finally {
@@ -161,16 +166,16 @@ export default function AdminPage() {
     if (!xlsxPreview) return;
     setXlsxBusy(true);
     try {
-      const decisions = Object.fromEntries((xlsxPreview.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing']));
       const response = await fetch('/api/admin/catalog/import-commit', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions }),
+        body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions: xlsxDecisions }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
       data.mergeImportedRecords(body.category, body.records || []);
       showSnack(`Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).`);
       setXlsxPreview(null);
+      setXlsxDecisions({});
     } catch (error) {
       showSnack(error.message || 'Falha ao confirmar a importação.', 'error');
     } finally {
@@ -284,7 +289,7 @@ export default function AdminPage() {
       <Box sx={{ flex: 1, bgcolor: '#f5f5f7', p: { xs: 2, md: 3 } }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
           <Alert severity="info" sx={{ mb: 2 }}>
-            As alterações do catálogo ficam nesta sessão do navegador e podem ser exportadas em JSON. A persistência compartilhada será conectada na etapa Azure.
+            O lote é confirmado no servidor após a prévia. Para persistência entre instâncias, configure o adapter durável do catálogo antes do handoff Azure.
           </Alert>
           <AdminTable
             data={currentTab.data}
@@ -311,12 +316,12 @@ export default function AdminPage() {
         <DialogContent dividers>
           {xlsxPreview && <>
             <Alert severity="info" sx={{ mb: 2 }}>Categoria: {xlsxPreview.category} · {xlsxPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
-            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {xlsxPreview.counts.new} · Possíveis duplicatas: {xlsxPreview.counts.possibleDuplicate} · Inválidos: {xlsxPreview.counts.invalid}</Typography>
-            <List dense>{xlsxPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider><ListItemText primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
+            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {xlsxPreview.counts.new} · Possíveis duplicatas: {xlsxPreview.counts.possibleDuplicate} · Já importados: {xlsxPreview.counts.alreadyImported || 0} · Inválidos: {xlsxPreview.counts.invalid}</Typography>
+            <List dense>{xlsxPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider secondaryAction={<FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id={`decision-${row.rowNumber}`}>Decisão</InputLabel><Select labelId={`decision-${row.rowNumber}`} label="Decisão" value={xlsxDecisions[String(row.rowNumber)] || 'keep_existing'} disabled={row.status === 'invalid' || row.status === 'already_imported'} onChange={(event) => setXlsxDecisions((current) => ({ ...current, [String(row.rowNumber)]: event.target.value }))}><MenuItem value="keep_existing">Manter existente</MenuItem><MenuItem value="use_imported">Usar importado</MenuItem><MenuItem value="merge">Mesclar campos</MenuItem><MenuItem value="ignore">Ignorar linha</MenuItem></Select></FormControl>}><ListItemText sx={{ pr: 2 }} primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
             {xlsxPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
           </>}
         </DialogContent>
-        <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.counts?.new}>Confirmar novos registros</Button></DialogActions>
+        <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
       </Dialog>
 
       {/* Edit Dialog */}

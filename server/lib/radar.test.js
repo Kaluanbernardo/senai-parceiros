@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem } from './radar.js';
+import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
+import { radarStore } from './radarStore.js';
 
 const baseItems = [
   normalizeRadarItem({ id: 'a', section: 'research', title: 'IA na indústria', summaryPt: 'Competências para manufatura', publishedAt: '2026-07-10', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['IA', 'indústria'], relevanceScore: 90, externalId: 'doi:a' }),
@@ -7,7 +8,7 @@ const baseItems = [
 ];
 
 describe('radar domain', () => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => { vi.restoreAllMocks(); radarStore.configure({ driver: 'memory' }); });
   it('deduplicates by DOI or external identifier', () => {
     expect(dedupeRadarItems([...baseItems, { ...baseItems[0], id: 'copy' }])).toHaveLength(2);
     expect(dedupeRadarItems([{ title: 'Sem identificador', sourceName: 'Fonte' }, { title: 'Sem identificador', sourceName: 'Fonte' }])).toHaveLength(1);
@@ -31,5 +32,33 @@ describe('radar domain', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ section: 'government', sourceName: 'Fonte governamental de teste', provider: 'rss', publishedAt: '2026-07-16' });
     expect(items[0].provenance.feedUrl).toBe('https://example.org/feed.xml');
+  });
+
+  it('refreshes and exposes a last valid snapshot with source observability', async () => {
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (String(url).includes('api.openalex.org')) return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
+      if (String(url).includes('api.crossref.org')) return Promise.resolve(new Response(JSON.stringify({ message: { items: [] } }), { status: 200 }));
+      return Promise.resolve(new Response('<rss><channel><item><title>Atualização VET</title><link>https://example.org/vet</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Educação profissional.</description><guid>vet-1</guid></item></channel></rss>', { status: 200 }));
+    }));
+    const result = await refreshRadarSnapshot();
+    expect(result.refreshed).toBe(true);
+    expect(result.lastRun.status).toBe('ok');
+    expect(getRadarStoreStatus().snapshot.itemCount).toBeGreaterThan(0);
+    expect(Object.values(result.sourceStatus).some((source) => source.status === 'ok')).toBe(true);
+  });
+
+  it('serves the last snapshot when every live source fails', async () => {
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (String(url).includes('api.openalex.org')) return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
+      if (String(url).includes('api.crossref.org')) return Promise.resolve(new Response(JSON.stringify({ message: { items: [] } }), { status: 200 }));
+      return Promise.resolve(new Response('<rss><channel><item><title>Snapshot de VET</title><link>https://example.org/snapshot</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate></item></channel></rss>', { status: 200 }));
+    }));
+    await refreshRadarSnapshot();
+    resetRadarLiveCache();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network_down')));
+    const result = await getRadarItems({ live: true });
+    expect(result.stale).toBe(true);
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.lastRun.status).toBe('stale');
   });
 });

@@ -40,6 +40,16 @@ const evaluationSchema = {
               evidence: { type: 'string' },
             },
           },
+          dimensionRationale: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              impact: { type: 'string' }, alignment: { type: 'string' }, credibility: { type: 'string' },
+              collaboration: { type: 'string' }, feasibility: { type: 'string' }, risk: { type: 'string' },
+            },
+          },
+          comparativeEdge: { type: 'string' },
+          tradeoffs: { type: 'array', items: { type: 'string' } },
         },
       },
     },
@@ -65,6 +75,9 @@ function normalizeEvaluation(value) {
         const evidence = String(entry.severeRisk?.evidence || '').trim();
         return { confirmed: Boolean(entry.severeRisk?.confirmed && evidence), evidence };
       })(),
+      dimensionRationale: Object.fromEntries(Object.entries(entry.dimensionRationale || {}).map(([key, value]) => [key, String(value).slice(0, 500)])),
+      comparativeEdge: String(entry.comparativeEdge || '').slice(0, 600),
+      tradeoffs: Array.isArray(entry.tradeoffs) ? entry.tradeoffs.map(String).slice(0, 6) : [],
     })),
   };
 }
@@ -75,7 +88,7 @@ function parseContent(content) {
   return JSON.parse(text);
 }
 
-async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, endpoint, provider, headers = {}, plugins, providerOptions }) {
+async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, endpoint, provider, headers = {}, authHeaders, plugins, providerOptions }) {
   if (!apiKey) throw new Error(`${provider}_not_configured`);
   const tradeoff = Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF));
   const { candidates: _catalog, ...inputContext } = input || {};
@@ -85,6 +98,7 @@ async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, 
     'Use apenas informações presentes no perfil; registre lacunas em gaps e não invente evidências.',
     'Além do contexto informado, considere o baseline SENAI-SP: competitividade e desenvolvimento sustentável da indústria paulista; educação profissional conectada ao trabalho; inovação e tecnologia; desenvolvimento regional; parcerias; Indústria 4.0; ESG; descarbonização e economia circular.',
     'Pontue cada dimensão de 0 a 100. Risco grave só pode ser confirmado com evidência objetiva e verificável.',
+    'Não aplique a mesma nota a candidatos diferentes sem justificar a equivalência. Para cada candidato, explique em dimensionRationale quais fatos sustentam as dimensões, registre comparativeEdge (em que ele difere dos demais) e tradeoffs (o que se ganha e o que se perde).',
     'Retorne o id de cada candidato como texto, exatamente como foi fornecido.',
     'Em evidence, cite somente nomes de campos ou URLs que aparecem no perfil fornecido.',
     JSON.stringify({ input: inputContext, candidates }),
@@ -92,11 +106,7 @@ async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, 
   const response = await fetch(endpoint, {
     method: 'POST',
     signal,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: { 'Content-Type': 'application/json', ...(authHeaders || { Authorization: `Bearer ${apiKey}` }), ...headers },
     body: JSON.stringify({
       model,
       messages: [{ role: 'system', content: 'Responda somente JSON válido conforme o schema solicitado.' }, { role: 'user', content: prompt }],
@@ -148,6 +158,21 @@ export async function evaluateWithOpenAI({ input, candidates, signal }) {
     model: process.env.OPENAI_MODEL || 'gpt-5-mini',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     provider: 'openai',
+  });
+}
+
+export async function evaluateWithAzure({ input, candidates, signal }) {
+  const endpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
+  const deployment = encodeURIComponent(process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || '');
+  if (!endpoint || !deployment || !process.env.AZURE_OPENAI_API_KEY) throw new Error('azure_not_configured');
+  const apiVersion = encodeURIComponent(process.env.AZURE_OPENAI_API_VERSION || '2024-10-21');
+  const url = endpoint.includes('/openai/deployments/')
+    ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}api-version=${apiVersion}`
+    : `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+  return evaluateWithEndpoint({
+    input, candidates, signal, apiKey: process.env.AZURE_OPENAI_API_KEY,
+    model: process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || deployment,
+    endpoint: url, provider: 'azure', authHeaders: { 'api-key': process.env.AZURE_OPENAI_API_KEY },
   });
 }
 

@@ -84,19 +84,27 @@ function scoreCandidate({ candidate, input }) {
   const credibility = Math.min(100, 35 + Math.min(45, Math.log10(citations + 1) * 16) + completeness * 20);
   const hasWebsite = Boolean(candidate.website || candidate.scholar);
   const confirmedPartnership = Boolean(candidate.hasPartnership) || /^(?:✅|🔗)|^parceiro de projetos|^parceiro irmão/i.test(String(candidate.relacao || '').trim());
-  const collaboration = 44 + (hasWebsite ? 18 : 0) + (confirmedPartnership ? 20 : 0) + (input.brief?.collaborationModel ? 6 : 0);
+  const objectiveBoost = {
+    speaker: { impact: 8, collaboration: 7, credibility: 3 },
+    project_partner: { collaboration: 12, feasibility: 7, impact: 4 },
+    benchmark: { alignment: 9, credibility: 8, feasibility: 3 },
+    research_support: { credibility: 10, impact: 7, alignment: 3 },
+    guided: { alignment: 4, impact: 4 },
+  }[input.objective] || {};
+  const collaboration = 44 + (hasWebsite ? 18 : 0) + (confirmedPartnership ? 20 : 0) + (input.brief?.collaborationModel ? 6 : 0) + (objectiveBoost.collaboration || 0);
   const geography = fold(input.brief?.feasibility?.geography || input.answers?.geography);
   const sameCountry = geography && candidate.pais && geography.includes(fold(candidate.pais));
-  const feasibility = 48 + (sameCountry ? 18 : 0) + (fold(input.brief?.hardConstraints?.join(' ') || input.answers?.constraints).includes('remot') ? 12 : 0);
+  const feasibility = 48 + (sameCountry ? 18 : 0) + (fold(input.brief?.hardConstraints?.join(' ') || input.answers?.constraints).includes('remot') ? 12 : 0) + (objectiveBoost.feasibility || 0);
   const riskSignals = [candidate.risco, candidate.risk, candidate.relacao].filter(Boolean).join(' ');
   const risk = clamp(78 - (fold(riskSignals).includes('sem evid') || fold(riskSignals).includes('conflito') ? 22 : 0) - (sourceFields(candidate).length < 5 ? 8 : 0));
-  const impact = clamp(42 + relevance * 0.55 + (candidate.relevancia ? 12 : 0));
-  const alignment = clamp(30 + relevance * 0.7);
+  const impact = clamp(42 + relevance * 0.55 + (candidate.relevancia ? 12 : 0) + (objectiveBoost.impact || 0));
+  const alignment = clamp(30 + relevance * 0.7 + (objectiveBoost.alignment || 0));
+  const calibratedCredibility = clamp(credibility + (objectiveBoost.credibility || 0));
 
   const dimensions = {
     impact: clamp(impact),
     alignment,
-    credibility: clamp(credibility),
+    credibility: calibratedCredibility,
     collaboration: clamp(collaboration),
     feasibility: clamp(feasibility),
     risk: clamp(risk),
@@ -113,6 +121,19 @@ function scoreCandidate({ candidate, input }) {
     total,
     confidence: clamp(35 + completeness * 50 + Math.min(overlap.length * 3, 15)),
     summary: overlap.length ? 'Aderência encontrada nos termos: ' + overlap.slice(0, 6).join(', ') + (candidate.pais ? `. Diferencial de contexto: atuação em ${candidate.pais}.` : '.') : 'Aderência contextual ainda precisa de validação humana.',
+    comparativeEdge: overlap.length ? `Diferencia-se por combinar ${overlap.slice(0, 4).join(', ')}${candidate.pais ? ` e atuação em ${candidate.pais}` : ''}.` : 'Diferencial ainda não demonstrado nas fontes públicas disponíveis.',
+    tradeoffs: [
+      candidate.pais && geography && !sameCountry ? `Exige avaliar a viabilidade de interação fora de ${geography}.` : null,
+      sourceFields(candidate).length < 7 ? 'Há lacunas de informação pública que reduzem a confiança.' : null,
+    ].filter(Boolean),
+    dimensionRationale: {
+      impact: `Sobreposição contextual de ${overlap.length} termo(s) observável(is) no perfil.`,
+      alignment: `Aderência ao briefing e ao baseline institucional calculada por termos e temas públicos.`,
+      credibility: `${sourceFields(candidate).length} campos públicos relevantes e ${citations || 0} citações localizadas.`,
+      collaboration: `${hasWebsite ? 'Fonte institucional disponível' : 'sem site institucional localizado'}${confirmedPartnership ? '; parceria explícita identificada' : '; parceria não confirmada'}.`,
+      feasibility: sameCountry ? 'Geografia informada coincide com o país do perfil.' : 'Geografia exige validação de modalidade, idioma e prazo.',
+      risk: riskSignals ? 'Sinais de risco foram avaliados nos campos públicos do catálogo.' : 'Nenhum sinal grave foi confirmado nos campos disponíveis.',
+    },
     evidence: sourceFields(candidate).slice(0, 6),
     gaps: sourceFields(candidate).length < 5 ? ['Perfil público com campos incompletos.'] : [],
   };
@@ -191,6 +212,7 @@ export function buildLocalEvaluation({ category, objective, answers, candidates,
       institutionalBaseline: SENAI_STRATEGIC_BASELINE,
       catalogSize: candidates.length,
       shortlistPolicy: { minimum: 5, maximum: 10, threshold: 28, institutionDiversity: true },
+      objectiveCalibration: 'objective-specific boosts are bounded and layered over public evidence; provider scores are blended with local evidence',
       providerPreselection: { limit: 30, selected: rankProviderCandidates(candidatePool, 30).map((entry) => entry.candidate.id) },
       shortlistExcluded: candidatePool.filter((entry) => !shortlist.includes(entry)).map((entry) => ({
         id: entry.candidate.id,
@@ -204,7 +226,14 @@ export function buildLocalEvaluation({ category, objective, answers, candidates,
 }
 
 function normalizeAiDimensions(dimensions, fallback) {
-  return Object.fromEntries(Object.keys(DEFAULT_WEIGHTS).map((key) => [key, clamp(dimensions?.[key] ?? fallback[key])]));
+  return Object.fromEntries(Object.keys(DEFAULT_WEIGHTS).map((key) => {
+    const providerValue = Number(dimensions?.[key]);
+    const localValue = Number(fallback[key]) || 0;
+    // A small local-evidence blend prevents a provider from flattening all
+    // candidates to identical scores while preserving its contextual judgment.
+    const value = Number.isFinite(providerValue) ? providerValue * 0.78 + localValue * 0.22 : localValue;
+    return [key, clamp(value)];
+  }));
 }
 
 function recompute(entry, ai) {

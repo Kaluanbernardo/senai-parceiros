@@ -1,5 +1,5 @@
 import { getSession } from '../../server/lib/cookies.js';
-import { readJson, methodNotAllowed } from '../../server/lib/http.js';
+import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
 import { isInterviewRateLimited, recordInterviewAttempt } from '../../server/lib/auth.js';
 import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
@@ -87,6 +87,7 @@ function withAdaptiveQuestion(state, question) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return methodNotAllowed(res);
+  if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
   if (isInterviewRateLimited(req, session)) return res.status(429).json({ error: 'interview_rate_limited' });

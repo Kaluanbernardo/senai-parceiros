@@ -131,6 +131,8 @@ export default function RadarPage() {
       </Card>
 
       {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>As fontes externas estão indisponíveis nesta consulta. Exibindo a base curada; as fontes live incluem OpenAlex, Crossref e feeds institucionais governamentais e internacionais.</Alert>}
+      {meta?.stale && <Alert severity="warning" sx={{ mt: 2 }}>Uma ou mais fontes falharam. Exibindo o último snapshot válido, atualizado em {meta.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'data não informada'}.</Alert>}
+      {meta?.sourceStatus && Object.values(meta.sourceStatus).some((source) => source.status === 'error') && <Alert severity="warning" sx={{ mt: 2 }}>Fontes temporariamente indisponíveis: {Object.values(meta.sourceStatus).filter((source) => source.status === 'error').map((source) => source.name).join(', ')}. A falha foi registrada sem interromper as demais fontes.</Alert>}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
       {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box> : (
@@ -162,7 +164,7 @@ export default function RadarPage() {
         </Grid>
       )}
       {!loading && !error && visibleItems.length === 0 && <Box sx={{ textAlign: 'center', py: 8 }}><Typography variant="h6" color="text.secondary">Nenhum item encontrado</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Tente remover um filtro ou ampliar o período.</Typography></Box>}
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: cada item mantém título original, fonte, data, provedor de coleta, pontuação de relevância e link público. Modo atual: {meta?.mode || 'não informado'} · consulta: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: cada item mantém título original, fonte, data, provedor de coleta, pontuação de relevância e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
     </Box>
   );
 }

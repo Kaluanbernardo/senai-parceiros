@@ -1,5 +1,8 @@
 import seedItems from '../../src/data/radar-seeds.json' with { type: 'json' };
+import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json' };
 import { dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
+import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
+import { radarStore } from './radarStore.js';
 export { dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 
 export const RADAR_SOURCE_POLICY = [
@@ -38,6 +41,10 @@ export const RADAR_FEED_POLICY = [
 const liveCache = new Map();
 const LIVE_CACHE_TTL = 10 * 60 * 1000;
 const LIVE_CACHE_MAX = 24;
+
+export function resetRadarLiveCache() {
+  liveCache.clear();
+}
 
 function cacheGet(key) {
   const cached = liveCache.get(key);
@@ -150,6 +157,29 @@ export async function fetchOpenAlexItems({ query = 'vocational education trainin
   return items;
 }
 
+function trackedResearcherNames(limit = 8) {
+  return canonicalizeResearchers(pesquisadores).records
+    .filter((record) => record.nome && (record.scholar || record.orcid || record.openalex_id))
+    .slice(0, Math.max(0, Math.min(Number(limit) || 8, 12)))
+    .map((record) => record.nome);
+}
+
+function researcherNameMatches(authors, name) {
+  const expected = String(name || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter((token) => token.length > 2);
+  return expected.length > 0 && (authors || []).some((author) => {
+    const actual = String(author || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return expected.every((token) => actual.includes(token));
+  });
+}
+
+export async function fetchTrackedResearcherItems({ limitResearchers = process.env.RADAR_TRACKED_RESEARCHER_LIMIT || 8 } = {}) {
+  const names = trackedResearcherNames(limitResearchers);
+  const results = await Promise.allSettled(names.map((name) => fetchOpenAlexItems({ query: `"${name}" vocational education`, limit: 4 })));
+  return results.flatMap((result, index) => result.status === 'fulfilled'
+    ? result.value.filter((item) => researcherNameMatches(item.authors, names[index])).map((item) => ({ ...item, provenance: { ...item.provenance, trackedResearcher: names[index] }, relevanceScore: Math.min(100, item.relevanceScore + 10) }))
+    : []);
+}
+
 export async function fetchCrossrefItems({ query = 'vocational education training', limit = 12 } = {}) {
   const cacheKey = `crossref:${query}:${limit}`;
   const cached = cacheGet(cacheKey);
@@ -189,33 +219,77 @@ export async function fetchCrossrefItems({ query = 'vocational education trainin
   return items;
 }
 
-export async function getRadarItems({ filters = {}, live = false } = {}) {
+function providerStatus(name, status, extra = {}) {
+  return { name, status, ...extra };
+}
+
+export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
-  let items = seedItems.map(normalizeRadarItem).filter((item) => allowedSources.has(item.sourceName));
+  const stored = radarStore.getSnapshot();
+  let items = (stored?.items || seedItems).map(normalizeRadarItem).filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
   let liveProvider = false;
+  let currentItems = [];
+  const sourceStatus = {};
   if (live && (!filters.section || filters.section === 'research')) {
-    try {
-      const query = filters.query || 'vocational education training';
-      const [openAlexItems, crossrefItems] = await Promise.allSettled([
-        fetchOpenAlexItems({ query }),
-        fetchCrossrefItems({ query }),
-      ]);
-      const liveItems = [
-        ...(openAlexItems.status === 'fulfilled' ? openAlexItems.value : []),
-        ...(crossrefItems.status === 'fulfilled' ? crossrefItems.value : []),
-      ];
-      items = [...liveItems, ...items].filter((item) => allowedSources.has(item.sourceName));
-      liveProvider = liveItems.length > 0;
-    } catch {
-      liveProvider = false;
-    }
+    const query = filters.query || 'vocational education training';
+    const [openAlexItems, crossrefItems, trackedItems] = await Promise.allSettled([fetchOpenAlexItems({ query }), fetchCrossrefItems({ query }), fetchTrackedResearcherItems()]);
+    sourceStatus.OpenAlex = openAlexItems.status === 'fulfilled'
+      ? providerStatus('OpenAlex', 'ok', { count: openAlexItems.value.length })
+      : providerStatus('OpenAlex', 'error', { error: String(openAlexItems.reason?.message || 'source_unavailable').slice(0, 160) });
+    sourceStatus.Crossref = crossrefItems.status === 'fulfilled'
+      ? providerStatus('Crossref', 'ok', { count: crossrefItems.value.length })
+      : providerStatus('Crossref', 'error', { error: String(crossrefItems.reason?.message || 'source_unavailable').slice(0, 160) });
+    const tracked = trackedItems.status === 'fulfilled' ? trackedItems.value : [];
+    sourceStatus['Pesquisadores cadastrados'] = trackedItems.status === 'fulfilled'
+      ? providerStatus('Pesquisadores cadastrados', 'ok', { count: tracked.length })
+      : providerStatus('Pesquisadores cadastrados', 'error', { error: String(trackedItems.reason?.message || 'source_unavailable').slice(0, 160) });
+    currentItems.push(...(openAlexItems.status === 'fulfilled' ? openAlexItems.value : []), ...(crossrefItems.status === 'fulfilled' ? crossrefItems.value : []), ...tracked);
+    items = [...currentItems, ...items].filter((item) => allowedSources.has(item.sourceName));
+    liveProvider = currentItems.length > 0;
   }
   if (live) {
     const feeds = RADAR_FEED_POLICY.filter((feed) => !filters.section || feed.section === filters.section);
     const feedResults = await Promise.allSettled(feeds.map((feed) => fetchFeedItems(feed)));
-    const feedItems = feedResults.flatMap((result) => result.status === 'fulfilled' ? result.value : []);
+    const feedItems = [];
+    feedResults.forEach((result, index) => {
+      const feed = feeds[index];
+      sourceStatus[feed.name] = result.status === 'fulfilled'
+        ? providerStatus(feed.name, 'ok', { count: result.value.length, url: feed.url })
+        : providerStatus(feed.name, 'error', { error: String(result.reason?.message || 'source_unavailable').slice(0, 160), url: feed.url });
+      if (result.status === 'fulfilled') feedItems.push(...result.value);
+    });
+    currentItems.push(...feedItems);
     items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || RADAR_FEED_POLICY.some((feed) => feed.name === item.sourceName));
     liveProvider = liveProvider || feedItems.length > 0;
   }
-  return { items: filterRadarItems(items, filters), liveProvider, fetchedAt: new Date().toISOString() };
+  const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
+  const snapshotItems = dedupeRadarItems(items);
+  const stale = !liveProvider && Boolean(stored);
+  if (persist && liveProvider) {
+    radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });
+    radarStore.recordRun({ status: 'ok', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
+  } else if (persist && live && !liveProvider) {
+    radarStore.recordRun({ status: stored ? 'stale' : 'failed', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
+  }
+  return { items: filterRadarItems(snapshotItems, filters), liveProvider, stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
+}
+
+export async function refreshRadarSnapshot({ filters = {} } = {}) {
+  const startedAt = Date.now();
+  try {
+    const result = await getRadarItems({ filters, live: true, persist: false });
+    const previous = radarStore.getSnapshot();
+    const snapshot = { items: dedupeRadarItems(result.items), fetchedAt: result.fetchedAt, sourceStatus: result.sourceStatus, liveProvider: result.liveProvider, stale: false };
+    if (result.liveProvider) radarStore.writeSnapshot(snapshot);
+    const retained = result.liveProvider ? snapshot : previous;
+    radarStore.recordRun({ status: result.liveProvider ? 'ok' : 'failed', fetchedAt: result.fetchedAt, itemCount: retained?.items?.length || 0, sourceStatus: result.sourceStatus, durationMs: Date.now() - startedAt });
+    return { ...result, items: retained?.items || snapshot.items, refreshed: result.liveProvider, stale: !result.liveProvider && Boolean(previous), durationMs: Date.now() - startedAt, lastRun: radarStore.getLastRun() };
+  } catch (error) {
+    const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus: {}, error: String(error?.message || 'radar_refresh_failed').slice(0, 160), durationMs: Date.now() - startedAt });
+    return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: 'radar_refresh_failed' };
+  }
+}
+
+export function getRadarStoreStatus() {
+  return { ...radarStore.status(), lastRun: radarStore.getLastRun(), snapshot: radarStore.getSnapshot() ? { fetchedAt: radarStore.getSnapshot().fetchedAt, itemCount: radarStore.getSnapshot().items?.length || 0 } : null };
 }

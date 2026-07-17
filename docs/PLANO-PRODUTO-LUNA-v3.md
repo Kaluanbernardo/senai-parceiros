@@ -28,15 +28,15 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 50 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 61 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
 1. O ranking já recebe o briefing e faz pré-seleção diversa para a IA, mas ainda precisa de calibração com casos reais para ampliar a diferença entre trade-offs.
-2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha e rollback; falta persistência server-side durável, idempotência entre instâncias e conflito explícito contra registros-seed.
-3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref com fallback; falta ingestão agendada, allowlist editorial mais ampla, classificação de relevância e observabilidade de falhas.
+2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico e rollback; o adapter durável por arquivo está pronto para MVP controlado, mas Vercel Blob/Azure Blob ainda precisa ser ligado por credencial corporativa.
+3. O Radar já consulta fontes RSS institucionais, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; falta ampliar a allowlist editorial e ligar armazenamento compartilhado.
 4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
-5. O armazenamento definitivo, autenticação corporativa/CSRF e limites operacionais ainda devem ser trocados por adapters Azure sem levar credenciais pessoais.
+5. A autenticação corporativa/Entra ID, rate limit compartilhado, quotas, alertas e o adapter Azure ainda precisam ser ligados sem levar credenciais pessoais.
 
 ## Decisões de produto vigentes
 
@@ -113,7 +113,7 @@ Cada ticket termina somente quando:
 - entrevista vaga aprofunda e entrevista completa evita redundância, sempre entre 8 e 20 perguntas;
 - shortlist contém possibilidades realmente diferentes e explica seus trade-offs;
 - nenhuma pessoa ou escola canônica aparece duas vezes no catálogo ou ranking;
-- uma pesquisa orientada pelo Gerador de Prompt produz um XLSX aceito pelo importador, com prévia, deduplicação e persistência;
+- uma pesquisa orientada pelo Gerador de Prompt produz um XLSX aceito pelo importador, com prévia, deduplicação, idempotência e persistência quando o adapter durável está configurado;
 - XLSX permite reconstruir briefing, pesos, notas, evidências, lacunas, exclusões e proveniência;
 - as três seções do Radar exibem itens externos atuais, clicáveis e deduplicados;
 - troca futura de OpenRouter/Vercel por provider e infraestrutura Azure ocorre por adapters e configuração;
@@ -121,14 +121,14 @@ Cada ticket termina somente quando:
 
 ## Estado de execucao em 17/07/2026
 
-As ondas de baseline, entrevista adaptativa, catalogos canonicos, importacao XLSX e primeira ingestao RSS foram implementadas nesta branch. A entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas; pesquisadores e escolas passam por deduplicacao antes de alimentar catalogo e selecao. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, e a exportacao da selecao ficou restrita a uma planilha rica XLSX.
+As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação XLSX e ingestão RSS foram implementadas nesta branch. A seleção agora registra diferenciais comparativos, trade-offs, calibração por objetivo e pré-seleção diversa para o provider; a entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, a importação é idempotente e auditável, o Radar mantém snapshot e refresh protegido, e a exportação da seleção ficou restrita a uma planilha rica XLSX.
 
 ### Proximos passos para o Luna
 
 1. Fechar avaliacao e shortlist: fazer as notas diferenciarem trade-offs, risco, evidencias e lacunas, mantendo de 5 a 10 resultados somente do catalogo.
-2. Endurecer a importacao XLSX administrativa: conflitos por registro-seed, persistencia compartilhada, idempotencia entre instancias e decisoes explicitas por linha.
-3. Endurecer o Radar: ampliar allowlist de feeds, ingestao agendada, classificacao de relevancia e observabilidade das fontes que falharam.
-4. Consolidar persistencia server-side substituivel por Azure, seguranca/CSRF, remocao de exportadores legados e smoke visual.
+2. Ligar o adapter de catálogo ao Vercel Blob privado no MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
+3. Ligar o snapshot do Radar a armazenamento compartilhado, ampliar allowlist e configurar o cron com segredo rotacionável.
+4. Consolidar Entra ID, rate limit/quotas compartilhados, alertas, smoke visual e runbook de rotação/backup/restore para o handoff Azure.
 
 O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
 

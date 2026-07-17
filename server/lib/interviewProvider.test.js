@@ -22,6 +22,9 @@ afterEach(() => {
   delete process.env.AI_PROVIDER;
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENAI_API_KEY;
+  delete process.env.AZURE_OPENAI_ENDPOINT;
+  delete process.env.AZURE_OPENAI_API_KEY;
+  delete process.env.AZURE_OPENAI_DEPLOYMENT;
 });
 
 describe('adaptive interview provider', () => {
@@ -52,5 +55,18 @@ describe('adaptive interview provider', () => {
 
   it('does not pretend the ChatGPT subscription is an API provider', async () => {
     await expect(generateNextQuestionWithProvider({ category: 'researcher', objective: 'speaker', answers: {}, history: [], askedIds: [] })).rejects.toThrow('ai_not_configured');
+  });
+
+  it('supports the future Azure OpenAI adapter without changing the interview contract', async () => {
+    process.env.AI_PROVIDER = 'azure';
+    process.env.AZURE_OPENAI_ENDPOINT = 'https://example.openai.azure.com';
+    process.env.AZURE_OPENAI_API_KEY = 'azure-test-key';
+    process.env.AZURE_OPENAI_DEPLOYMENT = 'senai-deployment';
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ model: 'senai-deployment', choices: [{ message: { content: JSON.stringify(validResponse) } }] }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+    expect(result.trace.provider).toBe('azure');
+    expect(fetchMock.mock.calls[0][0]).toContain('/openai/deployments/senai-deployment/chat/completions');
+    expect(fetchMock.mock.calls[0][1].headers['api-key']).toBe('azure-test-key');
   });
 });

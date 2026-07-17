@@ -4,9 +4,11 @@ import logout from '../api/auth/logout.js';
 import evaluate from '../api/selection/evaluate.js';
 import interviewNext from '../api/selection/interview-next.js';
 import radarItems from '../api/radar/items.js';
+import radarRefresh from '../api/radar/refresh.js';
 import catalogImportPreview from '../api/admin/catalog-import-preview.js';
 import catalogImportCommit from '../api/admin/catalog-import-commit.js';
 import catalogImportRollback from '../api/admin/catalog-import-rollback.js';
+import catalogImportBatches from '../api/admin/catalog-import-batches.js';
 
 const handlers = {
   '/api/auth/login': login,
@@ -15,9 +17,11 @@ const handlers = {
   '/api/selection/evaluate': evaluate,
   '/api/selection/interview/next': interviewNext,
   '/api/radar/items': radarItems,
+  '/api/radar/refresh': radarRefresh,
   '/api/admin/catalog/import-preview': catalogImportPreview,
   '/api/admin/catalog/import-commit': catalogImportCommit,
   '/api/admin/catalog/import-rollback': catalogImportRollback,
+  '/api/admin/catalog/import-batches': catalogImportBatches,
 };
 
 function adaptResponse(res) {
