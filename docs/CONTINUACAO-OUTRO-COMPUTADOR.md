@@ -1,4 +1,6 @@
-# Plano de continuidade — entrevista adaptativa, radar e catálogo de escolas
+# Documento histórico — entrevista adaptativa, radar e catálogo de escolas
+
+> **Não usar como plano vigente.** Este arquivo preserva o diagnóstico inicial antes do Luna v3. Para continuar o trabalho, use [`HANDOFF-LUNA-v3.md`](./HANDOFF-LUNA-v3.md), [`PLANO-PRODUTO-LUNA-v3.md`](./PLANO-PRODUTO-LUNA-v3.md) e [`AZURE-HANDOFF-RUNBOOK.md`](./AZURE-HANDOFF-RUNBOOK.md). O estado publicado mais recente está na branch `codex/enriquece-perfis-institucionais`.
 
 Atualizado em 17/07/2026. O mapa canônico de execução agora é `docs/PLANO-PRODUTO-LUNA-v3.md`; este documento preserva o diagnóstico detalhado para retomada em outro computador.
 
