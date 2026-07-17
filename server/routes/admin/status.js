@@ -1,6 +1,6 @@
-import { requireSession } from '../../server/lib/cookies.js';
-import { methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { getOperationalStatus } from '../../server/lib/operationalStatus.js';
+import { requireSession } from '../../lib/cookies.js';
+import { methodNotAllowed, requireSameOrigin } from '../../lib/http.js';
+import { getOperationalStatus } from '../../lib/operationalStatus.js';
 
 export default function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');

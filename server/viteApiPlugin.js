@@ -6,11 +6,11 @@ import evaluate from '../api/selection/evaluate.js';
 import interviewNext from '../api/selection/interview-next.js';
 import radarItems from '../api/radar/items.js';
 import radarRefresh from '../api/radar/refresh.js';
-import catalogImportPreview from '../api/admin/catalog-import-preview.js';
-import catalogImportCommit from '../api/admin/catalog-import-commit.js';
-import catalogImportRollback from '../api/admin/catalog-import-rollback.js';
-import catalogImportBatches from '../api/admin/catalog-import-batches.js';
-import adminStatus from '../api/admin/status.js';
+import catalogImportPreview from './routes/admin/catalog-import-preview.js';
+import catalogImportCommit from './routes/admin/catalog-import-commit.js';
+import catalogImportRollback from './routes/admin/catalog-import-rollback.js';
+import catalogImportBatches from './routes/admin/catalog-import-batches.js';
+import adminStatus from './routes/admin/status.js';
 import catalog from '../api/catalog.js';
 
 const handlers = {

@@ -1,7 +1,7 @@
-import { requireSession } from '../../server/lib/cookies.js';
-import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { commitCatalogImport, flushCatalogStore, hydrateCatalogStore } from '../../server/lib/catalogImport.js';
-import { getCatalog } from '../../server/lib/catalog.js';
+import { requireSession } from '../../lib/cookies.js';
+import { readJson, methodNotAllowed, requireSameOrigin } from '../../lib/http.js';
+import { commitCatalogImport, flushCatalogStore, hydrateCatalogStore } from '../../lib/catalogImport.js';
+import { getCatalog } from '../../lib/catalog.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
