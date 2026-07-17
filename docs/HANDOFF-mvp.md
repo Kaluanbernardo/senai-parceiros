@@ -1,5 +1,7 @@
 # Handoff — MVP de seleção de stakeholders
 
+> Documento histórico. Para o estado atual do produto e do handoff Azure, use `docs/HANDOFF-LUNA-v3.md`, `docs/PLANO-PRODUTO-LUNA-v3.md` e `docs/AZURE-HANDOFF-RUNBOOK.md`. Não execute instruções conflitantes deste arquivo.
+
 ## Rodar localmente
 
 1. Instale as dependências com npm install.
