@@ -10,7 +10,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 - Catálogo/Radar: memória para desenvolvimento e MVP público; `file` para execução controlada local; `vercel_blob` para armazenamento privado compartilhado na etapa corporativa.
 - Rate limit e orçamento de IA: o contrato atômico server-only já está implementado; `file` usa lock exclusivo e `vercel_blob` usa compare-and-swap (`ifMatch`) com retry. A configuração compartilhada ainda precisa ser ligada no ambiente corporativo.
 - Alertas: adapter server-only opcional por webhook HTTPS, com payload sanitizado e deduplicação; nenhum prompt, resposta, token ou IP é enviado.
-- Radar: refresh protegido em `/api/radar/refresh`, agendado a cada seis horas em `vercel.json`.
+- Radar: refresh protegido em `/api/radar/refresh`, agendado diariamente às 09:00 UTC em `vercel.json`, compatível com o plano Hobby do Vercel. A migração futura pode aumentar a frequência por Azure Timer/Functions.
 - O `vite preview` local também monta os handlers `/api/*`, permitindo testar o build de produção com autenticação, catálogo, Radar e status antes do deploy.
 - Seleção: respostas, briefings e resultados não são persistidos; somente a planilha exportada sai pelo navegador.
 - Pesquisadores não possuem foto, avatar, iniciais ou placeholder de mídia.
