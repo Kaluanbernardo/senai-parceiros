@@ -20,7 +20,7 @@ Encerrar o ciclo com um único artefato exportável útil e uma arquitetura segu
 3. Rate limit compartilhado, quotas, timeout, idempotência, teto de gasto e alertas.
 4. Logs sem respostas privadas, prompts integrais, cookies, tokens ou segredos.
 5. Documentar variáveis, rotação, backup, restore, rollback e migração.
-6. Exigir autenticação corporativa quando o time de TI implementar Entra ID; manter os dois papéis da aplicação.
+6. Exigir autenticação corporativa quando o time de TI implementar Entra ID; validar `iss`, `aud`, `exp`, `nbf`, tenant, assinatura e grupos, mantendo os dois papéis da aplicação.
 7. Remover e revogar todas as chaves pessoais no handoff.
 
 ## Aceite

@@ -36,6 +36,20 @@ Substituir somente adapters e configuração:
 - Autenticação: substituir a sessão provisória por Entra ID, mantendo os papéis de usuário e administrador mapeados por grupo.
 - Rate limit/orçamento: o MVP já oferece adapters `memory`, `file` e `vercel_blob` para rate limit e teto diário de IA, sem IP bruto, prompts ou respostas; na Azure, substituir por Redis/Storage com operação atômica e alertas.
 
+### Contrato mínimo de Entra ID
+
+O adapter corporativo deve substituir o login local HMAC sem exigir mudança nas páginas React ou nos endpoints protegidos:
+
+- validar assinatura e claims (`iss`, `aud`, `exp`, `nbf`) contra o tenant corporativo e JWKS oficial;
+- mapear grupos corporativos para os papéis `admin` e `user`; ausência de grupo autorizado deve resultar em `403`;
+- rejeitar tokens expirados, de outro tenant, de outra aplicação ou com assinatura inválida;
+- manter `requireSession(req, res, roles)` como fronteira única para as APIs existentes;
+- emitir apenas uma sessão HttpOnly, Secure e SameSite apropriada, sem devolver token ao frontend;
+- desabilitar o formulário de usuário/senha quando `AUTH_PROVIDER=entra`; o fallback local só pode existir explicitamente no ambiente MVP;
+- usar identidade gerenciada/Key Vault para segredos e registrar somente eventos operacionais, nunca tokens ou claims integrais.
+
+Variáveis e nomes exatos devem ser definidos pelo time de TI no ambiente corporativo. O repositório não deve receber `client_secret`, certificado, token ou valor de produção.
+
 ## Backup, restore e rollback
 
 - Catalogar o manifesto de catálogo e o snapshot do Radar antes de qualquer migração.
