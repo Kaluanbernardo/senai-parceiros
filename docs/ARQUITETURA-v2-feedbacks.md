@@ -1,4 +1,6 @@
-# Arquitetura v2 — Plataforma de Inteligência de Stakeholders SENAI-SP
+# Arquitetura v2 — Plataforma de Inteligência de Stakeholders SENAI-SP (histórico)
+
+> Referência histórica. Para execução, usar `docs/PLANO-PRODUTO-LUNA-v3.md`. A decisão vigente remove todas as fotos, avatares, iniciais e placeholders de pesquisadores; qualquer onda de imagens abaixo está cancelada.
 
 ## 1. Objetivo desta versão
 

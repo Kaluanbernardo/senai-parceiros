@@ -6,14 +6,14 @@ Permitir que profissionais da Gerência de Educação do SENAI-SP, mesmo sem uma
 
 O produto deve transformar um contexto ainda impreciso em uma shortlist defensável de cinco a dez stakeholders já cadastrados, com rastreabilidade integral, e também ajudar a produzir prompts padronizados para pesquisas externas mais amplas.
 
-> Atualização v2: os feedbacks mais recentes e a arquitetura de execução estão detalhados em `docs/ARQUITETURA-v2-feedbacks.md`. Em caso de conflito, a arquitetura v2 prevalece.
+> Atualização v3: o plano vigente e as decisões mais recentes estão em `docs/PLANO-PRODUTO-LUNA-v3.md`. Em caso de conflito, o plano v3 prevalece.
 
 ## 2. Prioridade de entrega
 
 ### Fase 1 — núcleo funcional
 
 1. Autenticação do site com dois papéis: usuário e administrador.
-2. Página inicial orientada à tarefa.
+2. Página inicial com apresentação equilibrada das ferramentas, sem priorizar uma única feature.
 3. Catálogo existente de pesquisadores, escolas e organizações.
 4. Seleção guiada de stakeholders nas três categorias.
 5. Avaliação multidimensional aprofundada, shortlist diversa de cinco a dez resultados e revisão das respostas.
@@ -27,7 +27,7 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 1. Atualização automática e periódica dos perfis públicos.
 2. Radar EPT completo: novas pesquisas dos pesquisadores cadastrados, novidades governamentais e publicações internacionais, com ingestão automática, persistência, classificação e proveniência.
 3. Fontes permitidas, quarentena, proveniência por campo, bloqueios manuais e rotinas de atualização.
-4. Complementação das fotos reais com registro de origem e possibilidade de substituição.
+4. Catálogo textual de pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia.
 
 O Radar atual é uma base de transição. A versão v2 remove seeds e modo demonstração da leitura e passa a servir somente conteúdo processado por uma rotina de ingestão persistente.
 

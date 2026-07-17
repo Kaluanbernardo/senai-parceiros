@@ -1,14 +1,14 @@
 # Plano de continuidade — entrevista adaptativa, radar e catálogo de escolas
 
-Atualizado em 16/07/2026. Este documento registra o próximo ciclo de implementação para que o projeto possa ser retomado em outro computador sem depender do histórico local.
+Atualizado em 17/07/2026. O mapa canônico de execução agora é `docs/PLANO-PRODUTO-LUNA-v3.md`; este documento preserva o diagnóstico detalhado para retomada em outro computador.
 
 ## Ponto de partida
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch de trabalho: `codex/enriquece-perfis-institucionais`
-- Commit publicado no início deste plano: `9b1fee9`
+- Commit-base publicado e validado: `6e2fa14`
 - Preview Vercel: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
-- Documentos de referência: `docs/PRD-mvp-selecao-stakeholders.md`, `docs/ARQUITETURA-v2-feedbacks.md`, `docs/PLANO-ONDAS-2-6.md` e `docs/HANDOFF-LUNA-v2.md`.
+- Documentos vigentes: `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e os tickets em `docs/luna-v3/`. Os documentos v2 são apenas históricos.
 - Decisão visual vigente: pesquisadores não usam fotos, avatares, iniciais ou placeholders de mídia. Os arquivos e metadados de fotos foram removidos em 17/07/2026.
 
 No novo computador:
@@ -265,7 +265,7 @@ O ciclo só termina quando:
 
 ## Prompt para retomar no outro computador
 
-> Leia `docs/CONTINUACAO-OUTRO-COMPUTADOR.md` e execute o plano a partir da Onda 0. Trabalhe na branch `codex/enriquece-perfis-institucionais`, preserve arquivos que não pertencem ao escopo, implemente e teste a entrevista adaptativa antes da qualidade do catálogo e do radar. Deduplique pesquisadores e escolas e preserve a decisão de não exibir fotos, avatares, iniciais ou placeholders de mídia para pesquisadores. Não grave segredos no repositório. Use OpenAI Platform API se houver `OPENAI_API_KEY`; caso contrário, configure OpenRouter. Publique uma nova preview no Vercel ao concluir cada onda funcional.
+> Leia `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preserve arquivos não relacionados e depois avance para a entrevista adaptativa. Não persista respostas, não exponha segredos e mantenha pesquisadores sem mídia de perfil. Use OpenAI Platform API somente se houver `OPENAI_API_KEY` faturada; caso contrário, configure OpenRouter. Teste, revise, faça commit e push por ticket; preview Vercel apenas após os gates locais.
 
 ## Skills sugeridas para a próxima sessão
 

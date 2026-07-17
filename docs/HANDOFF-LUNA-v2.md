@@ -1,4 +1,6 @@
-# Handoff de execução — Luna
+# Handoff de execução — Luna v2 (histórico)
+
+> Documento substituído por `docs/HANDOFF-LUNA-v3.md` e `docs/PLANO-PRODUTO-LUNA-v3.md`. Não executar as instruções abaixo: elas contêm estado, commit e decisões de fotos já superados.
 
 ## Missão
 

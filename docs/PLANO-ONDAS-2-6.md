@@ -1,4 +1,6 @@
-# Plano de execução — Correções UX e Ondas 2 a 6
+# Plano de execução — Correções UX e Ondas 2 a 6 (histórico)
+
+> Documento substituído por `docs/PLANO-PRODUTO-LUNA-v3.md`. Não executar a antiga onda de fotos nem instruções conflitantes com o handoff v3.
 
 ## Objetivo
 

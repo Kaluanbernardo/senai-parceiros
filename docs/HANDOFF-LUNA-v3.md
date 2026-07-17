@@ -1,0 +1,69 @@
+# Handoff de execução — Luna v3
+
+## Missão
+
+Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3/00-baseline-e-contratos.md` e avançando pelos desbloqueios. Não retomar ondas antigas de fotos.
+
+## Ponto de partida
+
+- Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
+- Branch: `codex/enriquece-perfis-institucionais`
+- Commit-base validado: `6e2fa14`
+- Baseline: 31 testes aprovados e build Vite aprovado em 17/07/2026.
+- Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
+- Produção não deve ser publicada sem solicitação explícita.
+
+## Prioridade do Luna
+
+1. baseline e fixtures de regressão;
+2. entrevista semanticamente adaptativa;
+3. avaliação e shortlist mais diferenciadas;
+4. catálogos canônicos de pesquisadores e escolas;
+5. thin slice real do Radar;
+6. XLSX, remoção de exportadores legados e hardening Azure.
+
+Catálogos e Radar podem ser executados em paralelo depois do baseline, mas não devem atrasar a entrevista, que é a feature principal.
+
+## Regras invioláveis
+
+1. Preservar React, Vite e MUI; evoluir incrementalmente.
+2. Não persistir respostas, resultados ou prompts completos da seleção.
+3. Nunca imprimir, versionar ou expor chaves. Não usar `VITE_` para segredos.
+4. Usar OpenAI Platform somente se houver chave de API faturada; assinatura ChatGPT não equivale a API. Caso contrário, usar OpenRouter com `openrouter/auto`.
+5. Manter fallback local para entrevista e avaliação.
+6. Não recomendar fora do catálogo e não completar cinco com candidato eliminado ou risco grave.
+7. Não expor chain-of-thought; registrar apenas justificativas e reason tags estruturados.
+8. Pesquisadores nunca exibem foto, avatar, iniciais ou placeholder de mídia e não possuem campos `foto`/`image`.
+9. Scholar serve para verificação de identidade, não para coleta de fotos.
+10. Não adicionar scripts temporários, `.playwright-cli`, `output`, `tmp` ou arquivos exploratórios aos commits.
+11. Preservar modificações locais não relacionadas, especialmente `scripts/collect-image-batch.ps1` e `src/data/apply_stake_desc_1.cjs`.
+12. Publicar preview Vercel somente após testes, build, smoke e revisão do diff.
+
+## Primeira sessão recomendada
+
+1. Ler integralmente o plano canônico e o ticket de baseline.
+2. Confirmar branch, commit e worktree sem alterar arquivos não relacionados.
+3. Rodar testes e build.
+4. Criar fixtures de escola/benchmarking, pesquisador/palestra, organização/parceria e contexto vago.
+5. Fixar contratos e testes de regressão.
+6. Fazer commit coeso do baseline.
+7. Iniciar imediatamente a entrevista adaptativa se nenhum bloqueio real existir.
+
+## Variáveis previstas
+
+```text
+AI_PROVIDER=openai|openrouter
+OPENAI_API_KEY=
+OPENAI_MODEL=
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=openrouter/auto
+OPENROUTER_COST_QUALITY_TRADEOFF=7
+RADAR_LIVE_SOURCES=true|false
+RADAR_CRON_SECRET=
+```
+
+Valores nunca devem aparecer em documentação, saída, teste ou commit. O adapter corporativo futuro deve respeitar os mesmos contratos.
+
+## Prompt direto para o Luna
+
+> Leia integralmente `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e `docs/luna-v3/00-baseline-e-contratos.md`. Execute primeiro o baseline na branch `codex/enriquece-perfis-institucionais`, preservando todos os arquivos locais não relacionados. Use TDD, não persista entrevistas, não exponha segredos e mantenha pesquisadores sem qualquer mídia de perfil. Depois do commit do baseline, avance para `docs/luna-v3/01-entrevista-adaptativa.md`. Paralelize catálogos e Radar somente quando isso não disputar os mesmos arquivos. Faça testes, build, smoke, revisão, commit e push por ticket; preview Vercel apenas depois dos gates locais.
