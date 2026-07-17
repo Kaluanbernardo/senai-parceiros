@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import handler from './[action].js';
+import handler from '../../../api/admin/[action].js';
 
 describe('admin API gateway', () => {
   it('rejects unknown admin actions without exposing another handler', async () => {

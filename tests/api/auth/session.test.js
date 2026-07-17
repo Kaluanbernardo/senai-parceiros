@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import handler from './session.js';
+import handler from '../../../api/auth/session.js';
 
 function response() {
   return {

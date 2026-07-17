@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import handler from './entra.js';
-import { resetEntraJwksCache } from '../../server/lib/entra.js';
+import handler from '../../../api/auth/entra.js';
+import { resetEntraJwksCache } from '../../../server/lib/entra.js';
 
 function response() {
   return {

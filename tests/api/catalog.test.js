@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import handler from './catalog.js';
-import { createSessionToken } from '../server/lib/cookies.js';
-import { catalogStore } from '../server/lib/catalogStore.js';
+import handler from '../../api/catalog.js';
+import { createSessionToken } from '../../server/lib/cookies.js';
+import { catalogStore } from '../../server/lib/catalogStore.js';
 
 process.env.AUTH_SESSION_SECRET = 'test-session-secret-that-is-long-enough-123';
 

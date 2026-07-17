@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import handler from './interview-next.js';
-import { createSessionToken } from '../../server/lib/cookies.js';
-import { InterviewPlanner } from '../../src/domain/interviewPlanner.js';
+import handler from '../../../api/selection/interview-next.js';
+import { createSessionToken } from '../../../server/lib/cookies.js';
+import { InterviewPlanner } from '../../../src/domain/interviewPlanner.js';
 
 process.env.AUTH_SESSION_SECRET = 'test-session-secret-that-is-long-enough-123';
 
