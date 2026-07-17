@@ -10,7 +10,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 - Branch: `codex/enriquece-perfis-institucionais`
 - HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 72 testes aprovados e build Vite aprovado em 17/07/2026.
+- Baseline + ondas incrementais: 73 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
 
@@ -67,7 +67,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O Gerador de Prompt já usa o contrato compartilhado `senai_catalog_v1`, exige as colunas do catálogo e oferece template XLSX; o painel admin possui prévia, confirmação por linha, deduplicação, idempotência, histórico e rollback protegido contra alterações posteriores. O catálogo persistido é reidratado após autenticação e atualizações importadas são mescladas por identidade/ID sem duplicar a interface. Os adapters `file` e `vercel_blob` tornam o lote durável quando configurados; o próximo Luna deve conectar a credencial corporativa e, depois, Azure Blob/Storage Table.
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado em `vercel.json`.
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`, sem guardar prompts, respostas ou IP bruto; o próximo ambiente deve ligar uma implementação compartilhada/atômica corporativa e alertas.
-- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs.
+- O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O mesmo conjunto de APIs é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
 - Próximo bloco recomendado: ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron, ampliar allowlist e executar o hardening Azure/Entra ID.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 

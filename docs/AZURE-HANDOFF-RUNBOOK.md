@@ -9,6 +9,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 - IA: OpenAI Platform, OpenRouter (`openrouter/auto`) ou Azure OpenAI por adapter, escolhidos por `AI_PROVIDER`.
 - Catálogo/Radar: memória para desenvolvimento; `file` para execução controlada local; `vercel_blob` para armazenamento privado compartilhado.
 - Radar: refresh protegido em `/api/radar/refresh`, agendado a cada seis horas em `vercel.json`.
+- O `vite preview` local também monta os handlers `/api/*`, permitindo testar o build de produção com autenticação, catálogo, Radar e status antes do deploy.
 - Seleção: respostas, briefings e resultados não são persistidos; somente a planilha exportada sai pelo navegador.
 - Pesquisadores não possuem foto, avatar, iniciais ou placeholder de mídia.
 

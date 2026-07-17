@@ -32,7 +32,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 72 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 73 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
