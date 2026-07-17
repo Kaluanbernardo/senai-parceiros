@@ -27,6 +27,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 8. Validar `GET /api/radar/refresh` com o segredo de cron e conferir `lastRun`, `itemCount`, `sourceStatus`, feeds configurados e `store.durable=true`.
 9. Como administrador, validar `GET /api/admin/status`; o retorno deve conter apenas flags de configuração e status dos stores, nunca segredos, prompts, respostas ou IPs. O bloco `handoff` resume a prontidão do MVP (`handoff.mvp`) e lista os bloqueadores corporativos (`handoff.corporate.blockers`), incluindo Entra ID, armazenamento atômico, alertas, cron e feeds definitivos.
 10. Para alertas, definir `OPS_ALERT_WEBHOOK_URL` somente com endpoint HTTPS corporativo e, opcionalmente, `OPS_ALERT_COOLDOWN_SECONDS`/`AI_ALERT_THRESHOLD`. Testar um evento de orçamento em ambiente de homologação antes de ativar produção.
+11. Antes de liberar o ambiente, executar `node scripts/handoff-preflight.mjs --profile=corporate`. O comando retorna somente checks e status sanitizado; deve terminar com `ok: true` sem imprimir valores de ambiente.
 
 ## Migração para Azure
 

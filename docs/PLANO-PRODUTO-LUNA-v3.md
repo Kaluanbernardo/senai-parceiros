@@ -48,7 +48,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 87 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 90 testes automatizados aprovados e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
 
