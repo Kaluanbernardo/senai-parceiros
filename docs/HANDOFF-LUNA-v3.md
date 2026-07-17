@@ -8,7 +8,7 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- Commit-base validado: `6c289c4` (`feat: endurece stores radar e providers`).
+- Commit-base validado: `675cb09` (`feat: adiciona armazenamento privado por blob`).
 - Baseline + ondas incrementais: 61 testes aprovados e build Vite aprovado em 17/07/2026.
 - Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
 - Produção não deve ser publicada sem solicitação explícita.
