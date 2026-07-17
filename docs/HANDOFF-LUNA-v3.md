@@ -8,10 +8,10 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- HEAD atual publicado: o commit mais recente da branch `codex/enriquece-perfis-institucionais`; a implementação funcional deste ciclo inclui `5be03f8` (`feat: reidrata catalogo e fecha historico de importacoes`). Esse commit inclui a reidratação do catálogo persistido, o endpoint autenticado de catálogo e a interface de histórico/rollback de importações.
+- HEAD funcional de referência: `3f0a9da` (`fix: torna o preflight do MVP o gate atual`). Use sempre o commit mais recente da branch `codex/enriquece-perfis-institucionais` ao retomar.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 90 testes aprovados e build Vite aprovado em 17/07/2026.
-- Preview conhecido: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
+- Baseline + ondas incrementais: 91 testes aprovados, preflight MVP com `ok: true` e build Vite aprovado em 17/07/2026.
+- Preview: publicar a branch atual no projeto Vercel `senai-parceiros` e registrar a URL retornada no fechamento da execução.
 - Produção não deve ser publicada sem solicitação explícita.
 
 ## Documentos de continuidade
@@ -28,8 +28,8 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 4. catálogos canônicos de pesquisadores e escolas;
 5. importação XLSX integrada ao Gerador de Prompt;
 6. thin slice real do Radar;
-7. Configuração corporativa do armazenamento, ativação do adapter Entra ID e autenticação, mantendo adapters substituíveis.
-8. XLSX, remoção de exportadores legados e hardening Azure.
+7. estabilização do MVP público, com testes, build, preflight e preview Vercel;
+8. migração corporativa futura por configuração/adapters, sem bloquear o MVP.
 
 Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem regredir a entrevista e a seleção, que são a feature principal.
 
@@ -71,17 +71,17 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
 - O preflight executável `npm run handoff:preflight:mvp` verifica o gate atual do MVP sem exigir Azure/Entra; `npm run handoff:preflight:corporate` fica reservado para a migração futura e verifica provider, Entra, origem, stores duráveis/atômicos, alertas, cron, feeds e IA sem imprimir segredos.
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.
-- Próximo bloco recomendado: registrar o aplicativo/grupos no tenant corporativo e ativar o adapter Entra ID, ligar armazenamento compartilhado privado para catálogo/Radar, configurar o segredo do cron e o webhook de alertas, e revisar o manifesto versionado de feeds.
+- Próximo bloco recomendado no MVP: calibrar a seleção com casos reais, evoluir a cobertura editorial do Radar e implementar a atualização pública de perfis. Azure/Entra, armazenamento corporativo e alertas ficam para a migração futura.
 - O importador e o Gerador de Prompt continuam sendo um unico fluxo: uma planilha criada pelo prompt deve entrar na previa sem remapeamento manual, sem campos de foto/avatar e sem substituir o catalogo inteiro.
 
 ## Próximas ondas para execução
 
-1. **Configuração corporativa (TI):** Blob privado no MVP, segredos server-only, registro do aplicativo/grupos Entra ID e preenchimento das variáveis `ENTRA_*` para ativar `POST /api/auth/entra`.
-2. **Operação compartilhada:** configurar os adapters duráveis/atômicos do MVP ou substituí-los por Redis/Storage corporativo, ativar alertas de custo/erro e manter retenção de logs sem prompts ou respostas.
-3. **Radar editorial:** revisar o manifesto de feeds `2026-07-17.v1`, ampliar a allowlist de fontes nacionais, estaduais e internacionais quando aprovado, e manter quarentena, deduplicação, snapshot e refresh agendado.
-4. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
-5. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
-6. **QA de entrega:** executar smoke visual desktop/mobile no navegador corporativo, validar importação/replay/rollback e login Entra, revisar diff e só então solicitar preview Vercel.
+1. **Calibração da seleção:** testar cenários reais de benchmarking, evento e parceria para comprovar perguntas adaptativas, diferenças entre candidatos e shortlist de 5–10 itens.
+2. **Radar editorial:** revisar o manifesto de feeds `2026-07-17.v1`, ampliar a allowlist de fontes nacionais, estaduais e internacionais quando aprovado, e manter quarentena, deduplicação, snapshot e refresh agendado.
+3. **Gate de importações futuras:** reutilizar aliases por domínio/país para novos registros e manter separados os escopos nacional, regional e local.
+4. **Atualização pública de perfis:** implementar o job agendado descrito abaixo, com diff, proveniência, aprovação e sem fotos de pesquisadores.
+5. **QA do MVP:** executar smoke visual desktop/mobile, validar importação/replay/rollback, revisar o diff e publicar um preview Vercel após os gates locais.
+6. **Migração corporativa futura:** quando o TI provisionar o ambiente, ativar Entra ID, Blob/Storage, alertas e cron pelo mesmo contrato de adapters.
 
 ### Evolução prevista: atualização automática dos perfis
 

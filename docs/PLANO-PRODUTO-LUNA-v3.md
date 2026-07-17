@@ -48,9 +48,11 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 90 testes automatizados aprovados e build de produção aprovado na execução atual.
+- 91 testes automatizados aprovados, preflight MVP com `ok: true` e build de produção aprovado na execução atual.
 
 ### Lacunas críticas remanescentes
+
+As lacunas corporativas abaixo são preparação para a migração futura e não bloqueiam o MVP público atual.
 
 1. O ranking já recebe o briefing e faz pré-seleção diversa para a IA, mas ainda precisa de calibração com casos reais para ampliar a diferença entre trade-offs.
 2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico, rollback protegido contra conflito e reidratação do catálogo após login; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
@@ -147,10 +149,9 @@ As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação
 
 1. Fechar avaliação e shortlist: fazer as notas diferenciarem trade-offs, risco, evidências e lacunas, mantendo de 5 a 10 resultados somente do catálogo.
 2. Manter a auditoria de deduplicação como gate de importações futuras: usar domínio/país para aliases ambíguos e não fundir redes, regionais ou unidades locais distintas.
-3. Configurar o adapter `vercel_blob` privado do catálogo/Radar no ambiente MVP e preparar o mesmo contrato para Azure Blob/Storage Table ou banco corporativo.
-4. Ampliar allowlist editorial e configurar o cron com segredo rotacionável.
-5. Concluir o registro/ativação do Entra ID com TI, consolidar rate limit compartilhado/alertas e executar o runbook de rotação/backup/restore para o handoff Azure.
-6. Executar smoke visual desktop/mobile e validação operacional final antes de qualquer preview Vercel.
+3. Ampliar a allowlist editorial do Radar e evoluir a atualização automática de perfis públicos com proveniência e aprovação.
+4. Executar smoke visual desktop/mobile e validação operacional final antes de cada preview Vercel.
+5. Na migração futura, configurar `vercel_blob`/Azure Storage, Entra ID, rate limit compartilhado, alertas e o runbook de rotação/backup/restore.
 
 O fluxo de **importação de stakeholders** é parte da entrega atual: o Gerador de Prompt orienta a pesquisa para produzir o schema `senai_catalog_v1`; o administrador importa o XLSX, revisa a prévia, resolve duplicidades, confirma o lote e pode consultar histórico ou fazer rollback. A mesma definição de colunas deve permanecer como fonte única no prompt, no template, na prévia, no catálogo e na exportação da seleção.
 
