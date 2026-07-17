@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, fetchFeedItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
+import { dedupeRadarItems, fetchFeedItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -8,7 +8,7 @@ const baseItems = [
 ];
 
 describe('radar domain', () => {
-  afterEach(() => { vi.restoreAllMocks(); radarStore.configure({ driver: 'memory' }); });
+  afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); radarStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; });
   it('deduplicates by DOI or external identifier', () => {
     expect(dedupeRadarItems([...baseItems, { ...baseItems[0], id: 'copy' }])).toHaveLength(2);
     expect(dedupeRadarItems([{ title: 'Sem identificador', sourceName: 'Fonte' }, { title: 'Sem identificador', sourceName: 'Fonte' }])).toHaveLength(1);
@@ -47,6 +47,15 @@ describe('radar domain', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ section: 'government', sourceName: 'Fonte governamental de teste', provider: 'rss', publishedAt: '2026-07-16' });
     expect(items[0].provenance.feedUrl).toBe('https://example.org/feed.xml');
+  });
+
+  it('ingests allowlisted institutional HTML pages without accepting external links', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html><article><a href="/noticia-ept">Nova política de educação profissional</a><time datetime="2026-07-16"></time><p>Atualização sobre formação técnica e competências.</p></article><article><a href="https://external.example/noticia">Link externo irrelevante</a></article></html>', { status: 200 })));
+    const items = await fetchWebItems({ name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' }, { limit: 5 });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ sourceName: 'INEP', provider: 'institutional-web', publishedAt: '2026-07-16', section: 'government' });
+    expect(items[0].sourceUrl).toBe('https://www.gov.br/noticia-ept');
+    expect(items[0].provenance.pageUrl).toContain('inep');
   });
 
   it('refreshes and exposes a last valid snapshot with source observability', async () => {

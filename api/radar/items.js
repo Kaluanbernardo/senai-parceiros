@@ -1,5 +1,5 @@
 import { getSession } from '../../server/lib/cookies.js';
-import { getRadarItems, getRadarFeedPolicy, RADAR_SECTIONS, RADAR_SOURCE_POLICY } from '../../server/lib/radar.js';
+import { getRadarItems, getRadarFeedPolicy, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
 import { isRadarRateLimited, recordRadarAttempt } from '../../server/lib/auth.js';
 
 function bool(value) {
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     });
     return res.status(200).json({
       ...result,
-      sourcePolicy: [...RADAR_SOURCE_POLICY, ...getRadarFeedPolicy()],
+      sourcePolicy: [...RADAR_SOURCE_POLICY, ...getRadarFeedPolicy(), ...RADAR_WEB_POLICY],
       mode: result.liveProvider ? 'live+curated' : 'curated-fallback',
     });
   } catch {

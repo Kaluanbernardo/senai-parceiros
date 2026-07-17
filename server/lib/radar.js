@@ -38,6 +38,15 @@ export const RADAR_FEED_POLICY = [
   { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
 ];
 
+export const RADAR_WEB_POLICY = [
+  { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' },
+  { name: 'Governo do Estado de São Paulo', section: 'government', url: 'https://www.educacao.sp.gov.br/educacao/noticias/', official: true, geography: 'São Paulo' },
+  { name: 'FAPESP', section: 'government', url: 'https://agencia.fapesp.br/', official: true, geography: 'São Paulo' },
+  { name: 'OCDE', section: 'international', url: 'https://www.oecd.org/en/topics/vocational-education-and-training-vet.html', official: true, geography: 'Internacional' },
+  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional' },
+  { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional' },
+];
+
 const RADAR_SECTION_SET = new Set(RADAR_SECTIONS);
 
 function configuredExtraFeeds() {
@@ -71,6 +80,104 @@ export function getRadarFeedPolicy() {
     seen.add(key);
     return true;
   });
+}
+
+function htmlText(value) {
+  return String(value || '')
+    .replace(/<!--([\s\S]*?)-->/g, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function absoluteUrl(href, baseUrl) {
+  try {
+    const base = new URL(baseUrl);
+    const url = new URL(href, base);
+    if (url.protocol !== 'https:' || url.hostname !== base.hostname) return '';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
+function webRelevance(title, summary) {
+  const haystack = `${title} ${summary}`.toLocaleLowerCase('pt-BR');
+  const terms = ['educação profissional', 'educacao profissional', 'educação tecnológica', 'educacao tecnologica', 'vocational', 'technical education', 'skills', 'qualificação', 'qualification', 'aprendizagem', 'apprenticeship', 'vet', 'tvet', 'competências', 'competencias', 'formação profissional', 'formacao profissional'];
+  return Math.min(100, 50 + terms.filter((term) => haystack.includes(term)).length * 9);
+}
+
+function webItem(candidate, source, index) {
+  const title = htmlText(candidate.title);
+  const summary = htmlText(candidate.summary) || 'Atualização pública recuperada da página institucional.';
+  const dateText = htmlText(candidate.date);
+  const parsedDate = dateText ? new Date(dateText) : null;
+  const dateFromText = dateText.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b|\b(\d{1,2})[/.](\d{1,2})[/.](20\d{2})\b/);
+  const publishedAt = parsedDate && !Number.isNaN(parsedDate.getTime())
+    ? parsedDate.toISOString().slice(0, 10)
+    : dateFromText
+      ? dateFromText[1]
+        ? `${dateFromText[1]}-${String(dateFromText[2]).padStart(2, '0')}-${String(dateFromText[3]).padStart(2, '0')}`
+        : `${dateFromText[6]}-${String(dateFromText[5]).padStart(2, '0')}-${String(dateFromText[4]).padStart(2, '0')}`
+      : null;
+  const sourceUrl = candidate.url;
+  return normalizeRadarItem({
+    section: source.section,
+    title,
+    summaryPt: summary,
+    publishedAt,
+    sourceName: source.name,
+    sourceUrl,
+    contentType: 'notícia institucional',
+    topics: ['EPT', 'VET'],
+    geography: source.geography,
+    official: source.official,
+    relevanceScore: webRelevance(title, summary),
+    provider: 'institutional-web',
+    externalId: sourceUrl || `${source.name}:${title}:${index}`,
+    provenance: { pageUrl: source.url, fetchedAt: new Date().toISOString() },
+  });
+}
+
+export async function fetchWebItems(source, { limit = 8 } = {}) {
+  const cacheKey = `web:${source.url}:${limit}`;
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+  const response = await fetch(source.url, { headers: { Accept: 'text/html,application/xhtml+xml' }, signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw new Error(`web_${response.status}`);
+  const html = await response.text();
+  const candidates = [];
+  const seenUrls = new Set();
+  const addCandidate = (candidate) => {
+    const url = absoluteUrl(candidate.url, source.url);
+    const title = htmlText(candidate.title);
+    if (!url || !title || title.length < 18 || title.length > 260 || seenUrls.has(url)) return;
+    seenUrls.add(url);
+    candidates.push({ ...candidate, url });
+  };
+  for (const match of html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)) {
+    const block = match[1];
+    const link = block.match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
+    if (!link) continue;
+    addCandidate({ url: link[1], title: link[2], summary: block.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1], date: block.match(/<time\b[^>]*datetime=["']([^"']+)["'][^>]*>/i)?.[1] || block.match(/<time\b[^>]*>([\s\S]*?)<\/time>/i)?.[1] });
+  }
+  if (!candidates.length) {
+    for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+      addCandidate({ url: match[1], title: match[2] });
+      if (candidates.length >= limit * 3) break;
+    }
+  }
+  const items = candidates
+    .map((candidate, index) => webItem(candidate, source, index))
+    .filter((item) => webRelevance(item.title, item.summaryPt) >= 59)
+    .sort((a, b) => b.relevanceScore - a.relevanceScore || String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')))
+    .slice(0, limit);
+  cacheSet(cacheKey, items);
+  return items;
 }
 
 const liveCache = new Map();
@@ -298,6 +405,20 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     currentItems.push(...feedItems);
     items = [...feedItems, ...items].filter((item) => allowedSources.has(item.sourceName) || feedPolicy.some((feed) => feed.name === item.sourceName));
     liveProvider = liveProvider || feedItems.length > 0;
+
+    const webSources = RADAR_WEB_POLICY.filter((source) => !filters.section || source.section === filters.section);
+    const webResults = await Promise.allSettled(webSources.map((source) => fetchWebItems(source)));
+    const webItems = [];
+    webResults.forEach((result, index) => {
+      const source = webSources[index];
+      sourceStatus[`${source.name} (web)`] = result.status === 'fulfilled'
+        ? providerStatus(`${source.name} (web)`, 'ok', { count: result.value.length, url: source.url })
+        : providerStatus(`${source.name} (web)`, 'error', { error: String(result.reason?.message || 'source_unavailable').slice(0, 160), url: source.url });
+      if (result.status === 'fulfilled') webItems.push(...result.value);
+    });
+    currentItems.push(...webItems);
+    items = [...webItems, ...items].filter((item) => allowedSources.has(item.sourceName));
+    liveProvider = liveProvider || webItems.length > 0;
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const snapshotItems = dedupeRadarItems(items);
