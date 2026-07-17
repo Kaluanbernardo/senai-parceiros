@@ -12,6 +12,7 @@ Este runbook descreve o que o time de TI precisa configurar ou substituir. Nenhu
 - Alertas: adapter server-only opcional por webhook HTTPS, com payload sanitizado e deduplicação; nenhum prompt, resposta, token ou IP é enviado.
 - Radar: refresh protegido em `/api/radar/refresh`, agendado diariamente às 09:00 UTC em `vercel.json`, compatível com o plano Hobby do Vercel. A migração futura pode aumentar a frequência por Azure Timer/Functions.
 - O `vite preview` local também monta os handlers `/api/*`, permitindo testar o build de produção com autenticação, catálogo, Radar e status antes do deploy.
+- No Vercel Hobby, os handlers administrativos são consolidados em `/api/admin/[action]` e encaminhados às implementações de `server/routes/admin`; isso mantém as rotas externas estáveis e reduz o pacote atual a 10 funções publicáveis. Testes não devem voltar para `api/`, pois seriam contados como funções pelo Vercel.
 - Seleção: respostas, briefings e resultados não são persistidos; somente a planilha exportada sai pelo navegador.
 - Pesquisadores não possuem foto, avatar, iniciais ou placeholder de mídia.
 

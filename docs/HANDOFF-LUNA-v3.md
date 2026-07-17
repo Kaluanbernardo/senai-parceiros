@@ -8,10 +8,10 @@ Executar o mapa em `docs/PLANO-PRODUTO-LUNA-v3.md`, começando por `docs/luna-v3
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch: `codex/enriquece-perfis-institucionais`
-- HEAD funcional de referência: `e31ad57` (`fix: agenda radar diariamente no vercel hobby`). Use sempre o commit mais recente da branch `codex/enriquece-perfis-institucionais` ao retomar.
+- HEAD funcional de código validado: `b06d52c` (`test: separa testes das funcoes publicaveis`). Use sempre o commit mais recente da branch `codex/enriquece-perfis-institucionais` ao retomar.
 - Commit-base validado: `a7f5669` (`docs: prepara handoff azure e plano de continuidade`). Use o HEAD atual ao retomar; o commit-base é apenas a referência histórica do início deste ciclo.
-- Baseline + ondas incrementais: 91 testes aprovados, preflight MVP com `ok: true` e build Vite aprovado em 17/07/2026.
-- Preview Vercel desta entrega: `https://senai-parceiros-7guupps7b-kaluanbernardos-projects.vercel.app`.
+- Baseline + ondas incrementais: 92 testes aprovados, preflight MVP com `ok: true` e build Vite aprovado em 17/07/2026.
+- Preview Vercel desta entrega, confirmado como `Ready`: `https://senai-parceiros-lhfdgppdd-kaluanbernardos-projects.vercel.app`.
 - Produção não deve ser publicada sem solicitação explícita.
 
 ## Documentos de continuidade
@@ -68,6 +68,7 @@ Catálogos, importador XLSX e Radar podem evoluir em paralelo, mas não devem re
 - O Radar já consome OpenAlex/Crossref, feeds RSS e páginas HTML institucionais allowlisted de Governo, OIT, UNESCO-UNEVOC, INEP, FAPESP, OCDE, Cedefop e ETF, incluindo consultas direcionadas a pesquisadores cadastrados, com fallback curado, snapshot válido, status por fonte, feeds adicionais oficiais configuráveis por `RADAR_EXTRA_FEEDS_JSON`, adapter `vercel_blob` e refresh protegido (`/api/radar/refresh`) agendado diariamente em `vercel.json` para compatibilidade com o plano Hobby.
 - O uso de IA e os rate limits já têm adapters server-only `memory`, `file` e `vercel_blob`; os caminhos transacionais usam lock exclusivo ou CAS com retry, sem guardar prompts, respostas ou IP bruto. O adapter de alertas HTTPS sanitizados também está pronto, faltando apenas o endpoint corporativo.
 - O endpoint administrativo `/api/admin/status` expõe somente flags de configuração e status dos stores para validação operacional; ele nunca retorna segredos, prompts, respostas ou IPs. O bloco `security.authProvider` mostra apenas o nome do provider ativo e `security.entraAdapter` mostra a prontidão segura do adapter (sem valores sensíveis); `handoff.mvp` informa se os gates mínimos do MVP estão configurados e `handoff.corporate.blockers` lista explicitamente o que ainda depende de TI. O mesmo conjunto de APIs, inclusive `POST /api/auth/entra`, é servido pelo `vite preview`, permitindo validar o artefato de produção localmente antes do Vercel.
+- Para respeitar o limite de funções do plano Hobby, os cinco handlers administrativos compartilham a função dinâmica `/api/admin/[action]`; as URLs públicas permanecem iguais. Implementações reutilizáveis ficam em `server/routes/admin` e todos os testes ficam fora de `api/`, evitando que o empacotador os trate como funções. O preview validado publica 10 funções.
 - Último smoke visual do artefato de produção: Chromium desktop e mobile passaram por login, Home, Seleção adaptativa, Radar nas três seções e Gerador de Prompt, sem erros de console; o favicon foi incluído para eliminar o 404 do shell.
 - O preflight executável `npm run handoff:preflight:mvp` verifica o gate atual do MVP sem exigir Azure/Entra; `npm run handoff:preflight:corporate` fica reservado para a migração futura e verifica provider, Entra, origem, stores duráveis/atômicos, alertas, cron, feeds e IA sem imprimir segredos.
 - O fallback curado do Radar foi validado para as três seções; a aba governamental mantém três itens oficiais quando uma fonte live falha, em vez de ficar vazia.

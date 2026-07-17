@@ -48,7 +48,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - matriz com tratamento de sobreposição e radar comparativo/individual;
 - interface com um único botão de exportação XLSX e workbook de nove abas;
 - pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
-- 91 testes automatizados aprovados, preflight MVP com `ok: true` e build de produção aprovado na execução atual.
+- 92 testes automatizados aprovados, preflight MVP com `ok: true`, build de produção aprovado e preview Vercel confirmado como `Ready` na execução atual.
 
 ### Lacunas críticas remanescentes
 

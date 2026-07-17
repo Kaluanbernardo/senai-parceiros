@@ -8,8 +8,8 @@ Atualizado em 17/07/2026. O mapa canônico de execução agora é `docs/PLANO-PR
 
 - Repositório: `https://github.com/Kaluanbernardo/senai-parceiros`
 - Branch de trabalho: `codex/enriquece-perfis-institucionais`
-- Commit-base publicado e validado: `6e2fa14`
-- Preview Vercel: `https://senai-parceiros-4i3egoozj-kaluanbernardos-projects.vercel.app`
+- Commit-base histórico: `6e2fa14`; para continuar, usar o HEAD mais recente da branch.
+- Preview Vercel vigente em 17/07/2026, confirmado como `Ready`: `https://senai-parceiros-lhfdgppdd-kaluanbernardos-projects.vercel.app`
 - Documentos vigentes: `docs/PLANO-PRODUTO-LUNA-v3.md`, `docs/HANDOFF-LUNA-v3.md` e os tickets em `docs/luna-v3/`. Os documentos v2 são apenas históricos.
 - Decisão visual vigente: pesquisadores não usam fotos, avatares, iniciais ou placeholders de mídia. Os arquivos e metadados de fotos foram removidos em 17/07/2026.
 
