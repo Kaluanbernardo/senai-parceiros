@@ -15,9 +15,11 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 7. mantém um radar alimentado por fontes acadêmicas, governamentais e internacionais;
 8. preserva fronteiras substituíveis para futura migração ao Azure do SENAI-SP.
 
-### Feature adicionada ao escopo
+### Feature adicionada ao escopo — importação de stakeholders
 
 **Importação de stakeholders via XLSX** é parte do fluxo principal, não um utilitário isolado. O profissional deve conseguir usar o Gerador de Prompt para orientar uma pesquisa externa, receber uma planilha estruturada com as mesmas colunas do catálogo e, no painel administrativo, importar esse arquivo com prévia, validação, deduplicação, decisões por linha, confirmação, histórico e rollback. O contrato compartilhado deve ser a fonte única para o prompt, o template, o importador e o catálogo; nenhum campo de foto/avatar pode ser criado para pesquisadores.
+
+O Gerador de Prompt deve orientar um output diretamente importável: uma aba `Stakeholders` com uma entidade por linha e as colunas do tipo escolhido (`researcher`, `school` ou `organization`), mais uma aba `Metadados` para contexto, critérios, limitações, fontes consultadas e data da pesquisa. Os campos precisam cobrir não só identidade e descrição, mas também aderência ao contexto, evidências, proveniência, confiança e lacunas — elementos usados pelo catálogo e pela seleção para diferenciar candidatos. Essa definição vive em `src/domain/catalogImportSchema.js` e não deve ser duplicada na UI ou em prompts alternativos.
 
 ## Estado confirmado do produto
 

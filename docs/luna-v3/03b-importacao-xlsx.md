@@ -4,12 +4,16 @@
 
 Permitir que um administrador importe para o catálogo uma planilha produzida a partir do Gerador de Prompt, com validação, deduplicação, prévia e rastreabilidade. A importação deve adicionar ou enriquecer registros; nunca substituir silenciosamente um catálogo inteiro.
 
-## Diagnóstico atual
+## Estado atual e lacunas de handoff
 
-- O Gerador de Prompt já exige colunas estruturadas, mas seus nomes não correspondem integralmente ao modelo atual do catálogo.
-- O prompt permite texto antes e depois da tabela, o que dificulta uma importação confiável.
-- O painel administrativo importa somente arrays JSON, substitui a coleção em memória e perde tudo ao recarregar a aplicação.
-- Não há validação de schema, prévia, resolução de duplicatas, persistência ou rollback de lote.
+O fluxo funcional já foi implementado nesta branch: o Gerador de Prompt e o importador usam o contrato compartilhado `senai_catalog_v1`; o painel administrativo oferece upload XLSX, prévia, decisões por linha, deduplicação, idempotência, histórico, rollback protegido contra alterações posteriores e reidratação do catálogo após login.
+
+O trabalho restante deste ticket é operacional e de QA:
+
+- configurar o adapter durável privado no ambiente MVP e preparar a troca por Azure Blob/Storage Table;
+- validar o round-trip com planilhas reais produzidas pelo Gerador de Prompt para pesquisador, escola e organização;
+- confirmar no handoff que a mesma definição de colunas é usada pelo prompt, template, prévia, catálogo e exportação;
+- revisar limites, retenção e rotação de credenciais sem persistir dados privados, fotos ou avatares.
 
 ## Contrato compartilhado
 
@@ -38,10 +42,12 @@ Permitir que um administrador importe para o catálogo uma planilha produzida a 
 1. Substituir os schemas isolados pelo contrato compartilhado do catálogo.
 2. Exigir os nomes e a ordem exatos das colunas da categoria escolhida.
 3. Exigir `schema_version=senai_catalog_v1` e `tipo_registro` com valor controlado: `researcher`, `school` ou `organization`.
-4. Proibir colunas extras, fórmulas, macros, títulos acima do cabeçalho e células mescladas.
-5. Mover resumo, lacunas e limitações para a aba `Metadados`; não permitir prosa misturada às linhas importáveis.
-6. Manter CSV UTF-8 apenas como fallback de pesquisa, deixando claro que o importador principal aceita XLSX. A conversão de CSV pode ser uma etapa posterior.
-7. Oferecer download de um template XLSX vazio por categoria, gerado a partir do mesmo schema.
+4. Incluir, além dos dados básicos, os campos que permitem ao catálogo selecionar e diferenciar stakeholders: aderência ao contexto, áreas/temas, evidências, fontes, confiança e lacunas.
+5. Incluir os campos específicos da categoria: identificadores e produção pública de pesquisadores; oferta, escala e relação com a indústria de escolas; natureza, setor, programas, parcerias e alcance de organizações.
+6. Proibir colunas extras, fórmulas, macros, títulos acima do cabeçalho e células mescladas.
+7. Mover resumo, lacunas e limitações para a aba `Metadados`; não permitir prosa misturada às linhas importáveis.
+8. Manter CSV UTF-8 apenas como fallback de pesquisa, deixando claro que o importador principal aceita XLSX. A conversão de CSV pode ser uma etapa posterior.
+9. Oferecer download de um template XLSX vazio por categoria, gerado a partir do mesmo schema.
 
 ## Fluxo de importação
 
