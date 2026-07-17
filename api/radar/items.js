@@ -1,6 +1,6 @@
 import { getSession } from '../../server/lib/cookies.js';
 import { getRadarItems, getRadarFeedPolicy, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
-import { isRadarRateLimited, recordRadarAttempt } from '../../server/lib/auth.js';
+import { flushRateLimitStore, hydrateRateLimitStore, isRadarRateLimited, recordRadarAttempt } from '../../server/lib/auth.js';
 
 function bool(value) {
   return String(value).toLowerCase() === 'true';
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
   }
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
+  await hydrateRateLimitStore({ force: true });
   if (isRadarRateLimited(req, session)) return res.status(429).json({ error: 'radar_rate_limited' });
   const url = new URL(req.url || '/api/radar/items', 'http://localhost');
   const section = url.searchParams.get('section') || undefined;
@@ -30,6 +31,7 @@ export default async function handler(req, res) {
     sort: url.searchParams.get('sort') || 'relevance',
   };
   recordRadarAttempt(req, session);
+  await flushRateLimitStore();
   try {
     const result = await getRadarItems({
       filters,

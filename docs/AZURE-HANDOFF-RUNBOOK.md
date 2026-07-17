@@ -32,7 +32,7 @@ Substituir somente adapters e configuração:
 - IA: `AI_PROVIDER=azure`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION` e segredo em Key Vault.
 - Refresh: Azure Timer/Functions chama o mesmo contrato do endpoint protegido, com identidade gerenciada e sem segredo no código.
 - Autenticação: substituir a sessão provisória por Entra ID, mantendo os papéis de usuário e administrador mapeados por grupo.
-- Rate limit/orçamento: o MVP já oferece adapter `memory`, `file` e `vercel_blob` para o teto diário de IA; na Azure, substituir por Redis/Storage com operação atômica e alertas.
+- Rate limit/orçamento: o MVP já oferece adapters `memory`, `file` e `vercel_blob` para rate limit e teto diário de IA, sem IP bruto, prompts ou respostas; na Azure, substituir por Redis/Storage com operação atômica e alertas.
 
 ## Backup, restore e rollback
 

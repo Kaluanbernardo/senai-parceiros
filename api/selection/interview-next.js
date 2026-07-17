@@ -1,6 +1,6 @@
 import { getSession } from '../../server/lib/cookies.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { isInterviewRateLimited, recordInterviewAttempt } from '../../server/lib/auth.js';
+import { flushRateLimitStore, hydrateRateLimitStore, isInterviewRateLimited, recordInterviewAttempt } from '../../server/lib/auth.js';
 import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
@@ -91,6 +91,7 @@ export default async function handler(req, res) {
   if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
+  await hydrateRateLimitStore({ force: true });
   if (isInterviewRateLimited(req, session)) return res.status(429).json({ error: 'interview_rate_limited' });
 
   try {
@@ -102,6 +103,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invalid_interview_payload' });
     }
     recordInterviewAttempt(req, session);
+    await flushRateLimitStore();
     await hydrateUsageBudget({ force: true });
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
     const local = localFallback(answeredState, 'provider_unavailable');

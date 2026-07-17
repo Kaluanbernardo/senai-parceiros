@@ -1,10 +1,7 @@
 import crypto from 'node:crypto';
 import { createSessionToken, setSessionCookie } from './cookies.js';
+import { rateLimitStore } from './rateLimitStore.js';
 
-const attempts = new Map();
-const selectionAttempts = new Map();
-const interviewAttempts = new Map();
-const radarAttempts = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 const MAX_SELECTION_ATTEMPTS = 12;
@@ -13,90 +10,77 @@ const RADAR_WINDOW_MS = 10 * 60 * 1000;
 const MAX_RADAR_ATTEMPTS = 30;
 
 function clientKey(req) {
-  return String(req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const raw = String(req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 32);
 }
 
 function selectionKey(req, session) {
   return `${clientKey(req)}:${session?.username || 'anonymous'}`;
 }
 
-export function isSelectionRateLimited(req, session) {
-  const key = selectionKey(req, session);
+function check(key, limit, windowMs) {
   const now = Date.now();
-  const record = selectionAttempts.get(key);
+  const record = rateLimitStore.get(key);
   if (!record || record.resetAt <= now) {
-    selectionAttempts.set(key, { count: 0, resetAt: now + WINDOW_MS });
+    rateLimitStore.set(key, { count: 0, resetAt: now + windowMs });
     return false;
   }
-  return record.count >= MAX_SELECTION_ATTEMPTS;
+  return record.count >= limit;
+}
+
+function record(key, windowMs) {
+  const now = Date.now();
+  const current = rateLimitStore.get(key);
+  if (!current || current.resetAt <= now) rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+  else rateLimitStore.set(key, { ...current, count: current.count + 1 });
+}
+
+export function isSelectionRateLimited(req, session) {
+  return check(`selection:${selectionKey(req, session)}`, MAX_SELECTION_ATTEMPTS, WINDOW_MS);
 }
 
 export function recordSelectionAttempt(req, session) {
-  const key = selectionKey(req, session);
-  const now = Date.now();
-  const record = selectionAttempts.get(key);
-  if (!record || record.resetAt <= now) selectionAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  else record.count += 1;
+  record(`selection:${selectionKey(req, session)}`, WINDOW_MS);
 }
 
 export function isInterviewRateLimited(req, session) {
-  const key = selectionKey(req, session);
-  const now = Date.now();
-  const record = interviewAttempts.get(key);
-  if (!record || record.resetAt <= now) {
-    interviewAttempts.set(key, { count: 0, resetAt: now + WINDOW_MS });
-    return false;
-  }
-  return record.count >= MAX_INTERVIEW_ATTEMPTS;
+  return check(`interview:${selectionKey(req, session)}`, MAX_INTERVIEW_ATTEMPTS, WINDOW_MS);
 }
 
 export function recordInterviewAttempt(req, session) {
-  const key = selectionKey(req, session);
-  const now = Date.now();
-  const record = interviewAttempts.get(key);
-  if (!record || record.resetAt <= now) interviewAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  else record.count += 1;
+  record(`interview:${selectionKey(req, session)}`, WINDOW_MS);
 }
 
 export function isRadarRateLimited(req, session) {
-  const key = selectionKey(req, session);
-  const now = Date.now();
-  const record = radarAttempts.get(key);
-  if (!record || record.resetAt <= now) {
-    radarAttempts.set(key, { count: 0, resetAt: now + RADAR_WINDOW_MS });
-    return false;
-  }
-  return record.count >= MAX_RADAR_ATTEMPTS;
+  return check(`radar:${selectionKey(req, session)}`, MAX_RADAR_ATTEMPTS, RADAR_WINDOW_MS);
 }
 
 export function recordRadarAttempt(req, session) {
-  const key = selectionKey(req, session);
-  const now = Date.now();
-  const record = radarAttempts.get(key);
-  if (!record || record.resetAt <= now) radarAttempts.set(key, { count: 1, resetAt: now + RADAR_WINDOW_MS });
-  else record.count += 1;
+  record(`radar:${selectionKey(req, session)}`, RADAR_WINDOW_MS);
 }
 
 export function isLoginRateLimited(req) {
-  const key = clientKey(req);
-  const now = Date.now();
-  const record = attempts.get(key);
-  if (!record || record.resetAt <= now) {
-    attempts.set(key, { count: 0, resetAt: now + WINDOW_MS });
-    return false;
-  }
-  return record.count >= MAX_ATTEMPTS;
+  return check(`login:${clientKey(req)}`, MAX_ATTEMPTS, WINDOW_MS);
 }
 
 export function recordLoginAttempt(req) {
-  const key = clientKey(req);
-  const now = Date.now();
-  const record = attempts.get(key);
-  if (!record || record.resetAt <= now) {
-    attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  } else {
-    record.count += 1;
-  }
+  record(`login:${clientKey(req)}`, WINDOW_MS);
+}
+
+export async function hydrateRateLimitStore({ force = false } = {}) {
+  return rateLimitStore.hydrate({ force });
+}
+
+export async function flushRateLimitStore() {
+  return rateLimitStore.flush();
+}
+
+export function getRateLimitStoreStatus() {
+  return rateLimitStore.status();
+}
+
+export function resetRateLimitsForTests() {
+  rateLimitStore.resetForTests();
 }
 
 function safeEqual(left, right) {

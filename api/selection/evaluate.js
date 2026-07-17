@@ -4,7 +4,7 @@ import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selectio
 import { evaluateWithProvider } from '../../server/lib/ai.js';
 import { getCatalog } from '../../server/lib/catalog.js';
 import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
-import { isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
+import { flushRateLimitStore, hydrateRateLimitStore, isSelectionRateLimited, recordSelectionAttempt } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
@@ -16,6 +16,7 @@ export default async function handler(req, res) {
   if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
+  await hydrateRateLimitStore({ force: true });
   if (isSelectionRateLimited(req, session)) return res.status(429).json({ error: 'selection_rate_limited' });
   try {
     const payload = await readJson(req);
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
     recordSelectionAttempt(req, session);
+    await flushRateLimitStore();
     await hydrateCatalogStore({ force: true });
     await hydrateUsageBudget({ force: true });
     const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
