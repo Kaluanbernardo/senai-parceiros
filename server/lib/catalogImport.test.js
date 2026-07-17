@@ -27,9 +27,17 @@ describe('catalog XLSX import', () => {
     values.nome = 'Instituto de Teste XLSX';
     values.pais = 'Brasil';
     values.areas_temas = 'EPT; indústria 4.0';
+    values.relacao_publica = 'Parceria pública com a indústria';
+    values.evidencias_publicas = 'Relatório institucional; https://example.org/evidencia';
+    values.riscos_sinais = 'não localizado';
     values.website_oficial = 'https://example.org/instituto-xlsx';
     const parsed = await parseCatalogWorkbook({ filename: 'pesquisa.xlsx', contentBase64: await workbookBase64(category, headers.map((header) => values[header])) });
     expect(parsed.errors).toEqual([]);
+    expect(parsed.rows[0].record).toMatchObject({
+      relacao: 'Parceria pública com a indústria',
+      evidencias_publicas: ['Relatório institucional', 'https://example.org/evidencia'],
+      risco: 'não localizado',
+    });
     const preview = previewCatalogImport(parsed, []);
     expect(preview.counts).toMatchObject({ total: 1, new: 1, invalid: 0 });
     const committed = commitCatalogImport(preview.batchId);
