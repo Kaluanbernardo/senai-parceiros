@@ -13,6 +13,7 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { CountryFlag } from '../utils/countryCode';
+import { getDisplayLogoUrl } from '../utils/media';
 
 function InfoRow({ label, children }) {
   return (
@@ -55,7 +56,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
   const subtitle =
     type === 'pesquisador' ? item.instituicao : null;
 
-  const imageUrl = item.logo || undefined;
+  const imageUrl = getDisplayLogoUrl(item.logo) || undefined;
   const initial = title ? title.charAt(0) : '?';
 
   return (

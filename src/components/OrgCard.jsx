@@ -11,10 +11,12 @@ import IconButton from '@mui/material/IconButton';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
+import { getDisplayLogoUrl } from '../utils/media';
 
 export default function OrgCard({ item, onClick }) {
   const [imgError, setImgError] = React.useState(false);
   const initial = item.nome ? item.nome.charAt(0) : '?';
+  const logoUrl = getDisplayLogoUrl(item.logo);
   const areas = item.areas ? item.areas.split(';').slice(0, 3) : [];
   const moreAreas = item.areas ? Math.max(0, item.areas.split(';').length - 3) : 0;
 
@@ -36,14 +38,14 @@ export default function OrgCard({ item, onClick }) {
         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
             <Avatar
-              src={!imgError && item.logo ? item.logo : undefined}
+              src={!imgError && logoUrl ? logoUrl : undefined}
               alt={item.nome}
               onError={() => setImgError(true)}
               sx={{
                 width: 40, height: 40,
-                bgcolor: item.logo && !imgError ? '#fff' : 'primary.light',
+                bgcolor: logoUrl && !imgError ? '#fff' : 'primary.light',
                 fontSize: 18, fontWeight: 700, flexShrink: 0,
-                border: item.logo && !imgError ? '1px solid' : 'none',
+                border: logoUrl && !imgError ? '1px solid' : 'none',
                 borderColor: 'grey.200',
                 '& img': { objectFit: 'contain', width: '70%', height: '70%', imageRendering: 'auto' },
                 overflow: 'hidden',

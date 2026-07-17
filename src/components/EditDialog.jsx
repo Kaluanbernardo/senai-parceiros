@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
+import { getDisplayLogoUrl } from '../utils/media';
 
 const FIELD_CONFIGS = {
   stakeholder: [
@@ -89,7 +90,7 @@ export default function EditDialog({ open, onClose, onSave, item, type, isNew })
     onClose();
   };
 
-  const previewUrl = form.logo;
+  const previewUrl = getDisplayLogoUrl(form.logo);
   const previewName = form.nome || form.instituicao;
 
   return (

@@ -10,6 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
+import { getDisplayLogoUrl } from '../utils/media';
 
 const areaColorMap = {
   'Engenharia': '#1565c0',
@@ -42,6 +43,7 @@ export default function EscolaCard({ item, onClick }) {
   const areas = item.areas ? item.areas.split(';').slice(0, 4) : [];
   const moreCount = item.areas ? item.areas.split(';').length - 4 : 0;
   const initial = item.instituicao ? item.instituicao.charAt(0) : '?';
+  const logoUrl = getDisplayLogoUrl(item.logo);
   const [imgError, setImgError] = React.useState(false);
 
   return (
@@ -50,14 +52,14 @@ export default function EscolaCard({ item, onClick }) {
         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
             <Avatar
-              src={!imgError && item.logo ? item.logo : undefined}
+              src={!imgError && logoUrl ? logoUrl : undefined}
               alt={item.instituicao}
               onError={() => setImgError(true)}
               sx={{
                 width: 40, height: 40,
-                bgcolor: item.logo && !imgError ? '#fff' : 'primary.light',
+                bgcolor: logoUrl && !imgError ? '#fff' : 'primary.light',
                 fontSize: 18, fontWeight: 700, flexShrink: 0,
-                border: item.logo && !imgError ? '1px solid' : 'none',
+                border: logoUrl && !imgError ? '1px solid' : 'none',
                 borderColor: 'grey.200',
                 '& img': { objectFit: 'contain', width: '70%', height: '70%', imageRendering: 'auto' },
                 overflow: 'hidden',

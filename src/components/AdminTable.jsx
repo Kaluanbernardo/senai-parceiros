@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
+import { getDisplayLogoUrl } from '../utils/media';
 
 const COLUMNS = {
   stakeholder: [
@@ -118,7 +119,7 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
       case 'id':
         return <Typography variant="body2" color="text.secondary">{item.id}</Typography>;
       case 'logo': {
-        const url = item.logo;
+        const url = getDisplayLogoUrl(item.logo);
         const name = getNameField(item) || '?';
         return (
           <Avatar
