@@ -55,17 +55,27 @@ function configuredExtraFeeds() {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    const knownSources = new Set(RADAR_SOURCE_POLICY.filter((source) => source.official).map((source) => source.name));
+    const officialSources = new Map(RADAR_SOURCE_POLICY.filter((source) => source.official).map((source) => [source.name, source]));
     return parsed
-      .filter((feed) => feed && knownSources.has(feed.name) && RADAR_SECTION_SET.has(feed.section) && feed.official === true)
-      .map((feed) => ({
-        name: String(feed.name),
-        section: String(feed.section),
-        url: String(feed.url || ''),
-        official: true,
-        geography: String(feed.geography || 'Internacional'),
-      }))
-      .filter((feed) => /^https:\/\//i.test(feed.url));
+      .filter((feed) => feed && officialSources.has(feed.name) && RADAR_SECTION_SET.has(feed.section) && feed.official === true)
+      .map((feed) => {
+        const officialSource = officialSources.get(feed.name);
+        const value = {
+          name: String(feed.name),
+          section: String(feed.section),
+          url: String(feed.url || ''),
+          official: true,
+          geography: String(feed.geography || 'Internacional'),
+        };
+        try {
+          const configuredHost = new URL(value.url).hostname.replace(/^www\./i, '').toLowerCase();
+          const officialHost = new URL(officialSource.url).hostname.replace(/^www\./i, '').toLowerCase();
+          return /^https:\/\//i.test(value.url) && (configuredHost === officialHost || configuredHost.endsWith(`.${officialHost}`)) ? value : null;
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
   } catch {
     return [];
   }

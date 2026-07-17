@@ -29,12 +29,14 @@ describe('radar domain', () => {
   it('accepts only allowlisted official HTTPS feeds from configuration', () => {
     const previous = process.env.RADAR_EXTRA_FEEDS_JSON;
     process.env.RADAR_EXTRA_FEEDS_JSON = JSON.stringify([
+      { name: 'OCDE', section: 'international', url: 'https://www.oecd.org/oecd.xml', official: true, geography: 'Internacional' },
       { name: 'OCDE', section: 'international', url: 'https://example.org/oecd.xml', official: true, geography: 'Internacional' },
       { name: 'Fonte desconhecida', section: 'research', url: 'https://example.org/unknown.xml', official: true },
       { name: 'OIT', section: 'international', url: 'http://insecure.example.org/oit.xml', official: true },
     ]);
     const configured = getRadarFeedPolicy();
-    expect(configured).toContainEqual(expect.objectContaining({ name: 'OCDE', url: 'https://example.org/oecd.xml' }));
+    expect(configured).toContainEqual(expect.objectContaining({ name: 'OCDE', url: 'https://www.oecd.org/oecd.xml' }));
+    expect(configured.some((feed) => feed.url === 'https://example.org/oecd.xml')).toBe(false);
     expect(configured.some((feed) => feed.name === 'Fonte desconhecida')).toBe(false);
     expect(configured.some((feed) => feed.url.startsWith('http://'))).toBe(false);
     if (previous === undefined) delete process.env.RADAR_EXTRA_FEEDS_JSON;
