@@ -14,6 +14,7 @@ function providerConfigured(status) {
 export function getHandoffPreflight(profile = 'corporate') {
   const normalizedProfile = profile === 'mvp' || profile === 'local' ? profile : 'corporate';
   const status = getOperationalStatus();
+  const aiProviderExplicitlySelected = Boolean(String(process.env.AI_PROVIDER || '').trim());
   const checks = normalizedProfile === 'corporate'
     ? [
       check('auth_provider', getAuthProvider() === 'entra', 'AUTH_PROVIDER deve ser entra.'),
@@ -32,7 +33,7 @@ export function getHandoffPreflight(profile = 'corporate') {
       check('public_origin', status.security.publicOriginConfigured, 'PUBLIC_APP_ORIGIN deve estar configurado.'),
       check('session_secret', status.security.sessionSecretConfigured, 'AUTH_SESSION_SECRET deve existir somente no servidor.'),
       check('radar_feeds', status.radar.feeds.ready, 'O manifesto de feeds oficiais precisa estar válido.'),
-      check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.', false),
+      check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.', aiProviderExplicitlySelected),
     ];
 
   const requiredChecks = checks.filter((item) => item.required);

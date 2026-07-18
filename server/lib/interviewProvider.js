@@ -1,165 +1,153 @@
-const DEFAULT_OPENAI_MODEL = 'gpt-5-mini';
-const DEFAULT_OPENROUTER_MODEL = 'openrouter/auto';
-const DEFAULT_TRADEOFF = 7;
+import { generateStructured } from './structuredGeneration.js';
 
+const DEFAULT_OPENROUTER_MODEL = 'openrouter/auto';
 export const INTERVIEW_DIMENSIONS = Object.freeze([
-  'impact',
-  'alignment',
-  'credibility',
-  'collaboration',
-  'feasibility',
-  'risk',
+  'impact', 'alignment', 'credibility', 'collaboration', 'feasibility', 'risk',
+]);
+
+// The model may choose only fields that the brief/ranking already understands.
+// The API applies the category/objective eligibility rules a second time.
+export const INTERVIEW_TARGET_FIELDS = Object.freeze([
+  'context', 'desired_outcome', 'success_indicators', 'themes', 'contribution_types',
+  'audience', 'communication_style', 'partnership_model', 'benchmark_focus',
+  'research_output', 'evidence_preferences', 'geography', 'timeframe',
+  'language_modality', 'budget', 'constraints', 'risk_rules', 'diversity_preferences',
 ]);
 
 export const nextQuestionSchema = Object.freeze({
   type: 'object',
   additionalProperties: false,
-  required: ['shouldStop', 'stopReason', 'question', 'dimensionsCovered', 'factsExtracted', 'remainingGaps'],
+  required: ['shouldStop', 'stopReason', 'targetField', 'prompt', 'helper', 'example', 'answerKind', 'reasonTag', 'dimensionsCovered', 'factsExtracted', 'remainingGaps', 'adaptationExplanation'],
   properties: {
     shouldStop: { type: 'boolean' },
     stopReason: { type: 'string' },
-    question: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['id', 'prompt', 'helper', 'example', 'answerKind', 'reasonTag'],
-      properties: {
-        id: { type: 'string' },
-        prompt: { type: 'string' },
-        helper: { type: 'string' },
-        example: { type: 'string' },
-        answerKind: { type: 'string', enum: ['text', 'textarea', 'multiline'] },
-        reasonTag: { type: 'string' },
-      },
-    },
+    targetField: { type: 'string', enum: INTERVIEW_TARGET_FIELDS },
+    prompt: { type: 'string' },
+    helper: { type: 'string' },
+    example: { type: 'string' },
+    answerKind: { type: 'string', enum: ['text', 'textarea', 'multiline'] },
+    reasonTag: { type: 'string' },
     dimensionsCovered: { type: 'array', items: { type: 'string', enum: INTERVIEW_DIMENSIONS } },
     factsExtracted: { type: 'array', items: { type: 'string' } },
     remainingGaps: { type: 'array', items: { type: 'string' } },
+    adaptationExplanation: { type: 'string' },
   },
 });
 
+function text(value, max = 500) { return String(value || '').trim().slice(0, max); }
+
 function parseContent(content) {
   if (content && typeof content === 'object') return content;
-  const text = String(content || '').trim().replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
-  return JSON.parse(text);
+  const value = String(content || '').trim().replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+  return JSON.parse(value);
 }
 
-function text(value, max = 500) {
-  return String(value || '').trim().slice(0, max);
-}
-
-function normalizeQuestion(value) {
+export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_FIELDS) {
   if (!value || typeof value !== 'object') throw new Error('invalid_structured_output');
-  const question = value.question || {};
+  // Accept the v2 nested contract while emitting the v4 flat contract. This
+  // keeps old mocks and in-flight sessions compatible during the handoff.
+  const nested = value.question && typeof value.question === 'object' ? value.question : value;
+  // Legacy provider responses used an arbitrary question id (for example
+  // `adaptive_publico`) instead of a canonical target field. Keep that id for
+  // compatibility, while routing the response through a safe canonical
+  // field until the provider adopts the new contract.
+  const legacyTarget = typeof nested.id === 'string' && nested.id.startsWith('adaptive_') ? 'audience' : '';
+  const targetField = text(value.targetField || nested.targetField || (INTERVIEW_TARGET_FIELDS.includes(nested.id) ? nested.id : legacyTarget), 80);
   const dimensionsCovered = Array.isArray(value.dimensionsCovered)
-    ? value.dimensionsCovered.filter((item) => INTERVIEW_DIMENSIONS.includes(item))
-    : [];
+    ? value.dimensionsCovered.filter((item) => INTERVIEW_DIMENSIONS.includes(item)) : [];
   const factsExtracted = Array.isArray(value.factsExtracted) ? value.factsExtracted.map((item) => text(item, 180)).filter(Boolean) : [];
   const remainingGaps = Array.isArray(value.remainingGaps) ? value.remainingGaps.map((item) => text(item, 180)).filter(Boolean) : [];
-  const answerKind = ['text', 'textarea', 'multiline'].includes(question.answerKind) ? question.answerKind : 'textarea';
+  const answerKind = ['text', 'textarea', 'multiline'].includes(nested.answerKind) ? nested.answerKind : 'textarea';
   const normalized = {
     shouldStop: Boolean(value.shouldStop),
     stopReason: text(value.stopReason, 300),
+    targetField,
     question: {
-      id: text(question.id, 80),
-      prompt: text(question.prompt, 600),
-      helper: text(question.helper, 500),
-      example: text(question.example, 500),
+      // `id` is deliberately not trusted by the API; it derives a stable id
+      // from turn + targetField. Retaining it here is for backwards clients.
+      id: text(nested.id || targetField, 80),
+      targetField,
+      prompt: text(value.prompt || nested.prompt, 600),
+      helper: text(value.helper || nested.helper, 500),
+      example: text(value.example || nested.example, 500),
       answerKind,
-      reasonTag: text(question.reasonTag, 100),
+      reasonTag: text(value.reasonTag || nested.reasonTag, 100),
     },
     dimensionsCovered,
     factsExtracted,
     remainingGaps,
+    adaptationExplanation: text(value.adaptationExplanation, 300),
   };
-  if (!normalized.shouldStop && (!normalized.question.id || !normalized.question.prompt || !normalized.question.reasonTag)) {
+  if (!normalized.shouldStop && (!allowedTargetFields.includes(normalized.targetField) || !normalized.question.prompt || !normalized.question.reasonTag)) {
     throw new Error('invalid_structured_output');
   }
   return normalized;
 }
 
+function transcriptFor(state) {
+  const source = Array.isArray(state.transcript) ? state.transcript : Array.isArray(state.history) ? state.history : [];
+  let total = 0;
+  const output = [];
+  for (const entry of source.slice(-20)) {
+    const item = {
+      turn: Number(entry.turn || output.length + 1),
+      displayedQuestion: text(entry.displayedQuestion || entry.prompt || entry.question || '', 600),
+      answer: text(entry.answer, 4000),
+      targetField: text(entry.targetField || entry.questionId, 80),
+      dimensions: Array.isArray(entry.dimensions) ? entry.dimensions.filter((d) => INTERVIEW_DIMENSIONS.includes(d)) : [],
+    };
+    const length = JSON.stringify(item).length;
+    if (total + length > 24000) break;
+    output.push(item);
+    total += length;
+  }
+  return output;
+}
+
 function interviewPrompt(state) {
-  const { category, objective, answers, history, askedIds, currentQuestion, lastAnswer, coverage, remainingGaps } = state;
+  const payload = {
+    category: state.category,
+    objective: state.objective,
+    context: text(state.context || state.answers?.context, 2000),
+    transcript: transcriptFor(state),
+    coveredFields: Array.isArray(state.coveredFields) ? state.coveredFields : [],
+    remainingRequiredFields: Array.isArray(state.remainingRequiredFields) ? state.remainingRequiredFields : [],
+    semanticFacts: Array.isArray(state.semanticFacts) ? state.semanticFacts.slice(-20) : [],
+    remainingGaps: Array.isArray(state.remainingGaps) ? state.remainingGaps.slice(-20) : [],
+    askedIds: Array.isArray(state.askedIds) ? state.askedIds : [],
+    currentQuestion: state.currentQuestion ? {
+      prompt: text(state.currentQuestion.prompt, 600),
+      targetField: text(state.currentQuestion.targetField || state.currentQuestion.id, 80),
+    } : null,
+    lastAnswer: text(state.lastAnswer, 4000),
+    limits: { minQuestions: 8, maxQuestions: 20, aggregateCharacters: 24000 },
+  };
   return [
     'Você é o entrevistador adaptativo da ferramenta de stakeholders do SENAI-SP.',
-    'Interprete semanticamente a última resposta e formule apenas a próxima pergunta mais útil para diferenciar candidatos do catálogo.',
-    'O usuário pode ser leigo: use linguagem simples, explique por que a pergunta importa e adapte o exemplo ao contexto real.',
-    'Nunca invente fatos, não recomende stakeholders e não revele raciocínio interno. Responda somente no JSON schema.',
-    'A seleção considera educação profissional de qualidade, desenvolvimento da indústria paulista, inovação, tecnologia, sustentabilidade e desenvolvimento regional.',
-    'Não repita perguntas já respondidas. Se uma informação já estiver clara, aprofunde outra lacuna ou encerre.',
-    'A entrevista deve ter no mínimo 8 e no máximo 20 perguntas; não peça dados privados ou segredos.',
-    JSON.stringify({ category, objective, answers, history, askedIds, currentQuestion, lastAnswer, coverage, remainingGaps }),
+    'Gere uma única próxima pergunta realmente dependente do transcript completo e da última resposta. A pergunta deve diferenciar stakeholders do catálogo.',
+    'Escolha somente um targetField do enum. Não invente fatos, não recomende stakeholders, não repita um campo já coberto e não revele raciocínio interno.',
+    'Use linguagem simples para uma pessoa leiga. Adapte o exemplo ao contexto informado (benchmarking não é evento; escola não é pesquisador). Responda somente no JSON schema.',
+    'Não encerre antes de 8 perguntas ou com campo obrigatório ausente; nunca ultrapasse 20.',
+    JSON.stringify(payload),
   ].join('\n');
 }
 
-async function callProvider({ endpoint, apiKey, model, headers, authHeaders, body, signal, plugins, providerOptions }) {
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    signal,
-    headers: { 'Content-Type': 'application/json', ...(authHeaders || { Authorization: `Bearer ${apiKey}` }), ...headers },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: 'Responda somente JSON válido conforme o schema solicitado.' },
-        { role: 'user', content: body },
-      ],
-      temperature: 0.2,
-      ...(plugins ? { plugins } : {}),
-      ...(providerOptions ? { provider: providerOptions } : {}),
-      response_format: { type: 'json_schema', json_schema: { name: 'adaptive_interview_question', strict: true, schema: nextQuestionSchema } },
-    }),
-  });
-  if (!response.ok) throw new Error(`ai_http_${response.status}`);
-  const payload = await response.json();
-  const content = payload.choices?.[0]?.message?.content;
-  return { result: normalizeQuestion(parseContent(content)), payload };
-}
-
 export async function generateNextQuestionWithProvider(state, { signal } = {}) {
-  const preferred = String(process.env.AI_PROVIDER || '').toLowerCase();
-  const azureEndpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
-  const azureDeployment = encodeURIComponent(process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || '');
-  const azureUrl = azureEndpoint && azureDeployment
-    ? (azureEndpoint.includes('/openai/deployments/') ? `${azureEndpoint}${azureEndpoint.includes('?') ? '&' : '?'}api-version=${encodeURIComponent(process.env.AZURE_OPENAI_API_VERSION || '2024-10-21')}` : `${azureEndpoint}/openai/deployments/${azureDeployment}/chat/completions?api-version=${encodeURIComponent(process.env.AZURE_OPENAI_API_VERSION || '2024-10-21')}`)
-    : '';
-  const providers = preferred === 'azure'
-    ? [{ id: 'azure', key: process.env.AZURE_OPENAI_API_KEY, model: process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || azureDeployment, endpoint: azureUrl }]
-    : preferred === 'openai'
-    ? [{ id: 'openai', key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL, endpoint: 'https://api.openai.com/v1/chat/completions' }]
-    : preferred === 'openrouter'
-      ? [{ id: 'openrouter', key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL, endpoint: 'https://openrouter.ai/api/v1/chat/completions' }]
-      : [
-        { id: 'openai', key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL, endpoint: 'https://api.openai.com/v1/chat/completions' },
-        { id: 'openrouter', key: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL, endpoint: 'https://openrouter.ai/api/v1/chat/completions' },
-      ];
-  const provider = providers.find((item) => item.key && item.endpoint);
-  if (!provider) throw new Error('ai_not_configured');
-  const headers = provider.id === 'openrouter'
-    ? {
-      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://senai-parceiros.vercel.app',
-      'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Parceiros',
-      'X-OpenRouter-Metadata': 'enabled',
-    }
-    : {};
-  const { result, payload } = await callProvider({
-    endpoint: provider.endpoint,
-    apiKey: provider.key,
-    model: provider.model,
-    headers,
-    authHeaders: provider.id === 'azure' ? { 'api-key': provider.key } : undefined,
-    body: interviewPrompt(state),
+  const generated = await generateStructured({
+    task: 'adaptive_interview_question',
+    schema: nextQuestionSchema,
+    messages: [
+      { role: 'system', content: 'Responda somente JSON válido conforme o schema solicitado.' },
+      { role: 'user', content: interviewPrompt(state) },
+    ],
+    maxOutputTokens: 800,
     signal,
-    plugins: provider.id === 'openrouter' ? [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) }] : undefined,
-    providerOptions: provider.id === 'openrouter' ? { require_parameters: true } : undefined,
   });
+  const result = normalizeQuestion(generated.data);
   return {
     ...result,
-    trace: {
-      provider: provider.id,
-      model: payload.model || provider.model,
-      usage: payload.usage || null,
-      costQualityTradeoff: provider.id === 'openrouter' ? Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)) : null,
-    },
+    trace: { ...generated.trace, model: generated.trace.model || process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL },
   };
 }
 
-export { normalizeQuestion };
+export { parseContent };

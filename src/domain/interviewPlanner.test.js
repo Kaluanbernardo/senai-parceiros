@@ -43,6 +43,17 @@ describe('InterviewPlanner', () => {
     expect(event.currentQuestion.prompt).not.toBe(benchmarking.currentQuestion.prompt);
   });
 
+  it('keeps the displayed transcript and maps an adaptive turn to a canonical brief field', () => {
+    let state = start({ category: 'school', objective: 'benchmark' });
+    state = answerAndNext(state, 'Quero comparar currÃ­culos e gestÃ£o com empresas.');
+    const dynamicId = 'adaptive_2_benchmark_focus';
+    const dynamicQuestion = { id: dynamicId, targetField: 'benchmark_focus', prompt: 'Que prÃ¡tica deseja comparar?', label: 'Que prÃ¡tica deseja comparar?', reasonTag: 'aprofundar_benchmark', dimensions: ['alignment'] };
+    state = { ...state, askedIds: [...state.askedIds, dynamicId], questionDefinitions: { ...state.questionDefinitions, [dynamicId]: dynamicQuestion }, currentQuestion: dynamicQuestion };
+    state = InterviewPlanner.answer(state, 'integraÃ§Ã£o entre escola e indÃºstria', dynamicId);
+    expect(state.transcript.at(-1)).toMatchObject({ displayedQuestion: dynamicQuestion.prompt, targetField: 'benchmark_focus' });
+    expect(InterviewPlanner.finalize(state).answers.benchmark_focus).toContain('integraÃ§Ã£o');
+  });
+
   it('prioritizes a discovery follow-up when a required answer is unknown', () => {
     let state = start({ category: 'researcher', objective: 'speaker' });
     state = answerAndNext(state, 'não sei ainda');

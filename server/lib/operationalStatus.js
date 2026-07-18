@@ -41,6 +41,13 @@ export function getOperationalStatus() {
     radar: {
       liveSources: process.env.RADAR_LIVE_SOURCES !== 'false',
       cronConfigured: radarCronConfigured,
+      dou: {
+        enabled: process.env.RADAR_DOU_ENABLED !== 'false',
+        sections: String(process.env.RADAR_DOU_SECTIONS || 'DO1,DO3').split(',').map((value) => value.trim()).filter(Boolean),
+        directProvider: String(process.env.RADAR_DISCOVERY_PROVIDER || 'direct'),
+        extractProvider: String(process.env.RADAR_EXTRACT_PROVIDER || 'tavily'),
+        tavilyConfigured: configured('TAVILY_API_KEY'),
+      },
       store: radarStore,
       feeds: radarFeeds,
     },

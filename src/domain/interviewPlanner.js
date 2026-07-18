@@ -149,8 +149,13 @@ function isUnknown(value) {
   const text = answerText(value);
   return !text || UNKNOWN_PATTERN.test(text);
 }
-function answered(state, id) { return Object.prototype.hasOwnProperty.call(state.answers || {}, id) && !isUnknown(state.answers[id]); }
-function needsFollowUp(state, id) { return Object.prototype.hasOwnProperty.call(state.answers || {}, id) && isUnknown(state.answers[id]); }
+function answerForField(state, id) {
+  if (Object.prototype.hasOwnProperty.call(state.answers || {}, id)) return state.answers[id];
+  const dynamic = Object.entries(state.answers || {}).find(([answerId]) => definitionFor(state, answerId)?.targetField === id);
+  return dynamic ? dynamic[1] : undefined;
+}
+function answered(state, id) { return answerForField(state, id) !== undefined && !isUnknown(answerForField(state, id)); }
+function needsFollowUp(state, id) { return answerForField(state, id) !== undefined && isUnknown(answerForField(state, id)); }
 function toList(value) {
   return answerText(value).split(/[;\n,]/).map((item) => item.trim()).filter(Boolean).filter((item) => !isUnknown(item));
 }
@@ -225,6 +230,7 @@ function questionForState(question, state) {
     : question.prompt;
   return {
     ...question,
+    targetField: question.targetField || question.id,
     category: state.category,
     objective: state.objective,
     context: state.answers?.context || state.context || '',
@@ -274,6 +280,11 @@ export function start({ category, objective, context = '', gaps = [] } = {}) {
     answers: context ? { context: answerText(context) } : {},
     askedIds: context ? ['context'] : [],
     history: [],
+    transcript: [],
+    semanticFacts: [],
+    remainingGaps: [],
+    coveredFields: context ? ['context'] : [],
+    remainingRequiredFields: [],
     questionDefinitions: {},
     gaps: Array.isArray(gaps) ? gaps.filter(Boolean).map(String) : [],
     uncertainties: [],
@@ -296,9 +307,21 @@ export function answer(state, value, questionId = state?.currentQuestion?.id) {
   if (!id || id !== state.currentQuestion.id) return { ...state, validation: { ...validationFor(state), error: 'question_mismatch' } };
   const normalized = answerText(answerValue);
   const answers = { ...state.answers, [id]: (id === 'context' && state.context && !isUnknown(state.context)) ? state.context : normalized };
-  const history = [...state.history, { questionId: id, answer: normalized, unknown: isUnknown(normalized), reasonTag: state.currentQuestion.reasonTag }];
+  const definition = definitionFor(state, id) || state.currentQuestion;
+  const history = [...(state.history || []), {
+    turn: (state.history || []).length + 1,
+    questionId: id,
+    targetField: definition?.targetField || definition?.id || id,
+    displayedQuestion: state.currentQuestion.prompt || state.currentQuestion.label || '',
+    dimensions: Array.isArray(definition?.dimensions) ? definition.dimensions : [],
+    answer: normalized,
+    unknown: isUnknown(normalized),
+    reasonTag: state.currentQuestion.reasonTag,
+  }];
   const uncertainties = isUnknown(normalized) ? addUnique(state.uncertainties, id) : state.uncertainties.filter((item) => item !== id);
-  return { ...state, answers, history, uncertainties, context: answers.context || state.context, validation: validationFor({ ...state, answers }), lastAnswered: id };
+  const next = { ...state, answers, history, transcript: history, uncertainties, context: answers.context || state.context, lastAnswered: id };
+  const validated = validationFor(next);
+  return { ...next, coveredFields: [...new Set(history.filter((item) => !item.unknown).map((item) => item.targetField))], remainingRequiredFields: validated.missing, validation: validated };
 }
 
 export function next(state) {
@@ -309,15 +332,30 @@ export function next(state) {
 export function revise(state, questionId, value) {
   const definition = definitionFor(state, questionId);
   if (!state || !state.askedIds?.includes(questionId) || !definition) return state;
-  const answers = { ...state.answers, [questionId]: answerText(value) };
-  const uncertainties = isUnknown(value) ? addUnique(state.uncertainties, questionId) : state.uncertainties.filter((item) => item !== questionId);
-  return { ...state, answers, uncertainties, status: 'active', currentQuestion: questionForState(definition, { ...state, answers }), validation: validationFor({ ...state, answers }) };
+  const normalized = answerText(value);
+  const answers = { ...state.answers, [questionId]: normalized };
+  const uncertainties = isUnknown(normalized) ? addUnique(state.uncertainties, questionId) : state.uncertainties.filter((item) => item !== questionId);
+  const history = (state.history || []).map((entry) => entry.questionId === questionId
+    ? { ...entry, answer: normalized, unknown: isUnknown(normalized) }
+    : entry);
+  const next = { ...state, answers, history, transcript: history, uncertainties, status: 'active', currentQuestion: questionForState(definition, { ...state, answers }), validation: validationFor({ ...state, answers }) };
+  return { ...next, remainingRequiredFields: next.validation.missing };
 }
 
 export function finalize(state) {
   if (!state) return null;
-  const answers = { ...(state.answers || {}) };
-  const unknowns = [...new Set([...state.uncertainties, ...Object.keys(answers).filter((id) => isUnknown(answers[id]))])];
+  const rawAnswers = { ...(state.answers || {}) };
+  const answers = {};
+  for (const [id, value] of Object.entries(rawAnswers)) {
+    const field = definitionFor(state, id)?.targetField || id;
+    // Prefer the canonical/static answer when both a static and an adaptive
+    // turn addressed the same field. This keeps the ranking contract stable.
+    if (!Object.prototype.hasOwnProperty.call(answers, field) || !isUnknown(answers[field])) answers[field] = value;
+  }
+  const unknowns = [...new Set([
+    ...(state.uncertainties || []).map((id) => definitionFor(state, id)?.targetField || id),
+    ...Object.keys(answers).filter((id) => isUnknown(answers[id])),
+  ])];
   const brief = {
     category: state.category,
     objective: state.objective,
@@ -340,6 +378,7 @@ export function finalize(state) {
     dimensionWeights: { ...DEFAULT_WEIGHTS },
     uncertainties: unknowns,
     answers,
+    rawAnswers,
     planner: { version: INTERVIEW_PLANNER_VERSION, askedIds: [...state.askedIds], questionsAsked: state.askedIds.length, validation: validationFor(state) },
   };
   return brief;

@@ -29,10 +29,25 @@ function validState(state) {
 function coverageFor(state) {
   const dimensions = new Set();
   for (const id of state.askedIds || []) {
-    const question = QUESTION_BANK.find((item) => item.id === id);
+    const question = state.questionDefinitions?.[id] || QUESTION_BANK.find((item) => item.id === id);
     question?.dimensions?.forEach((dimension) => dimensions.add(dimension));
   }
   return [...dimensions];
+}
+
+function targetFieldFor(question) {
+  return String(question?.targetField || question?.id || '').trim();
+}
+
+function eligibleTargetFields(state) {
+  return QUESTION_BANK
+    .filter((question) => {
+      if (question.categories && !question.categories.includes(state.category)) return false;
+      if (question.objectives && !question.objectives.includes(state.objective)) return false;
+      return true;
+    })
+    .map(targetFieldFor)
+    .filter(Boolean);
 }
 
 function localFallback(answeredState, reason = 'provider_unavailable') {
@@ -46,14 +61,27 @@ function localFallback(answeredState, reason = 'provider_unavailable') {
 
 function asQuestion(value, state) {
   if (!value || value.shouldStop) return null;
-  const question = value.question;
+  const question = value.question || value;
   if (!question || typeof question !== 'object') return null;
-  if (!question.id || !question.prompt || !question.reasonTag) return null;
-  if ((state.askedIds || []).includes(question.id)) return null;
-  if (question.prompt.length > 600 || question.helper.length > 500 || question.example.length > 500) return null;
+  const targetField = String(value.targetField || question.targetField || question.id || '').trim();
+  if (!targetField || !eligibleTargetFields(state).includes(targetField) || !question.prompt || !question.reasonTag) return null;
+  const existingDefinition = Object.values(state.questionDefinitions || {}).find((item) => targetFieldFor(item) === targetField);
+  const answerEntry = Object.entries(state.answers || {}).find(([id]) => id === targetField || targetFieldFor(state.questionDefinitions?.[id]) === targetField);
+  const answerText = String(answerEntry?.[1] || '').trim();
+  const alreadyAnswered = Boolean(answerText) && !/^(?:n[aã]o sei|ainda n[aã]o sei|desconhe[cç]o|\?|-)$/i.test(answerText);
+  // Legacy direct-field check retained below for old serialized states.
+  /* // const alreadyAnswered = Object.prototype.hasOwnProperty.call(state.answers || {}, targetField)
+    // && String(state.answers?.[targetField] || '').trim()
+    && !/^(?:n[aã]o sei|ainda n[aã]o sei|desconhe[cç]o|\?|-)$/i.test(String(state.answers[targetField]).trim());
+  */
+  if (existingDefinition && alreadyAnswered) return null;
+  const id = `adaptive_${(state.askedIds || []).length + 1}_${targetField}`;
+  if ((state.askedIds || []).includes(id)) return null;
+  if (question.prompt.length > 600 || String(question.helper || '').length > 500 || String(question.example || '').length > 500) return null;
   const context = state.answers?.context || state.context || '';
   return {
-    id: question.id,
+    id,
+    targetField,
     stage: 'adaptive',
     dimensions: Array.isArray(value.dimensionsCovered) ? value.dimensionsCovered : [],
     kind: question.answerKind || 'textarea',
@@ -79,6 +107,8 @@ function withAdaptiveQuestion(state, question) {
     askedIds,
     questionDefinitions,
     currentQuestion: question,
+    semanticFacts: Array.isArray(state.semanticFacts) ? state.semanticFacts : [],
+    remainingGaps: Array.isArray(state.remainingGaps) ? state.remainingGaps : [],
     status: 'active',
     validation: { ...(state.validation || {}), answered: Object.keys(state.answers || {}).length, maxQuestions: MAX_QUESTIONS },
     progress: { asked: askedIds.length, max: MAX_QUESTIONS },
@@ -120,11 +150,15 @@ export default async function handler(req, res) {
         objective: answeredState.objective,
         answers: answeredState.answers,
         history: answeredState.history,
+        transcript: answeredState.transcript || answeredState.history,
         askedIds: answeredState.askedIds,
         currentQuestion: answeredState.currentQuestion,
         lastAnswer: answer || 'não informado',
         coverage: coverageFor(answeredState),
         remainingGaps: answeredState.validation?.missing || [],
+        coveredFields: answeredState.coveredFields || [],
+        remainingRequiredFields: answeredState.validation?.missing || [],
+        semanticFacts: answeredState.semanticFacts || [],
       }, { signal: controller.signal });
       const budget = await recordAiUsageAtomic('interview', ai.trace?.usage);
       const askedCount = answeredState.askedIds.length;
@@ -134,7 +168,12 @@ export default async function handler(req, res) {
       }
       const question = asQuestion(ai, answeredState);
       if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(local);
-      return res.status(200).json({ state: withAdaptiveQuestion(answeredState, question), question, trace: { ...ai.trace, fallback: false, remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, budget } });
+      const next = withAdaptiveQuestion({
+        ...answeredState,
+        semanticFacts: [...new Set([...(answeredState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
+        remainingGaps: ai.remainingGaps || [],
+      }, question);
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return res.status(200).json(localFallback(answeredState, reason));

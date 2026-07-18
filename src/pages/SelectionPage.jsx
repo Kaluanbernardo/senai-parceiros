@@ -52,6 +52,8 @@ export default function SelectionPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [interviewTrace, setInterviewTrace] = useState([]);
+  const [adaptiveStatus, setAdaptiveStatus] = useState(null);
+  const [adaptiveRetry, setAdaptiveRetry] = useState(null);
 
   const reviewQuestions = useMemo(() => (plannerState?.askedIds || []).map((id) => plannerState?.questionDefinitions?.[id] || QUESTION_BANK.find((item) => item.id === id)).filter(Boolean).map((item) => ({ ...item, label: item.prompt, example: 'Revise a resposta registrada e ajuste apenas o que desejar.' })), [plannerState]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
@@ -66,6 +68,8 @@ export default function SelectionPage() {
     setPlannerState(null);
     setReviewing(false);
     setInterviewTrace([]);
+    setAdaptiveStatus(null);
+    setAdaptiveRetry(null);
   }
 
   function beginInterview() {
@@ -74,6 +78,8 @@ export default function SelectionPage() {
     setQuestionIndex(0);
     setReviewing(false);
     setInterviewTrace([]);
+    setAdaptiveStatus(null);
+    setAdaptiveRetry(null);
     setPlannerState(InterviewPlanner.start({ category, objective }));
   }
 
@@ -109,6 +115,7 @@ export default function SelectionPage() {
     setBusy(true);
     setError('');
     const requestState = { ...state, questionDefinitions: { ...(state.questionDefinitions || {}), [state.currentQuestion?.id]: state.currentQuestion } };
+    setAdaptiveRetry({ state: requestState, answer: answerValue });
     const answeredState = InterviewPlanner.answer(requestState, answerValue, requestState.currentQuestion?.id);
     let nextState = InterviewPlanner.next(answeredState);
     let providerTrace = { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: 'request_failed' };
@@ -134,6 +141,7 @@ export default function SelectionPage() {
       ...providerTrace,
     };
     const nextTrace = [...interviewTrace, traceEntry];
+    setAdaptiveStatus(providerTrace);
     setInterviewTrace(nextTrace);
     setPlannerState(nextState);
     setAnswers(nextState.answers || {});
@@ -203,6 +211,8 @@ export default function SelectionPage() {
     setResult(null);
     setError('');
     setInterviewTrace([]);
+    setAdaptiveStatus(null);
+    setAdaptiveRetry(null);
   }
 
   if (phase === 'results') {
@@ -268,6 +278,21 @@ export default function SelectionPage() {
         <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : 'Pergunta ' + (plannerState?.progress?.asked || 1) + ' de até ' + (plannerState?.progress?.max || 20)} color="primary" variant="outlined" />
       </Stack>
       <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : ((plannerState?.progress?.asked || 1) / (plannerState?.progress?.max || 20)) * 100} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
+      {!reviewing && adaptiveStatus && (
+        <Alert severity={adaptiveStatus.fallback ? 'warning' : 'info'} sx={{ mt: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1}>
+            <Typography variant="body2" sx={{ flex: 1 }}>
+              {adaptiveStatus.fallback
+                ? 'IA indisponível; roteiro local em uso. Você pode continuar e revisar as respostas ao final.'
+                : `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.`}
+            </Typography>
+            {adaptiveStatus.fallback && adaptiveRetry && <>
+              <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
+              <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Continuar localmente</Button>
+            </>}
+          </Stack>
+        </Alert>
+      )}
       <Paper variant="outlined" sx={{ mt: 4, p: { xs: 2.5, md: 5 } }}>
         <Typography variant="h4" sx={{ fontSize: { xs: '1.65rem', md: '2.35rem' } }}>{question.label}</Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>{question.helper}</Typography>

@@ -2,10 +2,6 @@ import { getSession } from '../../server/lib/cookies.js';
 import { getRadarItems, getRadarFeedPolicy, getRadarFeedReadiness, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
 import { consumeRadarAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 
-function bool(value) {
-  return String(value).toLowerCase() === 'true';
-}
-
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
   if (req.method !== 'GET') {
@@ -35,9 +31,12 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'rate_limit_unavailable' });
   }
   try {
+    // Reading the radar is intentionally snapshot-only. External sources are
+    // consulted exclusively by the protected refresh endpoint/cron, so a
+    // visitor never pays the latency or cost of a live collection run.
     const result = await getRadarItems({
       filters,
-      live: process.env.RADAR_LIVE_SOURCES === undefined ? true : bool(process.env.RADAR_LIVE_SOURCES),
+      live: false,
     });
     return res.status(200).json({
       ...result,

@@ -162,7 +162,14 @@ export default function RadarPage() {
                   <Typography variant="h6" sx={{ mt: 1.25, lineHeight: 1.3, overflowWrap: 'anywhere' }}>{item.title}</Typography>
                   {item.originalTitle && item.originalTitle !== item.title && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>Título original: {item.originalTitle}</Typography>}
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.summaryPt}</Typography>
+                  {item.summaryStatus !== 'unavailable' ? (
+                    <>
+                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>Em poucas palavras</Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.summaryPt}</Typography>
+                    </>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">A fonte não disponibilizou um resumo deste item.</Typography>
+                  )}
                   <Stack direction="row" gap={0.6} flexWrap="wrap" sx={{ mt: 1.5 }}>{item.topics.map((topic) => <Chip key={topic} size="small" label={topic} variant="outlined" />)}</Stack>
                   <Tooltip title={item.relevanceExplanation || ''} arrow>
                     <Chip size="small" color="secondary" label={`Relevância ${item.relevanceScore}/100`} sx={{ mt: 1.25 }} />
