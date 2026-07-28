@@ -39,6 +39,41 @@ describe('structured generation boundary', () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it('routes with the auto-router plugin only for the Auto Router', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    const bodies = [];
+    const fetchMock = vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    expect(bodies[0].plugins).toEqual([expect.objectContaining({ id: 'auto-router' })]);
+    expect(bodies[0].provider).toEqual({ require_parameters: true });
+  });
+
+  it('keeps a pinned model instead of letting the auto-router replace it', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    // A free-only setup must not be silently routed to a paid model.
+    process.env.OPENROUTER_MODEL = 'openrouter/free';
+    const bodies = [];
+    const fetchMock = vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    expect(bodies[0].model).toBe('openrouter/free');
+    expect(bodies[0].plugins).toBeUndefined();
+    // The strict schema requirement must survive, so an incompatible free
+    // model degrades to a visible fallback instead of free-form text.
+    expect(bodies[0].provider).toEqual({ require_parameters: true });
+    expect(bodies[0].response_format.json_schema.strict).toBe(true);
+  });
+
   it('normalizes provider failures without leaking response content', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';

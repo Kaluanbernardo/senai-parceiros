@@ -34,6 +34,13 @@ describe('parseEnvFile', () => {
     });
   });
 
+  it('survives the UTF-8 BOM written by Notepad on Windows', () => {
+    // Without this, editing .env.local in Notepad would silently drop the
+    // first variable of the file.
+    const parsed = parseEnvFile('﻿AUTH_SESSION_SECRET=segredo-local-com-mais-de-32-caracteres\n');
+    expect(parsed.AUTH_SESSION_SECRET).toBe('segredo-local-com-mais-de-32-caracteres');
+  });
+
   it('ignores VITE_ names so a secret is never treated as server configuration', () => {
     expect(parseEnvFile('VITE_OPENROUTER_API_KEY=nao-deve-carregar\nOPENROUTER_API_KEY=ok')).toEqual({
       OPENROUTER_API_KEY: 'ok',

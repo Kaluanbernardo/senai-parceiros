@@ -37,7 +37,9 @@ function unquote(rawValue) {
  */
 export function parseEnvFile(content) {
   const parsed = {};
-  for (const line of String(content || '').split(/\r?\n/)) {
+  // Notepad on Windows saves UTF-8 with a BOM, which would otherwise glue
+  // itself to the first variable name and make it disappear silently.
+  for (const line of String(content || '').replace(/^\uFEFF/, '').split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
     const match = trimmed.replace(/^export\s+/, '').match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);

@@ -73,12 +73,23 @@ function providerHeaders(provider) {
   };
 }
 
-function providerOptions(provider) {
+/**
+ * `require_parameters` keeps routing restricted to providers that accept the
+ * strict JSON schema, so an incompatible model degrades to a visible fallback
+ * instead of returning free-form text.
+ *
+ * The auto-router plugin only applies to the Auto Router itself: sending it
+ * alongside a pinned model lets OpenRouter route somewhere else, which would
+ * silently defeat a deliberate choice of model — including a free-only setup.
+ */
+function providerOptions(provider, model) {
   if (provider !== 'openrouter') return {};
+  const base = { provider: { require_parameters: true } };
+  if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
   const tradeoff = Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF))));
   return {
+    ...base,
     plugins: [{ id: 'auto-router', cost_quality_tradeoff: tradeoff }],
-    provider: { require_parameters: true },
   };
 }
 
@@ -95,7 +106,7 @@ export async function generateStructured({ task = 'structured_generation', schem
   let lastError = null;
   for (const provider of providers) {
     try {
-      const options = providerOptions(provider.id);
+      const options = providerOptions(provider.id, provider.model);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,
