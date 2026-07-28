@@ -5,10 +5,19 @@ function check(id, ok, message, required = true) {
   return { id, ok: Boolean(ok), required, message };
 }
 
+/**
+ * Mirror the provider order of `structuredGeneration.js`.  Selecting a
+ * provider explicitly disables the cross-provider fallback there, so a
+ * preflight that accepted any configured credential would report green while
+ * every generation failed with `ai_not_configured` and dropped to the local
+ * script.
+ */
 function providerConfigured(status) {
-  if (status.ai.provider === 'azure') return status.ai.azureConfigured;
-  if (status.ai.provider === 'openai') return status.ai.openaiConfigured || status.ai.openrouterConfigured;
-  return status.ai.openrouterConfigured || status.ai.openaiConfigured;
+  const selected = String(process.env.AI_PROVIDER || '').trim().toLowerCase();
+  if (selected === 'azure') return status.ai.azureConfigured;
+  if (selected === 'openrouter') return status.ai.openrouterConfigured;
+  if (selected === 'openai') return status.ai.openaiConfigured || status.ai.openrouterConfigured;
+  return status.ai.openaiConfigured || status.ai.openrouterConfigured;
 }
 
 export function getHandoffPreflight(profile = 'corporate') {

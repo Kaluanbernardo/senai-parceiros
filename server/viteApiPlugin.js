@@ -12,6 +12,7 @@ import catalogImportRollback from './routes/admin/catalog-import-rollback.js';
 import catalogImportBatches from './routes/admin/catalog-import-batches.js';
 import adminStatus from './routes/admin/status.js';
 import catalog from '../api/catalog.js';
+import { loadServerEnv } from './lib/envFile.js';
 
 const handlers = {
   '/api/auth/login': login,
@@ -48,6 +49,11 @@ function adaptResponse(res) {
 
 export default function viteApiPlugin() {
   const useApiHandlers = (server) => {
+    // Vite exposes `.env.local` through `import.meta.env`, which the Node
+    // handlers never read.  Loading it into `process.env` only while serving
+    // keeps local development aligned with Vercel and never touches the
+    // client bundle.
+    loadServerEnv({ cwd: server.config?.root || process.cwd() });
     server.middlewares.use(async (req, res, next) => {
       const path = String(req.url || '').split('?')[0];
       const handler = handlers[path];

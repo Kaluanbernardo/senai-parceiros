@@ -39,13 +39,23 @@ Arquivos de entrada mais importantes:
 
 ## Validação feita neste handoff
 
-- `vitest run`: passou — 36 arquivos, 121 testes.
+- `vitest run`: passou — 37 arquivos, 128 testes.
 - `vite build`: passou.
 - `node scripts/handoff-preflight.mjs --profile=mvp`: executou e retornou bloqueio esperado de configuração:
   - `PUBLIC_APP_ORIGIN` ausente;
-  - `AUTH_SESSION_SECRET` ausente.
+  - `OPENROUTER_API_KEY` ausente, com `AI_PROVIDER=openrouter` selecionado.
 - O comando global `npm` deste ambiente está quebrado (`npm-cli.js` ausente); os gates acima foram executados diretamente pelos binários locais, fora da limitação do sandbox.
 - O build emitiu apenas o alerta de chunks grandes, não uma falha.
+- O `dist/` foi varrido e não contém nome nem valor de segredo.
+
+### Correção de 28/07/2026 no preflight
+
+Os dois bloqueios anteriores estavam incorretos e foram resolvidos:
+
+- `AUTH_SESSION_SECRET` já estava preenchido em `.env.local`, mas o Vite carrega esse arquivo apenas em `import.meta.env`. Os handlers de API e o preflight rodam em Node e leem `process.env`, então o segredo era invisível para ambos. `server/lib/envFile.js` passou a carregar `.env.local`/`.env` no ambiente do servidor, sem sobrescrever valores já definidos pelo deploy e ignorando nomes `VITE_`.
+- O check `ai_provider` aceitava a credencial de qualquer provider, enquanto `server/lib/structuredGeneration.js` não faz fallback cruzado quando `AI_PROVIDER` está explícito. Com OpenRouter selecionado e sem chave, o preflight reportava verde e toda geração caía em fallback local. O check agora espelha a ordem real de seleção.
+
+Para validar o MVP localmente, definir `PUBLIC_APP_ORIGIN` e `OPENROUTER_API_KEY` apenas em `.env.local` (ignorado pelo Git) ou no ambiente do processo.
 
 ## Estado local que deve ser preservado
 
