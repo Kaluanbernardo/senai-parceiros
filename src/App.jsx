@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -13,19 +13,24 @@ import Stack from '@mui/material/Stack';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import HomePage from './pages/HomePage';
-import CatalogHomePage from './pages/CatalogHomePage';
 import LoginPage from './pages/LoginPage';
-import SelectionPage from './pages/SelectionPage';
-import PromptGeneratorPage from './pages/PromptGeneratorPage';
-import AdminPage from './pages/AdminPage';
-import EscolasUnificadaPage from './pages/EscolasUnificadaPage';
-import OrganizacoesPage from './pages/OrganizacoesPage';
-import PesquisadoresPage from './pages/PesquisadoresPage';
-import RadarPage from './pages/RadarPage';
 import { useAuth } from './context/AuthContext';
+import { useData } from './context/DataContext';
 import { getNavTools } from './app/toolRegistry';
 import { getToolIcon } from './app/toolIcons';
+
+// Each route loads on demand so the first paint carries only the shell, the
+// login screen and the seed catalog.  LoginPage stays eager: `Protected`
+// renders it synchronously for every signed-out visitor.
+const HomePage = lazy(() => import('./pages/HomePage'));
+const CatalogHomePage = lazy(() => import('./pages/CatalogHomePage'));
+const SelectionPage = lazy(() => import('./pages/SelectionPage'));
+const PromptGeneratorPage = lazy(() => import('./pages/PromptGeneratorPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const EscolasUnificadaPage = lazy(() => import('./pages/EscolasUnificadaPage'));
+const OrganizacoesPage = lazy(() => import('./pages/OrganizacoesPage'));
+const PesquisadoresPage = lazy(() => import('./pages/PesquisadoresPage'));
+const RadarPage = lazy(() => import('./pages/RadarPage'));
 
 const navigation = [
   { path: '/', label: 'Início', icon: <HomeOutlinedIcon />, matchPrefix: '/' },
@@ -63,17 +68,27 @@ function AppShell({ children }) {
           </Stack>
         </Box>
       </AppBar>
-      <Box component="main" sx={{ flex: 1, bgcolor: 'background.default' }}>{children}</Box>
+      <Box component="main" sx={{ flex: 1, bgcolor: 'background.default' }}>
+        <Suspense fallback={<PageFallback />}>{children}</Suspense>
+      </Box>
       <Box component="footer" sx={{ py: 2, px: 2, textAlign: 'center', bgcolor: 'primary.dark', color: 'rgba(255,255,255,.65)', fontSize: '.78rem' }}>SENAI-SP · Gerência de Educação · Ferramenta pública de MVP</Box>
     </Box>
   );
 }
 
+function PageFallback() {
+  return <Box sx={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}><CircularProgress /></Box>;
+}
+
 function Protected({ children, adminOnly = false }) {
   const { user, loading } = useAuth();
+  const { catalogReady } = useData();
   if (loading) return <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><CircularProgress /></Box>;
   if (!user) return <LoginPage />;
   if (adminOnly && user.role !== 'admin') return <Navigate to="/" replace />;
+  // The seed catalog arrives in its own chunk; every page behind this gate reads
+  // it, so waiting here keeps empty lists from flashing as real results.
+  if (!catalogReady) return <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><CircularProgress /></Box>;
   return children;
 }
 
@@ -92,7 +107,7 @@ export default function App() {
       <Route path="/catalogo/pesquisadores" element={<InShell><PesquisadoresPage /></InShell>} />
       <Route path="/catalogo/escolas" element={<InShell><EscolasUnificadaPage /></InShell>} />
       <Route path="/catalogo/organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />
-      <Route path="/admin" element={<Protected adminOnly><AdminPage /></Protected>} />
+      <Route path="/admin" element={<Protected adminOnly><Suspense fallback={<PageFallback />}><AdminPage /></Suspense></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

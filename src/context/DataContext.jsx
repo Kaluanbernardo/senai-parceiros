@@ -1,12 +1,29 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import stakeholdersRaw from '../data/stakeholders.json';
-import escolasRaw from '../data/escolas.json';
-import pesquisadoresRaw from '../data/pesquisadores.json';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { canonicalizeResearchers, resolveResearcherId } from '../domain/researcherCatalog';
 import { useAuth } from './AuthContext';
 
 const DataContext = createContext();
-const researcherCatalog = canonicalizeResearchers(pesquisadoresRaw);
+
+/**
+ * The three seed catalogs weigh ~730 kB of JSON.  Loading them on demand keeps
+ * them out of the entry chunk, so a signed-out visitor never downloads the
+ * catalog just to see the login screen.  `catalogReady` gates the pages that
+ * consume the seeds, which is why no screen can render an empty list while the
+ * chunk is still in flight.
+ */
+async function loadSeedCatalog() {
+  const [stakeholders, escolas, pesquisadores] = await Promise.all([
+    import('../data/stakeholders.json'),
+    import('../data/escolas.json'),
+    import('../data/pesquisadores.json'),
+  ]);
+  const researcherCatalog = canonicalizeResearchers(pesquisadores.default);
+  return {
+    stakeholdersRaw: stakeholders.default,
+    escolasRaw: escolas.default,
+    researcherCatalog,
+  };
+}
 
 function recordKey(record) {
   if (record?.id !== undefined && record?.id !== null) return `id:${String(record.id)}`;
@@ -33,11 +50,19 @@ function upsertRecords(previous, incoming = []) {
 
 export function DataProvider({ children }) {
   const { user } = useAuth();
-  const [stakeholders, setStakeholders] = useState(() => [...stakeholdersRaw]);
-  const [escolas, setEscolas] = useState(() => [...escolasRaw]);
-  const [pesquisadores, setPesquisadores] = useState(() => researcherCatalog.records);
+  const [stakeholders, setStakeholders] = useState([]);
+  const [escolas, setEscolas] = useState([]);
+  const [pesquisadores, setPesquisadores] = useState([]);
+  const [catalogReady, setCatalogReady] = useState(false);
+  const seedsRef = useRef(null);
+
+  const ensureSeeds = useCallback(async () => {
+    if (!seedsRef.current) seedsRef.current = await loadSeedCatalog();
+    return seedsRef.current;
+  }, []);
 
   const refreshCatalog = useCallback(async () => {
+    const { stakeholdersRaw, escolasRaw, researcherCatalog } = await ensureSeeds();
     const response = await fetch('/api/catalog', { credentials: 'include' });
     if (!response.ok) throw new Error('catalog_unavailable');
     const payload = await response.json();
@@ -47,21 +72,33 @@ export function DataProvider({ children }) {
     setStakeholders(upsertRecords([...stakeholdersRaw], payload.records.organization));
     setEscolas(upsertRecords([...escolasRaw], payload.records.school));
     setPesquisadores(canonicalizeResearchers(upsertRecords(researcherCatalog.records, payload.records.researcher)).records);
-  }, []);
+  }, [ensureSeeds]);
 
   useEffect(() => {
     if (!user) {
-      setStakeholders([...stakeholdersRaw]);
-      setEscolas([...escolasRaw]);
-      setPesquisadores(researcherCatalog.records);
+      setCatalogReady(false);
+      setStakeholders([]);
+      setEscolas([]);
+      setPesquisadores([]);
       return undefined;
     }
-    refreshCatalog()
-      .catch(() => {
+    let active = true;
+    ensureSeeds()
+      .then(({ stakeholdersRaw, escolasRaw, researcherCatalog }) => {
+        if (!active) return undefined;
+        setStakeholders([...stakeholdersRaw]);
+        setEscolas([...escolasRaw]);
+        setPesquisadores(researcherCatalog.records);
+        setCatalogReady(true);
         // The seed catalog remains useful when the durable store is unavailable.
+        return refreshCatalog().catch(() => undefined);
+      })
+      .catch(() => {
+        // Without the seeds there is nothing to show; keep the loading gate closed
+        // rather than rendering empty catalogs as if they were real results.
       });
-    return undefined;
-  }, [user, refreshCatalog]);
+    return () => { active = false; };
+  }, [user, ensureSeeds, refreshCatalog]);
 
   // Generic CRUD helpers
   const updateItem = useCallback((collection, setCollection, id, updates) => {
@@ -129,6 +166,7 @@ export function DataProvider({ children }) {
 
   const value = {
     stakeholders, escolas, pesquisadores,
+    catalogReady,
     researcherAliases,
     resolveResearcherId: (id) => resolveResearcherId(pesquisadores, id),
     updateStakeholder, addStakeholder, deleteStakeholder,
