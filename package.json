@@ -7,7 +7,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "radar:feeds:audit": "node scripts/audit-official-feeds.mjs",
+    "handoff:preflight": "node scripts/handoff-preflight.mjs",
+    "handoff:preflight:corporate": "node scripts/handoff-preflight.mjs --profile=corporate",
+    "handoff:preflight:mvp": "node scripts/handoff-preflight.mjs --profile=mvp"
   },
   "keywords": [],
   "author": "",
@@ -17,13 +23,16 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
+    "@vercel/blob": "^2.6.1",
+    "exceljs": "^4.4.0",
     "flag-icons": "^7.5.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.0"
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,0 +1,168 @@
+# Plano canônico de produto e execução — Luna v3
+
+Atualizado em 17/07/2026. Este é o mapa vigente do próximo ciclo. Em caso de conflito, ele prevalece sobre `ARQUITETURA-v2-feedbacks.md`, `PLANO-ONDAS-2-6.md`, `HANDOFF-LUNA-v2.md` e decisões históricas sobre fotos.
+
+## Objetivo do ciclo
+
+Entregar uma ferramenta pública de MVP realmente funcional para profissionais da Gerência de Educação do SENAI-SP que:
+
+1. ajuda uma pessoa leiga a descobrir e estruturar sua necessidade;
+2. formula cada nova pergunta a partir do significado das respostas anteriores;
+3. recomenda de 5 a 10 pesquisadores, escolas ou organizações já cadastrados;
+4. mostra diferenças, evidências, riscos, lacunas e rastreabilidade completa;
+5. exporta uma planilha XLSX rica, sem persistir entrevista ou resultado;
+6. importa para o catálogo planilhas XLSX geradas por pesquisas orientadas pelo Gerador de Prompt;
+7. mantém um radar alimentado por fontes acadêmicas, governamentais e internacionais;
+8. preserva fronteiras substituíveis para futura migração ao Azure do SENAI-SP.
+
+### Feature adicionada ao escopo — importação de stakeholders
+
+**Importação de stakeholders via XLSX** é parte do fluxo principal, não um utilitário isolado. O profissional deve conseguir usar o Gerador de Prompt para orientar uma pesquisa externa, receber uma planilha estruturada com as mesmas colunas do catálogo e, no painel administrativo, importar esse arquivo com prévia, validação, deduplicação, decisões por linha, confirmação, histórico e rollback. O contrato compartilhado deve ser a fonte única para o prompt, o template, o importador e o catálogo; nenhum campo de foto/avatar pode ser criado para pesquisadores.
+
+O Gerador de Prompt deve orientar um output diretamente importável: uma aba `Stakeholders` com uma entidade por linha e as colunas do tipo escolhido (`researcher`, `school` ou `organization`), mais uma aba `Metadados` para contexto, critérios, limitações, fontes consultadas e data da pesquisa. Os campos precisam cobrir não só identidade e descrição, mas também aderência ao contexto, evidências, proveniência, confiança e lacunas — elementos usados pelo catálogo e pela seleção para diferenciar candidatos. Essa definição vive em `src/domain/catalogImportSchema.js` e não deve ser duplicada na UI ou em prompts alternativos.
+
+### Critério adicional — o XLSX precisa alimentar o catálogo, não apenas armazenar pesquisa
+
+O resultado do Gerador de Prompt deve ser imediatamente útil para a busca e para a seleção. Além da identidade e da descrição, cada linha importável precisa preservar os sinais que o catálogo usa para diferenciar candidatos:
+
+- relação pública com o SENAI-SP ou com a indústria, quando existir;
+- temas, áreas de atuação e aderência ao contexto pesquisado;
+- evidências e URLs por afirmação relevante;
+- confiança, data de consulta e lacunas/dados não localizados;
+- sinais de risco ou conflito de interesse, sem transformar inferência em fato;
+- identificadores estáveis para deduplicação (Scholar/ORCID/OpenAlex para pesquisadores; domínio/identificador público para escolas e organizações).
+
+Esses campos devem ser representados no contrato versionado e mapeados para os campos canônicos consumidos por `selectionEngine`, `schoolCatalog` e `researcherCatalog`. Se uma coluna nova for necessária, ela deve ser criada no schema compartilhado e refletida ao mesmo tempo no prompt, no template, no parser, na prévia, no catálogo e nos testes de round-trip.
+
+## Estado confirmado do produto
+
+### Concluído ou suficientemente encaminhado
+
+- autenticação do MVP com papéis de usuário e administrador;
+- navegação principal por ferramentas: Início, Seleção, Catálogo, Radar e Prompt;
+- Home sem privilegiar uma única feature;
+- catálogo unificado com pesquisadores, escolas e organizações;
+- auditoria de produção sem nomes canônicos repetidos: variantes cross-source e multilíngues de escolas usam alias com domínio/país, enquanto redes e escopos distintos permanecem separados;
+- gerador de prompt para deep research com saída estruturada;
+- shortlist local com testes para 5 a 10 resultados, diversidade e risco grave;
+- matriz com tratamento de sobreposição e radar comparativo/individual;
+- interface com um único botão de exportação XLSX e workbook de nove abas;
+- pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia;
+- 92 testes automatizados aprovados, preflight MVP com `ok: true`, build de produção aprovado e preview Vercel confirmado como `Ready` na execução atual.
+
+### Lacunas críticas remanescentes
+
+As lacunas corporativas abaixo são preparação para a migração futura e não bloqueiam o MVP público atual.
+
+1. O ranking já recebe o briefing e faz pré-seleção diversa para a IA, mas ainda precisa de calibração com casos reais para ampliar a diferença entre trade-offs.
+2. A importação XLSX já tem contrato compartilhado, template, prévia, decisões por linha, idempotência, histórico, rollback protegido contra conflito e reidratação do catálogo após login; há adapters `file` e `vercel_blob` privados, faltando apenas configurar credencial corporativa/Blob Store.
+3. O Radar já consulta fontes RSS e páginas HTML institucionais allowlisted, OpenAlex e Crossref, mantém snapshot válido, status por fonte e endpoint de refresh protegido por cron; há adapter `file`/`vercel_blob` e allowlist adicional configurável por `RADAR_EXTRA_FEEDS_JSON`, faltando cadastrar e revisar os feeds corporativos definitivos.
+4. A remoção de PDF, Word e PowerPoint foi aplicada ao fluxo e às dependências diretas; a limpeza de artefatos históricos deve ser confirmada no handoff.
+5. O adapter server-side Entra ID já valida assinatura RS256, JWKS, tenant, audiência, emissor, expiração, `nbf` e grupos, e troca o token por sessão HttpOnly em `POST /api/auth/entra`; ainda faltam o registro corporativo do aplicativo/grupos e a ativação por variáveis de ambiente. Rate limit e teto diário de IA já possuem caminhos atômicos server-only (`file` com lock e `vercel_blob` com CAS/retry), e o adapter de alertas HTTPS sanitizados está pronto, faltando apenas a configuração corporativa.
+
+## Decisões de produto vigentes
+
+- A seleção de stakeholders é a feature principal; Radar é complementar.
+- A primeira escolha é sempre: pesquisador, escola ou outra organização.
+- A IA formula a próxima pergunta, mas regras determinísticas controlam cobertura, limites, segurança e encerramento.
+- A entrevista deve ter entre 8 e 20 perguntas, variando conforme clareza, incertezas e respostas.
+- Exemplos devem usar a categoria, objetivo e contexto atuais; escola para benchmarking não recebe exemplo de palestra sobre IA.
+- Ranking limitado ao catálogo cadastrado, com shortlist normal de 5 a 10. Candidatos eliminados ou com risco grave não podem ser reintroduzidos apenas para completar cinco.
+- Matriz principal: valor estratégico × viabilidade. Radar: impacto, alinhamento, credibilidade, colaboração, viabilidade e risco controlado.
+- Risco grave confirmado zera o valor estratégico e registra a regra aplicada.
+- Nada da entrevista, ranking ou resultado é persistido. A pessoa pode revisar respostas e exportar a rastreabilidade.
+- Pesquisadores permanecem sem qualquer mídia de perfil. Google Scholar serve apenas para identidade, afiliação e produção.
+- Apenas informações públicas entram no catálogo e no Radar.
+- Importação XLSX é exclusiva do administrador, sempre passa por prévia e não sobrescreve registros automaticamente.
+- O Gerador de Prompt e o importador usam o mesmo schema versionado; mudanças de colunas não podem ocorrer em apenas um dos lados.
+- A aplicação nunca recebe credenciais pessoais no código. Segredos ficam somente no servidor e devem ser removidos/rotacionados no handoff.
+
+## Estratégia de IA
+
+Fronteira única no servidor:
+
+```text
+AiProvider.generateNextQuestion(interviewState)
+AiProvider.evaluateCandidates(selectionBrief, candidates)
+AiProvider.classifyRadarItem(publicItem)  // etapa posterior e opcional
+```
+
+Ordem de configuração:
+
+1. OpenAI Platform API, somente se existir `OPENAI_API_KEY` com faturamento próprio de API;
+2. OpenRouter (`openrouter/auto`) quando a OpenAI Platform não estiver disponível;
+3. planejador e avaliador locais como fallback seguro.
+
+A assinatura pessoal do ChatGPT não fornece automaticamente créditos ou uma chave utilizável pela aplicação. O Luna deve detectar apenas a presença das variáveis, nunca imprimir seus valores.
+
+## Fronteira executável
+
+Os tickets abaixo são o trabalho pronto para execução. A ordem indicada por dependências deve ser respeitada; itens sem dependência entre si podem ser paralelizados.
+
+1. [Estabelecer baseline e contratos de regressão](luna-v3/00-baseline-e-contratos.md) — primeiro ticket obrigatório.
+2. [Tornar a entrevista semanticamente adaptativa](luna-v3/01-entrevista-adaptativa.md) — bloqueado pelo baseline.
+3. [Aprofundar avaliação e diferenciação da shortlist](luna-v3/02-avaliacao-e-shortlist.md) — bloqueado pela entrevista adaptativa.
+4. [Canonizar e deduplicar pesquisadores e escolas](luna-v3/03-catalogos-canonicos.md) — bloqueado pelo baseline; pode avançar em paralelo com a entrevista. A próxima revisão deve cobrir duplicatas semânticas residuais por identificador, domínio e variantes multilíngues.
+5. [Importar stakeholders de planilhas XLSX](luna-v3/03b-importacao-xlsx.md) — bloqueado pelos catálogos canônicos; atualiza também o Gerador de Prompt.
+6. [Colocar o Radar em ingestão real](luna-v3/04-radar-real.md) — bloqueado pelo baseline; pode avançar em paralelo, sem atrasar a seleção.
+7. [Consolidar XLSX, segurança e handoff Azure](luna-v3/05-xlsx-hardening-azure.md) — bloqueado pela shortlist, pelos catálogos e pela importação; a parte Azure final também depende do Radar.
+
+## Ordem de valor recomendada
+
+1. Entrevista adaptativa.
+2. Diferenciação e rastreabilidade do ranking.
+3. Deduplicação dos catálogos.
+4. Importação XLSX integrada ao Gerador de Prompt.
+5. Radar real com um thin slice por seção.
+6. Remoção dos exportadores legados e hardening Azure.
+
+## Gates comuns
+
+Cada ticket termina somente quando:
+
+- testes novos e antigos passam;
+- `npm run build` passa;
+- smoke funcional e visual cobre desktop e celular;
+- nenhum segredo, resposta de entrevista ou resultado é persistido ou enviado ao frontend indevidamente;
+- falha de IA ou fonte externa mantém fallback útil;
+- diff é revisado e arquivos temporários não relacionados permanecem fora do commit;
+- há commit coeso e push da branch;
+- preview Vercel é publicado somente depois dos gates locais; produção exige solicitação explícita.
+
+## Definição de pronto do ciclo
+
+- duas respostas semanticamente distintas produzem próximas perguntas materialmente distintas;
+- entrevista vaga aprofunda e entrevista completa evita redundância, sempre entre 8 e 20 perguntas;
+- shortlist contém possibilidades realmente diferentes e explica seus trade-offs;
+- nenhuma pessoa ou escola canônica aparece duas vezes no catálogo ou ranking; a auditoria deve cobrir também registros de fontes diferentes com o mesmo domínio oficial e nomes multilíngues;
+- uma pesquisa orientada pelo Gerador de Prompt produz um XLSX aceito pelo importador, com prévia, deduplicação, idempotência e persistência quando o adapter durável está configurado;
+- XLSX permite reconstruir briefing, pesos, notas, evidências, lacunas, exclusões e proveniência;
+- as três seções do Radar exibem itens externos atuais, clicáveis e deduplicados;
+- troca futura de OpenRouter/Vercel por provider e infraestrutura Azure ocorre por adapters e configuração;
+- nenhum pesquisador volta a exibir foto, avatar, iniciais ou placeholder de mídia.
+
+## Estado de execucao em 17/07/2026
+
+As ondas de baseline, entrevista adaptativa, catálogos canônicos, importação XLSX e ingestão RSS foram implementadas nesta branch. A seleção agora registra diferenciais comparativos, trade-offs, calibração por objetivo e pré-seleção diversa para o provider; a entrevista consulta OpenAI Platform ou OpenRouter no servidor, com fallback local, sem persistir respostas. O Gerador de Prompt e o importador compartilham o contrato `senai_catalog_v1`, a importação é idempotente e auditável, o Radar mantém snapshot e refresh protegido, o orçamento de IA possui adapter durável opcional, e a exportação da seleção ficou restrita a uma planilha rica XLSX.
+
+Em 17/07/2026, o Radar recebeu um gate editorial de novidade: somente itens datados dos últimos 12 meses e com sinal temático real entram na leitura. OpenAlex passou a usar janela de publicação válida; a OCDE é coletada por metadados DOI públicos; relevância é explicada como aderência temática (0–50), recência (0–30) e qualidade da fonte (0–20). O catálogo combinado passou a preferir a Rede Federal nacional aos dois CEFETs individuais, a interface removeu avatares de iniciais e os nomes institucionais conhecidos seguem `SIGLA (nome extenso)`.
+
+### Proximos passos para o Luna
+
+1. Fechar avaliação e shortlist: fazer as notas diferenciarem trade-offs, risco, evidências e lacunas, mantendo de 5 a 10 resultados somente do catálogo.
+2. Manter a auditoria de deduplicação como gate de importações futuras: usar domínio/país para aliases ambíguos e não fundir redes, regionais ou unidades locais distintas.
+3. Ampliar a allowlist editorial do Radar e evoluir a atualização automática de perfis públicos com proveniência e aprovação.
+4. Executar smoke visual desktop/mobile e validação operacional final antes de cada preview Vercel.
+5. Na migração futura, configurar `vercel_blob`/Azure Storage, Entra ID, rate limit compartilhado, alertas e o runbook de rotação/backup/restore.
+
+O fluxo de **importação de stakeholders** é parte da entrega atual: o Gerador de Prompt orienta a pesquisa para produzir o schema `senai_catalog_v1`; o administrador importa o XLSX, revisa a prévia, resolve duplicidades, confirma o lote e pode consultar histórico ou fazer rollback. A mesma definição de colunas deve permanecer como fonte única no prompt, no template, na prévia, no catálogo e na exportação da seleção.
+
+O item 2 e o item 3 sao um unico fluxo de produto: qualquer mudanca de coluna deve ser feita no contrato compartilhado e refletida simultaneamente no prompt, no template XLSX, na previa e no catalogo canonico.
+
+## Fog — decisões que não bloqueiam o próximo ticket
+
+- banco definitivo do Radar no MVP e serviço equivalente na Azure;
+- allowlist editorial final e responsáveis por revisar itens em quarentena;
+- parâmetros corporativos de Entra ID, rede, observabilidade e retenção;
+- templates oficiais de planilha e relatórios, quando forem enviados pelo usuário;
+- atualização automática dos perfis públicos, que entra depois da estabilidade da seleção e do Radar; deve usar job agendado, fontes allowlisted, diffs/proveniência, os mesmos aliases de deduplicação e aprovação antes de sobrescrever o catálogo, sem fotos ou dados privados.

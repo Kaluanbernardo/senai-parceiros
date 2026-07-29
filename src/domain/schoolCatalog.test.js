@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+import { mergeSchoolSources } from './schoolCatalog';
+import schools from '../data/escolas.json';
+import stakeholders from '../data/stakeholders.json';
+
+describe('school catalog', () => {
+  it('merges SENAI/SENAC variants while preserving source provenance', () => {
+    const records = mergeSchoolSources({
+      schools: [
+        { id: 1, instituicao: 'Serviço Nacional de Aprendizagem Industrial', pais: 'Brasil', website: 'https://portaldaindustria.com.br/senai', relevancia: 'rede' },
+        { id: 2, instituicao: 'Serviço Nacional de Aprendizagem Comercial', pais: 'Brasil', website: 'https://senac.br', relevancia: 'rede' },
+      ],
+      stakeholders: [
+        { id: 74, nome: 'SENAI — Serviço Nacional de Aprendizagem Industrial', categoria: 'Escola', pais: 'Brasil', website: 'https://portaldaindustria.com.br/senai', relacao: '✅ parceria' },
+        { id: 73, nome: 'SENAC – Serviço Nacional de Aprendizagem Comercial', categoria: 'Escola', pais: 'Brasil', website: 'https://senac.br' },
+      ],
+    });
+
+    expect(records).toHaveLength(2);
+    expect(records.find((record) => record.catalogIdentity === 'alias:senai').sourceRecords).toHaveLength(2);
+    expect(records.find((record) => record.catalogIdentity === 'alias:senai').hasPartnership).toBe(true);
+  });
+
+  it('keeps different entities sharing a parent domain separate', () => {
+    const records = mergeSchoolSources({
+      schools: [
+        { id: 1, instituicao: 'Serviço Nacional de Aprendizagem Industrial', pais: 'Brasil', website: 'https://portaldaindustria.com.br/senai' },
+        { id: 8, instituicao: 'Serviço Social da Indústria', pais: 'Brasil', website: 'https://portaldaindustria.com.br/sesi' },
+      ],
+    });
+    expect(records).toHaveLength(2);
+  });
+
+  it('does not merge a national network with a regional or local unit', () => {
+    const records = mergeSchoolSources({
+      schools: [
+        { id: 1, instituicao: 'Serviço Nacional de Aprendizagem Industrial', pais: 'Brasil' },
+        { id: 2, instituicao: 'SENAI-SP — Departamento Regional de São Paulo', pais: 'Brasil' },
+        { id: 3, instituicao: 'SENAI Roberto Mange', pais: 'Brasil' },
+      ],
+    });
+
+    expect(records).toHaveLength(3);
+    expect(records.map((record) => record.catalogIdentity)).toEqual(expect.arrayContaining(['alias:senai', expect.stringContaining('scoped:senai:')]));
+    expect(records.find((record) => record.nome === 'SENAI Roberto Mange').scope).toBe('local');
+  });
+
+  it('only marks explicit positive relations as confirmed partnerships', () => {
+    const records = mergeSchoolSources({
+      stakeholders: [
+        { id: 1, nome: 'Ivy Tech', categoria: 'Escola', relacao: 'Sem evidência pública de parceria com SENAI.' },
+        { id: 2, nome: 'Instituto parceiro', categoria: 'Escola', relacao: 'Parceiro de projetos.' },
+        { id: 3, nome: 'ITS Academy', categoria: 'Escola', relacao: '🔗 SENAI lista Politecnico di Milano como parceiro. SENAI acompanha o modelo ITS. Possíveis diálogos via programas UE-América Latina.' },
+      ],
+    });
+
+    expect(records.find((record) => record.nome === 'Ivy Tech').hasPartnership).toBe(false);
+    expect(records.find((record) => record.nome === 'Instituto parceiro').hasPartnership).toBe(true);
+    expect(records.find((record) => record.nome === 'ITS Academy').hasPartnership).toBe(false);
+  });
+
+  it('merges known cross-source multilingual duplicates without collapsing separate institutions', () => {
+    const records = mergeSchoolSources({ schools, stakeholders });
+    const byIdentity = new Map(records.map((record) => [record.catalogIdentity, record]));
+
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:shenzhen-polytechnic-university|'))?.[1].sourceRecords).toHaveLength(2);
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:iti-system|'))?.[1].sourceRecords).toHaveLength(2);
+    expect([...byIdentity.entries()].find(([key]) => key.startsWith('alias:tvet-colleges-system|'))?.[1].sourceRecords).toHaveLength(2);
+    expect(records.filter((record) => record.catalogIdentity === 'alias:senai')).toHaveLength(1);
+    expect(records.filter((record) => record.catalogIdentity === 'alias:senac')).toHaveLength(1);
+  });
+
+  it('uses the national Federal Network entry instead of duplicating its two CEFET members', () => {
+    const records = mergeSchoolSources({
+      schools: [
+        { id: 1, instituicao: 'Rede Federal de Educação Profissional, Científica e Tecnológica', pais: 'Brasil' },
+        { id: 2, instituicao: 'CEFET-RJ — Centro Federal de Educação Tecnológica Celso Suckow da Fonseca', pais: 'Brasil' },
+        { id: 3, instituicao: 'CEFET-MG — Centro Federal de Educação Tecnológica de Minas Gerais', pais: 'Brasil' },
+      ],
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0].nome).toMatch(/^Rede Federal/);
+  });
+});

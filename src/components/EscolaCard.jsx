@@ -5,11 +5,11 @@ import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
+import { formatInstitutionName } from '../domain/institutionName';
 
 const areaColorMap = {
   'Engenharia': '#1565c0',
@@ -41,42 +41,24 @@ function getAreaColor(area) {
 export default function EscolaCard({ item, onClick }) {
   const areas = item.areas ? item.areas.split(';').slice(0, 4) : [];
   const moreCount = item.areas ? item.areas.split(';').length - 4 : 0;
-  const initial = item.instituicao ? item.instituicao.charAt(0) : '?';
-  const [imgError, setImgError] = React.useState(false);
+  const displayName = formatInstitutionName(item.instituicao);
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: 3, borderColor: 'primary.main' }}>
       <CardActionArea onClick={onClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
-            <Avatar
-              src={!imgError && item.logo ? item.logo : undefined}
-              alt={item.instituicao}
-              onError={() => setImgError(true)}
-              sx={{
-                width: 40, height: 40,
-                bgcolor: item.logo && !imgError ? '#fff' : 'primary.light',
-                fontSize: 18, fontWeight: 700, flexShrink: 0,
-                border: item.logo && !imgError ? '1px solid' : 'none',
-                borderColor: 'grey.200',
-                '& img': { objectFit: 'contain', width: '70%', height: '70%', imageRendering: 'auto' },
-                overflow: 'hidden',
-              }}
-            >
-              {initial}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
-                {item.instituicao}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>Escola ou instituto</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <CountryFlag pais={item.pais} size={14} />
-                <Typography variant="body2" color="text.secondary">
-                  {item.pais}
-                </Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>{item.pais}</Typography>
               </Box>
             </Box>
+            <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.25 }}>{displayName}</Typography>
           </Box>
+
+          <Box sx={{ height: '1px', bgcolor: 'divider', mx: -2, mb: 1.5 }} />
 
           <Typography
             variant="body2"
@@ -85,10 +67,11 @@ export default function EscolaCard({ item, onClick }) {
               flex: 1,
               mb: 1.5,
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               lineHeight: 1.5,
+              fontSize: '0.8rem',
             }}
           >
             {item.relevancia}

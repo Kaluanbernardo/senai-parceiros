@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "title": "Notícia oficial sobre educação profissional",
+      "url": "https://www.gov.br/mec/pt-br/noticias/educacao-profissional",
+      "content": "O governo atualizou ações de formação técnica e aprendizagem.",
+      "published_date": "2026-07-17"
+    },
+    {
+      "title": "Resultado fora da lista oficial",
+      "url": "https://example.org/noticia",
+      "content": "Não deve ser aceito."
+    }
+  ]
+}

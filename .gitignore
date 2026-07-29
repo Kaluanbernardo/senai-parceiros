@@ -9,6 +9,9 @@ dist/
 .env.local
 .env.production
 
+# Runtime stores (catalog, Radar, rate limits and AI budget)
+.data/
+
 # IDE
 .vscode/
 .idea/
@@ -26,4 +29,6 @@ __pycache__/
 
 # Claude
 .claude/
-.vercel
+
+# Local brainstorming artifacts
+.superpowers/

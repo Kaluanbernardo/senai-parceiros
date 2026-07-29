@@ -4,19 +4,11 @@ import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import SchoolIcon from '@mui/icons-material/School';
 import { CountryFlag } from '../utils/countryCode';
 import { getCategoriasFromAreas } from '../utils/areaCategories';
-
-function getInitials(name) {
-  if (!name) return '?';
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return parts[0][0].toUpperCase();
-}
 
 function summarize(text, maxSentences = 2) {
   if (!text) return '';
@@ -24,23 +16,8 @@ function summarize(text, maxSentences = 2) {
   return sentences.slice(0, maxSentences).join(' ').trim();
 }
 
-function nameToSlug(name) {
-  if (!name) return '';
-  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-function usePhotoWithFallback(nome, fallbackUrl) {
-  const [stage, setStage] = React.useState(0);
-  const slug = nameToSlug(nome);
-  const sources = [`/fotos/${slug}.jpg`, `/fotos/${slug}.png`, fallbackUrl];
-  const src = stage < sources.length ? sources[stage] : undefined;
-  const onError = () => setStage((s) => s + 1);
-  return { src, onError };
-}
-
 export default function PesquisadorCard({ item, onClick }) {
   const categorias = getCategoriasFromAreas(item.areas);
-  const photo = usePhotoWithFallback(item.nome, item.foto);
 
   return (
     <Card sx={{
@@ -57,65 +34,24 @@ export default function PesquisadorCard({ item, onClick }) {
       <CardActionArea onClick={onClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
 
-          {/* Top section: photo left + identity right */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
-            {/* Photo */}
-            <Avatar
-              src={photo.src}
-              alt={item.nome}
-              onError={photo.onError}
-              sx={{
-                width: 80,
-                height: 96,
-                borderRadius: 1.5,
-                bgcolor: 'secondary.light',
-                fontSize: 26,
-                fontWeight: 700,
-                flexShrink: 0,
-                border: '1px solid',
-                borderColor: 'grey.200',
-                '& img': { objectFit: 'cover' },
-              }}
-            >
-              {getInitials(item.nome)}
-            </Avatar>
-
-            {/* Identity info */}
-            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.8, lineHeight: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+              <Typography variant="caption" color="secondary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>
                 Pesquisador EPT
               </Typography>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3, mt: 0.5 }}>
-                {item.nome}
+              {item.h_index ? <Chip label={`h-index ${item.h_index}`} size="small" color="secondary" variant="outlined" sx={{ height: 23, fontWeight: 700 }} /> : null}
+            </Box>
+            <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.25 }}>
+              {item.nome}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4, mt: 0.5 }}>
+              {item.instituicao}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
+              <CountryFlag pais={item.pais} size={14} />
+              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                {item.pais}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.3, mt: 0.25 }}>
-                {item.instituicao}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5 }}>
-                <CountryFlag pais={item.pais} size={13} />
-                <Typography variant="caption" color="text.secondary">
-                  {item.pais}
-                </Typography>
-              </Box>
-              {item.h_index && (
-                <Box sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  mt: 0.75,
-                  px: 1,
-                  py: 0.2,
-                  bgcolor: 'grey.100',
-                  border: '1px solid',
-                  borderColor: 'secondary.main',
-                  borderRadius: 10,
-                  alignSelf: 'flex-start',
-                }}>
-                  <Typography variant="caption" fontWeight={700} color="secondary.main">
-                    h-index {item.h_index}
-                  </Typography>
-                </Box>
-              )}
             </Box>
           </Box>
 

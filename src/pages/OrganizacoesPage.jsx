@@ -65,6 +65,7 @@ export default function OrganizacoesPage() {
       const matchSearch =
         !q ||
         item.nome.toLowerCase().includes(q) ||
+        (item.aliases || []).some((alias) => alias.toLowerCase().includes(q)) ||
         (item.descricao && item.descricao.toLowerCase().includes(q)) ||
         (item.pais && item.pais.toLowerCase().includes(q));
       const matchCountry =

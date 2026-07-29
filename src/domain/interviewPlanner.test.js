@@ -1,0 +1,115 @@
+import { describe, expect, it } from 'vitest';
+import { InterviewPlanner, MAX_QUESTIONS, finalize, start } from './interviewPlanner';
+
+function answerAndNext(state, value = 'Resposta suficiente para esta pergunta') {
+  return InterviewPlanner.next(InterviewPlanner.answer(state, value));
+}
+
+describe('InterviewPlanner', () => {
+  it('starts with a contextual first question and exposes transient state', () => {
+    const state = start({ category: 'researcher', objective: 'speaker' });
+
+    expect(state.status).toBe('active');
+    expect(state.currentQuestion.id).toBe('context');
+    expect(state.currentQuestion.reasonTag).toBe('estabelecer_contexto');
+    expect(state.progress.max).toBe(MAX_QUESTIONS);
+    expect(state).not.toHaveProperty('storageKey');
+  });
+
+  it('adapts the next questions to school benchmarking and does not add speaker branches', () => {
+    let state = start({ category: 'school', objective: 'benchmark' });
+    const ids = [];
+    for (let index = 0; index < 20 && state.currentQuestion; index += 1) {
+      ids.push(state.currentQuestion.id);
+      state = answerAndNext(state);
+    }
+
+    expect(ids).toContain('benchmark_focus');
+    expect(ids).not.toContain('communication_style');
+    expect(state.askedIds.length).toBeLessThanOrEqual(20);
+  });
+
+  it('uses the meaning of the answer to choose and phrase the next question', () => {
+    let benchmarking = start({ category: 'school', objective: 'benchmark' });
+    benchmarking = answerAndNext(benchmarking, 'Quero comparar gestão curricular e integração das escolas com empresas industriais.');
+
+    let event = start({ category: 'researcher', objective: 'speaker' });
+    event = answerAndNext(event, 'Será um evento sobre economia circular para instrutores do SENAI-SP.');
+
+    expect(benchmarking.currentQuestion.id).toBe('benchmark_focus');
+    expect(benchmarking.currentQuestion.prompt).toMatch(/gestão curricular|integração/i);
+    expect(event.currentQuestion.id).toBe('audience');
+    expect(event.currentQuestion.prompt).toMatch(/economia circular|instrutores/i);
+    expect(event.currentQuestion.prompt).not.toBe(benchmarking.currentQuestion.prompt);
+  });
+
+  it('keeps the displayed transcript and maps an adaptive turn to a canonical brief field', () => {
+    let state = start({ category: 'school', objective: 'benchmark' });
+    state = answerAndNext(state, 'Quero comparar currÃ­culos e gestÃ£o com empresas.');
+    const dynamicId = 'adaptive_2_benchmark_focus';
+    const dynamicQuestion = { id: dynamicId, targetField: 'benchmark_focus', prompt: 'Que prÃ¡tica deseja comparar?', label: 'Que prÃ¡tica deseja comparar?', reasonTag: 'aprofundar_benchmark', dimensions: ['alignment'] };
+    state = { ...state, askedIds: [...state.askedIds, dynamicId], questionDefinitions: { ...state.questionDefinitions, [dynamicId]: dynamicQuestion }, currentQuestion: dynamicQuestion };
+    state = InterviewPlanner.answer(state, 'integraÃ§Ã£o entre escola e indÃºstria', dynamicId);
+    expect(state.transcript.at(-1)).toMatchObject({ displayedQuestion: dynamicQuestion.prompt, targetField: 'benchmark_focus' });
+    expect(InterviewPlanner.finalize(state).answers.benchmark_focus).toContain('integraÃ§Ã£o');
+  });
+
+  it('prioritizes a discovery follow-up when a required answer is unknown', () => {
+    let state = start({ category: 'researcher', objective: 'speaker' });
+    state = answerAndNext(state, 'não sei ainda');
+
+    expect(state.currentQuestion.id).toBe('context_discovery');
+    expect(state.uncertainties).toContain('context');
+    expect(state.currentQuestion.reasonTag).toBe('aprofundar_contexto');
+  });
+
+  it('finalizes a structured brief and keeps gaps visible', () => {
+    let state = start({ category: 'researcher', objective: 'speaker', context: 'IA aplicada à indústria' });
+    for (let index = 0; index < 20 && state.currentQuestion; index += 1) {
+      const value = state.currentQuestion.id === 'themes' ? 'não sei ainda' : `Resposta para ${state.currentQuestion.id}`;
+      state = answerAndNext(state, value);
+    }
+
+    const brief = finalize(state);
+    expect(brief.category).toBe('researcher');
+    expect(brief.objective).toBe('speaker');
+    expect(brief.context).toBe('IA aplicada à indústria');
+    expect(brief.uncertainties).toContain('themes');
+    expect(brief.planner.questionsAsked).toBeLessThanOrEqual(20);
+    expect(brief.dimensionWeights).toHaveProperty('alignment');
+  });
+
+  it('uses deterministic fallback ordering for equivalent sessions', () => {
+    const collect = () => {
+      let state = start({ category: 'organization', objective: 'project_partner' });
+      const ids = [];
+      while (state.currentQuestion && ids.length < MAX_QUESTIONS) {
+        ids.push(state.currentQuestion.id);
+        state = answerAndNext(state);
+      }
+      return ids;
+    };
+
+    expect(collect()).toEqual(collect());
+  });
+
+  it('marks the session ready with no current question after the final answer', () => {
+    let state = start({ category: 'organization', objective: 'guided' });
+    while (state.currentQuestion) state = answerAndNext(state, 'Resposta suficiente');
+    expect(state.status).toBe('ready');
+    expect(state.currentQuestion).toBeNull();
+  });
+});
+
+describe('InterviewPlanner exports', () => {
+  it('exposes the four workflow operations', () => {
+    expect(InterviewPlanner).toEqual(expect.objectContaining({
+      start: expect.any(Function),
+      answer: expect.any(Function),
+      next: expect.any(Function),
+      finalize: expect.any(Function),
+    }));
+    expect(start).toBe(InterviewPlanner.start);
+    expect(finalize).toBe(InterviewPlanner.finalize);
+  });
+});

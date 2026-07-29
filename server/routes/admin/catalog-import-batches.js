@@ -1,0 +1,12 @@
+import { requireSession } from '../../lib/cookies.js';
+import { methodNotAllowed } from '../../lib/http.js';
+import { hydrateCatalogStore, listImportBatches, getCatalogStoreStatus } from '../../lib/catalogImport.js';
+
+export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method !== 'GET') return methodNotAllowed(res);
+  const session = requireSession(req, res, ['admin']);
+  if (!session) return;
+  await hydrateCatalogStore({ force: true });
+  return res.status(200).json({ batches: listImportBatches(), store: getCatalogStoreStatus() });
+}

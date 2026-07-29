@@ -14,6 +14,7 @@ import SearchBar from '../components/SearchBar';
 import OrgCard from '../components/OrgCard';
 import DetailModal from '../components/DetailModal';
 import { useData } from '../context/DataContext';
+import { mergeSchoolSources } from '../domain/schoolCatalog';
 
 function extractUniqueAreas(items) {
   const set = new Set();
@@ -40,41 +41,7 @@ export default function EscolasUnificadaPage() {
   const [showFilters, setShowFilters] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const allEscolas = useMemo(() => {
-    const orgs = [];
-    for (const item of stakeholdersData) {
-      if (item.categoria !== 'Escola') continue;
-      orgs.push({
-        id: `s-${item.id}`,
-        nome: item.nome,
-        descricao: item.diferencial,
-        pais: item.pais,
-        logo: item.logo,
-        website: item.website,
-        categoria: 'Escola',
-        areas: null,
-        hasPartnership: !!(item.relacao && item.relacao.includes('✅')),
-        _type: 'stakeholder',
-        _original: item,
-      });
-    }
-    for (const item of escolasData) {
-      orgs.push({
-        id: `e-${item.id}`,
-        nome: item.instituicao,
-        descricao: item.relevancia,
-        pais: item.pais,
-        logo: item.logo,
-        website: item.website,
-        categoria: 'Escola',
-        areas: item.areas,
-        hasPartnership: false,
-        _type: 'escola',
-        _original: item,
-      });
-    }
-    return orgs;
-  }, [stakeholdersData, escolasData]);
+  const allEscolas = useMemo(() => mergeSchoolSources({ schools: escolasData, stakeholders: stakeholdersData }), [stakeholdersData, escolasData]);
 
   const allCountries = useMemo(() => {
     const set = new Set(allEscolas.map((o) => o.pais).filter(Boolean));
@@ -89,6 +56,7 @@ export default function EscolasUnificadaPage() {
       const matchSearch =
         !q ||
         item.nome.toLowerCase().includes(q) ||
+        (item.aliases || []).some((alias) => alias.toLowerCase().includes(q)) ||
         (item.descricao && item.descricao.toLowerCase().includes(q)) ||
         (item.pais && item.pais.toLowerCase().includes(q)) ||
         (item.areas && item.areas.toLowerCase().includes(q));
@@ -220,7 +188,7 @@ export default function EscolasUnificadaPage() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         item={selectedItem?._original}
-        type={selectedItem?._type}
+        type="escola"
       />
     </Box>
   );

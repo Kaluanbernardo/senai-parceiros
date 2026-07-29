@@ -1,0 +1,56 @@
+import { getAuthProvider } from './auth.js';
+import { getOperationalStatus } from './operationalStatus.js';
+
+function check(id, ok, message, required = true) {
+  return { id, ok: Boolean(ok), required, message };
+}
+
+/**
+ * Mirror the provider order of `structuredGeneration.js`.  Selecting a
+ * provider explicitly disables the cross-provider fallback there, so a
+ * preflight that accepted any configured credential would report green while
+ * every generation failed with `ai_not_configured` and dropped to the local
+ * script.
+ */
+function providerConfigured(status) {
+  const selected = String(process.env.AI_PROVIDER || '').trim().toLowerCase();
+  if (selected === 'azure') return status.ai.azureConfigured;
+  if (selected === 'openrouter') return status.ai.openrouterConfigured;
+  if (selected === 'openai') return status.ai.openaiConfigured || status.ai.openrouterConfigured;
+  return status.ai.openaiConfigured || status.ai.openrouterConfigured;
+}
+
+export function getHandoffPreflight(profile = 'corporate') {
+  const normalizedProfile = profile === 'mvp' || profile === 'local' ? profile : 'corporate';
+  const status = getOperationalStatus();
+  const aiProviderExplicitlySelected = Boolean(String(process.env.AI_PROVIDER || '').trim());
+  const checks = normalizedProfile === 'corporate'
+    ? [
+      check('auth_provider', getAuthProvider() === 'entra', 'AUTH_PROVIDER deve ser entra.'),
+      check('entra_adapter', status.security.entraAdapter.ready, 'ENTRA_TENANT_ID, ENTRA_CLIENT_ID e grupos admin/user devem estar configurados.'),
+      check('public_origin', status.security.publicOriginConfigured, 'PUBLIC_APP_ORIGIN deve ser a origem corporativa.'),
+      check('session_secret', status.security.sessionSecretConfigured, 'AUTH_SESSION_SECRET deve existir somente no servidor.'),
+      check('durable_stores', status.handoff.mvp.durableStores, 'Catálogo, Radar, rate limit e orçamento devem usar adapters duráveis.'),
+      check('atomic_stores', status.handoff.corporate.atomicStores, 'Rate limit e orçamento devem usar adapter atômico.'),
+      check('alerts', status.handoff.corporate.alerts, 'OPS_ALERT_WEBHOOK_URL deve ser HTTPS e corporativo.'),
+      check('radar_cron', status.radar.cronConfigured, 'RADAR_CRON_SECRET ou CRON_SECRET deve estar configurado.'),
+      check('radar_feeds', status.radar.feeds.ready, 'O manifesto de feeds oficiais precisa estar válido.'),
+      check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.'),
+    ]
+    : [
+      check('auth_provider', getAuthProvider() === 'local', 'O MVP local deve usar AUTH_PROVIDER=local.'),
+      check('public_origin', status.security.publicOriginConfigured, 'PUBLIC_APP_ORIGIN deve estar configurado.'),
+      check('session_secret', status.security.sessionSecretConfigured, 'AUTH_SESSION_SECRET deve existir somente no servidor.'),
+      check('radar_feeds', status.radar.feeds.ready, 'O manifesto de feeds oficiais precisa estar válido.'),
+      check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.', aiProviderExplicitlySelected),
+    ];
+
+  const requiredChecks = checks.filter((item) => item.required);
+  return {
+    profile: normalizedProfile,
+    ok: requiredChecks.every((item) => item.ok),
+    checks,
+    blockers: checks.filter((item) => item.required && !item.ok).map((item) => item.id),
+    status,
+  };
+}

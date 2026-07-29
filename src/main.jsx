@@ -7,15 +7,18 @@ import 'flag-icons/css/flag-icons.min.css';
 import theme from './theme';
 import App from './App';
 import { DataProvider } from './context/DataContext';
+import { AuthProvider } from './context/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <DataProvider>
-          <App />
-        </DataProvider>
+        <AuthProvider>
+          <DataProvider>
+            <App />
+          </DataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>

@@ -10,14 +10,20 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
-import Paper from '@mui/material/Paper';
-import LockIcon from '@mui/icons-material/Lock';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import SchoolIcon from '@mui/icons-material/School';
 import ScienceIcon from '@mui/icons-material/Science';
@@ -27,68 +33,17 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import HistoryIcon from '@mui/icons-material/History';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import AdminTable from '../components/AdminTable';
 import EditDialog from '../components/EditDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const ADMIN_PASSWORD = 'SENAISP2026';
-
-function LoginGate({ onAuth }) {
-  const [pwd, setPwd] = useState('');
-  const [error, setError] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (pwd === ADMIN_PASSWORD) {
-      sessionStorage.setItem('admin_auth', '1');
-      onAuth();
-    } else {
-      setError(true);
-      setPwd('');
-    }
-  };
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#1a1a2e', alignItems: 'center', justifyContent: 'center' }}>
-      <Paper sx={{ p: 5, maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: 3 }} elevation={6}>
-        <LockIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          Painel Administrativo
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Digite a senha para acessar a gestao de dados.
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            type="password"
-            label="Senha"
-            value={pwd}
-            onChange={e => { setPwd(e.target.value); setError(false); }}
-            error={error}
-            helperText={error ? 'Senha incorreta. Tente novamente.' : ''}
-            autoFocus
-            sx={{ mb: 2 }}
-          />
-          <Button type="submit" variant="contained" fullWidth size="large" sx={{ mb: 1.5 }}>
-            Entrar
-          </Button>
-          <Button color="inherit" fullWidth onClick={() => navigate('/')}>
-            Voltar ao site
-          </Button>
-        </form>
-      </Paper>
-    </Box>
-  );
-}
-
 export default function AdminPage() {
   const navigate = useNavigate();
   const data = useData();
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('admin_auth') === '1');
   const [tab, setTab] = useState(0);
   const [editItem, setEditItem] = useState(null);
   const [editType, setEditType] = useState(null);
@@ -98,7 +53,15 @@ export default function AdminPage() {
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const fileInputRef = useRef(null);
+  const xlsxInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
+  const [xlsxPreview, setXlsxPreview] = useState(null);
+  const [xlsxDecisions, setXlsxDecisions] = useState({});
+  const [xlsxBusy, setXlsxBusy] = useState(false);
+  const [batchesOpen, setBatchesOpen] = useState(false);
+  const [batches, setBatches] = useState([]);
+  const [batchesBusy, setBatchesBusy] = useState(false);
+  const [rollbackBatch, setRollbackBatch] = useState(null);
 
   const showSnack = (message, severity = 'success') => {
     setSnack({ open: true, message, severity });
@@ -173,6 +136,102 @@ export default function AdminPage() {
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
+  const handleXlsxClick = () => {
+    setMenuAnchor(null);
+    setTimeout(() => xlsxInputRef.current?.click(), 100);
+  };
+
+  const loadImportBatches = async () => {
+    setBatchesBusy(true);
+    try {
+      const response = await fetch('/api/admin/catalog/import-batches', { credentials: 'include' });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao carregar histórico.');
+      setBatches(body.batches || []);
+    } catch (error) {
+      showSnack(error.message || 'Falha ao carregar histórico.', 'error');
+    } finally {
+      setBatchesBusy(false);
+    }
+  };
+
+  const handleBatchesClick = () => {
+    setMenuAnchor(null);
+    setBatchesOpen(true);
+    loadImportBatches();
+  };
+
+  const handleRollbackConfirm = async () => {
+    if (!rollbackBatch) return;
+    setBatchesBusy(true);
+    try {
+      const response = await fetch('/api/admin/catalog/import-rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ batchId: rollbackBatch.batchId }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao desfazer lote.');
+      await data.refreshCatalog();
+      setRollbackBatch(null);
+      showSnack('Lote desfeito e catálogo atualizado.', 'info');
+      await loadImportBatches();
+    } catch (error) {
+      showSnack(error.message || 'Falha ao desfazer lote.', 'error');
+    } finally {
+      setBatchesBusy(false);
+    }
+  };
+
+  const handleXlsxFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setXlsxBusy(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]);
+      const response = await fetch('/api/admin/catalog/import-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
+      setXlsxPreview(body);
+      setXlsxDecisions(Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing'])));
+    } catch (error) {
+      showSnack(error.message || 'Falha na prévia da importação.', 'error');
+    } finally {
+      setXlsxBusy(false);
+    }
+  };
+
+  const commitXlsx = async () => {
+    if (!xlsxPreview) return;
+    setXlsxBusy(true);
+    try {
+      const response = await fetch('/api/admin/catalog/import-commit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions: xlsxDecisions }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
+      data.mergeImportedRecords(body.category, body.records || []);
+      showSnack(`Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).`);
+      setXlsxPreview(null);
+      setXlsxDecisions({});
+    } catch (error) {
+      showSnack(error.message || 'Falha ao confirmar a importação.', 'error');
+    } finally {
+      setXlsxBusy(false);
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file || !importType) return;
@@ -191,10 +250,6 @@ export default function AdminPage() {
     reader.readAsText(file);
     e.target.value = '';
   };
-
-  if (!authed) {
-    return <LoginGate onAuth={() => setAuthed(true)} />;
-  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -239,6 +294,15 @@ export default function AdminPage() {
             <MenuItem disabled>
               <Typography variant="caption" fontWeight={700}>IMPORTAR</Typography>
             </MenuItem>
+            <MenuItem onClick={handleXlsxClick}>
+              <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Stakeholders XLSX" secondary="Prévia e confirmação administrativa" />
+            </MenuItem>
+            <MenuItem onClick={handleBatchesClick}>
+              <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Histórico de importações" secondary="Consultar lotes e desfazer quando permitido" />
+            </MenuItem>
+            <Divider />
             <MenuItem onClick={() => handleImportClick('stakeholders')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Stakeholders JSON</ListItemText>
@@ -277,6 +341,9 @@ export default function AdminPage() {
 
       <Box sx={{ flex: 1, bgcolor: '#f5f5f7', p: { xs: 2, md: 3 } }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            O lote é confirmado no servidor após a prévia. Para persistência entre instâncias, configure o adapter durável do catálogo antes do handoff Azure.
+          </Alert>
           <AdminTable
             data={currentTab.data}
             type={currentTab.type}
@@ -295,6 +362,39 @@ export default function AdminPage() {
         accept=".json"
         onChange={handleFileChange}
       />
+      <input type="file" ref={xlsxInputRef} style={{ display: 'none' }} accept=".xlsx" onChange={handleXlsxFileChange} />
+
+      <Dialog open={Boolean(xlsxPreview)} onClose={() => !xlsxBusy && setXlsxPreview(null)} fullWidth maxWidth="md">
+        <DialogTitle>Prévia da importação XLSX</DialogTitle>
+        <DialogContent dividers>
+          {xlsxPreview && <>
+            <Alert severity="info" sx={{ mb: 2 }}>Categoria: {xlsxPreview.category} · {xlsxPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
+            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {xlsxPreview.counts.new} · Possíveis duplicatas: {xlsxPreview.counts.possibleDuplicate} · Já importados: {xlsxPreview.counts.alreadyImported || 0} · Inválidos: {xlsxPreview.counts.invalid}</Typography>
+            <List dense>{xlsxPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider secondaryAction={<FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id={`decision-${row.rowNumber}`}>Decisão</InputLabel><Select labelId={`decision-${row.rowNumber}`} label="Decisão" value={xlsxDecisions[String(row.rowNumber)] || 'keep_existing'} disabled={row.status === 'invalid' || row.status === 'already_imported'} onChange={(event) => setXlsxDecisions((current) => ({ ...current, [String(row.rowNumber)]: event.target.value }))}><MenuItem value="keep_existing">Manter existente</MenuItem><MenuItem value="use_imported">Usar importado</MenuItem><MenuItem value="merge">Mesclar campos</MenuItem><MenuItem value="ignore">Ignorar linha</MenuItem></Select></FormControl>}><ListItemText sx={{ pr: 2 }} primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
+            {xlsxPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
+          </>}
+        </DialogContent>
+        <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
+      </Dialog>
+
+      <Dialog open={batchesOpen} onClose={() => !batchesBusy && setBatchesOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>Histórico de importações</DialogTitle>
+        <DialogContent dividers>
+          {batchesBusy && <Alert severity="info" sx={{ mb: 2 }}>Carregando lotes…</Alert>}
+          {!batchesBusy && !batches.length && <Alert severity="info">Nenhum lote confirmado neste ambiente.</Alert>}
+          <List dense>
+            {batches.map((batch) => (
+              <ListItem key={batch.batchId} divider secondaryAction={<Button size="small" color="warning" startIcon={<RestoreIcon />} onClick={() => setRollbackBatch(batch)} disabled={batchesBusy}>Desfazer</Button>}>
+                <ListItemText
+                  primary={`${batch.filename || 'Planilha'} · ${batch.category}`}
+                  secondary={`${batch.committedAt ? new Date(batch.committedAt).toLocaleString('pt-BR') : 'data não informada'} · aplicados: ${batch.applied?.length || 0} · ignorados: ${batch.ignored?.length || 0}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions><Button onClick={() => setBatchesOpen(false)} disabled={batchesBusy}>Fechar</Button><Button onClick={loadImportBatches} disabled={batchesBusy}>Atualizar</Button></DialogActions>
+      </Dialog>
 
       {/* Edit Dialog */}
       <EditDialog
@@ -313,6 +413,14 @@ export default function AdminPage() {
         onConfirm={handleDeleteConfirm}
         title="Excluir registro"
         message={`Tem certeza que deseja excluir "${deleteItem?.nome || deleteItem?.instituicao || ''}"? Esta acao nao pode ser desfeita.`}
+      />
+
+      <ConfirmDialog
+        open={Boolean(rollbackBatch)}
+        onClose={() => !batchesBusy && setRollbackBatch(null)}
+        onConfirm={handleRollbackConfirm}
+        title="Desfazer importação"
+        message={`Desfazer o lote "${rollbackBatch?.filename || rollbackBatch?.batchId || ''}"? O catálogo voltará ao estado anterior, se não houver conflito posterior.`}
       />
 
       {/* Snackbar */}

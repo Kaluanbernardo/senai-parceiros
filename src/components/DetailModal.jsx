@@ -9,10 +9,10 @@ import SchoolIcon from '@mui/icons-material/School';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { CountryFlag } from '../utils/countryCode';
+import { formatInstitutionName } from '../domain/institutionName';
 
 function InfoRow({ label, children }) {
   return (
@@ -39,82 +39,22 @@ const profileLabels = {
   academia: 'Academia.edu',
 };
 
-function getInitials(name) {
-  if (!name) return '?';
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return parts[0][0].toUpperCase();
-}
-
-function nameToSlug(name) {
-  if (!name) return '';
-  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-function usePhotoWithFallback(nome, fallbackUrl) {
-  const [stage, setStage] = React.useState(0);
-  React.useEffect(() => { setStage(0); }, [nome, fallbackUrl]);
-  const slug = nameToSlug(nome);
-  const sources = [`/fotos/${slug}.jpg`, `/fotos/${slug}.png`, fallbackUrl];
-  const src = stage < sources.length ? sources[stage] : undefined;
-  const onError = () => setStage((s) => s + 1);
-  return { src, onError };
-}
-
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
-  const [imgError, setImgError] = React.useState(false);
-  const pesqPhoto = usePhotoWithFallback(item?.nome, item?.foto);
-
-  // Reset error state when item changes
-  React.useEffect(() => { setImgError(false); }, [item]);
-
   if (!item) return null;
 
-  const title =
+  const rawTitle =
     type === 'stakeholder' ? item.nome :
     type === 'pesquisador' ? item.nome :
     item.instituicao;
+  const title = type === 'pesquisador' ? rawTitle : formatInstitutionName(rawTitle);
 
   const subtitle =
     type === 'pesquisador' ? item.instituicao : null;
-
-  const imageUrl =
-    type === 'pesquisador' ? pesqPhoto.src :
-    (item.logo || undefined);
-
-  const imageOnError =
-    type === 'pesquisador' ? pesqPhoto.onError :
-    () => setImgError(true);
-
-  const initial =
-    type === 'pesquisador' ? getInitials(item.nome) :
-    (title ? title.charAt(0) : '?');
-
-  const avatarBg =
-    type === 'pesquisador' ? 'secondary.light' : 'primary.light';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
       <DialogTitle sx={{ pr: 6, pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar
-            src={type === 'pesquisador' ? imageUrl : (!imgError && imageUrl ? imageUrl : undefined)}
-            alt={title}
-            onError={imageOnError}
-            sx={{
-              width: 56,
-              height: 56,
-              bgcolor: imageUrl && !imgError && type !== 'pesquisador' ? '#fff' : avatarBg,
-              fontSize: 22,
-              fontWeight: 700,
-              border: imageUrl && !imgError && type !== 'pesquisador' ? '1px solid' : 'none',
-              borderColor: 'grey.200',
-              '& img': { objectFit: 'contain', width: type !== 'pesquisador' ? '70%' : '100%', height: type !== 'pesquisador' ? '70%' : '100%', imageRendering: 'auto' },
-              overflow: 'hidden',
-            }}
-          >
-            {initial}
-          </Avatar>
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6" component="div" fontWeight={700}>
               {title}
@@ -186,8 +126,28 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
               />
             </InfoRow>
 
+            {item.descricao && (
+              <InfoRow label="Descrição">
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.75 }}>
+                  {item.descricao}
+                </Typography>
+              </InfoRow>
+            )}
+
             <InfoRow label="Diferencial">
-              <Typography variant="body2">{item.diferencial}</Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  p: 1.5,
+                  bgcolor: 'grey.50',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: 'secondary.main',
+                  lineHeight: 1.7,
+                }}
+              >
+                {item.diferencial}
+              </Typography>
             </InfoRow>
 
             <InfoRow label="Relação com o SENAI">
@@ -209,23 +169,68 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
         {type === 'escola' && (
           <>
-            <InfoRow label="Áreas de Atuação">
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {item.areas?.split(';').map((area, i) => (
-                  <Chip
-                    key={i}
-                    label={area.trim()}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                  />
-                ))}
-              </Box>
-            </InfoRow>
+            {item.areas && (
+              <InfoRow label="Áreas de Atuação">
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {item.areas.split(';').map((area, i) => (
+                    <Chip
+                      key={i}
+                      label={area.trim()}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                    />
+                  ))}
+                </Box>
+              </InfoRow>
+            )}
 
-            <InfoRow label="Relevância">
-              <Typography variant="body2">{item.relevancia}</Typography>
-            </InfoRow>
+            {item.relevancia && (
+              <InfoRow label="Perfil em destaque">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'primary.50',
+                    borderRadius: 1,
+                    borderLeft: 3,
+                    borderColor: 'primary.main',
+                    fontWeight: 500,
+                  }}
+                >
+                  {item.relevancia}
+                </Typography>
+              </InfoRow>
+            )}
+
+            {item.descricao && (
+              <InfoRow label="Descrição">
+                <Typography
+                  variant="body2"
+                  sx={{ whiteSpace: 'pre-line', lineHeight: 1.75 }}
+                >
+                  {item.descricao}
+                </Typography>
+              </InfoRow>
+            )}
+
+            {item.diferencial && (
+              <InfoRow label="Diferenciais">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    borderLeft: 3,
+                    borderColor: 'secondary.main',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {item.diferencial}
+                </Typography>
+              </InfoRow>
+            )}
           </>
         )}
 

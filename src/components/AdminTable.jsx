@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
+import { getDisplayLogoUrl } from '../utils/media';
 
 const COLUMNS = {
   stakeholder: [
@@ -46,7 +47,6 @@ const COLUMNS = {
   ],
   pesquisador: [
     { id: 'id', label: '#', width: 50 },
-    { id: 'foto', label: '', width: 50, sortable: false },
     { id: 'nome', label: 'Nome', flex: true },
     { id: 'instituicao', label: 'Instituicao', width: 180 },
     { id: 'pais', label: 'Pais', width: 130 },
@@ -114,29 +114,23 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
     return item.nome;
   };
 
-  const getImageUrl = (item) => {
-    if (type === 'pesquisador') return item.foto;
-    return item.logo;
-  };
-
   const renderCell = (item, colId) => {
     switch (colId) {
       case 'id':
         return <Typography variant="body2" color="text.secondary">{item.id}</Typography>;
-      case 'logo':
-      case 'foto': {
-        const url = getImageUrl(item);
+      case 'logo': {
+        const url = getDisplayLogoUrl(item.logo);
         const name = getNameField(item) || '?';
         return (
           <Avatar
             src={url || undefined}
             sx={{
               width: 32, height: 32,
-              bgcolor: type === 'pesquisador' ? 'secondary.light' : 'primary.light',
+              bgcolor: 'primary.light',
               fontSize: 14, fontWeight: 700,
-              border: url && type !== 'pesquisador' ? '1px solid' : 'none',
+              border: url ? '1px solid' : 'none',
               borderColor: 'grey.200',
-              '& img': { objectFit: 'contain', width: type !== 'pesquisador' ? '70%' : '100%', height: type !== 'pesquisador' ? '70%' : '100%' },
+              '& img': { objectFit: 'contain', width: '70%', height: '70%' },
             }}
           >
             {name.charAt(0).toUpperCase()}
