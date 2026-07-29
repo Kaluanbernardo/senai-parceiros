@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import stakeholders from '../data/stakeholders.json';
 import { buildLocalEvaluation, mergeAiEvaluation, rankProviderCandidates, selectShortlist } from './selectionEngine';
 
 const candidates = [
@@ -128,5 +129,100 @@ describe('selection engine', () => {
     expect(first.comparativeEdge).toContain('Diferencia-se');
     expect(first.dimensionRationale).toEqual(expect.objectContaining({ impact: expect.any(String), risk: expect.any(String) }));
     expect(Array.isArray(first.tradeoffs)).toBe(true);
+  });
+
+  it('does not treat absence of partnership evidence as a risk signal', () => {
+    const neutral = { ...candidates[0], id: 10, relacao: '' };
+    const partnershipUnknown = { ...candidates[0], id: 11, relacao: 'Sem evidência pública de parceria com o SENAI-SP.' };
+
+    const result = buildLocalEvaluation({ ...input, candidates: [neutral, partnershipUnknown] });
+    const neutralRisk = result.candidatePool.find((entry) => entry.candidate.id === 10).dimensions.risk;
+    const unknownRisk = result.candidatePool.find((entry) => entry.candidate.id === 11).dimensions.risk;
+
+    expect(unknownRisk).toBe(neutralRisk);
+  });
+
+  it('excludes a catalog record with a confirmed severe risk from the local shortlist', () => {
+    const safe = Array.from({ length: 5 }, (_, index) => ({
+      ...candidates[0],
+      id: 20 + index,
+      nome: `Especialista seguro ${index + 1}`,
+      instituicao: `Instituto seguro ${index + 1}`,
+    }));
+    const sanctioned = {
+      ...candidates[0],
+      id: 99,
+      nome: 'Organização com impedimento',
+      instituicao: 'Organização com impedimento',
+      riscos_sinais: 'Sanção oficial confirmada e impedimento vigente para contratação pública.',
+    };
+
+    const result = buildLocalEvaluation({ ...input, candidates: [sanctioned, ...safe] });
+    const risky = result.candidatePool.find((entry) => entry.candidate.id === 99);
+
+    expect(risky.severeRisk).toMatchObject({ confirmed: true });
+    expect(risky.strategicValue).toBe(0);
+    expect(result.shortlist.some((entry) => entry.candidate.id === 99)).toBe(false);
+    expect(result.trace.shortlistExcluded).toContainEqual({ id: 99, reason: 'severe-risk' });
+  });
+
+  it('does not escalate an explicitly unconfirmed allegation to a severe risk', () => {
+    const alleged = {
+      ...candidates[0],
+      id: 100,
+      riscos_sinais: 'Sanção não confirmada por fonte oficial; alegação ainda sem comprovação.',
+    };
+
+    const result = buildLocalEvaluation({ ...input, candidates: [alleged, ...candidates] });
+    const evaluated = result.candidatePool.find((entry) => entry.candidate.id === 100);
+
+    expect(evaluated.severeRisk).toBeNull();
+    expect(evaluated.strategicValue).toBeGreaterThan(0);
+  });
+
+  it('preserves a confirmed local severe risk when the AI evaluation omits it', () => {
+    const sanctioned = {
+      ...candidates[0],
+      id: 101,
+      riscos_sinais: 'Sanção oficial confirmada e impedimento vigente.',
+    };
+    const local = buildLocalEvaluation({ ...input, candidates: [sanctioned, ...candidates] });
+    const merged = mergeAiEvaluation(local, {
+      provider: 'openrouter',
+      evaluations: [{ id: 101, dimensions: { impact: 100, alignment: 100, credibility: 100 } }],
+    });
+    const evaluated = merged.candidatePool.find((entry) => entry.candidate.id === 101);
+
+    expect(evaluated.severeRisk).toMatchObject({ confirmed: true });
+    expect(evaluated.strategicValue).toBe(0);
+    expect(merged.shortlist.some((entry) => entry.candidate.id === 101)).toBe(false);
+  });
+
+  it('calibrates an advanced-manufacturing partnership case with real catalog records', () => {
+    const catalogIds = new Set([25, 37, 49, 70]);
+    const realCandidates = stakeholders.filter((candidate) => catalogIds.has(Number(candidate.id)));
+    const result = buildLocalEvaluation({
+      category: 'organization',
+      objective: 'project_partner',
+      answers: {
+        context: 'Projeto aplicado de manufatura avançada e inteligência artificial para a indústria paulista',
+        themes: 'manufatura avançada; inovação industrial; inteligência artificial',
+        geography: 'Brasil ou parceria internacional remota',
+        constraints: 'evidência pública de colaboração',
+      },
+      brief: {
+        context: 'Projeto aplicado de manufatura avançada e inteligência artificial',
+        themes: ['manufatura avançada', 'inovação industrial', 'inteligência artificial'],
+        desiredOutcomes: ['projeto aplicado'],
+        collaborationModel: 'projeto conjunto',
+        feasibility: { geography: 'Brasil' },
+      },
+      candidates: realCandidates,
+    });
+    const byId = new Map(result.candidatePool.map((entry) => [Number(entry.candidate.id), entry]));
+
+    expect(byId.get(25).total).toBeGreaterThan(byId.get(37).total);
+    expect(byId.get(25).dimensions.collaboration).toBeGreaterThan(byId.get(37).dimensions.collaboration);
+    expect(result.shortlist[0].candidate.nome).not.toBe('Ivy Tech Community College');
   });
 });

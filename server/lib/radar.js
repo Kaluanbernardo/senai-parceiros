@@ -3,7 +3,8 @@ import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json
 import { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
 import { radarStore } from './radarStore.js';
-import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract, validateResearchSummary } from './radar/summaries.js';
+import { summarizeResearchItems } from './radar/researchSummaryService.js';
+import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract } from './radar/summaries.js';
 import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
 import { TavilyWebProvider } from './radar/web/tavily.js';
 export { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
@@ -36,15 +37,15 @@ export const RADAR_SOURCE_POLICY = [
 
 export const RADAR_FEED_POLICY = [
   { name: 'Governo do Estado de São Paulo', section: 'government', url: 'https://www.agenciasp.sp.gov.br/feed/', official: true, geography: 'São Paulo' },
-  { name: 'FAPESP', section: 'government', url: 'https://agencia.fapesp.br/rss', official: true, geography: 'São Paulo' },
   { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
 ];
 
-export const RADAR_FEED_MANIFEST_VERSION = '2026-07-17.v2';
+export const RADAR_FEED_MANIFEST_VERSION = '2026-07-29.v3';
 
 export const RADAR_WEB_POLICY = [
   { name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos/noticias', official: true, geography: 'Brasil' },
   { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' },
+  { name: 'FAPESP', section: 'government', url: 'https://fapesp.br/noticias', official: true, geography: 'São Paulo' },
   { name: 'OIT', section: 'international', url: 'https://www.ilo.org/topics-and-sectors/skills-and-lifelong-learning', official: true, geography: 'Internacional' },
   { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional' },
   { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional' },
@@ -639,7 +640,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   }
   if (live && (!filters.section || filters.section === 'government')) {
     const dou = await fetchDouItems({ limit: 20 });
-    sourceStatus.DOU = providerStatus('Diário Oficial da União', dou.status === 'error' ? 'error' : 'ok', {
+    sourceStatus.DOU = providerStatus('Diário Oficial da União', dou.status, {
       count: dou.items.length,
       provider: dou.provider,
       window: dou.window,
@@ -681,8 +682,12 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const mergedResearch = mergeResearchItems(items.filter((item) => item.section === 'research'));
+  const shouldSummarizeResearch = live && (!filters.section || filters.section === 'research');
+  const summarizedResearch = shouldSummarizeResearch
+    ? await summarizeResearchItems(mergedResearch, { previousItems: stored?.items?.filter((item) => item.section === 'research') || [] })
+    : mergedResearch;
   const nonResearch = items.filter((item) => item.section !== 'research');
-  const snapshotItems = dedupeRadarItems([...mergedResearch, ...nonResearch]).filter((item) => item.isNews && !item.isPlaceholder);
+  const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter((item) => item.isNews && !item.isPlaceholder);
   const stale = !liveProvider && Boolean(stored);
   if (persist && liveProvider) {
     radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "radar:feeds:audit": "node scripts/audit-official-feeds.mjs",
     "handoff:preflight": "node scripts/handoff-preflight.mjs",
     "handoff:preflight:corporate": "node scripts/handoff-preflight.mjs --profile=corporate",
     "handoff:preflight:mvp": "node scripts/handoff-preflight.mjs --profile=mvp"

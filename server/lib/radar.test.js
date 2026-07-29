@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateRadarRelevance, dedupeRadarItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, resetRadarLiveCache } from './radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -76,6 +76,16 @@ describe('radar domain', () => {
     else process.env.RADAR_EXTRA_FEEDS_JSON = previous;
   });
 
+  it('keeps FAPESP on its current official web source instead of the broken legacy RSS endpoint', () => {
+    expect(getRadarFeedPolicy().some((feed) => feed.url === 'https://agencia.fapesp.br/rss')).toBe(false);
+    expect(RADAR_WEB_POLICY).toContainEqual(expect.objectContaining({
+      name: 'FAPESP',
+      section: 'government',
+      url: 'https://fapesp.br/noticias',
+      official: true,
+    }));
+  });
+
   it('ingests an institutional RSS item with provenance and section', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<rss><channel><item><title>Nova política de EPT</title><link>https://example.org/noticia</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Educação profissional e aprendizagem.</description><guid>item-1</guid></item></channel></rss>', { status: 200 })));
     const items = await fetchFeedItems({ name: 'Fonte governamental de teste', section: 'government', url: 'https://example.org/feed.xml', official: true, geography: 'Brasil' }, { limit: 5 });
@@ -110,6 +120,60 @@ describe('radar domain', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('sort=publication_date%3Adesc');
     expect(fetchMock.mock.calls[0][0]).toContain('to_publication_date');
     expect(items[0]).toMatchObject({ sourceName: 'OpenAlex', publishedAt: '2026-07-15', isNews: true });
+  });
+
+  it('enriches live research items with optional AI summaries before returning the snapshot', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    process.env.OPENROUTER_MODEL = 'test/model';
+    process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
+    vi.stubGlobal('fetch', vi.fn(async (url, request) => {
+      if (String(url).includes('openrouter.ai')) {
+        const payload = JSON.parse(request.body);
+        const requested = JSON.parse(payload.messages.at(-1).content);
+        return new Response(JSON.stringify({
+          model: 'test/model',
+          usage: { total_tokens: 120 },
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                summaries: requested.map((item) => ({
+                  id: item.id,
+                  summaryPt: 'O estudo compara percursos de educação profissional para manufatura avançada e apresenta evidências sobre participação empresarial, currículo e oportunidades de aprendizagem.',
+                })),
+              }),
+            },
+          }],
+        }), { status: 200 });
+      }
+      if (String(url).includes('api.openalex.org')) {
+        return new Response(JSON.stringify({ results: [{
+          id: 'https://openalex.org/W-ai',
+          display_name: 'Vocational education for advanced manufacturing',
+          publication_date: '2026-07-15',
+          type: 'article',
+          relevance_score: 8.2,
+          authorships: [],
+          topics: [{ display_name: 'Vocational education' }],
+          abstract_inverted_index: {
+            This: [0], study: [1], compares: [2], vocational: [3], education: [4], pathways: [5],
+            for: [6], advanced: [7], manufacturing: [8], and: [9], employer: [10], participation: [11],
+          },
+        }] }), { status: 200 });
+      }
+      if (String(url).includes('api.crossref.org')) {
+        return new Response(JSON.stringify({ message: { items: [] } }), { status: 200 });
+      }
+      return new Response('<rss><channel></channel></rss>', { status: 200 });
+    }));
+
+    const result = await getRadarItems({ filters: { section: 'research' }, live: true, persist: false });
+    const enriched = result.items.find((item) => item.externalId === 'https://openalex.org/W-ai');
+
+    expect(enriched).toMatchObject({
+      summaryStatus: 'ai',
+      summaryProvenance: { provider: 'openrouter', model: 'test/model' },
+    });
   });
 
   it('retrieves OECD VET publications through public DOI metadata', async () => {
@@ -149,6 +213,31 @@ describe('radar domain', () => {
     expect(result.lastRun.status).toBe('ok');
     expect(getRadarStoreStatus().snapshot.itemCount).toBeGreaterThan(0);
     expect(Object.values(result.sourceStatus).some((source) => source.status === 'ok')).toBe(true);
+  });
+
+  it('records a reachable DOU window without eligible acts as no_edition', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><body></body></html>', { status: 200 })));
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
+
+    expect(result.liveProvider).toBe(true);
+    expect(result.sourceStatus.DOU).toMatchObject({
+      status: 'no_edition',
+      count: 0,
+      provider: 'direct-official',
+    });
+  });
+
+  it('does not spend the academic-summary budget on a government-only refresh', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
+    const fetchMock = vi.fn(async () => new Response('<html><body></body></html>', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
+
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('openrouter.ai'))).toBe(false);
   });
 
   it('serves the last snapshot when every live source fails', async () => {

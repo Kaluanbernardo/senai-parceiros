@@ -76,6 +76,20 @@ function sourceFields(candidate) {
     .map(([key]) => key);
 }
 
+function confirmedSevereRisk(candidate) {
+  const evidence = [candidate.riscos_sinais, candidate.risco, candidate.risk].filter(Boolean).join(' ').trim();
+  const value = fold(evidence);
+  if (!value) return null;
+  const severeSignal = /sancao|impediment|corrup|fraude|embargo|ineleg|conflito de interesse|condena/.test(value);
+  const confirmed = /confirmad|oficial|vigent|sentenca|decisao|lista|condena/.test(value);
+  const negated = [
+    /(?:sem|nao ha|nenhum|nao localizado).{0,40}(?:sancao|impediment|corrup|fraude|embargo|ineleg|conflito|condena)/,
+    /(?:sancao|impediment|corrup|fraude|embargo|ineleg|conflito|condena).{0,50}(?:nao confirmad|nao comprova|sem confirmacao|alegad|suspeit)/,
+    /(?:alegad|suspeit).{0,40}(?:sancao|impediment|corrup|fraude|embargo|ineleg|conflito|condena)/,
+  ].some((pattern) => pattern.test(value));
+  return severeSignal && confirmed && !negated ? { confirmed: true, evidence } : null;
+}
+
 function scoreCandidate({ candidate, input }) {
   const briefText = [input.brief?.context, ...(input.brief?.themes || []), ...(input.brief?.desiredOutcomes || []), ...(input.brief?.contributionTypes || []), input.brief?.audience, input.brief?.collaborationModel].filter(Boolean).join(' ');
   const contextText = Object.values(input.answers || {}).join(' ') + ' ' + briefText + ' ' + SENAI_STRATEGIC_BASELINE.join(' ');
@@ -99,8 +113,11 @@ function scoreCandidate({ candidate, input }) {
   const geography = fold(input.brief?.feasibility?.geography || input.answers?.geography);
   const sameCountry = geography && candidate.pais && geography.includes(fold(candidate.pais));
   const feasibility = 48 + (sameCountry ? 18 : 0) + (fold(input.brief?.hardConstraints?.join(' ') || input.answers?.constraints).includes('remot') ? 12 : 0) + (objectiveBoost.feasibility || 0);
-  const riskSignals = [candidate.risco, candidate.risk, candidate.relacao].filter(Boolean).join(' ');
-  const risk = clamp(78 - (fold(riskSignals).includes('sem evid') || fold(riskSignals).includes('conflito') ? 22 : 0) - (sourceFields(candidate).length < 5 ? 8 : 0));
+  const relationshipRisk = /conflito|sancao|sanção|impedimento|fraude|corrup/i.test(String(candidate.relacao || '')) ? candidate.relacao : '';
+  const riskSignals = [candidate.riscos_sinais, candidate.risco, candidate.risk, relationshipRisk].filter(Boolean).join(' ');
+  const riskWarning = /conflito|sancao|impediment|fraude|corrup|controvers|restri/.test(fold(riskSignals));
+  const severeRisk = confirmedSevereRisk(candidate);
+  const risk = clamp((severeRisk ? 12 : 78) - (!severeRisk && riskWarning ? 22 : 0) - (sourceFields(candidate).length < 5 ? 8 : 0));
   const impact = clamp(42 + relevance * 0.55 + (candidate.relevancia ? 12 : 0) + (objectiveBoost.impact || 0));
   const alignment = clamp(30 + relevance * 0.7 + (objectiveBoost.alignment || 0));
   const calibratedCredibility = clamp(credibility + (objectiveBoost.credibility || 0));
@@ -113,7 +130,9 @@ function scoreCandidate({ candidate, input }) {
     feasibility: clamp(feasibility),
     risk: clamp(risk),
   };
-  const strategicValue = clamp(dimensions.impact * FORMULA_WEIGHTS.strategic.impact + dimensions.alignment * FORMULA_WEIGHTS.strategic.alignment + dimensions.credibility * FORMULA_WEIGHTS.strategic.credibility);
+  const strategicValue = severeRisk
+    ? 0
+    : clamp(dimensions.impact * FORMULA_WEIGHTS.strategic.impact + dimensions.alignment * FORMULA_WEIGHTS.strategic.alignment + dimensions.credibility * FORMULA_WEIGHTS.strategic.credibility);
   const viability = clamp(dimensions.collaboration * FORMULA_WEIGHTS.viability.collaboration + dimensions.feasibility * FORMULA_WEIGHTS.viability.feasibility + dimensions.risk * FORMULA_WEIGHTS.viability.risk);
   const total = clamp(strategicValue * FORMULA_WEIGHTS.total.strategic + viability * FORMULA_WEIGHTS.total.viability);
 
@@ -123,6 +142,7 @@ function scoreCandidate({ candidate, input }) {
     strategicValue,
     viability,
     total,
+    severeRisk,
     confidence: clamp(35 + completeness * 50 + Math.min(overlap.length * 3, 15)),
     summary: overlap.length ? 'Aderência encontrada nos termos: ' + overlap.slice(0, 6).join(', ') + (candidate.pais ? `. Diferencial de contexto: atuação em ${candidate.pais}.` : '.') : 'Aderência contextual ainda precisa de validação humana.',
     comparativeEdge: overlap.length ? `Diferencia-se por combinar ${overlap.slice(0, 4).join(', ')}${candidate.pais ? ` e atuação em ${candidate.pais}` : ''}.` : 'Diferencial ainda não demonstrado nas fontes públicas disponíveis.',
@@ -242,7 +262,10 @@ function normalizeAiDimensions(dimensions, fallback) {
 
 function recompute(entry, ai) {
   const dimensions = normalizeAiDimensions(ai?.dimensions, entry.dimensions);
-  const strategicValue = ai?.severeRisk?.confirmed
+  const severeRisk = entry.severeRisk?.confirmed
+    ? entry.severeRisk
+    : ai?.severeRisk?.confirmed ? ai.severeRisk : null;
+  const strategicValue = severeRisk
     ? 0
     : clamp(dimensions.impact * FORMULA_WEIGHTS.strategic.impact + dimensions.alignment * FORMULA_WEIGHTS.strategic.alignment + dimensions.credibility * FORMULA_WEIGHTS.strategic.credibility);
   const viability = clamp(dimensions.collaboration * FORMULA_WEIGHTS.viability.collaboration + dimensions.feasibility * FORMULA_WEIGHTS.viability.feasibility + dimensions.risk * FORMULA_WEIGHTS.viability.risk);
@@ -253,7 +276,7 @@ function recompute(entry, ai) {
     strategicValue,
     viability,
     total: clamp(strategicValue * FORMULA_WEIGHTS.total.strategic + viability * FORMULA_WEIGHTS.total.viability),
-    severeRisk: ai?.severeRisk || null,
+    severeRisk,
   };
 }
 

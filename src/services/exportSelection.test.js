@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { RICH_WORKSHEET_NAMES, sanitizeSpreadsheetValue, snapshotSelection } from './exportSelection';
+import ExcelJS from 'exceljs';
+import { exportSelection, RICH_WORKSHEET_NAMES, sanitizeSpreadsheetValue, snapshotSelection } from './exportSelection';
 
 describe('exportSelection', () => {
   it('sanitizes formula-like spreadsheet values', () => {
@@ -19,5 +20,30 @@ describe('exportSelection', () => {
     expect(snapshot.catalog).toHaveLength(2);
     expect(snapshot.answers.context).toBe('benchmarking');
     expect(RICH_WORKSHEET_NAMES).toHaveLength(9);
+  });
+
+  it('produces an XLSX that reopens with all nine audit worksheets', async () => {
+    const result = {
+      shortlist: [{
+        candidate: { id: 1, nome: 'Pessoa', instituicao: 'Instituto', website: 'https://example.org' },
+        total: 82,
+        strategicValue: 84,
+        viability: 79,
+        dimensions: { impact: 80, alignment: 85, credibility: 82, collaboration: 78, feasibility: 76, risk: 90 },
+        evidence: ['website'],
+        gaps: [],
+      }],
+      candidatePool: [{ candidate: { id: 1, nome: 'Pessoa', instituicao: 'Instituto', website: 'https://example.org' }, total: 82 }],
+      answers: { context: 'benchmarking' },
+      trace: { provider: 'local-fallback', formula: 'valor estratégico × 0,58 + viabilidade × 0,42' },
+    };
+
+    const artifact = await exportSelection(result, 'xlsx', { category: 'researcher' });
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await artifact.blob.arrayBuffer());
+
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(RICH_WORKSHEET_NAMES);
+    expect(workbook.getWorksheet('Shortlist').rowCount).toBeGreaterThan(1);
+    expect(artifact.filename).toMatch(/\.xlsx$/);
   });
 });
