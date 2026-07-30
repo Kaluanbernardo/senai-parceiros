@@ -127,12 +127,13 @@ function withTimeout(signal, timeoutMs) {
 }
 
 export class DirectOfficialWebProvider {
-  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
+  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 6), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
     this.fetchImpl = fetchImpl;
     this.baseUrl = baseUrl;
     this.sections = sections;
     this.timeoutMs = timeoutMs;
     this.maxDays = maxDays;
+    this.concurrency = concurrency;
     this.userAgent = userAgent;
   }
 
@@ -158,17 +159,25 @@ export class DirectOfficialWebProvider {
     const urls = buildDouEditionUrls({ startDate: startDate || new Date(), endDate: endDate || startDate || new Date(), sections: this.sections, baseUrl: this.baseUrl, maxDays: this.maxDays });
     const items = [];
     const errors = [];
-    for (const editionUrl of urls) {
-      try {
-        const html = await this.requestText(editionUrl, { signal });
+    // One edition per day per section, fetched sequentially, meant a useful
+    // lookback cost more wall clock than a serverless invocation has. Editions
+    // are independent, so they go in bounded-concurrency batches instead: the
+    // window can now be wide enough to actually catch an EPT act.
+    const batchSize = Math.max(1, Number(this.concurrency) || 6);
+    for (let index = 0; index < urls.length && items.length < maxResults; index += batchSize) {
+      const batch = urls.slice(index, index + batchSize);
+      const settled = await Promise.allSettled(batch.map((editionUrl) => this.requestText(editionUrl, { signal })));
+      settled.forEach((result, offset) => {
+        const editionUrl = batch[offset];
+        if (result.status === 'rejected') {
+          errors.push({ url: editionUrl, error: sanitizeProviderError(result.reason, 'direct_official_fetch_failed') });
+          return;
+        }
         const date = new URL(editionUrl).searchParams.get('data');
         const match = String(date || '').match(/^(\d{2})-(\d{2})-(20\d{2})$/);
         const iso = match ? `${match[3]}-${match[2]}-${match[1]}` : isoDate(startDate || new Date());
-        items.push(...parseListing(html, editionUrl, iso, sectionFromUrl(editionUrl)));
-      } catch (error) {
-        errors.push({ url: editionUrl, error: sanitizeProviderError(error, 'direct_official_fetch_failed') });
-      }
-      if (items.length >= maxResults) break;
+        items.push(...parseListing(result.value, editionUrl, iso, sectionFromUrl(editionUrl)));
+      });
     }
     const unique = [...new Map(items.map((item) => [item.externalId, item])).values()].slice(0, Math.max(0, Number(maxResults) || 20));
     return createDiscoveryResult({

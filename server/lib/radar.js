@@ -523,7 +523,11 @@ function douDateWindow() {
   const now = new Date();
   const end = new Date(now);
   const start = new Date(now);
-  start.setUTCDate(start.getUTCDate() - Math.max(0, Math.min(7, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 3) - 1)));
+  // The window was hard-capped at 7 days, so configuring a wider lookback had
+  // no effect. Acts on vocational education do not appear daily, and a window
+  // that short is the reason the collector reaches the official source and
+  // still reports zero eligible items.
+  start.setUTCDate(start.getUTCDate() - Math.max(0, Math.min(45, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 15) - 1)));
   return { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) };
 }
 
@@ -566,7 +570,7 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   const { startDate, endDate } = douDateWindow();
   const direct = new DirectOfficialWebProvider({
     sections: String(process.env.RADAR_DOU_SECTIONS || 'DO1,DO3').split(',').map((value) => value.trim()).filter(Boolean),
-    maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 3)),
+    maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 15)),
   });
   const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: limit });
   let candidates = directDiscovery.items || [];

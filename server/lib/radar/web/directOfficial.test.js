@@ -29,6 +29,28 @@ describe('DirectOfficialWebProvider', () => {
     expect(result.errors).toContainEqual({ url: 'https://example.org/noticia', error: 'url_not_allowed' });
   });
 
+  it('busca as edicoes em paralelo para permitir uma janela util', async () => {
+    // One edition per day per section fetched one after another made a useful
+    // lookback cost more wall clock than a serverless invocation has, which is
+    // why the window stayed too short to ever catch an act.
+    let inFlight = 0;
+    let peak = 0;
+    const fetchImpl = vi.fn(async () => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => { setTimeout(resolve, 5); });
+      inFlight -= 1;
+      return new Response(editionHtml, { status: 200 });
+    });
+    const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1', 'DO3'], maxDays: 10, concurrency: 6 });
+    const result = await provider.discover({ startDate: '2026-07-08', endDate: '2026-07-17', maxResults: 200 });
+
+    expect(result.status).toBe('ok');
+    expect(fetchImpl.mock.calls.length).toBeGreaterThan(6);
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThanOrEqual(6);
+  });
+
   it('keeps source failures observable without throwing away partial results', async () => {
     const fetchImpl = vi.fn()
       .mockResolvedValueOnce(new Response(editionHtml, { status: 200 }))
