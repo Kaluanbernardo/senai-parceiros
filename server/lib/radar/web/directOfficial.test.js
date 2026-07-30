@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { DirectOfficialWebProvider } from './directOfficial.js';
 
 const editionHtml = await readFile(new URL('../fixtures/dou-edition.html', import.meta.url), 'utf8');
+const editionSpaHtml = await readFile(new URL('../fixtures/dou-edition-spa.html', import.meta.url), 'utf8');
 const articleHtml = await readFile(new URL('../fixtures/dou-article.html', import.meta.url), 'utf8');
 
 describe('DirectOfficialWebProvider', () => {
@@ -27,6 +28,35 @@ describe('DirectOfficialWebProvider', () => {
     expect(result.documents[0].content).toMatch(/diretrizes para programas/i);
     expect(result.documents[0].title).toMatch(/Portaria de educação profissional/i);
     expect(result.errors).toContainEqual({ url: 'https://example.org/noticia', error: 'url_not_allowed' });
+  });
+
+  it('le a edicao renderizada no cliente pelo payload embutido', async () => {
+    // The real edition page ships no article anchors, which is why a fortnight
+    // of successful fetches still parsed zero acts.
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(editionSpaHtml, { status: 200 }));
+    const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1'], maxDays: 1 });
+    const result = await provider.discover({ startDate: '2026-07-17', endDate: '2026-07-17', maxResults: 10 });
+
+    expect(result.status).toBe('ok');
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]).toMatchObject({
+      sourceName: 'Diário Oficial da União',
+      official: true,
+      provider: 'direct-official',
+      publishedAt: '2026-07-17',
+    });
+    expect(result.items[0].sourceUrl).toContain('in.gov.br/web/dou/');
+    expect(result.items[0].title).toMatch(/educação profissional/i);
+  });
+
+  it('distingue edicao sem ato de pagina que nao foi lida', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response('<html><body><div id="root"></div></body></html>', { status: 200 }));
+    const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1'], maxDays: 1 });
+    const result = await provider.discover({ startDate: '2026-07-17', endDate: '2026-07-17' });
+
+    expect(result.items).toHaveLength(0);
+    expect(result.diagnostics).toMatchObject({ editionsRead: 1, anchorItems: 0, embeddedItems: 0, emptyEditions: 1 });
+    expect(result.diagnostics.htmlBytes).toBeGreaterThan(0);
   });
 
   it('busca as edicoes em paralelo para permitir uma janela util', async () => {

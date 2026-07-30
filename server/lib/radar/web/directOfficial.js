@@ -82,6 +82,67 @@ function extractArticleBody(html) {
   return trimText(article, 12000);
 }
 
+function decodeEntities(value) {
+  return String(value || '')
+    .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * The edition page at `leiturajornal` renders its listing client-side, so the
+ * delivered HTML carries no article anchors at all — the reason a run could
+ * fetch a full fortnight of editions without ever parsing a single act. The
+ * day's acts travel instead in an embedded JSON payload, which is what this
+ * reads.
+ */
+function parseEmbeddedEdition(html, editionUrl, publishedAt, section) {
+  const source = String(html || '');
+  const raw = source.match(/<script[^>]*\bid=["']params["'][^>]*>([\s\S]*?)<\/script>/i)?.[1]
+    || source.match(/<script[^>]*>\s*(\{[\s\S]*?"jsonArray"[\s\S]*?\})\s*<\/script>/i)?.[1];
+  if (!raw) return [];
+  let payload;
+  try {
+    payload = JSON.parse(decodeEntities(raw).trim());
+  } catch {
+    return [];
+  }
+  const entries = Array.isArray(payload?.jsonArray) ? payload.jsonArray : [];
+  const items = [];
+  const seen = new Set();
+  for (const entry of entries) {
+    const slug = String(entry?.urlTitle || entry?.url || '').trim();
+    const title = trimText(entry?.title || entry?.artTitle || '', 280);
+    if (!slug || !title || title.length < 8) continue;
+    const url = absoluteDouUrl(slug.startsWith('http') || slug.startsWith('/') ? slug : `/web/dou/-/${slug}`, editionUrl);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    const articleId = articleIdFromUrl(url);
+    const brazilian = String(entry?.pubDate || '').match(/^(\d{2})\/(\d{2})\/(20\d{2})$/);
+    items.push({
+      externalId: `dou:${articleId}`,
+      sourceName: 'Diário Oficial da União',
+      sourceUrl: url,
+      title,
+      summaryPt: trimText(entry?.content || entry?.artCategory || '', 900),
+      publishedAt: brazilian ? `${brazilian[3]}-${brazilian[2]}-${brazilian[1]}` : isoDate(publishedAt),
+      contentType: 'ato oficial',
+      section: String(entry?.pubName || section || sectionFromUrl(editionUrl) || 'DO1'),
+      official: true,
+      provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL,
+      provenance: {
+        editionUrl,
+        edition: isoDate(publishedAt),
+        section: section || sectionFromUrl(editionUrl) || null,
+        articleId,
+        discoveredAt: new Date().toISOString(),
+      },
+    });
+  }
+  return items;
+}
+
 function parseListing(html, editionUrl, publishedAt, section) {
   const items = [];
   const seen = new Set();
@@ -159,6 +220,10 @@ export class DirectOfficialWebProvider {
     const urls = buildDouEditionUrls({ startDate: startDate || new Date(), endDate: endDate || startDate || new Date(), sections: this.sections, baseUrl: this.baseUrl, maxDays: this.maxDays });
     const items = [];
     const errors = [];
+    // Counting what each edition actually yielded is what distinguishes "no act
+    // was published" from "the page was never parsed" — two situations that
+    // otherwise both report zero.
+    const diagnostics = { editionsRead: 0, anchorItems: 0, embeddedItems: 0, emptyEditions: 0, htmlBytes: 0 };
     // One edition per day per section, fetched sequentially, meant a useful
     // lookback cost more wall clock than a serverless invocation has. Editions
     // are independent, so they go in bounded-concurrency batches instead: the
@@ -176,7 +241,14 @@ export class DirectOfficialWebProvider {
         const date = new URL(editionUrl).searchParams.get('data');
         const match = String(date || '').match(/^(\d{2})-(\d{2})-(20\d{2})$/);
         const iso = match ? `${match[3]}-${match[2]}-${match[1]}` : isoDate(startDate || new Date());
-        items.push(...parseListing(result.value, editionUrl, iso, sectionFromUrl(editionUrl)));
+        const anchored = parseListing(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
+        const embedded = anchored.length ? [] : parseEmbeddedEdition(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
+        diagnostics.editionsRead += 1;
+        diagnostics.anchorItems += anchored.length;
+        diagnostics.embeddedItems += embedded.length;
+        diagnostics.htmlBytes = Math.max(diagnostics.htmlBytes, String(result.value || '').length);
+        if (!anchored.length && !embedded.length) diagnostics.emptyEditions += 1;
+        items.push(...anchored, ...embedded);
       });
     }
     const unique = [...new Map(items.map((item) => [item.externalId, item])).values()].slice(0, Math.max(0, Number(maxResults) || 20));
@@ -185,6 +257,7 @@ export class DirectOfficialWebProvider {
       errors,
       provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL,
       status: errors.length && !unique.length ? 'error' : errors.length ? 'partial' : unique.length ? 'ok' : 'no_edition',
+      diagnostics,
       trace: createProviderTrace({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, startedAt, requestCount: urls.length, query }),
     });
   }

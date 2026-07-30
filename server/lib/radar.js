@@ -600,7 +600,7 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   }
   const byUrl = new Map(documents.map((document) => [document.sourceUrl, document]));
   const items = candidates.map((candidate) => douItemFromDocument(byUrl.get(candidate.sourceUrl), candidate)).filter(Boolean).slice(0, limit);
-  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, window: { startDate, endDate } };
+  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, diagnostics: directDiscovery.diagnostics || null, window: { startDate, endDate } };
 }
 
 function providerStatus(name, status, extra = {}) {
@@ -676,6 +676,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       count: dou.items.length,
       provider: dou.provider,
       window: dou.window,
+      diagnostics: dou.diagnostics || null,
       errors: dou.errors?.slice(0, 5) || [],
     });
     currentItems.push(...dou.items);

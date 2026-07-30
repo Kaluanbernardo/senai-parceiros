@@ -23,12 +23,15 @@ export function createProviderTrace({ provider, startedAt = new Date().toISOStri
   };
 }
 
-export function createDiscoveryResult({ items = [], errors = [], provider, trace, status = 'ok' } = {}) {
+export function createDiscoveryResult({ items = [], errors = [], provider, trace, status = 'ok', diagnostics = null } = {}) {
   return {
     items: Array.isArray(items) ? items : [],
     errors: Array.isArray(errors) ? errors : [],
     provider: String(provider || trace?.provider || 'unknown'),
     status: String(status || 'ok'),
+    // Counts only; never page content. Zero items with zero parsed anchors is a
+    // different failure from zero items in a page that parsed fine.
+    diagnostics: diagnostics && typeof diagnostics === 'object' ? { ...diagnostics } : null,
     trace: trace || createProviderTrace({ provider }),
   };
 }
@@ -51,8 +54,16 @@ export function sanitizeProviderError(error, fallback = 'provider_error') {
   const value = error instanceof Error ? error.message : String(error || '');
   // Never expose request bodies, authorization headers, or arbitrary provider
   // responses in operational status or a user-facing API response.
-  const code = value.match(/^[a-z][a-z0-9_-]{2,64}/i)?.[0] || fallback;
-  return code.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+  //
+  // Providers raise codes (`direct_official_http_403`), but the runtime raises
+  // prose ("This operation was aborted"). Taking the leading token of prose
+  // yielded labels like "this", which name nothing and hid a plain timeout, so
+  // only a message that is entirely code-shaped is passed through.
+  const code = value.match(/^[a-z][a-z0-9_-]{2,64}$/i)?.[0];
+  if (code) return code.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+  if (/abort|timed?\s*out|timeout/i.test(value)) return 'timeout';
+  if (/network|fetch failed|econnreset|socket|dns/i.test(value)) return 'network_error';
+  return fallback;
 }
 
 export function contentHash(value) {
