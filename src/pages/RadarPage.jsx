@@ -47,6 +47,21 @@ const periodOptions = [
   { value: '1y', label: 'Últimos 12 meses' },
 ];
 
+/**
+ * Turns the per-source status of a refresh run into a short operator-facing
+ * clause naming which sources failed and why, so a partial run can be acted on
+ * without opening the endpoint by hand.
+ */
+function describeFailures(lastRun) {
+  const entries = Object.values(lastRun?.sourceStatus || {});
+  const failed = entries.filter((entry) => entry.status === 'error');
+  if (!failed.length) return '';
+  const detail = failed
+    .map((entry) => (entry.error ? `${entry.name} (${entry.error})` : entry.name))
+    .join(', ');
+  return `: ${detail}`;
+}
+
 function localDate(date) {
   if (!date) return 'Data não informada';
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`));
@@ -109,11 +124,13 @@ export default function RadarPage() {
       if (!response.ok || !body.refreshed) {
         // A partial failure keeps the last valid snapshot on purpose, so the
         // radar below stays populated even when this run collected nothing.
+        // Naming the sources that failed is what makes the run diagnosable:
+        // "one or more sources" alone gives the operator nothing to act on.
         setCollectResult({
           severity: 'warning',
           message: body.stale
-            ? 'A coleta falhou em uma ou mais fontes. O último snapshot válido foi preservado.'
-            : 'A coleta não pôde ser concluída agora. O conteúdo exibido continua sendo o último snapshot válido.',
+            ? `A coleta falhou em uma ou mais fontes${describeFailures(body.lastRun)}. O último snapshot válido foi preservado.`
+            : `A coleta não pôde ser concluída agora${describeFailures(body.lastRun)}. O conteúdo exibido continua sendo o último snapshot válido.`,
         });
         return;
       }
@@ -123,7 +140,10 @@ export default function RadarPage() {
           severity: 'warning',
           message: 'Coleta concluída, mas o snapshot está apenas em memória e será perdido na próxima requisição. Configure RADAR_STORE_DRIVER para um adapter durável.',
         }
-        : { severity: 'success', message: `Coleta concluída em ${Math.round((body.durationMs || 0) / 1000)}s e gravada no snapshot durável.` });
+        : {
+          severity: 'success',
+          message: `Coleta concluída em ${Math.round((body.durationMs || 0) / 1000)}s: ${body.lastRun?.itemCount ?? 0} item(ns) gravado(s) no snapshot durável.`,
+        });
     } catch {
       setCollectResult({ severity: 'error', message: 'A coleta não respondeu. Ela consulta várias fontes externas e pode exceder o tempo limite da função.' });
     } finally {
