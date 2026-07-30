@@ -164,6 +164,50 @@ describe('radar domain', () => {
     expect(result.diagnostics.candidates).toBeGreaterThan(result.diagnostics.shortlisted);
   });
 
+  it('preserva ato do DOU aprovado sobre o texto integral do ato', async () => {
+    // Eligibility is decided over the full act, but only an 80-word excerpt is
+    // stored. Re-deciding from the excerpt discarded acts that had legitimately
+    // qualified, so the collector reported four acts and the reader saw none.
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'dou-aprovado',
+        section: 'government',
+        title: 'Portaria SETEC nº 42',
+        summaryPt: 'Trecho do ato que nao repete o termo tematico.',
+        publishedAt: '2026-07-28',
+        sourceName: 'Diário Oficial da União',
+        provider: 'direct-official',
+        externalId: 'dou:aprovado',
+        provenance: { eligibility: { direct: 2, strategic: 1 } },
+      })],
+      fetchedAt: '2026-07-30T00:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+    expect(result.items.map((item) => item.id)).toContain('dou-aprovado');
+
+    // Without the recorded decision the same excerpt is judged on its own and
+    // the act disappears, which is exactly what the reader experienced.
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'dou-sem-registro',
+        section: 'government',
+        title: 'Despacho nº 42 do Ministério da Gestão',
+        summaryPt: 'Trecho do ato que nao repete o termo tematico.',
+        publishedAt: '2026-07-28',
+        sourceName: 'Diário Oficial da União',
+        provider: 'direct-official',
+        externalId: 'dou:sem-registro',
+      })],
+      fetchedAt: '2026-07-30T00:00:00.000Z',
+      liveProvider: true,
+    });
+    const legacy = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+    expect(legacy.items.map((item) => item.id)).not.toContain('dou-sem-registro');
+  });
+
   it('remove do snapshot o que a regra corrigida nao admitiria mais', async () => {
     // The snapshot carries items across runs, so a mistake admitted once stayed
     // visible even after the rule that let it in was fixed.

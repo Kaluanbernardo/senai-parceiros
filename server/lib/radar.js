@@ -595,7 +595,10 @@ function douItemFromDocument(document, candidate = {}) {
     geography: 'Brasil',
     official: true,
     provider: document?.provider || candidate?.provider || 'direct-official',
-    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length },
+    // The decision is recorded with the item because it was taken over the full
+    // act, while only an 80-word excerpt is stored. Re-deciding later from the
+    // excerpt would reject acts that legitimately qualified.
+    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { direct: relevance.direct, strategic: relevance.strategic } },
   });
 }
 
@@ -683,7 +686,14 @@ async function safeStoreCall(operation) {
  * stopped new mistakes but never removed the ones already stored.
  */
 function storedItemStillQualifies(item) {
-  if (item?.provider === 'direct-official') return douRelevance(item.title, item.summaryPt).eligible;
+  if (item?.provider === 'direct-official') {
+    // Items collected since the decision started being recorded carry it; older
+    // ones are re-judged from the text that survived, which is what clears the
+    // off-topic acts admitted under the previous rule.
+    const recorded = item?.provenance?.eligibility;
+    if (recorded && Number.isFinite(Number(recorded.direct))) return Number(recorded.direct) > 0;
+    return douRelevance(item.title, item.summaryPt).eligible;
+  }
   if (item?.provider === 'institutional-web' && !item.publishedAt) return String(item.title || '').length >= 40;
   return true;
 }
