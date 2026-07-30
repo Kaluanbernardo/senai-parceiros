@@ -107,6 +107,24 @@ describe('radar domain', () => {
     expect(undated.every((item) => item.noveltyStatus === 'reference')).toBe(true);
   });
 
+  it('descarta rotulo de secao sem data mas mantem manchete sem data', async () => {
+    // "Funções e Competências" is a permanent page label, not news; it reached
+    // the radar because an undated item has no recency signal to contradict it.
+    radarStore.configure({ driver: 'memory' });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br')
+      ? new Response(
+        '<article><a href="/n/1">Funções e Competências</a><p>Competências institucionais.</p></article>'
+        + '<article><a href="/n/2">Centro Paula Souza abre inscricoes para cursos tecnicos de educacao profissional</a><p>Vagas abertas.</p></article>',
+        { status: 200, headers: { 'content-type': 'text/html' } },
+      )
+      : new Response('', { status: 403 })));
+
+    await refreshRadarSnapshot();
+    const titles = (radarStore.getSnapshot()?.items || []).map((item) => item.title);
+    expect(titles).not.toContain('Funções e Competências');
+    expect(titles.some((title) => /abre inscricoes/i.test(title))).toBe(true);
+  });
+
   it('collects the São Paulo institutional pages in the government section', () => {
     const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
     expect(government).toEqual(expect.arrayContaining(['Centro Paula Souza', 'CEE-SP', 'SEADE', 'InvestSP']));

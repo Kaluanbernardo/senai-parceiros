@@ -236,7 +236,14 @@ export async function fetchWebItems(source, { limit = 8 } = {}) {
   }
   const items = candidates
     .map((candidate, index) => webItem(candidate, source, index))
-    .filter((item) => isEligibleRadarItem(item) && webRelevance(item.title, item.summaryPt) >= 59)
+    // Without a date there is no recency signal to tell a headline from a
+    // permanent section label, which is how a navigation entry titled "Funções e
+    // Competências" reached the radar. Length is the honest discriminator here:
+    // menu labels are short, headlines are not. Raising the topical bar instead
+    // would reject real news that happens to use one term.
+    .filter((item) => isEligibleRadarItem(item)
+      && webRelevance(item.title, item.summaryPt) >= 59
+      && (item.publishedAt || item.title.length >= 40))
     .sort((a, b) => b.relevanceScore - a.relevanceScore || String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')))
     .slice(0, limit);
   cacheSet(cacheKey, items);
@@ -527,7 +534,7 @@ function douDateWindow() {
   // no effect. Acts on vocational education do not appear daily, and a window
   // that short is the reason the collector reaches the official source and
   // still reports zero eligible items.
-  start.setUTCDate(start.getUTCDate() - Math.max(0, Math.min(45, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 15) - 1)));
+  start.setUTCDate(start.getUTCDate() - Math.max(0, Math.min(45, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7) - 1)));
   return { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) };
 }
 
@@ -570,7 +577,8 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   const { startDate, endDate } = douDateWindow();
   const direct = new DirectOfficialWebProvider({
     sections: String(process.env.RADAR_DOU_SECTIONS || 'DO1,DO3').split(',').map((value) => value.trim()).filter(Boolean),
-    maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 15)),
+    maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7)),
+    timeoutMs: Math.max(2000, Number(process.env.RADAR_DOU_TIMEOUT_MS || 8000)),
   });
   const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: limit });
   let candidates = directDiscovery.items || [];
@@ -590,6 +598,9 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   const directDocuments = urls.length ? await direct.retrieve({ urls }) : { documents: [], errors: [], status: directDiscovery.status };
   let documents = directDocuments.documents || [];
   let extractionProvider = directDocuments.provider || provider;
+  // Retrieval errors used to be discarded here, so a run that discovered acts
+  // and then failed to read a single one reported only the discovery timeouts.
+  discoveryErrors = [...discoveryErrors, ...(directDocuments.errors || [])];
   const missingUrls = urls.filter((url) => !documents.some((document) => document.sourceUrl === url));
   if (missingUrls.length && process.env.TAVILY_API_KEY && String(process.env.RADAR_EXTRACT_PROVIDER || 'tavily').toLowerCase() === 'tavily') {
     const tavily = new TavilyWebProvider();
@@ -600,7 +611,13 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   }
   const byUrl = new Map(documents.map((document) => [document.sourceUrl, document]));
   const items = candidates.map((candidate) => douItemFromDocument(byUrl.get(candidate.sourceUrl), candidate)).filter(Boolean).slice(0, limit);
-  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, diagnostics: directDiscovery.diagnostics || null, window: { startDate, endDate } };
+  const diagnostics = {
+    ...(directDiscovery.diagnostics || {}),
+    candidates: candidates.length,
+    retrieved: documents.length,
+    eligible: items.length,
+  };
+  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, diagnostics, window: { startDate, endDate } };
 }
 
 function providerStatus(name, status, extra = {}) {

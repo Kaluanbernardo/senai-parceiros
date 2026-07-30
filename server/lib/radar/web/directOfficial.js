@@ -91,11 +91,13 @@ function decodeEntities(value) {
 }
 
 /**
- * The edition page at `leiturajornal` renders its listing client-side, so the
- * delivered HTML carries no article anchors at all — the reason a run could
- * fetch a full fortnight of editions without ever parsing a single act. The
- * day's acts travel instead in an embedded JSON payload, which is what this
- * reads.
+ * Fallback for editions delivered without article anchors, where the acts
+ * travel in an embedded JSON payload instead.
+ *
+ * Measured behaviour: the edition page does serve anchors, so `parseListing`
+ * carries the run and this path stays unused. It is kept because the two
+ * outcomes are indistinguishable from the outside, and a run that silently
+ * parses nothing is the failure this collector took longest to diagnose.
  */
 function parseEmbeddedEdition(html, editionUrl, publishedAt, section) {
   const source = String(html || '');
@@ -188,7 +190,7 @@ function withTimeout(signal, timeoutMs) {
 }
 
 export class DirectOfficialWebProvider {
-  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 6), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
+  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 10), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
     this.fetchImpl = fetchImpl;
     this.baseUrl = baseUrl;
     this.sections = sections;
@@ -267,14 +269,30 @@ export class DirectOfficialWebProvider {
     const documents = [];
     const errors = [];
     const candidates = [...new Set((Array.isArray(urls) ? urls : []).map((value) => String(value || '').trim()))].slice(0, 20);
+    // Eligibility is decided on the act's body, so every discovered act has to be
+    // fetched before it can qualify. One at a time, that cost more than the
+    // invocation had left after discovery, and the whole edition was discarded
+    // for lack of content rather than for lack of relevance.
+    const batchSize = Math.max(1, Number(this.concurrency) || 6);
+    const allowed = [];
     for (const candidate of candidates) {
       const url = normalizeHttpsUrl(candidate, { domains: ['in.gov.br'] });
       if (!url || !isDouUrl(url, { article: true })) {
         errors.push({ url: candidate, error: 'url_not_allowed' });
         continue;
       }
-      try {
-        const html = await this.requestText(url, { signal });
+      allowed.push(url);
+    }
+    for (let index = 0; index < allowed.length; index += batchSize) {
+      const batch = allowed.slice(index, index + batchSize);
+      const settled = await Promise.allSettled(batch.map((url) => this.requestText(url, { signal })));
+      settled.forEach((result, offset) => {
+        const url = batch[offset];
+        if (result.status === 'rejected') {
+          errors.push({ url, error: sanitizeProviderError(result.reason, 'direct_official_fetch_failed') });
+          return;
+        }
+        const html = result.value;
         const content = extractArticleBody(html);
         documents.push({
           externalId: `dou:${articleIdFromUrl(url)}`,
@@ -289,9 +307,7 @@ export class DirectOfficialWebProvider {
           focus,
           provenance: { articleId: articleIdFromUrl(url), extractedAt: new Date().toISOString(), extractionProvider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, contentHash: contentHash(content) },
         });
-      } catch (error) {
-        errors.push({ url, error: sanitizeProviderError(error, 'direct_official_fetch_failed') });
-      }
+      });
     }
     return createRetrievalResult({
       documents,

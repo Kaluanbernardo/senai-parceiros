@@ -19,6 +19,28 @@ describe('DirectOfficialWebProvider', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('busca os atos em paralelo, senao a edicao inteira se perde por tempo', async () => {
+    // Eligibility needs the act's body, so a sequential retrieval ran out of
+    // budget after discovery and every discovered act was dropped for lack of
+    // content rather than for lack of relevance.
+    let inFlight = 0;
+    let peak = 0;
+    const fetchImpl = vi.fn(async () => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => { setTimeout(resolve, 5); });
+      inFlight -= 1;
+      return new Response(articleHtml, { status: 200 });
+    });
+    const provider = new DirectOfficialWebProvider({ fetchImpl, concurrency: 5 });
+    const urls = Array.from({ length: 10 }, (_, index) => `https://www.in.gov.br/web/dou/-/portaria-${index}`);
+    const result = await provider.retrieve({ urls });
+
+    expect(result.documents).toHaveLength(10);
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThanOrEqual(5);
+  });
+
   it('retrieves validated DOU article URLs and rejects external URLs', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(articleHtml, { status: 200 }));
     const provider = new DirectOfficialWebProvider({ fetchImpl });
