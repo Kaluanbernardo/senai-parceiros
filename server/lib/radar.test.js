@@ -56,6 +56,20 @@ describe('radar domain', () => {
     expect(stored.items.some((item) => item.sourceName === 'Centro Paula Souza')).toBe(true);
   });
 
+  it('reporta a falha do armazenamento sem perder a execucao', async () => {
+    // flush() used to be called from inside the catch block, so a failing store
+    // threw a second time and the original cause escaped with no lastRun.
+    radarStore.configure({ driver: 'memory' });
+    vi.spyOn(radarStore, 'flush').mockRejectedValue(new Error('blob_write_forbidden'));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br')
+      ? new Response('<article><a href="/n/1">Centro Paula Souza amplia vagas em educacao profissional</a><p>Formacao tecnica.</p></article>', { status: 200, headers: { 'content-type': 'text/html' } })
+      : new Response('', { status: 403 })));
+
+    const result = await refreshRadarSnapshot();
+    expect(result.lastRun).toBeTruthy();
+    expect(result.sourceStatus['Snapshot (armazenamento)']).toMatchObject({ status: 'error', error: 'blob_write_forbidden' });
+  });
+
   it('keeps undated institutional items in the persisted snapshot', async () => {
     // The snapshot is everything a reader sees, so an item dropped here is
     // unreachable no matter what the interface does.

@@ -603,8 +603,22 @@ function providerStatus(name, status, extra = {}) {
   return { name, status, ...extra };
 }
 
+/**
+ * Store I/O must never abort a collection run.  A throw here used to escape as
+ * an opaque `radar_refresh_failed` with no source and no cause attached, which
+ * is indistinguishable from every collector failing at once.
+ */
+async function safeStoreCall(operation) {
+  try {
+    await operation();
+    return null;
+  } catch (error) {
+    return String(error?.message || 'store_unavailable').slice(0, 160);
+  }
+}
+
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
-  await radarStore.hydrate({ force: live });
+  const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: live }));
   const feedPolicy = getRadarFeedPolicy();
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
   const isAllowedItem = (item) => allowedSources.has(item.sourceName)
@@ -711,13 +725,16 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const nonResearch = items.filter((item) => item.section !== 'research');
   const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
   const stale = !liveProvider && Boolean(stored);
+  if (hydrateError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: hydrateError });
   if (persist && liveProvider) {
     radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });
     radarStore.recordRun({ status: 'ok', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
-    await radarStore.flush();
+    const flushError = await safeStoreCall(() => radarStore.flush());
+    if (flushError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: flushError });
   } else if (persist && live && !liveProvider) {
     radarStore.recordRun({ status: stored ? 'stale' : 'failed', fetchedAt, itemCount: snapshotItems.length, sourceStatus, durationMs: null });
-    await radarStore.flush();
+    const flushError = await safeStoreCall(() => radarStore.flush());
+    if (flushError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: flushError });
   }
   return { items: filterRadarItems(snapshotItems, filters), liveProvider, stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
 }
@@ -730,13 +747,19 @@ export async function refreshRadarSnapshot({ filters = {} } = {}) {
     const snapshot = { items: dedupeRadarItems(result.items), fetchedAt: result.fetchedAt, sourceStatus: result.sourceStatus, liveProvider: result.liveProvider, stale: false };
     if (result.liveProvider) radarStore.writeSnapshot(snapshot);
     const retained = result.liveProvider ? snapshot : previous;
-    radarStore.recordRun({ status: result.liveProvider ? 'ok' : 'failed', fetchedAt: result.fetchedAt, itemCount: retained?.items?.length || 0, sourceStatus: result.sourceStatus, durationMs: Date.now() - startedAt });
-    await radarStore.flush();
-    return { ...result, items: retained?.items || snapshot.items, refreshed: result.liveProvider, stale: !result.liveProvider && Boolean(previous), durationMs: Date.now() - startedAt, lastRun: radarStore.getLastRun() };
+    const sourceStatus = { ...result.sourceStatus };
+    const writeError = await safeStoreCall(() => radarStore.flush());
+    if (writeError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: writeError });
+    radarStore.recordRun({ status: result.liveProvider && !writeError ? 'ok' : 'failed', fetchedAt: result.fetchedAt, itemCount: retained?.items?.length || 0, sourceStatus, durationMs: Date.now() - startedAt, error: writeError || undefined });
+    return { ...result, sourceStatus, items: retained?.items || snapshot.items, refreshed: result.liveProvider && !writeError, stale: !result.liveProvider && Boolean(previous), durationMs: Date.now() - startedAt, lastRun: radarStore.getLastRun() };
   } catch (error) {
-    const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus: {}, error: String(error?.message || 'radar_refresh_failed').slice(0, 160), durationMs: Date.now() - startedAt });
-    await radarStore.flush();
-    return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: 'radar_refresh_failed' };
+    // The previous version called flush() from inside this catch, so a failing
+    // store threw a second time and the original cause escaped as an opaque
+    // error with no lastRun attached — the run became unattributable.
+    const cause = String(error?.message || 'radar_refresh_failed').slice(0, 160);
+    const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus: {}, error: cause, durationMs: Date.now() - startedAt });
+    await safeStoreCall(() => radarStore.flush());
+    return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: cause };
   }
 }
 

@@ -30,7 +30,17 @@ export default async function handler(req, res) {
     result = await refreshRadarSnapshot();
   } catch (error) {
     await emitOperationalAlert('radar_refresh_failed', { severity: 'critical', details: { status: 'error', driver: getRadarStoreStatus().driver } });
-    return res.status(503).json({ refreshed: false, stale: true, error: 'radar_refresh_failed', store: getRadarStoreStatus() });
+    // Returning the run and its cause is what makes this branch diagnosable:
+    // the bare `radar_refresh_failed` left the operator with a failure that
+    // pointed at nothing at all.
+    const status = getRadarStoreStatus();
+    return res.status(503).json({
+      refreshed: false,
+      stale: true,
+      error: String(error?.message || 'radar_refresh_failed').slice(0, 160),
+      lastRun: status.lastRun || { status: 'failed', error: String(error?.message || 'radar_refresh_failed').slice(0, 160), sourceStatus: {} },
+      store: status,
+    });
   }
   if (!result.refreshed || result.stale) {
     await emitOperationalAlert('radar_snapshot_stale', { severity: result.stale ? 'warning' : 'critical', details: { status: result.lastRun?.status || 'stale', driver: getRadarStoreStatus().driver } });
