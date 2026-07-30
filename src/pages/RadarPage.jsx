@@ -27,7 +27,7 @@ import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { filterRadarItems, RADAR_SECTION_LABELS, RADAR_SECTIONS } from '../domain/radar';
+import { countUndatedItems, filterRadarItems, RADAR_SECTION_LABELS, RADAR_SECTIONS } from '../domain/radar';
 import { useAuth } from '../context/AuthContext';
 
 const sections = RADAR_SECTIONS.map((value) => ({
@@ -159,6 +159,10 @@ export default function RadarPage() {
   }), [items]);
 
   const visibleItems = useMemo(() => filterRadarItems(items, filters), [items, filters]);
+  // A narrow window hides undated items by design; saying so keeps the omission
+  // from looking like the source simply published nothing.
+  const undatedCount = useMemo(() => countUndatedItems(items), [items]);
+  const undatedHidden = undatedCount > 0 && filters.period !== '1y';
   const setFilter = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }));
   const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '', sort: 'relevance' });
 
@@ -218,7 +222,10 @@ export default function RadarPage() {
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
           </Grid>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }}>
-            <Typography variant="caption" color="text.secondary">{visibleItems.length} item(ns) visível(is)</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {visibleItems.length} item(ns) visível(is)
+              {undatedHidden && ` · ${undatedCount} sem data publicada, oculto(s) por este período`}
+            </Typography>
             <Button size="small" onClick={clearFilters}>Limpar filtros</Button>
           </Stack>
         </CardContent>

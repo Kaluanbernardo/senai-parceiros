@@ -19,6 +19,25 @@ describe('radar domain', () => {
     expect(result.map((item) => item.id)).toEqual(['a']);
   });
 
+  it('keeps undated items in the default window and hides them in narrow ones', () => {
+    // Institutional pages often expose no parsable date. Dropping those items in
+    // every window made collected results invisible with no signal at all.
+    const undated = normalizeRadarItem({ id: 'c', section: 'government', title: 'Nota sem data publicada', summaryPt: 'Portal institucional', sourceName: 'Centro Paula Souza', contentType: 'notícia institucional', topics: ['EPT'], relevanceScore: 70, externalId: 'gov:c' });
+    expect(undated.publishedAt).toBeNull();
+    expect(undated.noveltyStatus).toBe('reference');
+
+    const wide = filterRadarItems([...baseItems, undated], { section: 'government', period: '1y' });
+    expect(wide.map((item) => item.id)).toContain('c');
+
+    const narrow = filterRadarItems([...baseItems, undated], { section: 'government', period: '30d' });
+    expect(narrow.map((item) => item.id)).not.toContain('c');
+  });
+
+  it('collects the São Paulo institutional pages in the government section', () => {
+    const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
+    expect(government).toEqual(expect.arrayContaining(['Centro Paula Souza', 'CEE-SP', 'SEADE', 'InvestSP']));
+  });
+
   it('normalizes unsupported sections and scores safely', () => {
     const item = normalizeRadarItem({ section: 'unknown', title: 'x', relevanceScore: 120 });
     expect(item.section).toBe('research');

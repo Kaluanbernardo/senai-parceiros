@@ -120,6 +120,19 @@ function dateValue(value) {
   return value ? new Date(`${value}T12:00:00`).getTime() : 0;
 }
 
+/**
+ * Widest window, which is also the default view.  Items whose source page
+ * exposes no parsable date are a labelled class ("Referência sem data"), not old
+ * items, so they stay visible here; a deliberately narrower window is a recency
+ * question they cannot answer.  Dropping them everywhere made collected results
+ * disappear from the interface with no signal at all.
+ */
+const UNDATED_VISIBLE_PERIOD = '1y';
+
+export function countUndatedItems(items) {
+  return (Array.isArray(items) ? items : []).filter((item) => !item?.publishedAt).length;
+}
+
 export function filterRadarItems(items, filters = {}) {
   const section = RADAR_SECTIONS.includes(filters.section) ? filters.section : null;
   const query = safeText(filters.query).toLocaleLowerCase('pt-BR');
@@ -136,7 +149,9 @@ export function filterRadarItems(items, filters = {}) {
       && (!geography || item.geography === geography)
       && (!topic || item.topics.some((entry) => entry.toLocaleLowerCase('pt-BR') === topic))
       && (!contentType || item.contentType === contentType)
-      && (!cutoff || (item.publishedAt && dateValue(item.publishedAt) >= cutoff.getTime()));
+      && (!cutoff || (item.publishedAt
+        ? dateValue(item.publishedAt) >= cutoff.getTime()
+        : filters.period === UNDATED_VISIBLE_PERIOD));
   });
   const sort = filters.sort === 'date' ? 'date' : 'relevance';
   return filtered.sort((left, right) => sort === 'relevance'
