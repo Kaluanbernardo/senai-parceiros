@@ -133,6 +133,22 @@ export function countUndatedItems(items) {
   return (Array.isArray(items) ? items : []).filter((item) => !item?.publishedAt).length;
 }
 
+/**
+ * Single definition of what deserves to be collected, stored and shown: dated
+ * news inside the 12-month window, plus undated institutional references.
+ * Archive, scheduled and placeholder items stay out.
+ *
+ * `isNews` alone used to gate collection, snapshot writing and display. It is
+ * false for undated items, and institutional portals frequently publish without
+ * a parsable date, so those pages were discarded at the earliest step and could
+ * never reach a reader no matter what the interface did.
+ */
+export function isEligibleRadarItem(item) {
+  return Boolean(item)
+    && (item.isNews || item.noveltyStatus === 'reference')
+    && !item.isPlaceholder;
+}
+
 export function filterRadarItems(items, filters = {}) {
   const section = RADAR_SECTIONS.includes(filters.section) ? filters.section : null;
   const query = safeText(filters.query).toLocaleLowerCase('pt-BR');

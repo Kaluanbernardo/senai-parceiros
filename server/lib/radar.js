@@ -1,6 +1,6 @@
 import seedItems from '../../src/data/radar-seeds.json' with { type: 'json' };
 import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json' };
-import { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, isEligibleRadarItem, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
 import { radarStore } from './radarStore.js';
 import { summarizeResearchItems } from './radar/researchSummaryService.js';
@@ -236,7 +236,7 @@ export async function fetchWebItems(source, { limit = 8 } = {}) {
   }
   const items = candidates
     .map((candidate, index) => webItem(candidate, source, index))
-    .filter((item) => item.isNews && webRelevance(item.title, item.summaryPt) >= 59)
+    .filter((item) => isEligibleRadarItem(item) && webRelevance(item.title, item.summaryPt) >= 59)
     .sort((a, b) => b.relevanceScore - a.relevanceScore || String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')))
     .slice(0, limit);
   cacheSet(cacheKey, items);
@@ -691,7 +691,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     ? await summarizeResearchItems(mergedResearch, { previousItems: stored?.items?.filter((item) => item.section === 'research') || [] })
     : mergedResearch;
   const nonResearch = items.filter((item) => item.section !== 'research');
-  const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter((item) => item.isNews && !item.isPlaceholder);
+  const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
   const stale = !liveProvider && Boolean(stored);
   if (persist && liveProvider) {
     radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });

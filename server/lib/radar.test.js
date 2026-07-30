@@ -33,6 +33,27 @@ describe('radar domain', () => {
     expect(narrow.map((item) => item.id)).not.toContain('c');
   });
 
+  it('keeps undated institutional items in the persisted snapshot', async () => {
+    // The snapshot is everything a reader sees, so an item dropped here is
+    // unreachable no matter what the interface does.
+    radarStore.configure({ driver: 'memory' });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('cps.sp.gov.br')) {
+        return new Response(
+          '<article><a href="/noticias/curso-tecnico-industria">Centro Paula Souza abre inscricoes para cursos tecnicos de EPT</a><p>Vagas em educacao profissional.</p></article>',
+          { status: 200, headers: { 'content-type': 'text/html' } },
+        );
+      }
+      return new Response('', { status: 403 });
+    });
+    await refreshRadarSnapshot();
+    const stored = radarStore.getSnapshot();
+    const undated = (stored?.items || []).filter((item) => !item.publishedAt);
+    expect(undated.length).toBeGreaterThan(0);
+    expect(undated.every((item) => item.noveltyStatus === 'reference')).toBe(true);
+  });
+
   it('collects the São Paulo institutional pages in the government section', () => {
     const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
     expect(government).toEqual(expect.arrayContaining(['Centro Paula Souza', 'CEE-SP', 'SEADE', 'InvestSP']));
