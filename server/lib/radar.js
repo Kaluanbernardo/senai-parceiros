@@ -538,6 +538,26 @@ function douDateWindow() {
   return { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) };
 }
 
+const DOU_DISCOVERY_CEILING = 4000;
+
+/**
+ * Cheap pre-filter over a discovered act, before any request is spent on its
+ * body. The listing exposes the act's title and issuing body, which is enough
+ * to discard the overwhelming majority that concern neither education nor
+ * work. Deliberately broader than `douRelevance`, which decides eligibility on
+ * the full text: this only decides what is worth reading.
+ */
+function douCandidateSignal(candidate) {
+  const haystack = `${candidate?.title || ''} ${candidate?.summaryPt || ''}`
+    .toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return [
+    'educacao', 'ensino', 'escola', 'aprendizagem', 'aprendiz', 'formacao',
+    'qualificacao', 'capacitacao', 'competencia', 'curso', 'tecnico', 'tecnologic',
+    'profissionaliz', 'trabalho e emprego', 'setec', 'senai', 'senac', 'sesi',
+    'rede federal', 'instituto federal', 'cefet', 'mec', 'inep', 'sistema s',
+  ].some((term) => haystack.includes(term));
+}
+
 function douRelevance(title, content = '') {
   const haystack = `${title || ''} ${content || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const direct = ['educacao profissional', 'educacao tecnica', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'setec', 'rede federal', 'sistema s', 'senai', 'senac'].filter((term) => haystack.includes(term)).length;
@@ -580,7 +600,10 @@ export async function fetchDouItems({ limit = 20 } = {}) {
     maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7)),
     timeoutMs: Math.max(2000, Number(process.env.RADAR_DOU_TIMEOUT_MS || 8000)),
   });
-  const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: limit });
+  // Parsing costs nothing beyond the edition already downloaded, so discovery
+  // keeps the whole listing and the narrowing happens below, on signal rather
+  // than on arrival order.
+  const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: DOU_DISCOVERY_CEILING });
   let candidates = directDiscovery.items || [];
   let provider = directDiscovery.provider;
   let discoveryErrors = directDiscovery.errors || [];
@@ -594,7 +617,13 @@ export async function fetchDouItems({ limit = 20 } = {}) {
     provider = discovered.provider;
     discoveryErrors = [...discoveryErrors, ...(discovered.errors || [])];
   }
-  const urls = candidates.map((candidate) => candidate.sourceUrl).filter(Boolean).slice(0, limit);
+  // An edition carries thousands of acts and only a handful concern vocational
+  // education. Taking the first twenty as they happened to be listed spent every
+  // request on unrelated acts; the title and the issuing body are enough to tell
+  // which ones deserve one.
+  const shortlisted = candidates.filter((candidate) => douCandidateSignal(candidate));
+  const selected = (shortlisted.length ? shortlisted : candidates).slice(0, limit);
+  const urls = selected.map((candidate) => candidate.sourceUrl).filter(Boolean).slice(0, limit);
   const directDocuments = urls.length ? await direct.retrieve({ urls }) : { documents: [], errors: [], status: directDiscovery.status };
   let documents = directDocuments.documents || [];
   let extractionProvider = directDocuments.provider || provider;
@@ -610,10 +639,11 @@ export async function fetchDouItems({ limit = 20 } = {}) {
     discoveryErrors = [...discoveryErrors, ...(extracted.errors || [])];
   }
   const byUrl = new Map(documents.map((document) => [document.sourceUrl, document]));
-  const items = candidates.map((candidate) => douItemFromDocument(byUrl.get(candidate.sourceUrl), candidate)).filter(Boolean).slice(0, limit);
+  const items = selected.map((candidate) => douItemFromDocument(byUrl.get(candidate.sourceUrl), candidate)).filter(Boolean).slice(0, limit);
   const diagnostics = {
     ...(directDiscovery.diagnostics || {}),
     candidates: candidates.length,
+    shortlisted: shortlisted.length,
     retrieved: documents.length,
     eligible: items.length,
   };

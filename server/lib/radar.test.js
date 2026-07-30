@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateRadarRelevance, dedupeRadarItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -123,6 +123,45 @@ describe('radar domain', () => {
     const titles = (radarStore.getSnapshot()?.items || []).map((item) => item.title);
     expect(titles).not.toContain('Funções e Competências');
     expect(titles.some((title) => /abre inscricoes/i.test(title))).toBe(true);
+  });
+
+  it('gasta requisicao do DOU nos atos com sinal tematico, nao nos primeiros da lista', async () => {
+    // An edition lists thousands of acts and only a handful concern vocational
+    // education; taking them in listing order spent every request on unrelated
+    // ones. The acts below are ordered so that arrival order and topical signal
+    // disagree.
+    radarStore.configure({ driver: 'memory' });
+    const acts = Array.from({ length: 40 }, (_, index) => ({
+      urlTitle: `ato-administrativo-${index}`,
+      title: `Alvará de funcionamento número ${index} sem relação com o tema`,
+      pubDate: '29/07/2026',
+      pubName: 'DO1',
+      artCategory: 'Ministério da Gestão',
+    }));
+    acts.push({
+      urlTitle: 'portaria-educacao-profissional-2026',
+      title: 'Portaria dispõe sobre a oferta de educação profissional técnica de nível médio',
+      pubDate: '29/07/2026',
+      pubName: 'DO1',
+      artCategory: 'Ministério da Educação/Gabinete do Ministro',
+    });
+
+    const requested = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('leiturajornal')) {
+        return new Response(`<html><body><script id="params" type="application/json">${JSON.stringify({ jsonArray: acts })}</script></body></html>`, { status: 200 });
+      }
+      if (href.includes('/web/dou/')) {
+        requested.push(href);
+        return new Response('<html><body><article>Ato sobre educação profissional e aprendizagem industrial.</article></body></html>', { status: 200 });
+      }
+      return new Response('', { status: 403 });
+    });
+
+    const result = await fetchDouItems({ limit: 5 });
+    expect(requested.some((url) => url.includes('portaria-educacao-profissional-2026'))).toBe(true);
+    expect(result.diagnostics.candidates).toBeGreaterThan(result.diagnostics.shortlisted);
   });
 
   it('collects the São Paulo institutional pages in the government section', () => {
