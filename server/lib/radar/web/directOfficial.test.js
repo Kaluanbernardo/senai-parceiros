@@ -52,23 +52,30 @@ describe('DirectOfficialWebProvider', () => {
     expect(result.errors).toContainEqual({ url: 'https://example.org/noticia', error: 'url_not_allowed' });
   });
 
-  it('le a edicao renderizada no cliente pelo payload embutido', async () => {
-    // The real edition page ships no article anchors, which is why a fortnight
-    // of successful fetches still parsed zero acts.
-    const fetchImpl = vi.fn().mockResolvedValue(new Response(editionSpaHtml, { status: 200 }));
+  it('le os atos do payload embutido mesmo quando a edicao tem ancoras', async () => {
+    // Anchors on an edition page are navigation links repeated across editions,
+    // so gating the payload on their absence made it unreachable.
+    const withNavigation = editionSpaHtml.replace(
+      '<div id="root"></div>',
+      '<a href="/web/dou/-/edicao-anterior">Edição anterior do Diário Oficial</a><div id="root"></div>',
+    );
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(withNavigation, { status: 200 }));
     const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1'], maxDays: 1 });
     const result = await provider.discover({ startDate: '2026-07-17', endDate: '2026-07-17', maxResults: 10 });
 
     expect(result.status).toBe('ok');
-    expect(result.items).toHaveLength(2);
-    expect(result.items[0]).toMatchObject({
+    // The navigation anchor still comes through; what matters is that the acts
+    // are no longer excluded by its mere presence.
+    const act = result.items.find((item) => /educação profissional/i.test(item.title));
+    expect(act).toBeTruthy();
+    expect(act).toMatchObject({
       sourceName: 'Diário Oficial da União',
       official: true,
       provider: 'direct-official',
       publishedAt: '2026-07-17',
     });
-    expect(result.items[0].sourceUrl).toContain('in.gov.br/web/dou/');
-    expect(result.items[0].title).toMatch(/educação profissional/i);
+    expect(act.sourceUrl).toContain('in.gov.br/web/dou/');
+    expect(result.items.length).toBeGreaterThanOrEqual(2);
   });
 
   it('distingue edicao sem ato de pagina que nao foi lida', async () => {

@@ -91,13 +91,13 @@ function decodeEntities(value) {
 }
 
 /**
- * Fallback for editions delivered without article anchors, where the acts
- * travel in an embedded JSON payload instead.
+ * Reads the acts from the edition's embedded JSON payload.
  *
- * Measured behaviour: the edition page does serve anchors, so `parseListing`
- * carries the run and this path stays unused. It is kept because the two
- * outcomes are indistinguishable from the outside, and a run that silently
- * parses nothing is the failure this collector took longest to diagnose.
+ * Measured behaviour: the anchors an edition page does serve are a couple of
+ * navigation links repeated on every edition — thirteen editions yielded
+ * twenty-six anchors that deduplicated to a single candidate. The day's acts
+ * are not among them, so this runs alongside `parseListing` rather than only
+ * when it comes back empty.
  */
 function parseEmbeddedEdition(html, editionUrl, publishedAt, section) {
   const source = String(html || '');
@@ -244,7 +244,11 @@ export class DirectOfficialWebProvider {
         const match = String(date || '').match(/^(\d{2})-(\d{2})-(20\d{2})$/);
         const iso = match ? `${match[3]}-${match[2]}-${match[1]}` : isoDate(startDate || new Date());
         const anchored = parseListing(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
-        const embedded = anchored.length ? [] : parseEmbeddedEdition(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
+        // Both parsers always run. Gating the payload on "no anchors found" made
+        // it unreachable: an edition page carries a couple of navigation links
+        // matching the article URL shape, so anchors were never empty while the
+        // day's acts were never among them.
+        const embedded = parseEmbeddedEdition(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
         diagnostics.editionsRead += 1;
         diagnostics.anchorItems += anchored.length;
         diagnostics.embeddedItems += embedded.length;
@@ -254,6 +258,10 @@ export class DirectOfficialWebProvider {
       });
     }
     const unique = [...new Map(items.map((item) => [item.externalId, item])).values()].slice(0, Math.max(0, Number(maxResults) || 20));
+    // Anchors repeated on every edition collapse to almost nothing here. Without
+    // this count the run reported dozens of parsed anchors and a single
+    // candidate, with no way to see that they were the same navigation links.
+    diagnostics.uniqueCandidates = unique.length;
     return createDiscoveryResult({
       items: unique,
       errors,
