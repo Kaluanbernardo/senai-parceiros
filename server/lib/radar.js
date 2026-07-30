@@ -562,12 +562,19 @@ function douRelevance(title, content = '') {
   const haystack = `${title || ''} ${content || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const direct = ['educacao profissional', 'educacao tecnica', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'setec', 'rede federal', 'sistema s', 'senai', 'senac'].filter((term) => haystack.includes(term)).length;
   const strategic = ['industria', 'industrial', 'competencias', 'trabalho', 'inovacao', 'tecnologia', 'economia circular', 'descarbonizacao', 'sao paulo'].filter((term) => haystack.includes(term)).length;
-  return { direct, strategic, eligible: direct > 0 || (strategic >= 2 && /formacao|educacao|competenc|qualifica|aprendizagem|trabalho/.test(haystack)) };
+  // Eligibility now requires an explicit vocational-education term. The former
+  // strategic-only path matched words like "trabalho" and "tecnologia" that
+  // appear in any page's navigation and footer, which is how an act on dialysis
+  // habilitation qualified as vocational education news.
+  return { direct, strategic, eligible: direct > 0 };
 }
 
 function douItemFromDocument(document, candidate = {}) {
   const content = String(document?.content || document?.summaryPt || candidate?.summaryPt || '').trim();
-  const title = String(document?.title || candidate?.title || 'Ato oficial do Diário Oficial da União').trim();
+  // The listing payload carries the act's own title; the fetched page's <title>
+  // is the newspaper's, which is how an act reached the radar called
+  // "Imprensa Nacional".
+  const title = String(candidate?.title || document?.title || 'Ato oficial do Diário Oficial da União').trim();
   const relevance = douRelevance(title, content);
   if (!relevance.eligible) return null;
   const sourceUrl = document?.sourceUrl || candidate?.sourceUrl;
@@ -668,6 +675,19 @@ async function safeStoreCall(operation) {
   }
 }
 
+/**
+ * Re-applies the current rules to an item already in the snapshot.
+ *
+ * The snapshot carries items forward across runs, so anything admitted under a
+ * rule that later proved wrong stayed visible forever: correcting a filter
+ * stopped new mistakes but never removed the ones already stored.
+ */
+function storedItemStillQualifies(item) {
+  if (item?.provider === 'direct-official') return douRelevance(item.title, item.summaryPt).eligible;
+  if (item?.provider === 'institutional-web' && !item.publishedAt) return String(item.title || '').length >= 40;
+  return true;
+}
+
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
   const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: live }));
   const feedPolicy = getRadarFeedPolicy();
@@ -676,7 +696,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     || feedPolicy.some((feed) => feed.name === item.sourceName)
     || /^curated-/.test(item.provider);
   const stored = radarStore.getSnapshot();
-  let items = (stored?.items || seedItems).map(normalizeRadarItem).filter(isAllowedItem);
+  let items = (stored?.items || seedItems).map(normalizeRadarItem).filter(isAllowedItem).filter(storedItemStillQualifies);
   let liveProvider = false;
   let currentItems = [];
   const sourceStatus = {};

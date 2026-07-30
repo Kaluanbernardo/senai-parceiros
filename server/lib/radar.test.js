@@ -164,6 +164,27 @@ describe('radar domain', () => {
     expect(result.diagnostics.candidates).toBeGreaterThan(result.diagnostics.shortlisted);
   });
 
+  it('remove do snapshot o que a regra corrigida nao admitiria mais', async () => {
+    // The snapshot carries items across runs, so a mistake admitted once stayed
+    // visible even after the rule that let it in was fixed.
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [
+        normalizeRadarItem({ id: 'dou-fora', section: 'government', title: 'Imprensa Nacional', summaryPt: 'Habilita estabelecimento para Terapia Renal Substitutiva.', publishedAt: '2026-07-24', sourceName: 'Diário Oficial da União', provider: 'direct-official', externalId: 'dou:1' }),
+        normalizeRadarItem({ id: 'dou-dentro', section: 'government', title: 'Portaria sobre educação profissional técnica', summaryPt: 'Dispõe sobre a oferta de educação profissional.', publishedAt: '2026-07-24', sourceName: 'Diário Oficial da União', provider: 'direct-official', externalId: 'dou:2' }),
+        normalizeRadarItem({ id: 'web-rotulo', section: 'government', title: 'Funções e Competências', sourceName: 'Centro Paula Souza', provider: 'institutional-web', externalId: 'web:1' }),
+      ],
+      fetchedAt: '2026-07-30T00:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+    const titles = result.items.map((item) => item.title);
+    expect(titles).not.toContain('Imprensa Nacional');
+    expect(titles).not.toContain('Funções e Competências');
+    expect(titles).toContain('Portaria sobre educação profissional técnica');
+  });
+
   it('collects the São Paulo institutional pages in the government section', () => {
     const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
     expect(government).toEqual(expect.arrayContaining(['Centro Paula Souza', 'CEE-SP', 'SEADE', 'InvestSP']));
