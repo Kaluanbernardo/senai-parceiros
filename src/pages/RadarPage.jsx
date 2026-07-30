@@ -48,16 +48,23 @@ const periodOptions = [
 ];
 
 /**
- * Turns the per-source status of a refresh run into a short operator-facing
- * clause naming which sources failed and why, so a partial run can be acted on
- * without opening the endpoint by hand.
+ * Reports every source that did not return usable items, whatever status it
+ * used to say so.  Matching only `status === 'error'` left the collectors that
+ * report their own vocabulary — the DOU forwards the provider's status — with
+ * no way to appear, so a run could fail with nothing to point at.
  */
 function describeFailures(lastRun) {
   const entries = Object.values(lastRun?.sourceStatus || {});
-  const failed = entries.filter((entry) => entry.status === 'error');
-  if (!failed.length) return '';
-  const detail = failed
-    .map((entry) => (entry.error ? `${entry.name} (${entry.error})` : entry.name))
+  const unproductive = entries.filter((entry) => entry.status !== 'ok' || !(entry.count > 0));
+  if (!unproductive.length) {
+    // A run that aborted before reaching any collector reports no source at all.
+    return lastRun?.error ? `: ${lastRun.error}` : '';
+  }
+  const detail = unproductive
+    .map((entry) => {
+      const reason = entry.error || (Array.isArray(entry.errors) && entry.errors[0]) || entry.status;
+      return `${entry.name} (${reason})`;
+    })
     .join(', ');
   return `: ${detail}`;
 }
@@ -131,6 +138,7 @@ export default function RadarPage() {
           message: body.stale
             ? `A coleta falhou em uma ou mais fontes${describeFailures(body.lastRun)}. O último snapshot válido foi preservado.`
             : `A coleta não pôde ser concluída agora${describeFailures(body.lastRun)}. O conteúdo exibido continua sendo o último snapshot válido.`,
+          lastRun: body.lastRun,
         });
         return;
       }
@@ -139,10 +147,12 @@ export default function RadarPage() {
         ? {
           severity: 'warning',
           message: 'Coleta concluída, mas o snapshot está apenas em memória e será perdido na próxima requisição. Configure RADAR_STORE_DRIVER para um adapter durável.',
+          lastRun: body.lastRun,
         }
         : {
           severity: 'success',
           message: `Coleta concluída em ${Math.round((body.durationMs || 0) / 1000)}s: ${body.lastRun?.itemCount ?? 0} item(ns) gravado(s) no snapshot durável.`,
+          lastRun: body.lastRun,
         });
     } catch {
       setCollectResult({ severity: 'error', message: 'A coleta não respondeu. Ela consulta várias fontes externas e pode exceder o tempo limite da função.' });
@@ -151,6 +161,10 @@ export default function RadarPage() {
       await loadItems();
     }
   };
+
+  const collectDiagnostics = collectResult?.lastRun
+    ? JSON.stringify(collectResult.lastRun, null, 2)
+    : '';
 
   const options = useMemo(() => ({
     sources: [...new Set(items.map((item) => item.sourceName))].sort(),
@@ -238,7 +252,19 @@ export default function RadarPage() {
       {meta?.stale && <Alert severity="warning" sx={{ mt: 2 }}>Uma ou mais fontes falharam. Exibindo o último snapshot válido, atualizado em {meta.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'data não informada'}.</Alert>}
       {everySourceFailed && <Alert severity="warning" sx={{ mt: 2 }}>As fontes automáticas desta seção não responderam nesta atualização. As novidades públicas verificadas continuam disponíveis.</Alert>}
       {!everySourceFailed && sourceErrors.length > 0 && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>Atualizado com {sourceSuccesses.length} de {sourceValues.length} fontes automáticas; {sourceErrors.length} não respondeu nesta consulta.</Typography>}
-      {collectResult && <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>{collectResult.message}</Alert>}
+      {collectResult && (
+        <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>
+          {collectResult.message}
+          {collectDiagnostics && (
+            // The summary above interprets the run; this is the run itself, for
+            // when the interpretation is not enough to explain what happened.
+            <Box component="details" sx={{ mt: 1 }}>
+              <Box component="summary" sx={{ cursor: 'pointer', fontSize: '.82rem' }}>Detalhes técnicos da coleta</Box>
+              <Box component="pre" sx={{ mt: 1, p: 1, maxHeight: 320, overflow: 'auto', bgcolor: 'rgba(0,0,0,.06)', borderRadius: 1, fontSize: '.72rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{collectDiagnostics}</Box>
+            </Box>
+          )}
+        </Alert>
+      )}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
       {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box> : (

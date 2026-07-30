@@ -33,6 +33,29 @@ describe('radar domain', () => {
     expect(narrow.map((item) => item.id)).not.toContain('c');
   });
 
+  it('coleta segue e grava snapshot quando o DOU esta indisponivel', async () => {
+    // A bare await on the DOU collector used to abort the entire run: no other
+    // source was collected, no snapshot was written and the failure reported no
+    // source at all, so it could not be attributed to anything.
+    radarStore.configure({ driver: 'memory' });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('in.gov.br')) throw new Error('dou_connection_reset');
+      if (href.includes('cps.sp.gov.br')) {
+        return new Response(
+          '<article><a href="/noticias/curso-tecnico">Centro Paula Souza amplia vagas em educacao profissional na industria</a><p>Formacao tecnica e competencias.</p></article>',
+          { status: 200, headers: { 'content-type': 'text/html' } },
+        );
+      }
+      return new Response('', { status: 403 });
+    });
+    const result = await refreshRadarSnapshot();
+    expect(result.refreshed).toBe(true);
+    expect(result.sourceStatus.DOU.status).toBe('error');
+    const stored = radarStore.getSnapshot();
+    expect(stored.items.some((item) => item.sourceName === 'Centro Paula Souza')).toBe(true);
+  });
+
   it('keeps undated institutional items in the persisted snapshot', async () => {
     // The snapshot is everything a reader sees, so an item dropped here is
     // unreachable no matter what the interface does.

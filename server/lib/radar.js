@@ -643,7 +643,17 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     liveProvider = liveProvider || (oecd.status === 'fulfilled' && oecd.value.length > 0);
   }
   if (live && (!filters.section || filters.section === 'government')) {
-    const dou = await fetchDouItems({ limit: 20 });
+    // Every other collector is isolated with allSettled. This one was a bare
+    // await, so a single throw here aborted the whole run: no source was
+    // collected, no snapshot was written and `sourceStatus` came back empty,
+    // leaving the failure with nothing to point at.
+    const [douResult] = await Promise.allSettled([fetchDouItems({ limit: 20 })]);
+    const dou = douResult.status === 'fulfilled' ? douResult.value : {
+      items: [],
+      status: 'error',
+      provider: 'direct',
+      errors: [String(douResult.reason?.message || 'dou_unavailable').slice(0, 160)],
+    };
     sourceStatus.DOU = providerStatus('Diário Oficial da União', dou.status, {
       count: dou.items.length,
       provider: dou.provider,
@@ -687,9 +697,17 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const mergedResearch = mergeResearchItems(items.filter((item) => item.section === 'research'));
   const shouldSummarizeResearch = live && (!filters.section || filters.section === 'research');
-  const summarizedResearch = shouldSummarizeResearch
-    ? await summarizeResearchItems(mergedResearch, { previousItems: stored?.items?.filter((item) => item.section === 'research') || [] })
-    : mergedResearch;
+  // Summaries are an optional enrichment with their own budget and extractive
+  // fallback, so a failure there must not cost the run every item it collected.
+  const [summaryResult] = shouldSummarizeResearch
+    ? await Promise.allSettled([summarizeResearchItems(mergedResearch, { previousItems: stored?.items?.filter((item) => item.section === 'research') || [] })])
+    : [{ status: 'fulfilled', value: mergedResearch }];
+  if (summaryResult.status === 'rejected') {
+    sourceStatus['Resumos por IA'] = providerStatus('Resumos por IA', 'error', {
+      error: String(summaryResult.reason?.message || 'summary_unavailable').slice(0, 160),
+    });
+  }
+  const summarizedResearch = summaryResult.status === 'fulfilled' ? summaryResult.value : mergedResearch;
   const nonResearch = items.filter((item) => item.section !== 'research');
   const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
   const stale = !liveProvider && Boolean(stored);
