@@ -78,6 +78,22 @@ describe('DirectOfficialWebProvider', () => {
     expect(result.items.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('descreve a estrutura da edicao sem expor conteudo', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(editionSpaHtml, { status: 200 }));
+    const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1'], maxDays: 1 });
+    const result = await provider.discover({ startDate: '2026-07-17', endDate: '2026-07-17' });
+
+    expect(result.diagnostics.markers).toMatchObject({
+      hasParamsScript: true,
+      hasJsonArray: true,
+      scriptsJson: 1,
+    });
+    expect(result.diagnostics.markers.biggestJsonKeys).toEqual(['jsonArray']);
+    // Key names and counts only; no title, no body, no page text.
+    const serialized = JSON.stringify(result.diagnostics.markers);
+    expect(serialized).not.toMatch(/Portaria|educação profissional/i);
+  });
+
   it('distingue edicao sem ato de pagina que nao foi lida', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response('<html><body><div id="root"></div></body></html>', { status: 200 }));
     const provider = new DirectOfficialWebProvider({ fetchImpl, sections: ['DO1'], maxDays: 1 });

@@ -145,6 +145,40 @@ function parseEmbeddedEdition(html, editionUrl, publishedAt, section) {
   return items;
 }
 
+/**
+ * Structural fingerprint of an edition page: element counts and the key names
+ * of any embedded JSON, never their values or any page text.
+ *
+ * Two attempts at guessing this page's shape were both wrong — anchors turned
+ * out to be navigation, and the JSON payload guess found nothing. A page of
+ * 2.4 MB clearly carries the acts somewhere, and describing its structure is
+ * cheaper and far more reliable than a third guess.
+ */
+function editionMarkers(html) {
+  const source = String(html || '');
+  const jsonScripts = [...source.matchAll(/<script\b[^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+  const keysOf = (raw) => {
+    try {
+      const parsed = JSON.parse(decodeEntities(raw).trim());
+      return parsed && typeof parsed === 'object' ? Object.keys(parsed).slice(0, 12) : [];
+    } catch {
+      return [];
+    }
+  };
+  const biggest = jsonScripts.slice().sort((left, right) => right.length - left.length)[0] || '';
+  return {
+    anchorsTotal: (source.match(/<a\b/gi) || []).length,
+    anchorsDou: (source.match(/href=["'][^"']*\/web\/dou\//gi) || []).length,
+    scriptsJson: jsonScripts.length,
+    biggestJsonBytes: biggest.length,
+    biggestJsonKeys: keysOf(biggest),
+    hasParamsScript: /<script[^>]*\bid=["']params["']/i.test(source),
+    hasJsonArray: /"jsonArray"/.test(source),
+    hasHierarchyList: /hierarchyList|hierarchy_list/i.test(source),
+    hasMateriaMarker: /\bmateria\b/i.test(source),
+  };
+}
+
 function parseListing(html, editionUrl, publishedAt, section) {
   const items = [];
   const seen = new Set();
@@ -254,6 +288,8 @@ export class DirectOfficialWebProvider {
         diagnostics.embeddedItems += embedded.length;
         diagnostics.htmlBytes = Math.max(diagnostics.htmlBytes, String(result.value || '').length);
         if (!anchored.length && !embedded.length) diagnostics.emptyEditions += 1;
+        // One sample is enough to describe the shape; every edition renders alike.
+        if (!diagnostics.markers) diagnostics.markers = editionMarkers(result.value);
         items.push(...anchored, ...embedded);
       });
     }
