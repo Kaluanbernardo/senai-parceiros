@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       ...result,
       sourcePolicy: [...RADAR_SOURCE_POLICY, ...getRadarFeedPolicy(), ...RADAR_WEB_POLICY],
       feedReadiness: getRadarFeedReadiness(),
-      mode: result.liveProvider ? 'live+curated' : 'curated-fallback',
+      mode: result.liveProvider || result.snapshotLive ? 'live+curated' : 'curated-fallback',
     });
   } catch {
     return res.status(503).json({ error: 'radar_unavailable' });

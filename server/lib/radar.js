@@ -736,7 +736,11 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     const flushError = await safeStoreCall(() => radarStore.flush());
     if (flushError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: flushError });
   }
-  return { items: filterRadarItems(snapshotItems, filters), liveProvider, stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
+  // `liveProvider` describes this call, and reading the radar never collects, so
+  // it is always false on a GET. The stored snapshot carries its own provenance:
+  // without it every reader was told the content came from the curated fallback,
+  // even when looking at a snapshot collected live minutes earlier.
+  return { items: filterRadarItems(snapshotItems, filters), liveProvider, snapshotLive: Boolean(stored?.liveProvider), stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
 }
 
 export async function refreshRadarSnapshot({ filters = {} } = {}) {

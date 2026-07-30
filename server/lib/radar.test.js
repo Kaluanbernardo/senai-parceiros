@@ -70,6 +70,22 @@ describe('radar domain', () => {
     expect(result.sourceStatus['Snapshot (armazenamento)']).toMatchObject({ status: 'error', error: 'blob_write_forbidden' });
   });
 
+  it('reconhece um snapshot coletado ao vivo na leitura seguinte', async () => {
+    // Reading never collects, so the read's own liveProvider is always false.
+    // Reporting the mode from it told every reader the content came from the
+    // curated fallback, even right after a successful collection.
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({ id: 'live', section: 'research', title: 'Estudo coletado ao vivo', publishedAt: '2026-07-29', sourceName: 'OpenAlex', externalId: 'doi:live' })],
+      fetchedAt: '2026-07-29T12:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: {}, live: false, persist: false });
+    expect(result.liveProvider).toBe(false);
+    expect(result.snapshotLive).toBe(true);
+  });
+
   it('keeps undated institutional items in the persisted snapshot', async () => {
     // The snapshot is everything a reader sees, so an item dropped here is
     // unreachable no matter what the interface does.
