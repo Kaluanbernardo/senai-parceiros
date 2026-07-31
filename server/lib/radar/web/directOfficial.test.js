@@ -52,6 +52,42 @@ describe('DirectOfficialWebProvider', () => {
     expect(result.errors).toContainEqual({ url: 'https://example.org/noticia', error: 'url_not_allowed' });
   });
 
+  it('isolates the first act when one DOU article groups multiple acts', async () => {
+    // Real DOU pages can group several acts under one <article>, separated by
+    // p.identifica. A vocational term in a later act must not approve the first.
+    const groupedHtml = `
+      <html><body><article>
+        <p class="text-center">Publicado em: 27/07/2026</p>
+        <p class="identifica">ALVARA No 3.155, DE 23 DE JULHO DE 2026</p>
+        <p class="dou-paragraph">Autoriza compra de municao por centro de formacao de vigilantes.</p>
+        <p class="identifica">PORTARIA No 99, DE 24 DE JULHO DE 2026</p>
+        <p class="dou-paragraph">Institui politica de educacao profissional tecnica.</p>
+      </article></body></html>`;
+    const provider = new DirectOfficialWebProvider({ fetchImpl: vi.fn().mockResolvedValue(new Response(groupedHtml, { status: 200 })) });
+
+    const result = await provider.retrieve({ urls: ['https://www.in.gov.br/web/dou/-/alvara-n-3.155'] });
+
+    expect(result.documents[0].content).toMatch(/formacao de vigilantes/i);
+    expect(result.documents[0].content).not.toMatch(/educacao profissional/i);
+  });
+
+  it('does not treat an annex table entry as the subject of the act', async () => {
+    // The real SERES false positive matched "qualificacao profissional" only
+    // inside a maintainer name in a large course table.
+    const tableHtml = `
+      <html><body><article>
+        <p class="identifica">PORTARIA SERES/MEC No 356</p>
+        <p>Reconhece cursos superiores de graduacao a distancia.</p>
+        <table><tr><td>Instituto de Educacao e Qualificacao Profissional</td></tr></table>
+      </article></body></html>`;
+    const provider = new DirectOfficialWebProvider({ fetchImpl: vi.fn().mockResolvedValue(new Response(tableHtml, { status: 200 })) });
+
+    const result = await provider.retrieve({ urls: ['https://www.in.gov.br/web/dou/-/portaria-seres-mec-356'] });
+
+    expect(result.documents[0].content).toMatch(/cursos superiores/i);
+    expect(result.documents[0].content).not.toMatch(/qualificacao profissional/i);
+  });
+
   it('le os atos do payload embutido mesmo quando a edicao tem ancoras', async () => {
     // Anchors on an edition page are navigation links repeated across editions,
     // so gating the payload on their absence made it unreachable.

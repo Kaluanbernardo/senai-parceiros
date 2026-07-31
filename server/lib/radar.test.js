@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateRadarRelevance, dedupeRadarItems, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarItems, getRadarStoreStatus, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -191,7 +191,7 @@ describe('radar domain', () => {
         sourceName: 'Diário Oficial da União',
         provider: 'direct-official',
         externalId: 'dou:aprovado',
-        provenance: { eligibility: { direct: 2, strategic: 1 } },
+        provenance: { eligibility: { version: 2, direct: 2, strategic: 1 } },
       })],
       fetchedAt: '2026-07-30T00:00:00.000Z',
       liveProvider: true,
@@ -226,7 +226,7 @@ describe('radar domain', () => {
     radarStore.configure({ driver: 'memory' });
     radarStore.writeSnapshot({
       items: [
-        normalizeRadarItem({ id: 'dou-fora', section: 'government', title: 'Imprensa Nacional', summaryPt: 'Habilita estabelecimento para Terapia Renal Substitutiva.', publishedAt: '2026-07-24', sourceName: 'Diário Oficial da União', provider: 'direct-official', externalId: 'dou:1' }),
+        normalizeRadarItem({ id: 'dou-fora', section: 'government', title: 'Imprensa Nacional', summaryPt: 'Habilita estabelecimento para Terapia Renal Substitutiva.', publishedAt: '2026-07-24', sourceName: 'Diário Oficial da União', provider: 'direct-official', externalId: 'dou:1', provenance: { eligibility: { direct: 1, strategic: 1 } } }),
         normalizeRadarItem({ id: 'dou-dentro', section: 'government', title: 'Portaria sobre educação profissional técnica', summaryPt: 'Dispõe sobre a oferta de educação profissional.', publishedAt: '2026-07-24', sourceName: 'Diário Oficial da União', provider: 'direct-official', externalId: 'dou:2' }),
         normalizeRadarItem({ id: 'web-rotulo', section: 'government', title: 'Funções e Competências', sourceName: 'Centro Paula Souza', provider: 'institutional-web', externalId: 'web:1' }),
       ],
@@ -241,9 +241,9 @@ describe('radar domain', () => {
     expect(titles).toContain('Portaria sobre educação profissional técnica');
   });
 
-  it('collects the São Paulo institutional pages in the government section', () => {
+  it('schedules only the government page with observed collection value', () => {
     const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
-    expect(government).toEqual(expect.arrayContaining(['Centro Paula Souza', 'CEE-SP', 'SEADE', 'InvestSP']));
+    expect(government).toEqual(['Centro Paula Souza']);
   });
 
   it('normalizes unsupported sections and scores safely', () => {
@@ -303,14 +303,16 @@ describe('radar domain', () => {
     else process.env.RADAR_EXTRA_FEEDS_JSON = previous;
   });
 
-  it('keeps FAPESP on its current official web source instead of the broken legacy RSS endpoint', () => {
-    expect(getRadarFeedPolicy().some((feed) => feed.url === 'https://agencia.fapesp.br/rss')).toBe(false);
-    expect(RADAR_WEB_POLICY).toContainEqual(expect.objectContaining({
-      name: 'FAPESP',
-      section: 'government',
-      url: 'https://fapesp.br/noticias',
-      official: true,
-    }));
+  it('does not advertise sources whose generic collectors never produce items', () => {
+    const inactive = ['INEP', 'FAPESP', 'CEE-SP', 'SEADE', 'InvestSP', 'Governo do Estado de São Paulo', 'UNESCO-UNEVOC'];
+    const advertised = new Set(RADAR_SOURCE_POLICY.map((source) => source.name));
+    const scheduled = new Set([...getRadarFeedPolicy(), ...RADAR_WEB_POLICY].map((source) => source.name));
+
+    inactive.forEach((name) => {
+      expect(advertised.has(name)).toBe(false);
+      expect(scheduled.has(name)).toBe(false);
+    });
+    expect(getRadarFeedReadiness().sections).toEqual({ research: true, government: true, international: true });
   });
 
   it('ingests an institutional RSS item with provenance and section', async () => {

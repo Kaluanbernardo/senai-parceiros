@@ -79,7 +79,18 @@ function extractArticleBody(html) {
     || source.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
     || source.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
     || source;
-  return trimText(article, 12000);
+  // A DOU URL can render several acts in the same <article>. The real page
+  // separates them with p.identifica; evaluating the whole group let a term in
+  // a later act approve the first, unrelated one.
+  const identifiers = [...article.matchAll(/<p\b[^>]*class=["'][^"']*\bidentifica\b[^"']*["'][^>]*>/gi)];
+  const firstAct = identifiers.length
+    ? article.slice(identifiers[0].index, identifiers[1]?.index ?? article.length)
+    : article;
+  // Large annex tables can contain an institution whose legal name happens to
+  // include "qualificacao profissional" even when the act concerns unrelated
+  // higher-education recognition. The normative body remains available.
+  const withoutTables = firstAct.replace(/<table\b[\s\S]*?<\/table>/gi, ' ');
+  return trimText(withoutTables, 12000);
 }
 
 function decodeEntities(value) {

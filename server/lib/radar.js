@@ -13,43 +13,20 @@ export const RADAR_SOURCE_POLICY = [
   { name: 'OpenAlex', kind: 'research', url: 'https://openalex.org', official: false },
   { name: 'Crossref', kind: 'research', url: 'https://www.crossref.org', official: false },
   { name: 'MEC / SETEC', kind: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos', official: true },
-  { name: 'CNE', kind: 'government', url: 'https://www.gov.br/mec/pt-br/cne', official: true },
-  { name: 'INEP', kind: 'government', url: 'https://www.gov.br/inep/pt-br/assuntos/noticias', official: true },
-  { name: 'MTE', kind: 'government', url: 'https://www.gov.br/trabalho-e-emprego/pt-br/noticias', official: true },
-  { name: 'MDIC', kind: 'government', url: 'https://www.gov.br/mdic/pt-br/assuntos/noticias', official: true },
-  { name: 'ABDI', kind: 'government', url: 'https://www.abdi.com.br', official: true },
-  { name: 'IPEA', kind: 'government', url: 'https://www.ipea.gov.br/portal', official: true },
   { name: 'Diário Oficial da União', kind: 'government', url: 'https://www.in.gov.br', official: true },
-  { name: 'Governo do Estado de São Paulo', kind: 'government', url: 'https://www.educacao.sp.gov.br/educacao/noticias', official: true },
   { name: 'Centro Paula Souza', kind: 'government', url: 'https://www.cps.sp.gov.br', official: true },
-  { name: 'CEE-SP', kind: 'government', url: 'https://www.ceesp.sp.gov.br', official: true },
-  { name: 'SEADE', kind: 'government', url: 'https://www.seade.gov.br', official: true },
-  { name: 'FAPESP', kind: 'government', url: 'https://fapesp.br', official: true },
-  { name: 'InvestSP', kind: 'government', url: 'https://investsp.org.br', official: true },
   { name: 'OCDE', kind: 'international', url: 'https://www.oecd.org/en/topics/vocational-education-and-training-vet.html', official: true },
   { name: 'OIT', kind: 'international', url: 'https://www.ilo.org/topics-and-sectors/skills-and-lifelong-learning/skills-and-employability-branch', official: true },
-  { name: 'UNESCO-UNEVOC', kind: 'international', url: 'https://www.unevoc.unesco.org/en', official: true },
   { name: 'Cedefop', kind: 'international', url: 'https://www.cedefop.europa.eu', official: true },
   { name: 'ETF', kind: 'international', url: 'https://www.etf.europa.eu', official: true },
-  { name: 'Banco Mundial', kind: 'international', url: 'https://www.worldbank.org/en/topic/skillsdevelopment', official: true },
-  { name: 'BID', kind: 'international', url: 'https://www.iadb.org/en/topics/education', official: true },
 ];
 
-export const RADAR_FEED_POLICY = [
-  { name: 'Governo do Estado de São Paulo', section: 'government', url: 'https://www.agenciasp.sp.gov.br/feed/', official: true, geography: 'São Paulo' },
-  { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/unevoc_rss.xml', official: true, geography: 'Internacional' },
-];
+export const RADAR_FEED_POLICY = [];
 
-export const RADAR_FEED_MANIFEST_VERSION = '2026-07-29.v3';
+export const RADAR_FEED_MANIFEST_VERSION = '2026-07-31.v4';
 
 export const RADAR_WEB_POLICY = [
-  { name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos/noticias', official: true, geography: 'Brasil' },
-  { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' },
-  { name: 'FAPESP', section: 'government', url: 'https://fapesp.br/noticias', official: true, geography: 'São Paulo' },
   { name: 'Centro Paula Souza', section: 'government', url: 'https://www.cps.sp.gov.br/noticias/', official: true, geography: 'São Paulo' },
-  { name: 'CEE-SP', section: 'government', url: 'https://www.ceesp.sp.gov.br', official: true, geography: 'São Paulo' },
-  { name: 'SEADE', section: 'government', url: 'https://www.seade.gov.br/noticias/', official: true, geography: 'São Paulo' },
-  { name: 'InvestSP', section: 'government', url: 'https://investsp.org.br', official: true, geography: 'São Paulo' },
   { name: 'OIT', section: 'international', url: 'https://www.ilo.org/topics-and-sectors/skills-and-lifelong-learning', official: true, geography: 'Internacional' },
   { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional' },
   { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional' },
@@ -105,8 +82,9 @@ export function getRadarFeedReadiness() {
   const sources = RADAR_SOURCE_POLICY;
   const sections = {
     research: sources.some((source) => source.kind === 'research'),
-    government: feeds.some((feed) => feed.section === 'government' && feed.official === true),
-    international: feeds.some((feed) => feed.section === 'international' && feed.official === true),
+    government: sources.some((source) => source.name === 'Diário Oficial da União'),
+    international: sources.some((source) => source.name === 'OCDE')
+      && RADAR_WEB_POLICY.some((source) => source.section === 'international' && source.official === true),
   };
   const validUrls = feeds.every((feed) => {
     try { return feed.official === true && new URL(feed.url).protocol === 'https:'; } catch { return false; }
@@ -539,6 +517,7 @@ function douDateWindow() {
 }
 
 const DOU_DISCOVERY_CEILING = 4000;
+const DOU_ELIGIBILITY_VERSION = 2;
 
 /**
  * Cheap pre-filter over a discovered act, before any request is spent on its
@@ -598,7 +577,7 @@ function douItemFromDocument(document, candidate = {}) {
     // The decision is recorded with the item because it was taken over the full
     // act, while only an 80-word excerpt is stored. Re-deciding later from the
     // excerpt would reject acts that legitimately qualified.
-    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { direct: relevance.direct, strategic: relevance.strategic } },
+    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { version: DOU_ELIGIBILITY_VERSION, direct: relevance.direct, strategic: relevance.strategic } },
   });
 }
 
@@ -687,11 +666,11 @@ async function safeStoreCall(operation) {
  */
 function storedItemStillQualifies(item) {
   if (item?.provider === 'direct-official') {
-    // Items collected since the decision started being recorded carry it; older
-    // ones are re-judged from the text that survived, which is what clears the
-    // off-topic acts admitted under the previous rule.
+    // Only decisions made over structurally isolated act text are durable. The
+    // previous version evaluated grouped acts and annex tables, so trusting it
+    // would preserve the false positives that this migration is meant to clear.
     const recorded = item?.provenance?.eligibility;
-    if (recorded && Number.isFinite(Number(recorded.direct))) return Number(recorded.direct) > 0;
+    if (Number(recorded?.version) >= DOU_ELIGIBILITY_VERSION && Number.isFinite(Number(recorded.direct))) return Number(recorded.direct) > 0;
     return douRelevance(item.title, item.summaryPt).eligible;
   }
   if (item?.provider === 'institutional-web' && !item.publishedAt) return String(item.title || '').length >= 40;

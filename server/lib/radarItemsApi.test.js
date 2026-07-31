@@ -9,12 +9,12 @@ const mocks = vi.hoisted(() => ({
   hydrateRateLimitStore: vi.fn(),
 }));
 
-vi.mock('../../server/lib/cookies.js', () => ({ getSession: mocks.getSession }));
-vi.mock('../../server/lib/auth.js', () => ({
+vi.mock('./cookies.js', () => ({ getSession: mocks.getSession }));
+vi.mock('./auth.js', () => ({
   consumeRadarAttempt: mocks.consumeRadarAttempt,
   hydrateRateLimitStore: mocks.hydrateRateLimitStore,
 }));
-vi.mock('../../server/lib/radar.js', () => ({
+vi.mock('./radar.js', () => ({
   getRadarItems: mocks.getRadarItems,
   getRadarFeedPolicy: mocks.getRadarFeedPolicy,
   getRadarFeedReadiness: mocks.getRadarFeedReadiness,
@@ -23,7 +23,7 @@ vi.mock('../../server/lib/radar.js', () => ({
   RADAR_WEB_POLICY: [],
 }));
 
-const { default: handler } = await import('./items.js');
+const { default: handler } = await import('../../api/radar/items.js');
 
 function responseDouble() {
   const response = {
