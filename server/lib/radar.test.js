@@ -532,6 +532,18 @@ describe('radar domain', () => {
     expect(items[0]).toMatchObject({ section: 'international', sourceName: 'OCDE', publishedAt: '2026-06-23', isNews: true });
   });
 
+  it('retries a transient OECD metadata rate limit', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('', { status: 429, headers: { 'retry-after': '0' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: { items: [], 'total-results': 0 } }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const items = await fetchOecdItems({ limit: 3 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(items.coverage).toMatchObject({ complete: true });
+  });
+
   it('ingests allowlisted institutional HTML pages without accepting external links', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html><article><a href="/noticia-ept">Nova política de educação profissional</a><time datetime="2026-07-16"></time><p>Atualização sobre formação técnica e competências.</p></article><article><a href="https://external.example/noticia">Link externo irrelevante</a></article></html>', { status: 200 })));
     const items = await fetchWebItems({ name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' }, { limit: 5 });

@@ -432,8 +432,11 @@ export async function collectPaginatedInstitutionalSource(source, { now = new Da
   let exhausted = false;
   let interruptedReason = '';
   const deadlineAt = Date.now() + Math.max(1000, Number(source.deadlineMs || 45_000));
-  const refreshingComplete = source.incremental && previousCoverage?.complete === true;
-  const startPage = source.incremental ? Math.max(0, Number(previousCoverage?.nextPage || 0)) : 0;
+  const compatibleCoverage = source.coverageVersion
+    ? (Number(previousCoverage?.version) === Number(source.coverageVersion) ? previousCoverage : null)
+    : previousCoverage;
+  const refreshingComplete = source.incremental && compatibleCoverage?.complete === true;
+  const startPage = source.incremental ? Math.max(0, Number(compatibleCoverage?.nextPage || 0)) : 0;
   for (let batchPage = 0; batchPage < maxPages; batchPage += 1) {
     const page = startPage + batchPage;
     if (page >= Number(source.maxPages || Number.POSITIVE_INFINITY)) {
@@ -497,6 +500,7 @@ export async function collectPaginatedInstitutionalSource(source, { now = new Da
   return {
     items,
     coverage: {
+      ...(source.coverageVersion ? { version: Number(source.coverageVersion) } : {}),
       windowStart: cutoff,
       windowEnd,
       oldestSeen: dates[0] || null,

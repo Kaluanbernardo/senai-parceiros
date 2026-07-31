@@ -43,7 +43,7 @@ export const RADAR_WEB_POLICY = [
   // Cedefop may challenge individual paginated requests. Keep an honest cursor
   // and retry the blocked page on the next run; never call page one a complete
   // annual backfill merely because newer items were collected successfully.
-  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20, batchPages: 1, incremental: true },
+  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20, batchPages: 1, incremental: true, coverageVersion: 2 },
   { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 60, batchPages: 8, incremental: true },
   { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/home/UNEVOC+News', official: true, geography: 'Internacional', allowedHosts: ['www.unevoc.unesco.org', 'www.unesco.org', 'atlas.unevoc.unesco.org'], pagePath: '/home/UNEVOC+News/lang=en/page={page}', maxPages: 60, batchPages: 4, incremental: true, timeoutMs: 20000 },
 ];
@@ -470,8 +470,16 @@ export async function fetchOecdItems({ limit = 100, maxPages = 10, previousCover
       filter: `from-pub-date:${since.toISOString().slice(0, 10)},until-pub-date:${today}`,
       select: 'DOI,title,URL,published,author,type,publisher,container-title,abstract',
     });
-    const response = await fetch(`https://api.crossref.org/works?${params}`, { headers: { 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' }, signal: AbortSignal.timeout(15000) });
-    if (!response.ok) throw new Error(`oecd_metadata_${response.status}`);
+    let response;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      response = await fetch(`https://api.crossref.org/works?${params}`, { headers: { 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' }, signal: AbortSignal.timeout(15000) });
+      if (response.ok) break;
+      if (response.status !== 429 || attempt === 3) throw new Error(`oecd_metadata_${response.status}`);
+      if (process.env.NODE_ENV !== 'test') {
+        const retryAfter = Number(response.headers.get('retry-after') || 0) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(2500, Math.max(500, retryAfter || attempt * 700))));
+      }
+    }
     const body = await response.json();
     const pageWorks = body.message?.items || [];
     works.push(...pageWorks);

@@ -120,6 +120,17 @@ describe('institutional Radar collectors', () => {
     expect(result.coverage).toMatchObject({ complete: false, nextPage: 3, pagesRead: 0, reason: 'source_blocked' });
   });
 
+  it('invalidates a legacy complete marker when the source coverage contract changes', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<article><a href="/news/vet">New vocational education policy</a><time datetime="2026-07-20"></time></article>', { status: 200 })));
+
+    const result = await collectPaginatedInstitutionalSource({
+      name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true,
+      geography: 'Internacional', pageParam: 'page', maxPages: 20, incremental: true, coverageVersion: 2,
+    }, { now: new Date('2026-07-31T12:00:00Z'), maxPages: 1, previousCoverage: { complete: true, nextPage: null } });
+
+    expect(result.coverage).toMatchObject({ version: 2, complete: false, nextPage: 1, reason: 'page_batch' });
+  });
+
   it('preserves a colon in Plone pagination parameter names', async () => {
     let requestedUrl = '';
     vi.stubGlobal('fetch', vi.fn(async (url) => {
