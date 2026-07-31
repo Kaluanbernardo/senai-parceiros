@@ -671,7 +671,9 @@ function storedItemStillQualifies(item) {
     // would preserve the false positives that this migration is meant to clear.
     const recorded = item?.provenance?.eligibility;
     if (Number(recorded?.version) >= DOU_ELIGIBILITY_VERSION && Number.isFinite(Number(recorded.direct))) return Number(recorded.direct) > 0;
-    return douRelevance(item.title, item.summaryPt).eligible;
+    // The stored excerpt cannot reconstruct which act or annex supplied the
+    // match. Drop legacy decisions instead of re-approving contaminated text.
+    return false;
   }
   if (item?.provider === 'institutional-web' && !item.publishedAt) return String(item.title || '').length >= 40;
   return true;

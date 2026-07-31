@@ -238,7 +238,29 @@ describe('radar domain', () => {
     const titles = result.items.map((item) => item.title);
     expect(titles).not.toContain('Imprensa Nacional');
     expect(titles).not.toContain('Funções e Competências');
-    expect(titles).toContain('Portaria sobre educação profissional técnica');
+    expect(titles).not.toContain('Portaria sobre educação profissional técnica');
+  });
+
+  it('descarta decisão DOU anterior ao isolamento estrutural mesmo se o resumo parecer elegível', async () => {
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'dou-legado-contaminado',
+        section: 'government',
+        title: 'Despacho de encerramento de projeto energético',
+        summaryPt: 'Projeto de qualificação profissional encerrado.',
+        publishedAt: '2026-07-24',
+        sourceName: 'Diário Oficial da União',
+        provider: 'direct-official',
+        externalId: 'dou:legado-contaminado',
+        provenance: { eligibility: { version: 1, direct: 1, strategic: 1 } },
+      })],
+      fetchedAt: '2026-07-30T00:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+    expect(result.items.map((item) => item.id)).not.toContain('dou-legado-contaminado');
   });
 
   it('schedules only the government page with observed collection value', () => {
