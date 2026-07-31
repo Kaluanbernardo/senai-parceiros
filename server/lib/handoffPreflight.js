@@ -35,6 +35,7 @@ export function getHandoffPreflight(profile = 'corporate') {
       check('alerts', status.handoff.corporate.alerts, 'OPS_ALERT_WEBHOOK_URL deve ser HTTPS e corporativo.'),
       check('radar_cron', status.radar.cronConfigured, 'RADAR_CRON_SECRET ou CRON_SECRET deve estar configurado.'),
       check('radar_feeds', status.radar.feeds.ready, 'O manifesto de feeds oficiais precisa estar válido.'),
+      check('openalex_api_key', Boolean(String(process.env.OPENALEX_API_KEY || '').trim()), 'OPENALEX_API_KEY é obrigatória para cobrir os pesquisadores cadastrados.'),
       check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.'),
     ]
     : [
@@ -42,6 +43,7 @@ export function getHandoffPreflight(profile = 'corporate') {
       check('public_origin', status.security.publicOriginConfigured, 'PUBLIC_APP_ORIGIN deve estar configurado.'),
       check('session_secret', status.security.sessionSecretConfigured, 'AUTH_SESSION_SECRET deve existir somente no servidor.'),
       check('radar_feeds', status.radar.feeds.ready, 'O manifesto de feeds oficiais precisa estar válido.'),
+      check('openalex_api_key', Boolean(String(process.env.OPENALEX_API_KEY || '').trim()), 'OPENALEX_API_KEY é obrigatória para cobrir os pesquisadores cadastrados.'),
       check('ai_provider', providerConfigured(status), 'O provider de IA escolhido precisa ter credencial server-only.', aiProviderExplicitlySelected),
     ];
 

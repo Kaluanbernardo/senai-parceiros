@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource, semanticEvidence } from './institutional.js';
+import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource, extractInstitutionalCandidates, semanticEvidence } from './institutional.js';
 
 describe('institutional Radar collectors', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -26,6 +26,25 @@ describe('institutional Radar collectors', () => {
     expect(semanticEvidence('Hospital recebe novos equipamentos', 'Terapia renal e atendimento clínico.')).toMatchObject({ eligible: false });
     expect(semanticEvidence('Novos cursos técnicos', 'Educação profissional para a indústria paulista.')).toMatchObject({ eligible: true });
     expect(semanticEvidence('Government will vet applications', 'Applications undergo review.')).toMatchObject({ eligible: false });
+    expect(semanticEvidence('Clínica veterinária oferece atendimento gratuito', 'A ação do Instituto Federal do Amapá atende animais domésticos.')).toMatchObject({ eligible: false });
+    expect(semanticEvidence('Fatec promove campanha de adoção de animais', 'Atendimento comunitário gratuito.')).toMatchObject({ eligible: false });
+  });
+
+  it('does not qualify an unrelated headline from category tags or neighbouring markup', () => {
+    const html = `
+      <article>
+        <span class="category">Educação Profissional e Tecnológica</span>
+        <h2><a href="/noticias/clinica-veterinaria">Clínica veterinária oferta atendimento gratuito</a></h2>
+        <p class="description">Serviço do Instituto Federal do Amapá atende animais de estimação e silvestres.</p>
+        <span class="tags">Cursos Técnicos</span>
+      </article>`;
+
+    const [candidate] = extractInstitutionalCandidates(html, {
+      name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/', official: true,
+      geography: 'Brasil',
+    });
+
+    expect(candidate).toMatchObject({ title: 'Clínica veterinária oferta atendimento gratuito', eligible: false });
   });
 
   it('marks coverage partial when a source reaches its page cap before the cutoff', async () => {
@@ -89,6 +108,18 @@ describe('institutional Radar collectors', () => {
     expect(result.coverage).toMatchObject({ complete: true, nextPage: null, reason: 'head_refresh' });
   });
 
+  it('keeps the same annual cursor when an institutional challenge blocks a page', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><title>Cedefop - Verification Required</title></html>', { status: 200 })));
+
+    const result = await collectPaginatedInstitutionalSource({
+      name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true,
+      geography: 'Internacional', pageParam: 'page', maxPages: 20, incremental: true,
+    }, { now: new Date('2026-07-31T12:00:00Z'), maxPages: 1, previousCoverage: { complete: false, nextPage: 3 } });
+
+    expect(result.items).toHaveLength(0);
+    expect(result.coverage).toMatchObject({ complete: false, nextPage: 3, pagesRead: 0, reason: 'source_blocked' });
+  });
+
   it('preserves a colon in Plone pagination parameter names', async () => {
     let requestedUrl = '';
     vi.stubGlobal('fetch', vi.fn(async (url) => {
@@ -117,6 +148,19 @@ describe('institutional Radar collectors', () => {
 
     expect(result.items).toHaveLength(2);
     expect(result.coverage).toMatchObject({ pagesRead: 2, totalPages: 2, complete: true });
+  });
+
+  it('does not let an explicit-topic source approve a post with no item-level vocational evidence', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([
+      { id: 1, date: '2026-06-01T12:00:00', link: 'https://example.org/clinica', title: { rendered: 'Clínica veterinária oferece atendimento gratuito' }, excerpt: { rendered: '<p>Serviço atende animais domésticos.</p>' } },
+    ]), { status: 200, headers: { 'x-wp-totalpages': '1' } })));
+
+    const result = await collectWordPressSource({
+      name: 'Centro Paula Souza', section: 'government', url: 'https://example.org/noticias/', official: true,
+      geography: 'São Paulo', explicitTopic: true, topicLabel: 'EPT',
+    }, { now: new Date('2026-07-31T12:00:00Z') });
+
+    expect(result.items).toHaveLength(0);
   });
 
   it('walks DOE-SP results backwards from the newest page and exposes its annual cursor', async () => {

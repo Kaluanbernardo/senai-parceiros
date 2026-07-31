@@ -1,15 +1,15 @@
 import seedItems from '../../src/data/radar-seeds.json' with { type: 'json' };
 import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json' };
-import { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, isEligibleRadarItem, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
+import { dedupeRadarItems, filterRadarItems, isEligibleRadarItem, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
 import { radarStore } from './radarStore.js';
 import { summarizeResearchItems } from './radar/researchSummaryService.js';
 import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract } from './radar/summaries.js';
 import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
 import { TavilyWebProvider } from './radar/web/tavily.js';
-import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource } from './radar/institutional.js';
+import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource, semanticEvidence } from './radar/institutional.js';
 import { collectTrackedResearcherStudies } from './radar/researchers.js';
-export { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
+export { dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 
 export const RADAR_SOURCE_POLICY = [
   { name: 'OpenAlex', kind: 'research', url: 'https://openalex.org', official: false },
@@ -30,19 +30,22 @@ export const RADAR_SOURCE_POLICY = [
 
 export const RADAR_FEED_POLICY = [];
 
-export const RADAR_FEED_MANIFEST_VERSION = '2026-07-31.v6';
+export const RADAR_FEED_MANIFEST_VERSION = '2026-07-31.v7';
 
 export const RADAR_WEB_POLICY = [
   { name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos/noticias/noticias', official: true, geography: 'Brasil', pageParam: 'b_start:int', pageStep: 15, includeFirstPageParam: true, maxPages: 60, batchPages: 4, incremental: true, timeoutMs: 20000 },
-  { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/ept', official: true, geography: 'Brasil', pageParam: 'b_start:int', pageStep: 30, maxPages: 8, explicitTopic: true, topicLabel: 'EPT' },
-  { name: 'Centro Paula Souza', section: 'government', url: 'https://www.cps.sp.gov.br/noticias/', official: true, geography: 'São Paulo', collector: 'wordpress', maxPages: 8, timeoutMs: 25000, explicitTopic: true, topicLabel: 'EPT' },
-  { name: 'Secretaria da Educação de SP', section: 'government', url: 'https://www.educacao.sp.gov.br/noticias/', official: true, geography: 'São Paulo', maxPages: 1 },
+  { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/ept', official: true, geography: 'Brasil', pageParam: 'b_start:int', pageStep: 30, maxPages: 60, batchPages: 4, incremental: true },
+  { name: 'Centro Paula Souza', section: 'government', url: 'https://www.cps.sp.gov.br/noticias/', official: true, geography: 'São Paulo', collector: 'wordpress', maxPages: 8, timeoutMs: 25000 },
+  { name: 'Secretaria da Educação de SP', section: 'government', url: 'https://www.educacao.sp.gov.br/noticias/', official: true, geography: 'São Paulo', maxPages: 60, batchPages: 4, incremental: true },
   { name: 'Agência SP', section: 'government', url: 'https://www.agenciasp.sp.gov.br/', official: true, geography: 'São Paulo', collector: 'wordpress', maxPages: 5 },
   { name: 'Diário Oficial do Estado de São Paulo', section: 'government', url: 'https://www.doe.sp.gov.br/', apiUrl: 'https://do-api-web-search.doe.sp.gov.br/v2/advanced-search/publications', official: true, geography: 'São Paulo', collector: 'doe-sp', terms: ['educação profissional', 'educação profissional técnica', 'ensino técnico', 'curso técnico', 'formação profissional'], batchPages: 4, maxItems: 1000, timeoutMs: 40000, deadlineMs: 50000 },
   { name: 'OIT', section: 'international', url: 'https://www.ilo.org/resource/news', official: true, geography: 'Internacional', collector: 'ilo-sitemap', sitemapUrl: 'https://www.ilo.org/sitemap.xml', maxDocuments: 60, articleConcurrency: 20, maxItems: 1000 },
-  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20 },
-  { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20 },
-  { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/home/UNEVOC+News', official: true, geography: 'Internacional', allowedHosts: ['www.unevoc.unesco.org', 'www.unesco.org', 'atlas.unevoc.unesco.org'], pagePath: '/home/UNEVOC+News/lang=en/page={page}', maxPages: 3, timeoutMs: 20000, explicitTopic: true, topicLabel: 'TVET' },
+  // Cedefop may challenge individual paginated requests. Keep an honest cursor
+  // and retry the blocked page on the next run; never call page one a complete
+  // annual backfill merely because newer items were collected successfully.
+  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20, batchPages: 1, incremental: true },
+  { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 60, batchPages: 8, incremental: true },
+  { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/home/UNEVOC+News', official: true, geography: 'Internacional', allowedHosts: ['www.unevoc.unesco.org', 'www.unesco.org', 'atlas.unevoc.unesco.org'], pagePath: '/home/UNEVOC+News/lang=en/page={page}', maxPages: 60, batchPages: 4, incremental: true, timeoutMs: 20000 },
 ];
 
 const RADAR_SECTION_SET = new Set(RADAR_SECTIONS);
@@ -135,12 +138,6 @@ function absoluteUrl(href, baseUrl) {
   }
 }
 
-function webRelevance(title, summary) {
-  const haystack = `${title} ${summary}`.toLocaleLowerCase('pt-BR');
-  const terms = ['educação profissional', 'educacao profissional', 'educação tecnológica', 'educacao tecnologica', 'vocational', 'technical education', 'skills', 'qualificação', 'qualification', 'aprendizagem', 'apprenticeship', 'vet', 'tvet', 'competências', 'competencias', 'formação profissional', 'formacao profissional'];
-  return Math.min(100, 50 + terms.filter((term) => haystack.includes(term)).length * 9);
-}
-
 function hasVocationalResearchSignal(work) {
   const title = htmlText(work?.display_name || work?.title);
   const indexedTopics = (work?.topics || []).map((topic) => topic?.display_name).filter(Boolean).join(' ');
@@ -209,7 +206,7 @@ export async function fetchWebItems(source, { limit = 8, previousCoverage = null
         : await collectPaginatedInstitutionalSource(source, { maxPages: pageCount, previousCoverage });
   const itemLimit = Number(source.maxItems || (source.maxPages ? 1000 : limit));
   const items = result.items
-    .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')) || b.relevanceScore - a.relevanceScore)
+    .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')) || a.title.localeCompare(b.title, 'pt-BR'))
     .slice(0, itemLimit);
   Object.defineProperty(items, 'coverage', { value: result.coverage, enumerable: false });
   cacheSet(cacheKey, items);
@@ -285,7 +282,7 @@ export async function fetchFeedItems(feed, { limit = 10 } = {}) {
   const xml = await response.text();
   const blocks = [...xml.matchAll(/<(?:item|entry)\b[\s\S]*?<\/(?:item|entry)>/gi)].map((match) => match[0]);
   const items = blocks.map((block, index) => feedItem(block, feed, index))
-    .filter((item) => item.title && item.sourceUrl && item.isNews && webRelevance(item.title, item.summaryPt) >= 59)
+    .filter((item) => item.title && item.sourceUrl && item.isNews && semanticEvidence(item.title, item.summaryPt).eligible)
     .slice(0, limit);
   cacheSet(cacheKey, items);
   return items;
@@ -346,8 +343,16 @@ export async function fetchOpenAlexItems({ query = '"vocational education and tr
   });
   if (process.env.OPENALEX_API_KEY) params.set('api_key', process.env.OPENALEX_API_KEY);
   const headers = process.env.OPENALEX_MAILTO ? { 'User-Agent': `senai-parceiros/1.0 (mailto:${process.env.OPENALEX_MAILTO})` } : undefined;
-  const response = await fetch(`https://api.openalex.org/works?${params}`, { headers, signal: AbortSignal.timeout(8000) });
-  if (!response.ok) throw new Error(`openalex_${response.status}`);
+  let response;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    response = await fetch(`https://api.openalex.org/works?${params}`, { headers, signal: AbortSignal.timeout(8000) });
+    if (response.ok) break;
+    if (response.status !== 429 || attempt === 3) throw new Error(`openalex_${response.status}`);
+    if (process.env.NODE_ENV !== 'test') {
+      const retryAfter = Number(response.headers.get('retry-after') || 0) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, Math.min(2500, Math.max(400, retryAfter || attempt * 600))));
+    }
+  }
   const body = await response.json();
   const items = (body.results || [])
     .filter(hasVocationalResearchSignal)
@@ -437,7 +442,7 @@ export async function fetchCrossrefItems({ query = 'vocational education trainin
       authors: (work.author || []).map((author) => [author.given, author.family].filter(Boolean).join(' ')).filter(Boolean),
     });
   });
-  const relevant = items.filter((item) => item.isNews && webRelevance(item.title, '') >= 59);
+  const relevant = items.filter((item) => item.isNews && semanticEvidence(item.title).eligible);
   cacheSet(cacheKey, relevant);
   return relevant;
 }
@@ -508,7 +513,7 @@ export async function fetchOecdItems({ limit = 100, maxPages = 10, previousCover
       }),
       authors: (work.author || []).map((author) => [author.given, author.family].filter(Boolean).join(' ')).filter(Boolean),
     });
-  }).filter((item) => item.isNews && webRelevance(item.title, '') >= 59);
+  }).filter((item) => item.isNews && semanticEvidence(item.title).eligible);
   const complete = !cursor || (Number.isFinite(totalResults) && works.length >= totalResults);
   Object.defineProperty(items, 'coverage', { value: {
     windowStart: since.toISOString().slice(0, 10),
@@ -545,7 +550,7 @@ function douDateWindow(previousCoverage = null) {
 }
 
 const DOU_DISCOVERY_CEILING = 4000;
-const DOU_ELIGIBILITY_VERSION = 3;
+const DOU_ELIGIBILITY_VERSION = 5;
 
 /**
  * Cheap pre-filter over a discovered act, before any request is spent on its
@@ -573,16 +578,31 @@ function countWholeTerms(haystack, terms) {
   }).length;
 }
 
+const DOU_STRONG_TERMS = ['educacao profissional', 'educacao profissional e tecnologica', 'educacao tecnica', 'formacao profissional', 'formacao tecnica e profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'curso tecnico', 'cursos tecnicos', 'itinerario de formacao tecnica profissional'];
+const DOU_SUBSTANTIVE_TERMS = ['institui', 'estabelece', 'regulamenta', 'autoriza', 'cria', 'dispoe', 'aprova', 'altera', 'define', 'proporciona', 'promove', 'amplia', 'programa', 'politica', 'oferta', 'curso', 'vagas', 'curricul', 'diretriz', 'certific', 'financiamento', 'bolsa', 'edital', 'chamada publica', 'cooperacao'];
+const DOU_INSTITUTIONAL_BOILERPLATE = /\b(?:secretaria|diretoria|subsecretaria|departamento|coordenacao)(?: nacional| especial)? (?:de|da) educacao profissional e tecnologica\b/g;
+
+function foldDouText(value) {
+  return String(value || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function stripDouInstitutionalBoilerplate(value) {
+  return foldDouText(value).replace(DOU_INSTITUTIONAL_BOILERPLATE, ' ');
+}
+
 export function douRelevance(title, content = '') {
-  const titleHaystack = String(title || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const haystack = `${titleHaystack} ${content || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const strongTerms = ['educacao profissional', 'educacao tecnica', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'sistema s', 'senai', 'senac'];
-  const strongDirect = countWholeTerms(haystack, strongTerms);
-  const titleStrongDirect = countWholeTerms(titleHaystack, strongTerms);
+  const titleHaystack = stripDouInstitutionalBoilerplate(title);
+  const foldedContent = stripDouInstitutionalBoilerplate(content);
+  const haystack = `${titleHaystack} ${foldedContent}`;
+  const strongDirect = countWholeTerms(haystack, DOU_STRONG_TERMS);
+  const titleStrongDirect = countWholeTerms(titleHaystack, DOU_STRONG_TERMS);
   const institutional = countWholeTerms(haystack, ['setec', 'rede federal']);
   const direct = strongDirect + institutional;
   const strategic = ['industria', 'industrial', 'competencias', 'trabalho', 'inovacao', 'tecnologia', 'economia circular', 'descarbonizacao', 'sao paulo'].filter((term) => haystack.includes(term)).length;
-  const substantive = ['institui', 'estabelece', 'regulamenta', 'autoriza', 'cria', 'dispoe', 'aprova', 'altera', 'define', 'programa', 'politica', 'oferta', 'curso', 'vagas', 'curricul', 'diretriz', 'certific', 'financiamento', 'bolsa', 'edital', 'chamada publica', 'cooperacao'].filter((term) => haystack.includes(term)).length;
+  const substantive = DOU_SUBSTANTIVE_TERMS.filter((term) => haystack.includes(term)).length;
+  const evidenceClauses = foldedContent.split(/[.!?;\n]+/).map((clause) => clause.trim()).filter(Boolean);
+  const coupledEvidence = evidenceClauses.some((clause) => countWholeTerms(clause, DOU_STRONG_TERMS) > 0
+    && DOU_SUBSTANTIVE_TERMS.some((term) => clause.includes(term)));
   const administrativeNoise = /\b(?:extrato de (?:contrato|apostilamento|termo aditivo)|aviso de (?:licitacao|pregao|registro de diplomas)|resultado de julgamento|dispensa de licitacao|inexigibilidade de licitacao|termo de homologacao)\b/.test(haystack);
   // Eligibility now requires an explicit vocational-education term. The former
   // strategic-only path matched words like "trabalho" and "tecnologia" that
@@ -591,7 +611,26 @@ export function douRelevance(title, content = '') {
   // Issuing-body boilerplate is not news by itself: procurement extracts and
   // diploma notices from SETEC/IFs must not qualify merely because the body's
   // legal name contains "educaÃ§Ã£o profissional".
-  return { direct, strategic, substantive, administrativeNoise: administrativeNoise ? 1 : 0, eligible: !administrativeNoise && direct > 0 && (titleStrongDirect > 0 || substantive > 0) };
+  return { direct, strategic, substantive, administrativeNoise: administrativeNoise ? 1 : 0, eligible: !administrativeNoise && strongDirect > 0 && (titleStrongDirect > 0 || coupledEvidence) };
+}
+
+function douThemeEvidence(content, title = '') {
+  const clean = htmlText(content || title);
+  const sentences = clean.match(/[^.!?;]+[.!?;]?/g)?.map((value) => value.trim()).filter(Boolean) || [];
+  const evidenceIndex = sentences.findIndex((sentence) => {
+    const folded = stripDouInstitutionalBoilerplate(sentence);
+    return countWholeTerms(folded, DOU_STRONG_TERMS) > 0
+      && DOU_SUBSTANTIVE_TERMS.some((term) => folded.includes(term));
+  });
+  const titleIsEvidence = countWholeTerms(stripDouInstitutionalBoilerplate(title), DOU_STRONG_TERMS) > 0;
+  return evidenceIndex >= 0
+    ? [sentences[evidenceIndex], sentences[evidenceIndex + 1]].filter(Boolean).join(' ')
+    : titleIsEvidence ? title : clean;
+}
+
+function douThemeSummary(content, title = '') {
+  const excerpt = douThemeEvidence(content, title);
+  return `Relação com educação profissional: ${conciseText(excerpt, 520)}`;
 }
 
 function douItemFromDocument(document, candidate = {}) {
@@ -599,13 +638,17 @@ function douItemFromDocument(document, candidate = {}) {
   // The listing payload carries the act's own title; the fetched page's <title>
   // is the newspaper's, which is how an act reached the radar called
   // "Imprensa Nacional".
-  const title = String(candidate?.title || document?.title || 'Ato oficial do Diário Oficial da União').trim();
-  const relevance = douRelevance(title, content);
+  const originalTitle = String(candidate?.title || document?.title || 'Ato oficial do Diário Oficial da União').trim();
+  const relevance = douRelevance(originalTitle, content);
   if (!relevance.eligible) return null;
   const sourceUrl = document?.sourceUrl || candidate?.sourceUrl;
   const externalId = document?.externalId || candidate?.externalId || `dou:${sourceUrl}`;
-  const sourceText = content || title;
-  const summary = buildEvidenceFallback(sourceText, { maxWords: 80 });
+  const sourceText = content || originalTitle;
+  const evidence = douThemeEvidence(sourceText, originalTitle);
+  const summary = douThemeSummary(sourceText, originalTitle);
+  const title = semanticEvidence(originalTitle).eligible
+    ? originalTitle
+    : `${originalTitle} — ${conciseText(evidence, 180)}`;
   return normalizeRadarItem({
     id: externalId,
     externalId,
@@ -623,7 +666,7 @@ function douItemFromDocument(document, candidate = {}) {
     // The decision is recorded with the item because it was taken over the full
     // act, while only an 80-word excerpt is stored. Re-deciding later from the
     // excerpt would reject acts that legitimately qualified.
-    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { version: DOU_ELIGIBILITY_VERSION, eligible: relevance.eligible ? 1 : 0, direct: relevance.direct, strategic: relevance.strategic, substantive: relevance.substantive, administrativeNoise: relevance.administrativeNoise } },
+    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), originalTitle, evidenceLength: sourceText.length, eligibility: { version: DOU_ELIGIBILITY_VERSION, eligible: relevance.eligible ? 1 : 0, direct: relevance.direct, strategic: relevance.strategic, substantive: relevance.substantive, administrativeNoise: relevance.administrativeNoise } },
   });
 }
 
@@ -748,7 +791,11 @@ function storedItemStillQualifies(item) {
     // match. Drop legacy decisions instead of re-approving contaminated text.
     return false;
   }
-  if (item?.provider === 'institutional-web' && !item.publishedAt) return String(item.title || '').length >= 40;
+  if (item?.provider === 'institutional-paginated') {
+    const recorded = item?.provenance?.eligibility;
+    return Number(recorded?.version) >= 2 && Number(recorded?.eligible) > 0;
+  }
+  if (item?.provider === 'institutional-web') return false;
   return true;
 }
 
@@ -771,11 +818,19 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const collectInternational = live && (!filters.section || filters.section === 'international');
   const collectGovernment = live && (!filters.section || filters.section === 'government');
   const researchPromise = collectResearch
-    ? Promise.allSettled([
-      fetchOpenAlexItems({ query: filters.query || '"vocational education and training"' }),
-      fetchCrossrefItems({ query: filters.query || '"vocational education and training"' }),
-      fetchTrackedResearcherItems({ previousCoverage: stored?.sourceStatus?.['Pesquisadores cadastrados']?.coverage || null }),
-    ])
+    ? (async () => {
+      // The general query and identity resolver share the same OpenAlex quota.
+      // Starting both at once caused the general feed to return 429 on every
+      // integrated run even though each collector succeeded in isolation.
+      const [openAlexItems, crossrefItems] = await Promise.allSettled([
+        fetchOpenAlexItems({ query: filters.query || '"vocational education and training"' }),
+        fetchCrossrefItems({ query: filters.query || '"vocational education and training"' }),
+      ]);
+      const [trackedItems] = await Promise.allSettled([
+        fetchTrackedResearcherItems({ previousCoverage: stored?.sourceStatus?.['Pesquisadores cadastrados']?.coverage || null }),
+      ]);
+      return [openAlexItems, crossrefItems, trackedItems];
+    })()
     : null;
   const oecdPromise = collectInternational ? Promise.allSettled([fetchOecdItems({ previousCoverage: stored?.sourceStatus?.OCDE?.coverage || null })]) : null;
   const douPromise = collectGovernment
@@ -883,7 +938,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const summarizedResearch = summaryResult.status === 'fulfilled' ? summaryResult.value : mergedResearch;
   const nonResearch = items.filter((item) => item.section !== 'research');
   const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
-  const stale = !liveProvider && Boolean(stored);
+  const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);
   if (hydrateError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: hydrateError });
   if (persist && liveProvider) {
     radarStore.writeSnapshot({ items: snapshotItems, fetchedAt, sourceStatus, liveProvider: true, stale: false });

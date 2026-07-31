@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { getHandoffPreflight } from './handoffPreflight.js';
 
 const tracked = [
-  'AUTH_PROVIDER', 'AUTH_SESSION_SECRET', 'PUBLIC_APP_ORIGIN', 'AI_PROVIDER', 'OPENAI_API_KEY', 'OPENROUTER_API_KEY',
+  'AUTH_PROVIDER', 'AUTH_SESSION_SECRET', 'PUBLIC_APP_ORIGIN', 'AI_PROVIDER', 'OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'OPENALEX_API_KEY',
   'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_DEPLOYMENT', 'RADAR_CRON_SECRET', 'CRON_SECRET',
   'ENTRA_TENANT_ID', 'ENTRA_CLIENT_ID', 'ENTRA_ADMIN_GROUP_ID', 'ENTRA_USER_GROUP_ID', 'OPS_ALERT_WEBHOOK_URL',
   'CATALOG_STORE_DRIVER', 'RADAR_STORE_DRIVER', 'RATE_LIMIT_STORE_DRIVER', 'AI_BUDGET_STORE_DRIVER',
@@ -24,6 +24,7 @@ describe('handoff preflight', () => {
     process.env.AUTH_PROVIDER = 'local';
     process.env.AUTH_SESSION_SECRET = 'local-session-secret-at-least-32-characters';
     process.env.PUBLIC_APP_ORIGIN = 'https://preview.example.test';
+    process.env.OPENALEX_API_KEY = 'openalex-key';
     const result = getHandoffPreflight('mvp');
     expect(result.ok).toBe(true);
     expect(result.blockers).toEqual([]);
@@ -42,12 +43,24 @@ describe('handoff preflight', () => {
     expect(result.blockers).toContain('ai_provider');
   });
 
+  it('blocks a live Radar deployment without the required OpenAlex API key', () => {
+    process.env.AUTH_PROVIDER = 'local';
+    process.env.AUTH_SESSION_SECRET = 'local-session-secret-at-least-32-characters';
+    process.env.PUBLIC_APP_ORIGIN = 'https://preview.example.test';
+
+    const result = getHandoffPreflight('mvp');
+
+    expect(result.ok).toBe(false);
+    expect(result.blockers).toContain('openalex_api_key');
+  });
+
   it('accepts the MVP when the selected provider is configured', () => {
     process.env.AUTH_PROVIDER = 'local';
     process.env.AUTH_SESSION_SECRET = 'local-session-secret-at-least-32-characters';
     process.env.PUBLIC_APP_ORIGIN = 'https://preview.example.test';
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'openrouter-key';
+    process.env.OPENALEX_API_KEY = 'openalex-key';
     const result = getHandoffPreflight('mvp');
     expect(result.ok).toBe(true);
     expect(result.blockers).toEqual([]);

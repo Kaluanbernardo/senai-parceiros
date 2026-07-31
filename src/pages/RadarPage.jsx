@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
@@ -84,16 +83,9 @@ export default function RadarPage() {
   const [error, setError] = useState('');
   const [collecting, setCollecting] = useState(false);
   const [collectResult, setCollectResult] = useState(null);
-  const [filters, setFilters] = useState({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '', sort: 'relevance' });
+  const [filters, setFilters] = useState({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
   const activeSection = sections.find((entry) => entry.value === section) || sections[0];
-  const sourceValues = Object.values(meta?.sourceStatus || {});
-  const sourceErrors = sourceValues.filter((source) => source.status === 'error');
-  const sourceSuccesses = sourceValues.filter((source) => source.status !== 'error');
-  const everySourceFailed = sourceValues.length > 0 && sourceSuccesses.length === 0;
-  const coverageEntries = sourceValues.filter((source) => source.coverage);
-  const incompleteCoverage = coverageEntries.filter((source) => !source.coverage.complete);
-  const researcherCoverage = sourceValues.find((source) => source.name === 'Pesquisadores cadastrados')?.coverage;
 
   const loadItems = async () => {
     setLoading(true);
@@ -184,7 +176,7 @@ export default function RadarPage() {
   const undatedCount = useMemo(() => countUndatedItems(items), [items]);
   const undatedHidden = undatedCount > 0 && filters.period !== '1y';
   const setFilter = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }));
-  const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '', sort: 'relevance' });
+  const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 3, md: 5 } }}>
@@ -235,8 +227,7 @@ export default function RadarPage() {
               <TextField fullWidth size="small" label="Buscar" value={filters.query} onChange={setFilter('query')} placeholder="ex.: inteligência artificial" InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }} />
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}><FormControl fullWidth size="small"><InputLabel>Período</InputLabel><Select value={filters.period} label="Período" onChange={setFilter('period')}>{periodOptions.map((entry) => <MenuItem key={entry.value} value={entry.value}>{entry.label}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 6, md: 2 }}><FormControl fullWidth size="small"><InputLabel>Ordenar</InputLabel><Select value={filters.sort} label="Ordenar" onChange={setFilter('sort')}><MenuItem value="relevance">Relevância + recência</MenuItem><MenuItem value="date">Mais recentes</MenuItem></Select></FormControl></Grid>
-            <Grid size={{ xs: 12, md: 2 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
+            <Grid size={{ xs: 12, md: 4 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Local</InputLabel><Select value={filters.geography} label="Local" onChange={setFilter('geography')}><MenuItem value="">Todos</MenuItem>{[...new Set(items.map((item) => item.geography))].sort().map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tema</InputLabel><Select value={filters.topic} label="Tema" onChange={setFilter('topic')}><MenuItem value="">Todos</MenuItem>{options.topics.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
@@ -251,20 +242,7 @@ export default function RadarPage() {
         </CardContent>
       </Card>
 
-      <Alert icon={<InfoOutlinedIcon />} severity="info" sx={{ mt: 2 }}>
-        <strong>Como a relevância é calculada:</strong> aderência temática (até 50 pontos) + recência (até 30) + qualidade da fonte (até 20). Só entram publicações identificadas com data dos últimos 12 meses.
-      </Alert>
-      {coverageEntries.length > 0 && (
-        <Alert severity={incompleteCoverage.length ? 'warning' : 'success'} sx={{ mt: 2 }}>
-          <strong>Cobertura dos últimos 12 meses:</strong> {coverageEntries.length - incompleteCoverage.length} de {coverageEntries.length} fonte(s) concluída(s).
-          {incompleteCoverage.length > 0 && ` Ainda há cobertura parcial em: ${incompleteCoverage.map((source) => source.name).join(', ')}.`}
-          {researcherCoverage && ` Pesquisadores: ${researcherCoverage.authorsResolved}/${researcherCoverage.catalogTotal} identidades resolvidas; ${researcherCoverage.worksRetrieved || 0} trabalho(s) recuperado(s).`}
-        </Alert>
-      )}
       {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Exibindo novidades públicas verificadas da base curada enquanto as fontes automáticas se recuperam.</Alert>}
-      {meta?.stale && <Alert severity="warning" sx={{ mt: 2 }}>Uma ou mais fontes falharam. Exibindo o último snapshot válido, atualizado em {meta.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'data não informada'}.</Alert>}
-      {everySourceFailed && <Alert severity="warning" sx={{ mt: 2 }}>As fontes automáticas desta seção não responderam nesta atualização. As novidades públicas verificadas continuam disponíveis.</Alert>}
-      {!everySourceFailed && sourceErrors.length > 0 && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>Atualizado com {sourceSuccesses.length} de {sourceValues.length} fontes automáticas; {sourceErrors.length} não respondeu nesta consulta.</Typography>}
       {collectResult && (
         <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>
           {collectResult.message}
@@ -299,17 +277,13 @@ export default function RadarPage() {
                   <Divider sx={{ my: 1.5 }} />
                   {item.summaryStatus !== 'unavailable' ? (
                     <>
-                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>Em poucas palavras</Typography>
+                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>{item.section === 'research' ? 'Em poucas palavras' : 'Por que está no Radar'}</Typography>
                       <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.summaryPt}</Typography>
                     </>
                   ) : (
                     <Typography variant="caption" color="text.secondary">A fonte não disponibilizou um resumo deste item.</Typography>
                   )}
                   <Stack direction="row" gap={0.6} flexWrap="wrap" sx={{ mt: 1.5 }}>{item.topics.map((topic) => <Chip key={topic} size="small" label={topic} variant="outlined" />)}</Stack>
-                  <Tooltip title={item.relevanceExplanation || ''} arrow>
-                    <Chip size="small" color="secondary" label={`Relevância ${item.relevanceScore}/100`} sx={{ mt: 1.25 }} />
-                  </Tooltip>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>{item.relevanceExplanation}</Typography>
                   {item.authors?.length > 0 && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>Autores: {item.authors.join(', ')}</Typography>}
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}><AccessTimeIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.35 }} />{localDate(item.publishedAt)}{item.geography ? ` · ${item.geography}` : ''}</Typography>
                 </CardContent>
@@ -322,7 +296,7 @@ export default function RadarPage() {
         </Grid>
       )}
       {!loading && !error && visibleItems.length === 0 && <Box sx={{ textAlign: 'center', py: 8 }}><Typography variant="h6" color="text.secondary">Nenhum item encontrado</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Tente remover um filtro ou ampliar o período.</Typography></Box>}
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: cada item mantém título original, fonte, data, provedor de coleta, pontuação de relevância e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
     </Box>
   );
 }

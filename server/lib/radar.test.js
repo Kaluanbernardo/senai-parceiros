@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateRadarRelevance, dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -18,8 +18,8 @@ describe('radar domain', () => {
     ])).toHaveLength(2);
   });
 
-  it('filters by section, topic and query while sorting by relevance', () => {
-    const result = filterRadarItems(baseItems, { section: 'research', topic: 'IA', query: 'manufatura', sort: 'relevance' });
+  it('filters by section, topic and query while sorting by publication date', () => {
+    const result = filterRadarItems(baseItems, { section: 'research', topic: 'IA', query: 'manufatura' });
     expect(result.map((item) => item.id)).toEqual(['a']);
   });
 
@@ -88,6 +88,21 @@ describe('radar domain', () => {
     const result = await getRadarItems({ filters: {}, live: false, persist: false });
     expect(result.liveProvider).toBe(false);
     expect(result.snapshotLive).toBe(true);
+    expect(result.stale).toBe(false);
+  });
+
+  it('não marca como obsoleto um snapshot válido só porque a leitura não coleta', async () => {
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({ id: 'live', section: 'government', title: 'Política de educação profissional', summaryPt: 'Institui cursos técnicos.', publishedAt: '2026-07-29', sourceName: 'MEC / SETEC', externalId: 'gov:live' })],
+      fetchedAt: '2026-07-29T12:00:00.000Z',
+      liveProvider: true,
+      stale: false,
+    });
+
+    const result = await getRadarItems({ filters: {}, live: false, persist: false });
+
+    expect(result.stale).toBe(false);
   });
 
   it('forca a releitura do snapshot remoto em toda leitura publica', async () => {
@@ -177,22 +192,53 @@ describe('radar domain', () => {
     expect(result.diagnostics.candidates).toBeGreaterThan(result.diagnostics.shortlisted);
   });
 
+  it('resume o DOU pelo trecho que demonstra a relação com educação profissional', async () => {
+    const acts = [{
+      urlTitle: 'portaria-generica-42', title: 'PORTARIA SETEC Nº 42, DE 29 DE JULHO DE 2026', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Ministério da Educação',
+    }];
+    const boilerplate = `Secretaria de Educação Profissional e Tecnológica. ${Array.from({ length: 120 }, () => 'considerando disposições administrativas gerais').join(' ')}`;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('leiturajornal')) return new Response(`<script id="params" type="application/json">${JSON.stringify({ jsonArray: acts })}</script>`, { status: 200 });
+      if (href.includes('/web/dou/')) return new Response(`<article>${boilerplate}. O ato institui itinerário de formação técnica e profissional integrado ao ensino médio, com oferta de cursos técnicos. Disposições finais.</article>`, { status: 200 });
+      return new Response('', { status: 404 });
+    });
+
+    const result = await fetchDouItems({ limit: 5 });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].title).toMatch(/formação técnica e profissional|cursos técnicos/i);
+    expect(result.items[0].provenance.originalTitle).toBe('PORTARIA SETEC Nº 42, DE 29 DE JULHO DE 2026');
+    expect(result.items[0].summaryPt).toMatch(/^Relação com educação profissional:/);
+    expect(result.items[0].summaryPt).toMatch(/formação técnica e profissional|cursos técnicos/i);
+    expect(result.items[0].summaryPt).not.toMatch(/Secretaria de Educação Profissional e Tecnológica/i);
+    expect(result.items[0].summaryPt).not.toMatch(/^considerando disposições administrativas/i);
+  });
+
   it('descarta atos administrativos rotineiros mesmo quando o orgao pertence a EPT', async () => {
     expect(douRelevance(
       'EXTRATO DE CONTRATO',
-      'MinistÃ©rio da EducaÃ§Ã£o. Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica. Contratante: Instituto Federal.',
+      'Ministério da Educação. Secretaria de Educação Profissional e Tecnológica. Contratante: Instituto Federal.',
     ).eligible).toBe(false);
     expect(douRelevance(
-      'PORTARIA SETEC NÂº 42',
-      'Institui programa de educaÃ§Ã£o profissional tÃ©cnica e regulamenta a oferta de cursos.',
+      'PORTARIA SETEC Nº 42',
+      'Institui programa de educação profissional técnica e regulamenta a oferta de cursos.',
     ).eligible).toBe(true);
     expect(douRelevance(
-      'EXTRATO DE DOAÃ‡ÃƒO',
-      'Bens avaliados em trezentos e treze mil e setecentos reais. Autorizado conforme resoluÃ§Ã£o regional.',
+      'PORTARIA SETEC Nº 43',
+      'Secretaria de Educação Profissional e Tecnológica. Autoriza afastamento de servidor para viagem.',
+    ).eligible).toBe(false);
+    expect(douRelevance(
+      'PORTARIA SETEC Nº 44',
+      'A Secretaria de Educação Profissional e Tecnológica autoriza o funcionamento da clínica veterinária.',
+    ).eligible).toBe(false);
+    expect(douRelevance(
+      'EXTRATO DE DOAÇÃO',
+      'Bens avaliados em trezentos e treze mil e setecentos reais. Autorizado conforme resolução regional.',
     )).toMatchObject({ direct: 0, eligible: false });
     const acts = [
-      { urlTitle: 'extrato-contrato-ept', title: 'EXTRATO DE CONTRATO', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica' },
-      { urlTitle: 'portaria-oferta-ept', title: 'PORTARIA SETEC NÂº 42', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica' },
+      { urlTitle: 'extrato-contrato-ept', title: 'EXTRATO DE CONTRATO', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de Educação Profissional e Tecnológica' },
+      { urlTitle: 'portaria-oferta-ept', title: 'PORTARIA SETEC Nº 42', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de Educação Profissional e Tecnológica' },
     ];
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const href = String(url);
@@ -200,16 +246,17 @@ describe('radar domain', () => {
         return new Response(`<html><body><script id="params" type="application/json">${JSON.stringify({ jsonArray: acts })}</script></body></html>`, { status: 200 });
       }
       if (href.includes('extrato-contrato-ept')) {
-        return new Response('<html><body><article>MinistÃ©rio da EducaÃ§Ã£o. Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica. Contratante: Instituto Federal. Objeto: serviÃ§o administrativo continuado.</article></body></html>', { status: 200 });
+        return new Response('<html><body><article>Ministério da Educação. Secretaria de Educação Profissional e Tecnológica. Contratante: Instituto Federal. Objeto: serviço administrativo continuado.</article></body></html>', { status: 200 });
       }
       if (href.includes('portaria-oferta-ept')) {
-        return new Response('<html><body><article>Institui programa de educaÃ§Ã£o profissional tÃ©cnica e regulamenta a oferta de cursos.</article></body></html>', { status: 200 });
+        return new Response('<html><body><article>Institui programa de educação profissional técnica e regulamenta a oferta de cursos.</article></body></html>', { status: 200 });
       }
       return new Response('', { status: 403 });
     });
 
     const result = await fetchDouItems({ limit: 10 });
-    expect(result.items.map((item) => item.title)).toEqual(['PORTARIA SETEC NÂº 42']);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].provenance.originalTitle).toBe('PORTARIA SETEC Nº 42');
   });
 
   it('preserva ato do DOU aprovado sobre o texto integral do ato', async () => {
@@ -227,7 +274,7 @@ describe('radar domain', () => {
         sourceName: 'Diário Oficial da União',
         provider: 'direct-official',
         externalId: 'dou:aprovado',
-        provenance: { eligibility: { version: 3, eligible: 1, direct: 2, strategic: 1 } },
+        provenance: { eligibility: { version: 5, eligible: 1, direct: 2, strategic: 1 } },
       })],
       fetchedAt: '2026-07-30T00:00:00.000Z',
       liveProvider: true,
@@ -305,26 +352,13 @@ describe('radar domain', () => {
     expect(RADAR_WEB_POLICY.filter((source) => source.section === 'government').every((source) => (source.maxPages || source.batchPages) > 0)).toBe(true);
   });
 
-  it('normalizes unsupported sections and scores safely', () => {
+  it('normalizes unsupported sections without exposing score calculations', () => {
     const item = normalizeRadarItem({ section: 'unknown', title: 'x', relevanceScore: 120 });
     expect(item.section).toBe('research');
-    expect(item.relevanceScore).toBe(15);
-    expect(item.relevanceScore).toBe(item.relevanceBreakdown.thematic + item.relevanceBreakdown.recency + item.relevanceBreakdown.sourceQuality);
+    expect(item).not.toHaveProperty('relevanceScore');
+    expect(item).not.toHaveProperty('relevanceBreakdown');
+    expect(item).not.toHaveProperty('relevanceExplanation');
     expect(normalizeRadarItem({ title: 'sem data', publishedAt: 'não é data' }).publishedAt).toBeNull();
-  });
-
-  it('explains relevance as theme, recency and source quality', () => {
-    const result = calculateRadarRelevance({
-      title: 'Nova política de educação profissional para a indústria',
-      summaryPt: 'Formação técnica, competências digitais e aprendizagem industrial.',
-      publishedAt: '2026-07-10',
-      provider: 'institutional-web',
-      official: true,
-    }, { now: new Date('2026-07-17T12:00:00Z') });
-
-    expect(result.score).toBe(result.breakdown.thematic + result.breakdown.recency + result.breakdown.sourceQuality);
-    expect(result.breakdown).toEqual(expect.objectContaining({ thematic: expect.any(Number), recency: 30, sourceQuality: 20 }));
-    expect(result.explanation).toMatch(/tema|recência|fonte/i);
   });
 
   it('marks undated hubs as references instead of news', () => {
@@ -410,6 +444,21 @@ describe('radar domain', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('sort=publication_date%3Adesc');
     expect(fetchMock.mock.calls[0][0]).toContain('to_publication_date');
     expect(items[0]).toMatchObject({ sourceName: 'OpenAlex', publishedAt: '2026-07-15', isNews: true });
+  });
+
+  it('retries a transient OpenAlex rate limit instead of reporting a source failure', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('', { status: 429, headers: { 'retry-after': '0' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [{
+        id: 'https://openalex.org/W2', display_name: 'Technical and vocational education policy',
+        publication_date: '2026-07-14', type: 'article', authorships: [], topics: [{ display_name: 'Vocational education' }],
+      }] }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const items = await fetchOpenAlexItems({ limit: 2 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(items).toHaveLength(1);
   });
 
   it('enriches live research items with optional AI summaries before returning the snapshot', async () => {

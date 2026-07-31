@@ -1,6 +1,7 @@
 import { isEligibleRadarItem, normalizeRadarItem } from '../../../src/domain/radar.js';
 
 const DAY_MS = 86_400_000;
+const OFFICIAL_SOURCE_USER_AGENT = 'Mozilla/5.0 (compatible; SENAI-Radar/1.0; +https://www.sp.senai.br/)';
 
 function fold(value) {
   return String(value || '')
@@ -35,9 +36,7 @@ const SEMANTIC_PATTERNS = [
   ['formação técnica e profissional', /\bformacao tecnica e profissional\b/],
   ['formação inicial e continuada', /\bformacao inicial e continuada\b/],
   ['Rede Federal', /\brede federal de educacao profissional\b/],
-  ['Instituto Federal', /\binstitutos? federais?\b/],
   ['escola técnica', /\bescolas? tecnicas?\b/],
-  ['Etec/Fatec', /(?:^|\W)(?:etec|fatec)s?(?:\W|$)/],
   ['competência profissional', /\bcompetencias? profissionais?\b/],
   ['certificação profissional', /\bcertificacao profissional\b/],
   ['reconhecimento de saberes', /\breconhecimento de saberes\b/],
@@ -128,10 +127,13 @@ export function extractInstitutionalCandidates(html, source) {
       || context.match(/\b\d{1,2}\s+(?:de\s+)?(?:janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s+(?:de\s+)?20\d{2}\b/i)?.[0]
       || context.match(/(?:publicado|atualizado|published|publication date|data)[^0-9a-z]{0,30}([\s\S]{0,80}?)(?:<|$)/i)?.[1]
       ;
-    const summary = context.match(/<(?:p|div)\b[^>]*(?:class=["'][^"']*(?:description|summary|resume|lead|texto)[^"']*["'])?[^>]*>([\s\S]*?)<\/(?:p|div)>/i)?.[1] || '';
-    const evidence = source.explicitTopic
-      ? { eligible: true, matches: [source.topicLabel || 'escopo temático da fonte'] }
-      : semanticEvidence(title, text(summary), text(context));
+    const summary = context.match(/<(?:p|div|span)\b[^>]*class=["'][^"']*(?:description|summary|resume|lead|texto)[^"']*["'][^>]*>([\s\S]*?)<\/(?:p|div|span)>/i)?.[1]
+      || context.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1]
+      || '';
+    // Category labels, tag clouds and neighbouring cards are discovery hints,
+    // not evidence about this publication. Only its own title and summary may
+    // qualify it for the Radar.
+    const evidence = semanticEvidence(title, text(summary));
     seen.add(url);
     candidates.push({ url, title, summary: text(summary), publishedAt: parseInstitutionalDate(date), evidence: evidence.matches, eligible: evidence.eligible });
   };
@@ -161,8 +163,17 @@ export function extractInstitutionalCandidates(html, source) {
   return candidates;
 }
 
+function institutionalThemeSummary(candidate, source) {
+  const clean = text(candidate.summary);
+  const sentences = clean.match(/[^.!?;]+[.!?;]?/g)?.map((value) => value.trim()).filter(Boolean) || [];
+  const evidenceSentence = sentences.find((sentence) => semanticEvidence('', sentence).eligible);
+  const excerpt = evidenceSentence || (semanticEvidence(candidate.title).eligible ? `O título explicita o tema: “${candidate.title}”.` : clean);
+  const label = source.section === 'international' ? 'Relação com VET' : 'Relação com educação profissional';
+  return `${label}: ${excerpt}`.trim();
+}
+
 function institutionalItem(candidate, source, fetchedAt) {
-  const summary = candidate.summary || 'Publicação recuperada da fonte institucional; consulte a página original para detalhes.';
+  const summary = institutionalThemeSummary(candidate, source);
   return normalizeRadarItem({
     section: source.section,
     title: candidate.title,
@@ -176,7 +187,7 @@ function institutionalItem(candidate, source, fetchedAt) {
     official: source.official === true,
     provider: 'institutional-paginated',
     externalId: candidate.url,
-    provenance: { pageUrl: source.url, fetchedAt, semanticMarkers: candidate.evidence },
+    provenance: { pageUrl: source.url, fetchedAt, semanticMarkers: candidate.evidence, eligibility: { version: 2, eligible: 1 } },
   });
 }
 
@@ -210,7 +221,7 @@ export async function collectDoeSpSource(source, { now = new Date(), maxPages = 
     const remainingMs = deadlineAt - Date.now();
     if (remainingMs <= 0) throw new Error('doe_sp_deadline');
     const response = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' },
+      headers: { Accept: 'application/json', 'User-Agent': OFFICIAL_SOURCE_USER_AGENT },
       signal: AbortSignal.timeout(Math.max(1, Math.min(Number(source.timeoutMs || 20_000), remainingMs))),
     });
     if (!response.ok) throw new Error(`doe_sp_${response.status}`);
@@ -321,7 +332,7 @@ export async function collectIloSitemapSource(source, { now = new Date(), maxDoc
     const remainingMs = deadlineAt - Date.now();
     if (remainingMs <= 0) throw new Error('ilo_sitemap_deadline');
     const response = await fetch(url, {
-      headers: { Accept: accept, 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' },
+      headers: { Accept: accept, 'User-Agent': OFFICIAL_SOURCE_USER_AGENT },
       signal: AbortSignal.timeout(Math.max(1, Math.min(Number(source.timeoutMs || 12_000), remainingMs))),
     });
     if (!response.ok) throw new Error(`ilo_sitemap_${response.status}`);
@@ -437,7 +448,7 @@ export async function collectPaginatedInstitutionalSource(source, { now = new Da
         const remainingMs = deadlineAt - Date.now();
         if (remainingMs <= 0) throw new Error('institutional_deadline');
         response = await fetch(url, {
-          headers: { Accept: 'text/html,application/xhtml+xml', 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' },
+          headers: { Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9,pt-BR;q=0.8', 'User-Agent': OFFICIAL_SOURCE_USER_AGENT },
           signal: AbortSignal.timeout(Math.max(1, Math.min(Number(source.timeoutMs || 10_000), remainingMs))),
         });
         if (!response.ok) throw new Error(`institutional_${response.status}`);
@@ -452,13 +463,12 @@ export async function collectPaginatedInstitutionalSource(source, { now = new Da
       interruptedReason = /deadline/i.test(String(requestError?.message || '')) ? 'deadline' : /abort|timeout/i.test(String(requestError?.message || '')) ? 'timeout' : 'request_failed';
       break;
     }
-    pagesRead += 1;
     const html = await response.text();
     if (/verification required|captcha|cf-chl-|challenge-platform/i.test(html)) {
-      if (pagesRead === 1) throw new Error('institutional_blocked');
       interruptedReason = 'source_blocked';
       break;
     }
+    pagesRead += 1;
     const pageCandidates = extractInstitutionalCandidates(html, source);
     if (!pageCandidates.length) {
       if (!page) interruptedReason = 'empty_source';
@@ -522,7 +532,7 @@ export async function collectWordPressSource(source, { now = new Date(), maxPage
     const remainingMs = deadlineAt - Date.now();
     if (remainingMs <= 0) throw new Error('institutional_deadline');
     const response = await fetch(pageUrl, {
-      headers: { Accept: 'application/json', 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' },
+      headers: { Accept: 'application/json', 'User-Agent': OFFICIAL_SOURCE_USER_AGENT },
       signal: AbortSignal.timeout(Math.max(1, Math.min(Number(source.timeoutMs || 12_000), remainingMs))),
     });
     if (!response.ok) throw new Error(`wordpress_${response.status}`);
@@ -539,9 +549,7 @@ export async function collectWordPressSource(source, { now = new Date(), maxPage
     for (const post of page.posts) {
       const title = text(post?.title?.rendered);
       const summary = text(post?.excerpt?.rendered);
-      const evidence = source.explicitTopic
-        ? { eligible: true, matches: [source.topicLabel || 'escopo temático da fonte'] }
-        : semanticEvidence(title, summary);
+      const evidence = semanticEvidence(title, summary);
       if (!title || !post?.link) continue;
       candidates.push({
         url: absoluteUrl(post.link, source),
