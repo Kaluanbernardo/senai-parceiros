@@ -699,7 +699,10 @@ function storedItemStillQualifies(item) {
 }
 
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
-  const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: live }));
+  // A warm serverless reader can outlive the instance that writes a new Blob
+  // snapshot. Always reload the durable snapshot so GETs do not serve the
+  // document first hydrated by this process for the rest of its lifetime.
+  const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: true }));
   const feedPolicy = getRadarFeedPolicy();
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
   const isAllowedItem = (item) => allowedSources.has(item.sourceName)

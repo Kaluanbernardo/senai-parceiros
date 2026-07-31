@@ -86,6 +86,18 @@ describe('radar domain', () => {
     expect(result.snapshotLive).toBe(true);
   });
 
+  it('forca a releitura do snapshot remoto em toda leitura publica', async () => {
+    // Serverless instances can stay warm after another instance writes a newer
+    // Blob snapshot. A snapshot-only GET must not keep serving the first remote
+    // document hydrated by that process for the rest of its lifetime.
+    radarStore.configure({ driver: 'memory' });
+    const hydrate = vi.spyOn(radarStore, 'hydrate').mockResolvedValue(radarStore.status());
+
+    await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+
+    expect(hydrate).toHaveBeenCalledWith({ force: true });
+  });
+
   it('keeps undated institutional items in the persisted snapshot', async () => {
     // The snapshot is everything a reader sees, so an item dropped here is
     // unreachable no matter what the interface does.

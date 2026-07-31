@@ -97,7 +97,10 @@ export default function RadarPage() {
     setError('');
     try {
       const serverQuery = section === 'research' && filters.query.trim().length >= 3 ? `&query=${encodeURIComponent(filters.query.trim().slice(0, 120))}` : '';
-      const response = await fetch(`/api/radar/items?section=${encodeURIComponent(section)}${serverQuery}`, { credentials: 'include' });
+      const response = await fetch(`/api/radar/items?section=${encodeURIComponent(section)}${serverQuery}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'radar_unavailable');
       setItems(body.items || []);
