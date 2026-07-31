@@ -99,11 +99,12 @@ export function dedupeRadarItems(items) {
   const seen = new Set();
   const seenTitles = new Set();
   return items.map(normalizeRadarItem).filter((item) => {
-    const key = item.doi || item.externalId || `${item.sourceName}:${item.title.toLocaleLowerCase('pt-BR')}`;
+    const stableId = item.doi || item.externalId;
+    const key = stableId || `${item.sourceName}:${item.title.toLocaleLowerCase('pt-BR')}`;
     const titleKey = folded(item.title).replace(/[^a-z0-9]+/g, ' ').trim();
-    if (seen.has(key) || (titleKey && seenTitles.has(`${item.section}:${titleKey}`))) return false;
+    if (seen.has(key) || (!stableId && titleKey && seenTitles.has(`${item.section}:${titleKey}`))) return false;
     seen.add(key);
-    if (titleKey) seenTitles.add(`${item.section}:${titleKey}`);
+    if (!stableId && titleKey) seenTitles.add(`${item.section}:${titleKey}`);
     return true;
   });
 }

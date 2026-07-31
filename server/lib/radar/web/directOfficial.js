@@ -235,12 +235,13 @@ function withTimeout(signal, timeoutMs) {
 }
 
 export class DirectOfficialWebProvider {
-  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 10), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
+  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, maxDocuments = 20, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 10), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
     this.fetchImpl = fetchImpl;
     this.baseUrl = baseUrl;
     this.sections = sections;
     this.timeoutMs = timeoutMs;
     this.maxDays = maxDays;
+    this.maxDocuments = maxDocuments;
     this.concurrency = concurrency;
     this.userAgent = userAgent;
   }
@@ -259,7 +260,7 @@ export class DirectOfficialWebProvider {
     }
   }
 
-  async discover({ query = 'educação profissional', domains = ['in.gov.br'], startDate, endDate, maxResults = 20, signal } = {}) {
+  async discover({ query = 'educação profissional', domains = ['in.gov.br'], startDate, endDate, maxResults = 20, candidateFilter, signal } = {}) {
     const startedAt = new Date().toISOString();
     if (!domains.some((domain) => normalizeHostname(domain) === 'in.gov.br' || normalizeHostname(domain).endsWith('.in.gov.br'))) {
       return createDiscoveryResult({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, status: 'not_applicable', trace: createProviderTrace({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, startedAt }) });
@@ -301,7 +302,8 @@ export class DirectOfficialWebProvider {
         if (!anchored.length && !embedded.length) diagnostics.emptyEditions += 1;
         // One sample is enough to describe the shape; every edition renders alike.
         if (!diagnostics.markers) diagnostics.markers = editionMarkers(result.value);
-        items.push(...anchored, ...embedded);
+        const discovered = [...anchored, ...embedded];
+        items.push(...(typeof candidateFilter === 'function' ? discovered.filter(candidateFilter) : discovered));
       });
     }
     const unique = [...new Map(items.map((item) => [item.externalId, item])).values()].slice(0, Math.max(0, Number(maxResults) || 20));
@@ -323,7 +325,7 @@ export class DirectOfficialWebProvider {
     const startedAt = new Date().toISOString();
     const documents = [];
     const errors = [];
-    const candidates = [...new Set((Array.isArray(urls) ? urls : []).map((value) => String(value || '').trim()))].slice(0, 20);
+    const candidates = [...new Set((Array.isArray(urls) ? urls : []).map((value) => String(value || '').trim()))].slice(0, this.maxDocuments);
     // Eligibility is decided on the act's body, so every discovered act has to be
     // fetched before it can qualify. One at a time, that cost more than the
     // invocation had left after discovery, and the whole edition was discarded

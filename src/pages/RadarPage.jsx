@@ -89,8 +89,11 @@ export default function RadarPage() {
   const activeSection = sections.find((entry) => entry.value === section) || sections[0];
   const sourceValues = Object.values(meta?.sourceStatus || {});
   const sourceErrors = sourceValues.filter((source) => source.status === 'error');
-  const sourceSuccesses = sourceValues.filter((source) => source.status === 'ok');
+  const sourceSuccesses = sourceValues.filter((source) => source.status !== 'error');
   const everySourceFailed = sourceValues.length > 0 && sourceSuccesses.length === 0;
+  const coverageEntries = sourceValues.filter((source) => source.coverage);
+  const incompleteCoverage = coverageEntries.filter((source) => !source.coverage.complete);
+  const researcherCoverage = sourceValues.find((source) => source.name === 'Pesquisadores cadastrados')?.coverage;
 
   const loadItems = async () => {
     setLoading(true);
@@ -251,6 +254,13 @@ export default function RadarPage() {
       <Alert icon={<InfoOutlinedIcon />} severity="info" sx={{ mt: 2 }}>
         <strong>Como a relevância é calculada:</strong> aderência temática (até 50 pontos) + recência (até 30) + qualidade da fonte (até 20). Só entram publicações identificadas com data dos últimos 12 meses.
       </Alert>
+      {coverageEntries.length > 0 && (
+        <Alert severity={incompleteCoverage.length ? 'warning' : 'success'} sx={{ mt: 2 }}>
+          <strong>Cobertura dos últimos 12 meses:</strong> {coverageEntries.length - incompleteCoverage.length} de {coverageEntries.length} fonte(s) concluída(s).
+          {incompleteCoverage.length > 0 && ` Ainda há cobertura parcial em: ${incompleteCoverage.map((source) => source.name).join(', ')}.`}
+          {researcherCoverage && ` Pesquisadores: ${researcherCoverage.authorsResolved}/${researcherCoverage.catalogTotal} identidades resolvidas; ${researcherCoverage.worksRetrieved || 0} trabalho(s) recuperado(s).`}
+        </Alert>
+      )}
       {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Exibindo novidades públicas verificadas da base curada enquanto as fontes automáticas se recuperam.</Alert>}
       {meta?.stale && <Alert severity="warning" sx={{ mt: 2 }}>Uma ou mais fontes falharam. Exibindo o último snapshot válido, atualizado em {meta.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'data não informada'}.</Alert>}
       {everySourceFailed && <Alert severity="warning" sx={{ mt: 2 }}>As fontes automáticas desta seção não responderam nesta atualização. As novidades públicas verificadas continuam disponíveis.</Alert>}

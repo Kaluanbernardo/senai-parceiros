@@ -7,29 +7,42 @@ import { summarizeResearchItems } from './radar/researchSummaryService.js';
 import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract } from './radar/summaries.js';
 import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
 import { TavilyWebProvider } from './radar/web/tavily.js';
+import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource } from './radar/institutional.js';
+import { collectTrackedResearcherStudies } from './radar/researchers.js';
 export { calculateRadarRelevance, dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 
 export const RADAR_SOURCE_POLICY = [
   { name: 'OpenAlex', kind: 'research', url: 'https://openalex.org', official: false },
   { name: 'Crossref', kind: 'research', url: 'https://www.crossref.org', official: false },
   { name: 'MEC / SETEC', kind: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos', official: true },
+  { name: 'INEP', kind: 'government', url: 'https://www.gov.br/inep/pt-br', official: true },
   { name: 'Diário Oficial da União', kind: 'government', url: 'https://www.in.gov.br', official: true },
+  { name: 'Diário Oficial do Estado de São Paulo', kind: 'government', url: 'https://www.doe.sp.gov.br', official: true },
   { name: 'Centro Paula Souza', kind: 'government', url: 'https://www.cps.sp.gov.br', official: true },
+  { name: 'Secretaria da Educação de SP', kind: 'government', url: 'https://www.educacao.sp.gov.br', official: true },
+  { name: 'Agência SP', kind: 'government', url: 'https://www.agenciasp.sp.gov.br', official: true },
   { name: 'OCDE', kind: 'international', url: 'https://www.oecd.org/en/topics/vocational-education-and-training-vet.html', official: true },
   { name: 'OIT', kind: 'international', url: 'https://www.ilo.org/topics-and-sectors/skills-and-lifelong-learning/skills-and-employability-branch', official: true },
   { name: 'Cedefop', kind: 'international', url: 'https://www.cedefop.europa.eu', official: true },
   { name: 'ETF', kind: 'international', url: 'https://www.etf.europa.eu', official: true },
+  { name: 'UNESCO-UNEVOC', kind: 'international', url: 'https://unevoc.unesco.org', official: true },
 ];
 
 export const RADAR_FEED_POLICY = [];
 
-export const RADAR_FEED_MANIFEST_VERSION = '2026-07-31.v4';
+export const RADAR_FEED_MANIFEST_VERSION = '2026-07-31.v6';
 
 export const RADAR_WEB_POLICY = [
-  { name: 'Centro Paula Souza', section: 'government', url: 'https://www.cps.sp.gov.br/noticias/', official: true, geography: 'São Paulo' },
-  { name: 'OIT', section: 'international', url: 'https://www.ilo.org/topics-and-sectors/skills-and-lifelong-learning', official: true, geography: 'Internacional' },
-  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional' },
-  { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional' },
+  { name: 'MEC / SETEC', section: 'government', url: 'https://www.gov.br/mec/pt-br/assuntos/noticias/noticias', official: true, geography: 'Brasil', pageParam: 'b_start:int', pageStep: 15, includeFirstPageParam: true, maxPages: 60, batchPages: 4, incremental: true, timeoutMs: 20000 },
+  { name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/ept', official: true, geography: 'Brasil', pageParam: 'b_start:int', pageStep: 30, maxPages: 8, explicitTopic: true, topicLabel: 'EPT' },
+  { name: 'Centro Paula Souza', section: 'government', url: 'https://www.cps.sp.gov.br/noticias/', official: true, geography: 'São Paulo', collector: 'wordpress', maxPages: 8, timeoutMs: 25000, explicitTopic: true, topicLabel: 'EPT' },
+  { name: 'Secretaria da Educação de SP', section: 'government', url: 'https://www.educacao.sp.gov.br/noticias/', official: true, geography: 'São Paulo', maxPages: 1 },
+  { name: 'Agência SP', section: 'government', url: 'https://www.agenciasp.sp.gov.br/', official: true, geography: 'São Paulo', collector: 'wordpress', maxPages: 5 },
+  { name: 'Diário Oficial do Estado de São Paulo', section: 'government', url: 'https://www.doe.sp.gov.br/', apiUrl: 'https://do-api-web-search.doe.sp.gov.br/v2/advanced-search/publications', official: true, geography: 'São Paulo', collector: 'doe-sp', terms: ['educação profissional', 'educação profissional técnica', 'ensino técnico', 'curso técnico', 'formação profissional'], batchPages: 4, maxItems: 1000, timeoutMs: 40000, deadlineMs: 50000 },
+  { name: 'OIT', section: 'international', url: 'https://www.ilo.org/resource/news', official: true, geography: 'Internacional', collector: 'ilo-sitemap', sitemapUrl: 'https://www.ilo.org/sitemap.xml', maxDocuments: 60, articleConcurrency: 20, maxItems: 1000 },
+  { name: 'Cedefop', section: 'international', url: 'https://www.cedefop.europa.eu/en/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20 },
+  { name: 'ETF', section: 'international', url: 'https://www.etf.europa.eu/en/news-and-events/news', official: true, geography: 'Internacional', pageParam: 'page', maxPages: 20 },
+  { name: 'UNESCO-UNEVOC', section: 'international', url: 'https://connect.unevoc.unesco.org/home/UNEVOC+News', official: true, geography: 'Internacional', allowedHosts: ['www.unevoc.unesco.org', 'www.unesco.org', 'atlas.unevoc.unesco.org'], pagePath: '/home/UNEVOC+News/lang=en/page={page}', maxPages: 3, timeoutMs: 20000, explicitTopic: true, topicLabel: 'TVET' },
 ];
 
 const RADAR_SECTION_SET = new Set(RADAR_SECTIONS);
@@ -179,51 +192,26 @@ function webItem(candidate, source, index) {
   });
 }
 
-export async function fetchWebItems(source, { limit = 8 } = {}) {
-  const cacheKey = `web:${source.url}:${limit}`;
+export async function fetchWebItems(source, { limit = 8, previousCoverage = null } = {}) {
+  const pageCount = Number(source.batchPages || source.maxPages || 1);
+  const coverageCursor = previousCoverage?.complete
+    ? 'complete'
+    : `${previousCoverage?.nextPage ?? 'none'}:${previousCoverage?.candidateOffset ?? 'none'}`;
+  const cacheKey = `web:${source.url}:${limit}:${pageCount}:${coverageCursor}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
-  const response = await fetch(source.url, { headers: { Accept: 'text/html,application/xhtml+xml', 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' }, signal: AbortSignal.timeout(12000) });
-  if (!response.ok) throw new Error(`web_${response.status}`);
-  const html = await response.text();
-  const candidates = [];
-  const seenUrls = new Set();
-  const addCandidate = (candidate) => {
-    const url = absoluteUrl(candidate.url, source.url);
-    const title = htmlText(candidate.title);
-    if (!url || !title || title.length < 18 || title.length > 260 || seenUrls.has(url)) return;
-    seenUrls.add(url);
-    candidates.push({ ...candidate, url });
-  };
-  for (const match of html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)) {
-    const block = match[1];
-    const link = block.match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
-    if (!link) continue;
-    addCandidate({ url: link[1], title: link[2], summary: block.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1], date: block.match(/<time\b[^>]*datetime=["']([^"']+)["'][^>]*>/i)?.[1] || block.match(/<time\b[^>]*>([\s\S]*?)<\/time>/i)?.[1] });
-  }
-  if (!candidates.length) {
-    for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
-      const context = html.slice(Math.max(0, match.index - 350), Math.min(html.length, match.index + match[0].length + 1100));
-      const date = context.match(/<time\b[^>]*datetime=["']([^"']+)["']/i)?.[1]
-        || context.match(/(?:publicado|atualizado|published)[^0-9]{0,40}(\d{1,2}[/.]\d{1,2}[/.]20\d{2})/i)?.[1]
-        || context.match(/\b(20\d{2}-\d{2}-\d{2})\b/)?.[1];
-      const summary = context.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1];
-      addCandidate({ url: match[1], title: match[2], summary, date });
-      if (candidates.length >= limit * 3) break;
-    }
-  }
-  const items = candidates
-    .map((candidate, index) => webItem(candidate, source, index))
-    // Without a date there is no recency signal to tell a headline from a
-    // permanent section label, which is how a navigation entry titled "Funções e
-    // Competências" reached the radar. Length is the honest discriminator here:
-    // menu labels are short, headlines are not. Raising the topical bar instead
-    // would reject real news that happens to use one term.
-    .filter((item) => isEligibleRadarItem(item)
-      && webRelevance(item.title, item.summaryPt) >= 59
-      && (item.publishedAt || item.title.length >= 40))
-    .sort((a, b) => b.relevanceScore - a.relevanceScore || String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')))
-    .slice(0, limit);
+  const result = source.collector === 'wordpress'
+    ? await collectWordPressSource(source, { maxPages: pageCount })
+    : source.collector === 'doe-sp'
+      ? await collectDoeSpSource(source, { maxPages: pageCount, previousCoverage })
+      : source.collector === 'ilo-sitemap'
+        ? await collectIloSitemapSource(source, { previousCoverage })
+        : await collectPaginatedInstitutionalSource(source, { maxPages: pageCount, previousCoverage });
+  const itemLimit = Number(source.maxItems || (source.maxPages ? 1000 : limit));
+  const items = result.items
+    .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')) || b.relevanceScore - a.relevanceScore)
+    .slice(0, itemLimit);
+  Object.defineProperty(items, 'coverage', { value: result.coverage, enumerable: false });
   cacheSet(cacheKey, items);
   return items;
 }
@@ -385,12 +373,19 @@ function researcherNameMatches(authors, name) {
   });
 }
 
-export async function fetchTrackedResearcherItems({ limitResearchers = process.env.RADAR_TRACKED_RESEARCHER_LIMIT || 8 } = {}) {
-  const names = trackedResearcherNames(limitResearchers);
-  const results = await Promise.allSettled(names.map((name) => fetchOpenAlexItems({ query: `"${name}" vocational education`, limit: 4 })));
-  return results.flatMap((result, index) => result.status === 'fulfilled'
-    ? result.value.filter((item) => researcherNameMatches(item.authors, names[index])).map((item) => ({ ...item, provenance: { ...item.provenance, trackedResearcher: names[index] }, relevanceScore: Math.min(100, item.relevanceScore + 10) }))
-    : []);
+export async function fetchTrackedResearcherItems({ limitResearchers, previousCoverage = null } = {}) {
+  const catalog = canonicalizeResearchers(pesquisadores).records;
+  const selected = Number(limitResearchers) > 0 ? catalog.slice(0, Number(limitResearchers)) : catalog;
+  const result = await collectTrackedResearcherStudies({
+    catalog: selected,
+    knownResolutions: previousCoverage?.resolvedAuthorMap || [],
+    resolutionCursor: previousCoverage?.resolutionCursor || 0,
+    worksCursor: previousCoverage?.worksCursor || '*',
+    worksCursorAuthorIds: previousCoverage?.worksCursorAuthorIds || [],
+  });
+  Object.defineProperty(result.items, 'coverage', { value: result.coverage, enumerable: false });
+  Object.defineProperty(result.items, 'errors', { value: result.errors, enumerable: false });
+  return result.items;
 }
 
 export async function fetchCrossrefItems({ query = 'vocational education training', limit = 12 } = {}) {
@@ -447,26 +442,40 @@ export async function fetchCrossrefItems({ query = 'vocational education trainin
   return relevant;
 }
 
-export async function fetchOecdItems({ limit = 8 } = {}) {
-  const cacheKey = `oecd:${limit}`;
+export async function fetchOecdItems({ limit = 100, maxPages = 10, previousCoverage = null } = {}) {
+  const initialCursor = previousCoverage?.cursor || '*';
+  const cacheKey = `oecd:${limit}:${maxPages}:${previousCoverage?.complete ? 'refresh' : initialCursor}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
   const since = new Date();
   since.setUTCFullYear(since.getUTCFullYear() - 1);
   const today = new Date().toISOString().slice(0, 10);
-  const params = new URLSearchParams({
-    'query.bibliographic': 'vocational education training skills apprenticeship',
-    'query.publisher-name': 'OECD',
-    rows: String(Math.min(Math.max(limit, 1), 20)),
-    sort: 'published',
-    order: 'desc',
-    filter: `from-pub-date:${since.toISOString().slice(0, 10)},until-pub-date:${today}`,
-    select: 'DOI,title,URL,published,author,type,publisher,container-title,abstract',
-  });
-  const response = await fetch(`https://api.crossref.org/works?${params}`, { headers: { 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' }, signal: AbortSignal.timeout(10000) });
-  if (!response.ok) throw new Error(`oecd_metadata_${response.status}`);
-  const body = await response.json();
-  const items = (body.message?.items || []).map((work) => {
+  const works = [];
+  let cursor = initialCursor;
+  let pagesRead = 0;
+  let totalResults = null;
+  while (cursor && pagesRead < maxPages) {
+    const params = new URLSearchParams({
+      'query.bibliographic': 'vocational education training skills apprenticeship',
+      'query.publisher-name': 'OECD',
+      rows: String(Math.min(Math.max(limit, 1), 100)),
+      cursor,
+      sort: 'published',
+      order: 'desc',
+      filter: `from-pub-date:${since.toISOString().slice(0, 10)},until-pub-date:${today}`,
+      select: 'DOI,title,URL,published,author,type,publisher,container-title,abstract',
+    });
+    const response = await fetch(`https://api.crossref.org/works?${params}`, { headers: { 'User-Agent': 'senai-parceiros/1.0 radar-public-sources' }, signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error(`oecd_metadata_${response.status}`);
+    const body = await response.json();
+    const pageWorks = body.message?.items || [];
+    works.push(...pageWorks);
+    pagesRead += 1;
+    totalResults = Number(body.message?.['total-results'] ?? totalResults);
+    cursor = body.message?.['next-cursor'] || null;
+    if (!pageWorks.length || pageWorks.length < Math.min(Math.max(limit, 1), 100)) cursor = null;
+  }
+  const items = works.map((work) => {
     const dateParts = work.published?.['date-parts']?.[0] || [];
     const publishedAt = dateParts.length >= 3
       ? `${dateParts[0]}-${String(dateParts[1]).padStart(2, '0')}-${String(dateParts[2]).padStart(2, '0')}`
@@ -500,24 +509,43 @@ export async function fetchOecdItems({ limit = 8 } = {}) {
       authors: (work.author || []).map((author) => [author.given, author.family].filter(Boolean).join(' ')).filter(Boolean),
     });
   }).filter((item) => item.isNews && webRelevance(item.title, '') >= 59);
+  const complete = !cursor || (Number.isFinite(totalResults) && works.length >= totalResults);
+  Object.defineProperty(items, 'coverage', { value: {
+    windowStart: since.toISOString().slice(0, 10),
+    windowEnd: today,
+    pagesRead,
+    retrieved: works.length,
+    totalResults: Number.isFinite(totalResults) ? totalResults : null,
+    cursor: complete ? null : cursor,
+    complete,
+    reason: complete ? 'source_exhausted' : 'page_cap',
+  }, enumerable: false });
   cacheSet(cacheKey, items);
   return items;
 }
 
-function douDateWindow() {
+function douDateWindow(previousCoverage = null) {
   const now = new Date();
   const end = new Date(now);
   const start = new Date(now);
-  // The window was hard-capped at 7 days, so configuring a wider lookback had
-  // no effect. Acts on vocational education do not appear daily, and a window
-  // that short is the reason the collector reaches the official source and
-  // still reports zero eligible items.
-  start.setUTCDate(start.getUTCDate() - Math.max(0, Math.min(45, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7) - 1)));
-  return { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) };
+  const chunkDays = Math.max(1, Math.min(14, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7)));
+  const target = new Date(now);
+  target.setUTCFullYear(target.getUTCFullYear() - 1);
+  if (previousCoverage?.activeWindowStart && previousCoverage?.activeWindowEnd && previousCoverage?.reason === 'candidate_cap') {
+    return { startDate: previousCoverage.activeWindowStart, endDate: previousCoverage.activeWindowEnd, targetDate: target.toISOString().slice(0, 10), candidateOffset: Number(previousCoverage.candidateOffset || 0) };
+  }
+  if (previousCoverage?.oldestCovered && !previousCoverage.complete) {
+    end.setTime(new Date(`${previousCoverage.oldestCovered}T00:00:00Z`).getTime());
+    end.setUTCDate(end.getUTCDate() - 1);
+  }
+  start.setTime(end.getTime());
+  start.setUTCDate(start.getUTCDate() - (chunkDays - 1));
+  if (start < target) start.setTime(target.getTime());
+  return { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), targetDate: target.toISOString().slice(0, 10), candidateOffset: 0 };
 }
 
 const DOU_DISCOVERY_CEILING = 4000;
-const DOU_ELIGIBILITY_VERSION = 2;
+const DOU_ELIGIBILITY_VERSION = 3;
 
 /**
  * Cheap pre-filter over a discovered act, before any request is spent on its
@@ -527,6 +555,7 @@ const DOU_ELIGIBILITY_VERSION = 2;
  * the full text: this only decides what is worth reading.
  */
 function douCandidateSignal(candidate) {
+  if (/\b(?:extrato de (?:contrato|apostilamento|termo aditivo)|aviso de (?:licitacao|pregao|registro de diplomas)|resultado de julgamento|dispensa de licitacao|inexigibilidade de licitacao|termo de homologacao)\b/i.test(String(candidate?.title || '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) return false;
   const haystack = `${candidate?.title || ''} ${candidate?.summaryPt || ''}`
     .toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   return [
@@ -537,15 +566,32 @@ function douCandidateSignal(candidate) {
   ].some((term) => haystack.includes(term));
 }
 
-function douRelevance(title, content = '') {
-  const haystack = `${title || ''} ${content || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const direct = ['educacao profissional', 'educacao tecnica', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'setec', 'rede federal', 'sistema s', 'senai', 'senac'].filter((term) => haystack.includes(term)).length;
+function countWholeTerms(haystack, terms) {
+  return terms.filter((term) => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:^|\\W)${escaped}(?:\\W|$)`).test(haystack);
+  }).length;
+}
+
+export function douRelevance(title, content = '') {
+  const titleHaystack = String(title || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const haystack = `${titleHaystack} ${content || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const strongTerms = ['educacao profissional', 'educacao tecnica', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'ensino tecnico', 'sistema s', 'senai', 'senac'];
+  const strongDirect = countWholeTerms(haystack, strongTerms);
+  const titleStrongDirect = countWholeTerms(titleHaystack, strongTerms);
+  const institutional = countWholeTerms(haystack, ['setec', 'rede federal']);
+  const direct = strongDirect + institutional;
   const strategic = ['industria', 'industrial', 'competencias', 'trabalho', 'inovacao', 'tecnologia', 'economia circular', 'descarbonizacao', 'sao paulo'].filter((term) => haystack.includes(term)).length;
+  const substantive = ['institui', 'estabelece', 'regulamenta', 'autoriza', 'cria', 'dispoe', 'aprova', 'altera', 'define', 'programa', 'politica', 'oferta', 'curso', 'vagas', 'curricul', 'diretriz', 'certific', 'financiamento', 'bolsa', 'edital', 'chamada publica', 'cooperacao'].filter((term) => haystack.includes(term)).length;
+  const administrativeNoise = /\b(?:extrato de (?:contrato|apostilamento|termo aditivo)|aviso de (?:licitacao|pregao|registro de diplomas)|resultado de julgamento|dispensa de licitacao|inexigibilidade de licitacao|termo de homologacao)\b/.test(haystack);
   // Eligibility now requires an explicit vocational-education term. The former
   // strategic-only path matched words like "trabalho" and "tecnologia" that
   // appear in any page's navigation and footer, which is how an act on dialysis
   // habilitation qualified as vocational education news.
-  return { direct, strategic, eligible: direct > 0 };
+  // Issuing-body boilerplate is not news by itself: procurement extracts and
+  // diploma notices from SETEC/IFs must not qualify merely because the body's
+  // legal name contains "educaÃ§Ã£o profissional".
+  return { direct, strategic, substantive, administrativeNoise: administrativeNoise ? 1 : 0, eligible: !administrativeNoise && direct > 0 && (titleStrongDirect > 0 || substantive > 0) };
 }
 
 function douItemFromDocument(document, candidate = {}) {
@@ -577,22 +623,23 @@ function douItemFromDocument(document, candidate = {}) {
     // The decision is recorded with the item because it was taken over the full
     // act, while only an 80-word excerpt is stored. Re-deciding later from the
     // excerpt would reject acts that legitimately qualified.
-    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { version: DOU_ELIGIBILITY_VERSION, direct: relevance.direct, strategic: relevance.strategic } },
+    provenance: { ...(candidate?.provenance || {}), ...(document?.provenance || {}), evidenceLength: sourceText.length, eligibility: { version: DOU_ELIGIBILITY_VERSION, eligible: relevance.eligible ? 1 : 0, direct: relevance.direct, strategic: relevance.strategic, substantive: relevance.substantive, administrativeNoise: relevance.administrativeNoise } },
   });
 }
 
-export async function fetchDouItems({ limit = 20 } = {}) {
+export async function fetchDouItems({ limit = 40, previousCoverage = null } = {}) {
   if (process.env.RADAR_DOU_ENABLED === 'false') return { items: [], status: 'disabled', provider: 'disabled', errors: [] };
-  const { startDate, endDate } = douDateWindow();
+  const { startDate, endDate, targetDate, candidateOffset } = douDateWindow(previousCoverage);
   const direct = new DirectOfficialWebProvider({
     sections: String(process.env.RADAR_DOU_SECTIONS || 'DO1,DO3').split(',').map((value) => value.trim()).filter(Boolean),
     maxDays: Math.max(1, Number(process.env.RADAR_DOU_LOOKBACK_DAYS || 7)),
+    maxDocuments: limit,
     timeoutMs: Math.max(2000, Number(process.env.RADAR_DOU_TIMEOUT_MS || 8000)),
   });
   // Parsing costs nothing beyond the edition already downloaded, so discovery
   // keeps the whole listing and the narrowing happens below, on signal rather
   // than on arrival order.
-  const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: DOU_DISCOVERY_CEILING });
+  const directDiscovery = await direct.discover({ query: 'EPT formação profissional indústria competências', domains: ['in.gov.br'], startDate, endDate, maxResults: DOU_DISCOVERY_CEILING, candidateFilter: douCandidateSignal });
   let candidates = directDiscovery.items || [];
   let provider = directDiscovery.provider;
   let discoveryErrors = directDiscovery.errors || [];
@@ -611,7 +658,15 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   // request on unrelated acts; the title and the issuing body are enough to tell
   // which ones deserve one.
   const shortlisted = candidates.filter((candidate) => douCandidateSignal(candidate));
-  const selected = (shortlisted.length ? shortlisted : candidates).slice(0, limit);
+  const ranked = (shortlisted.length ? shortlisted : candidates).sort((left, right) => {
+    const score = (candidate) => {
+      const value = `${candidate?.title || ''} ${candidate?.summaryPt || ''}`.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return ['educacao profissional', 'educacao tecnica', 'ensino tecnico', 'formacao profissional', 'qualificacao profissional', 'aprendizagem profissional', 'setec', 'rede federal', 'instituto federal', 'senai', 'senac']
+        .filter((term) => value.includes(term)).length;
+    };
+    return score(right) - score(left) || String(right.publishedAt || '').localeCompare(String(left.publishedAt || ''));
+  });
+  const selected = ranked.slice(candidateOffset, candidateOffset + limit);
   const urls = selected.map((candidate) => candidate.sourceUrl).filter(Boolean).slice(0, limit);
   const directDocuments = urls.length ? await direct.retrieve({ urls }) : { documents: [], errors: [], status: directDiscovery.status };
   let documents = directDocuments.documents || [];
@@ -631,12 +686,30 @@ export async function fetchDouItems({ limit = 20 } = {}) {
   const items = selected.map((candidate) => douItemFromDocument(byUrl.get(candidate.sourceUrl), candidate)).filter(Boolean).slice(0, limit);
   const diagnostics = {
     ...(directDiscovery.diagnostics || {}),
-    candidates: candidates.length,
+    candidates: Number(directDiscovery.diagnostics?.anchorItems || 0) + Number(directDiscovery.diagnostics?.embeddedItems || 0),
     shortlisted: shortlisted.length,
     retrieved: documents.length,
     eligible: items.length,
   };
-  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, diagnostics, window: { startDate, endDate } };
+  const candidateOffsetNext = candidateOffset + selected.length;
+  const windowComplete = candidateOffsetNext >= ranked.length;
+  const parseableWindow = Number(directDiscovery.diagnostics?.embeddedItems || 0) > 0;
+  const successfulWindow = windowComplete && discoveryErrors.length === 0 && parseableWindow;
+  const oldestCovered = successfulWindow
+    ? [previousCoverage?.oldestCovered, startDate].filter(Boolean).sort()[0]
+    : previousCoverage?.oldestCovered || null;
+  const complete = successfulWindow && oldestCovered <= targetDate;
+  const coverage = {
+    windowStart: targetDate,
+    windowEnd: new Date().toISOString().slice(0, 10),
+    activeWindowStart: startDate,
+    activeWindowEnd: endDate,
+    oldestCovered,
+    candidateOffset: windowComplete ? 0 : candidateOffsetNext,
+    complete,
+    reason: discoveryErrors.length ? 'source_partial' : !parseableWindow ? 'unparseable_window' : !windowComplete ? 'candidate_cap' : complete ? 'window_boundary' : 'backfill_pending',
+  };
+  return { items, status: items.length ? 'ok' : (directDiscovery.status || 'no_edition'), provider: extractionProvider || provider, errors: discoveryErrors, diagnostics, coverage, window: { startDate, endDate } };
 }
 
 function providerStatus(name, status, extra = {}) {
@@ -670,7 +743,7 @@ function storedItemStillQualifies(item) {
     // previous version evaluated grouped acts and annex tables, so trusting it
     // would preserve the false positives that this migration is meant to clear.
     const recorded = item?.provenance?.eligibility;
-    if (Number(recorded?.version) >= DOU_ELIGIBILITY_VERSION && Number.isFinite(Number(recorded.direct))) return Number(recorded.direct) > 0;
+    if (Number(recorded?.version) >= DOU_ELIGIBILITY_VERSION && Number.isFinite(Number(recorded.eligible))) return Number(recorded.eligible) > 0;
     // The stored excerpt cannot reconstruct which act or annex supplied the
     // match. Drop legacy decisions instead of re-approving contaminated text.
     return false;
@@ -693,10 +766,29 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   let items = (stored?.items || seedItems).map(normalizeRadarItem).filter(isAllowedItem).filter(storedItemStillQualifies);
   let liveProvider = false;
   let currentItems = [];
-  const sourceStatus = {};
+  const sourceStatus = { ...(stored?.sourceStatus || {}) };
+  const collectResearch = live && (!filters.section || filters.section === 'research');
+  const collectInternational = live && (!filters.section || filters.section === 'international');
+  const collectGovernment = live && (!filters.section || filters.section === 'government');
+  const researchPromise = collectResearch
+    ? Promise.allSettled([
+      fetchOpenAlexItems({ query: filters.query || '"vocational education and training"' }),
+      fetchCrossrefItems({ query: filters.query || '"vocational education and training"' }),
+      fetchTrackedResearcherItems({ previousCoverage: stored?.sourceStatus?.['Pesquisadores cadastrados']?.coverage || null }),
+    ])
+    : null;
+  const oecdPromise = collectInternational ? Promise.allSettled([fetchOecdItems({ previousCoverage: stored?.sourceStatus?.OCDE?.coverage || null })]) : null;
+  const douPromise = collectGovernment
+    ? Promise.allSettled([fetchDouItems({ limit: 40, previousCoverage: stored?.sourceStatus?.DOU?.coverage || null })])
+    : null;
+  const feeds = live ? feedPolicy.filter((feed) => !filters.section || feed.section === filters.section) : [];
+  const feedResultsPromise = live ? Promise.allSettled(feeds.map((feed) => fetchFeedItems(feed))) : null;
+  const webSources = live ? RADAR_WEB_POLICY.filter((source) => !filters.section || source.section === filters.section) : [];
+  const webResultsPromise = live ? Promise.allSettled(webSources.map((source) => fetchWebItems(source, {
+    previousCoverage: stored?.sourceStatus?.[`${source.name} (web)`]?.coverage || null,
+  }))) : null;
   if (live && (!filters.section || filters.section === 'research')) {
-    const query = filters.query || '"vocational education and training"';
-    const [openAlexItems, crossrefItems, trackedItems] = await Promise.allSettled([fetchOpenAlexItems({ query }), fetchCrossrefItems({ query }), fetchTrackedResearcherItems()]);
+    const [openAlexItems, crossrefItems, trackedItems] = await researchPromise;
     sourceStatus.OpenAlex = openAlexItems.status === 'fulfilled'
       ? providerStatus('OpenAlex', 'ok', { count: openAlexItems.value.length })
       : providerStatus('OpenAlex', 'error', { error: String(openAlexItems.reason?.message || 'source_unavailable').slice(0, 160) });
@@ -705,17 +797,19 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       : providerStatus('Crossref', 'error', { error: String(crossrefItems.reason?.message || 'source_unavailable').slice(0, 160) });
     const tracked = trackedItems.status === 'fulfilled' ? trackedItems.value : [];
     sourceStatus['Pesquisadores cadastrados'] = trackedItems.status === 'fulfilled'
-      ? providerStatus('Pesquisadores cadastrados', 'ok', { count: tracked.length })
+      ? providerStatus('Pesquisadores cadastrados', tracked.coverage?.complete ? 'ok' : 'partial', { count: tracked.length, coverage: tracked.coverage || null, errors: tracked.errors?.slice(0, 5) || [] })
       : providerStatus('Pesquisadores cadastrados', 'error', { error: String(trackedItems.reason?.message || 'source_unavailable').slice(0, 160) });
     currentItems.push(...(openAlexItems.status === 'fulfilled' ? openAlexItems.value : []), ...(crossrefItems.status === 'fulfilled' ? crossrefItems.value : []), ...tracked);
     items = [...currentItems, ...items].filter(isAllowedItem);
-    liveProvider = currentItems.length > 0;
+    liveProvider = openAlexItems.status === 'fulfilled'
+      || crossrefItems.status === 'fulfilled'
+      || (trackedItems.status === 'fulfilled' && Number(tracked.coverage?.authorsResolved) > 0);
   }
   if (live && (!filters.section || filters.section === 'international')) {
-    const oecdItems = await Promise.allSettled([fetchOecdItems()]);
+    const oecdItems = await oecdPromise;
     const oecd = oecdItems[0];
     sourceStatus.OCDE = oecd.status === 'fulfilled'
-      ? providerStatus('OCDE', 'ok', { count: oecd.value.length })
+      ? providerStatus('OCDE', oecd.value.coverage?.complete ? 'ok' : 'partial', { count: oecd.value.length, coverage: oecd.value.coverage || null })
       : providerStatus('OCDE', 'error', { error: String(oecd.reason?.message || 'source_unavailable').slice(0, 160) });
     if (oecd.status === 'fulfilled') currentItems.push(...oecd.value);
     items = [...(oecd.status === 'fulfilled' ? oecd.value : []), ...items].filter(isAllowedItem);
@@ -726,7 +820,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     // await, so a single throw here aborted the whole run: no source was
     // collected, no snapshot was written and `sourceStatus` came back empty,
     // leaving the failure with nothing to point at.
-    const [douResult] = await Promise.allSettled([fetchDouItems({ limit: 20 })]);
+    const [douResult] = await douPromise;
     const dou = douResult.status === 'fulfilled' ? douResult.value : {
       items: [],
       status: 'error',
@@ -738,6 +832,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       provider: dou.provider,
       window: dou.window,
       diagnostics: dou.diagnostics || null,
+      coverage: dou.coverage || null,
       errors: dou.errors?.slice(0, 5) || [],
     });
     currentItems.push(...dou.items);
@@ -746,8 +841,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     liveProvider = liveProvider || ['ok', 'no_edition'].includes(dou.status);
   }
   if (live) {
-    const feeds = feedPolicy.filter((feed) => !filters.section || feed.section === filters.section);
-    const feedResults = await Promise.allSettled(feeds.map((feed) => fetchFeedItems(feed)));
+    const feedResults = await feedResultsPromise;
     const feedItems = [];
     feedResults.forEach((result, index) => {
       const feed = feeds[index];
@@ -760,19 +854,18 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     items = [...feedItems, ...items].filter(isAllowedItem);
     liveProvider = liveProvider || feedItems.length > 0;
 
-    const webSources = RADAR_WEB_POLICY.filter((source) => !filters.section || source.section === filters.section);
-    const webResults = await Promise.allSettled(webSources.map((source) => fetchWebItems(source)));
+    const webResults = await webResultsPromise;
     const webItems = [];
     webResults.forEach((result, index) => {
       const source = webSources[index];
       sourceStatus[`${source.name} (web)`] = result.status === 'fulfilled'
-        ? providerStatus(`${source.name} (web)`, 'ok', { count: result.value.length, url: source.url })
+        ? providerStatus(`${source.name} (web)`, result.value.coverage?.complete ? 'ok' : 'partial', { count: result.value.length, url: source.url, coverage: result.value.coverage || null })
         : providerStatus(`${source.name} (web)`, 'error', { error: String(result.reason?.message || 'source_unavailable').slice(0, 160), url: source.url });
       if (result.status === 'fulfilled') webItems.push(...result.value);
     });
     currentItems.push(...webItems);
     items = [...webItems, ...items].filter(isAllowedItem);
-    liveProvider = liveProvider || webItems.length > 0;
+    liveProvider = liveProvider || webResults.some((result) => result.status === 'fulfilled');
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const mergedResearch = mergeResearchItems(items.filter((item) => item.section === 'research'));

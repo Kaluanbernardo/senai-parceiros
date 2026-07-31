@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateRadarRelevance, dedupeRadarItems, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { calculateRadarRelevance, dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -12,6 +12,10 @@ describe('radar domain', () => {
   it('deduplicates by DOI or external identifier', () => {
     expect(dedupeRadarItems([...baseItems, { ...baseItems[0], id: 'copy' }])).toHaveLength(2);
     expect(dedupeRadarItems([{ title: 'Sem identificador', sourceName: 'Fonte' }, { title: 'Sem identificador', sourceName: 'Fonte' }])).toHaveLength(1);
+    expect(dedupeRadarItems([
+      { section: 'government', title: 'PORTARIA Nº 7', sourceName: 'DOE-SP', externalId: 'ato:1' },
+      { section: 'government', title: 'PORTARIA Nº 7', sourceName: 'DOE-SP', externalId: 'ato:2' },
+    ])).toHaveLength(2);
   });
 
   it('filters by section, topic and query while sorting by relevance', () => {
@@ -41,10 +45,10 @@ describe('radar domain', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const href = String(url);
       if (href.includes('in.gov.br')) throw new Error('dou_connection_reset');
-      if (href.includes('cps.sp.gov.br')) {
+      if (href.includes('cps.sp.gov.br/wp-json/')) {
         return new Response(
-          '<article><a href="/noticias/curso-tecnico">Centro Paula Souza amplia vagas em educacao profissional na industria</a><p>Formacao tecnica e competencias.</p></article>',
-          { status: 200, headers: { 'content-type': 'text/html' } },
+          JSON.stringify([{ id: 1, date: '2026-07-20T12:00:00', link: 'https://www.cps.sp.gov.br/noticias/curso-tecnico', title: { rendered: 'Centro Paula Souza amplia vagas em educação profissional na indústria' }, excerpt: { rendered: '<p>Formação técnica e competências.</p>' } }]),
+          { status: 200, headers: { 'content-type': 'application/json', 'x-wp-totalpages': '1' } },
         );
       }
       return new Response('', { status: 403 });
@@ -98,9 +102,7 @@ describe('radar domain', () => {
     expect(hydrate).toHaveBeenCalledWith({ force: true });
   });
 
-  it('keeps undated institutional items in the persisted snapshot', async () => {
-    // The snapshot is everything a reader sees, so an item dropped here is
-    // unreachable no matter what the interface does.
+  it('does not claim an undated institutional item belongs to the 12-month window', async () => {
     radarStore.configure({ driver: 'memory' });
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const href = String(url);
@@ -115,25 +117,24 @@ describe('radar domain', () => {
     await refreshRadarSnapshot();
     const stored = radarStore.getSnapshot();
     const undated = (stored?.items || []).filter((item) => !item.publishedAt);
-    expect(undated.length).toBeGreaterThan(0);
-    expect(undated.every((item) => item.noveltyStatus === 'reference')).toBe(true);
+    expect(undated).toHaveLength(0);
   });
 
-  it('descarta rotulo de secao sem data mas mantem manchete sem data', async () => {
+  it('mantém manchete datada recuperada pela API institucional do CPS', async () => {
     // "Funções e Competências" is a permanent page label, not news; it reached
     // the radar because an undated item has no recency signal to contradict it.
     radarStore.configure({ driver: 'memory' });
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br')
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br/wp-json/')
       ? new Response(
-        '<article><a href="/n/1">Funções e Competências</a><p>Competências institucionais.</p></article>'
-        + '<article><a href="/n/2">Centro Paula Souza abre inscricoes para cursos tecnicos de educacao profissional</a><p>Vagas abertas.</p></article>',
-        { status: 200, headers: { 'content-type': 'text/html' } },
+        JSON.stringify([
+          { id: 2, date: '2026-07-20T12:00:00', link: 'https://www.cps.sp.gov.br/n/2', title: { rendered: 'Centro Paula Souza abre inscricoes para cursos tecnicos de educacao profissional' }, excerpt: { rendered: '<p>Vagas abertas.</p>' } },
+        ]),
+        { status: 200, headers: { 'content-type': 'application/json', 'x-wp-totalpages': '1' } },
       )
       : new Response('', { status: 403 })));
 
     await refreshRadarSnapshot();
     const titles = (radarStore.getSnapshot()?.items || []).map((item) => item.title);
-    expect(titles).not.toContain('Funções e Competências');
     expect(titles.some((title) => /abre inscricoes/i.test(title))).toBe(true);
   });
 
@@ -176,6 +177,41 @@ describe('radar domain', () => {
     expect(result.diagnostics.candidates).toBeGreaterThan(result.diagnostics.shortlisted);
   });
 
+  it('descarta atos administrativos rotineiros mesmo quando o orgao pertence a EPT', async () => {
+    expect(douRelevance(
+      'EXTRATO DE CONTRATO',
+      'MinistÃ©rio da EducaÃ§Ã£o. Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica. Contratante: Instituto Federal.',
+    ).eligible).toBe(false);
+    expect(douRelevance(
+      'PORTARIA SETEC NÂº 42',
+      'Institui programa de educaÃ§Ã£o profissional tÃ©cnica e regulamenta a oferta de cursos.',
+    ).eligible).toBe(true);
+    expect(douRelevance(
+      'EXTRATO DE DOAÃ‡ÃƒO',
+      'Bens avaliados em trezentos e treze mil e setecentos reais. Autorizado conforme resoluÃ§Ã£o regional.',
+    )).toMatchObject({ direct: 0, eligible: false });
+    const acts = [
+      { urlTitle: 'extrato-contrato-ept', title: 'EXTRATO DE CONTRATO', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica' },
+      { urlTitle: 'portaria-oferta-ept', title: 'PORTARIA SETEC NÂº 42', pubDate: '29/07/2026', pubName: 'DO1', artCategory: 'Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica' },
+    ];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('leiturajornal')) {
+        return new Response(`<html><body><script id="params" type="application/json">${JSON.stringify({ jsonArray: acts })}</script></body></html>`, { status: 200 });
+      }
+      if (href.includes('extrato-contrato-ept')) {
+        return new Response('<html><body><article>MinistÃ©rio da EducaÃ§Ã£o. Secretaria de EducaÃ§Ã£o Profissional e TecnolÃ³gica. Contratante: Instituto Federal. Objeto: serviÃ§o administrativo continuado.</article></body></html>', { status: 200 });
+      }
+      if (href.includes('portaria-oferta-ept')) {
+        return new Response('<html><body><article>Institui programa de educaÃ§Ã£o profissional tÃ©cnica e regulamenta a oferta de cursos.</article></body></html>', { status: 200 });
+      }
+      return new Response('', { status: 403 });
+    });
+
+    const result = await fetchDouItems({ limit: 10 });
+    expect(result.items.map((item) => item.title)).toEqual(['PORTARIA SETEC NÂº 42']);
+  });
+
   it('preserva ato do DOU aprovado sobre o texto integral do ato', async () => {
     // Eligibility is decided over the full act, but only an 80-word excerpt is
     // stored. Re-deciding from the excerpt discarded acts that had legitimately
@@ -191,7 +227,7 @@ describe('radar domain', () => {
         sourceName: 'Diário Oficial da União',
         provider: 'direct-official',
         externalId: 'dou:aprovado',
-        provenance: { eligibility: { version: 2, direct: 2, strategic: 1 } },
+        provenance: { eligibility: { version: 3, eligible: 1, direct: 2, strategic: 1 } },
       })],
       fetchedAt: '2026-07-30T00:00:00.000Z',
       liveProvider: true,
@@ -263,9 +299,10 @@ describe('radar domain', () => {
     expect(result.items.map((item) => item.id)).not.toContain('dou-legado-contaminado');
   });
 
-  it('schedules only the government page with observed collection value', () => {
+  it('schedules the federal and São Paulo institutional sources with explicit coverage contracts', () => {
     const government = RADAR_WEB_POLICY.filter((source) => source.section === 'government').map((source) => source.name);
-    expect(government).toEqual(['Centro Paula Souza']);
+    expect(government).toEqual(['MEC / SETEC', 'INEP', 'Centro Paula Souza', 'Secretaria da Educação de SP', 'Agência SP', 'Diário Oficial do Estado de São Paulo']);
+    expect(RADAR_WEB_POLICY.filter((source) => source.section === 'government').every((source) => (source.maxPages || source.batchPages) > 0)).toBe(true);
   });
 
   it('normalizes unsupported sections and scores safely', () => {
@@ -325,8 +362,8 @@ describe('radar domain', () => {
     else process.env.RADAR_EXTRA_FEEDS_JSON = previous;
   });
 
-  it('does not advertise sources whose generic collectors never produce items', () => {
-    const inactive = ['INEP', 'FAPESP', 'CEE-SP', 'SEADE', 'InvestSP', 'Governo do Estado de São Paulo', 'UNESCO-UNEVOC'];
+  it('advertises only sources backed by a scheduled collector', () => {
+    const inactive = ['FAPESP', 'CEE-SP', 'SEADE', 'InvestSP', 'Governo do Estado de São Paulo'];
     const advertised = new Set(RADAR_SOURCE_POLICY.map((source) => source.name));
     const scheduled = new Set([...getRadarFeedPolicy(), ...RADAR_WEB_POLICY].map((source) => source.name));
 
@@ -334,6 +371,8 @@ describe('radar domain', () => {
       expect(advertised.has(name)).toBe(false);
       expect(scheduled.has(name)).toBe(false);
     });
+    expect(advertised.has('INEP')).toBe(true);
+    expect(advertised.has('UNESCO-UNEVOC')).toBe(true);
     expect(getRadarFeedReadiness().sections).toEqual({ research: true, government: true, international: true });
   });
 
@@ -448,7 +487,7 @@ describe('radar domain', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html><article><a href="/noticia-ept">Nova política de educação profissional</a><time datetime="2026-07-16"></time><p>Atualização sobre formação técnica e competências.</p></article><article><a href="https://external.example/noticia">Link externo irrelevante</a></article></html>', { status: 200 })));
     const items = await fetchWebItems({ name: 'INEP', section: 'government', url: 'https://www.gov.br/inep/pt-br/centrais-de-conteudo/noticias/', official: true, geography: 'Brasil' }, { limit: 5 });
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ sourceName: 'INEP', provider: 'institutional-web', publishedAt: '2026-07-16', section: 'government' });
+    expect(items[0]).toMatchObject({ sourceName: 'INEP', provider: 'institutional-paginated', publishedAt: '2026-07-16', section: 'government' });
     expect(items[0].sourceUrl).toBe('https://www.gov.br/noticia-ept');
     expect(items[0].provenance.pageUrl).toContain('inep');
   });
