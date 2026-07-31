@@ -3,7 +3,9 @@ import { getRadarItems, getRadarFeedPolicy, getRadarFeedReadiness, RADAR_SECTION
 import { consumeRadarAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
+  // The Blob is the snapshot cache. Caching this response in the browser made
+  // the post-refresh GET keep showing the previous fetchedAt for five minutes.
+  res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'method_not_allowed' });
@@ -42,7 +44,7 @@ export default async function handler(req, res) {
       ...result,
       sourcePolicy: [...RADAR_SOURCE_POLICY, ...getRadarFeedPolicy(), ...RADAR_WEB_POLICY],
       feedReadiness: getRadarFeedReadiness(),
-      mode: result.liveProvider ? 'live+curated' : 'curated-fallback',
+      mode: result.liveProvider || result.snapshotLive ? 'live+curated' : 'curated-fallback',
     });
   } catch {
     return res.status(503).json({ error: 'radar_unavailable' });

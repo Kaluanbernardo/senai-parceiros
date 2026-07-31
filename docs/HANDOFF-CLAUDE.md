@@ -75,19 +75,72 @@ Há scripts e artefatos de coleta de imagens não relacionados em `scripts/`,
 `output/`, `tmp/`, `.playwright-cli/` e `src/data/apply_stake_desc_1.cjs`.
 Preservá-los. Não usar `git add -A`, reset, stash ou limpeza automática.
 
+## Carregamento sob demanda do bundle
+
+As nove rotas usam `React.lazy` e os três JSONs de catálogo (~730 kB) saíram do
+chunk de entrada. `DataProvider` só busca os seeds quando existe usuário
+autenticado, então quem para na tela de login não baixa o catálogo.
+
+`catalogReady` fecha o portão em `Protected`: nenhuma página que consome
+`useData` renderiza antes dos seeds chegarem, o que impede lista vazia aparecer
+como resultado real. Ao alterar `DataContext`, preservar esse par
+`catalogReady`/`Protected`.
+
+Efeito medido no `npm run build`:
+
+| chunk de entrada | antes | depois |
+| --- | --- | --- |
+| `index` | 1.461,9 kB | 498,4 kB |
+| `index` gzip | ~430 kB | 161,4 kB |
+
+O alerta de chunk maior que 500 kB continua, agora apenas pelo `exceljs`
+(937 kB), que já é `import()` dinâmico e só baixa quando alguém exporta.
+
 ## Pendências depois desta entrega
 
 1. Resolver os gates corporativos somente quando houver infraestrutura:
-   Entra ID, stores duráveis/atômicos, alertas e scheduler.
+   Entra ID, stores duráveis/atômicos, alertas e scheduler. Bloqueio externo:
+   não há o que fazer no código até o SENAI-SP liberar os recursos.
 2. Acompanhar as 12 vulnerabilidades reportadas pelo `npm audit` (11 altas e
    uma moderada). O caminho automático exige downgrades quebradores de ExcelJS
    e React Router; não usar `npm audit fix --force`. O advisory do React Router
    afeta o modo RSC, que este SPA Vite não usa; as demais ocorrências chegam
    pela cadeia de compactação do ExcelJS.
+
+   Verificado em 29/07/2026: a faixa vulnerável é `7.12.0 - 8.2.0` e a última
+   7.x publicada é a `7.18.2`, ainda dentro dela. **Esperar um patch 7.x não é
+   estratégia viável** — a correção só existe a partir da `8.3.0`, ou seja,
+   exige salto de major. Como o projeto usa `BrowserRouter` em SPA Vite, sem
+   RSC, o risco prático permanece nulo; tratar como item agendado antes de
+   produção, nunca como emergência.
 3. Observar custo e qualidade dos resumos por IA antes de ativá-los por padrão.
+   Depende de dados que só o Preview em uso gera; manter
+   `RADAR_SUMMARY_PROVIDER` vazio até haver medição real.
 4. Revalidar as fontes oficiais periodicamente com
    `npm run radar:feeds:audit`.
+
+   Ambiente com allowlist de egresso (sandbox, CI restrito) devolve 403 com o
+   corpo `Host not in allowlist: <host>` para toda fonte. Isso é bloqueio de
+   rede, não fonte quebrada: confirmar numa rede sem allowlist antes de tratar
+   qualquer feed como indisponível.
 5. Publicar primeiro em Preview. Produção exige autorização explícita.
+
+## Variáveis mínimas para o preflight MVP passar
+
+Verificado em 29/07/2026: estas cinco bastam para `npm run handoff:preflight:mvp`
+retornar `ok: true` com `blockers: []`.
+
+```text
+AUTH_PROVIDER=local
+AUTH_SESSION_SECRET=<pelo menos 32 caracteres>
+PUBLIC_APP_ORIGIN=<origin do Preview>
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=<secret>
+```
+
+`ai_provider` só é obrigatório porque `AI_PROVIDER` está preenchido; sem essa
+variável o preflight exige apenas as quatro primeiras. Configurar no painel do
+Preview ou em `.env.local`, nunca no repositório.
 
 ## Regras de continuidade
 

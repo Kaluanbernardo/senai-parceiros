@@ -79,7 +79,115 @@ function extractArticleBody(html) {
     || source.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
     || source.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
     || source;
-  return trimText(article, 12000);
+  // A DOU URL can render several acts in the same <article>. The real page
+  // separates them with p.identifica; evaluating the whole group let a term in
+  // a later act approve the first, unrelated one.
+  const identifiers = [...article.matchAll(/<p\b[^>]*class=["'][^"']*\bidentifica\b[^"']*["'][^>]*>/gi)];
+  const firstAct = identifiers.length
+    ? article.slice(identifiers[0].index, identifiers[1]?.index ?? article.length)
+    : article;
+  // Large annex tables can contain an institution whose legal name happens to
+  // include "qualificacao profissional" even when the act concerns unrelated
+  // higher-education recognition. The normative body remains available.
+  const withoutTables = firstAct.replace(/<table\b[\s\S]*?<\/table>/gi, ' ');
+  return trimText(withoutTables, 12000);
+}
+
+function decodeEntities(value) {
+  return String(value || '')
+    .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Reads the acts from the edition's embedded JSON payload.
+ *
+ * Measured behaviour: the anchors an edition page does serve are a couple of
+ * navigation links repeated on every edition — thirteen editions yielded
+ * twenty-six anchors that deduplicated to a single candidate. The day's acts
+ * are not among them, so this runs alongside `parseListing` rather than only
+ * when it comes back empty.
+ */
+function parseEmbeddedEdition(html, editionUrl, publishedAt, section) {
+  const source = String(html || '');
+  const raw = source.match(/<script[^>]*\bid=["']params["'][^>]*>([\s\S]*?)<\/script>/i)?.[1]
+    || source.match(/<script[^>]*>\s*(\{[\s\S]*?"jsonArray"[\s\S]*?\})\s*<\/script>/i)?.[1];
+  if (!raw) return [];
+  let payload;
+  try {
+    payload = JSON.parse(decodeEntities(raw).trim());
+  } catch {
+    return [];
+  }
+  const entries = Array.isArray(payload?.jsonArray) ? payload.jsonArray : [];
+  const items = [];
+  const seen = new Set();
+  for (const entry of entries) {
+    const slug = String(entry?.urlTitle || entry?.url || '').trim();
+    const title = trimText(entry?.title || entry?.artTitle || '', 280);
+    if (!slug || !title || title.length < 8) continue;
+    const url = absoluteDouUrl(slug.startsWith('http') || slug.startsWith('/') ? slug : `/web/dou/-/${slug}`, editionUrl);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    const articleId = articleIdFromUrl(url);
+    const brazilian = String(entry?.pubDate || '').match(/^(\d{2})\/(\d{2})\/(20\d{2})$/);
+    items.push({
+      externalId: `dou:${articleId}`,
+      sourceName: 'Diário Oficial da União',
+      sourceUrl: url,
+      title,
+      summaryPt: trimText(entry?.content || entry?.artCategory || '', 900),
+      publishedAt: brazilian ? `${brazilian[3]}-${brazilian[2]}-${brazilian[1]}` : isoDate(publishedAt),
+      contentType: 'ato oficial',
+      section: String(entry?.pubName || section || sectionFromUrl(editionUrl) || 'DO1'),
+      official: true,
+      provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL,
+      provenance: {
+        editionUrl,
+        edition: isoDate(publishedAt),
+        section: section || sectionFromUrl(editionUrl) || null,
+        articleId,
+        discoveredAt: new Date().toISOString(),
+      },
+    });
+  }
+  return items;
+}
+
+/**
+ * Structural fingerprint of an edition page: element counts and the key names
+ * of any embedded JSON, never their values or any page text.
+ *
+ * Two attempts at guessing this page's shape were both wrong — anchors turned
+ * out to be navigation, and the JSON payload guess found nothing. A page of
+ * 2.4 MB clearly carries the acts somewhere, and describing its structure is
+ * cheaper and far more reliable than a third guess.
+ */
+function editionMarkers(html) {
+  const source = String(html || '');
+  const jsonScripts = [...source.matchAll(/<script\b[^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+  const keysOf = (raw) => {
+    try {
+      const parsed = JSON.parse(decodeEntities(raw).trim());
+      return parsed && typeof parsed === 'object' ? Object.keys(parsed).slice(0, 12) : [];
+    } catch {
+      return [];
+    }
+  };
+  const biggest = jsonScripts.slice().sort((left, right) => right.length - left.length)[0] || '';
+  return {
+    anchorsTotal: (source.match(/<a\b/gi) || []).length,
+    anchorsDou: (source.match(/href=["'][^"']*\/web\/dou\//gi) || []).length,
+    scriptsJson: jsonScripts.length,
+    biggestJsonBytes: biggest.length,
+    biggestJsonKeys: keysOf(biggest),
+    hasParamsScript: /<script[^>]*\bid=["']params["']/i.test(source),
+    hasJsonArray: /"jsonArray"/.test(source),
+    hasHierarchyList: /hierarchyList|hierarchy_list/i.test(source),
+    hasMateriaMarker: /\bmateria\b/i.test(source),
+  };
 }
 
 function parseListing(html, editionUrl, publishedAt, section) {
@@ -127,12 +235,14 @@ function withTimeout(signal, timeoutMs) {
 }
 
 export class DirectOfficialWebProvider {
-  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
+  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.RADAR_DOU_BASE_URL || DEFAULT_BASE_URL, sections = process.env.RADAR_DOU_SECTIONS?.split(',') || ['DO1', 'DO3'], timeoutMs = 12000, maxDays = 3, maxDocuments = 20, concurrency = Number(process.env.RADAR_DOU_CONCURRENCY || 10), userAgent = 'senai-parceiros/1.0 radar-public-sources' } = {}) {
     this.fetchImpl = fetchImpl;
     this.baseUrl = baseUrl;
     this.sections = sections;
     this.timeoutMs = timeoutMs;
     this.maxDays = maxDays;
+    this.maxDocuments = maxDocuments;
+    this.concurrency = concurrency;
     this.userAgent = userAgent;
   }
 
@@ -150,7 +260,7 @@ export class DirectOfficialWebProvider {
     }
   }
 
-  async discover({ query = 'educação profissional', domains = ['in.gov.br'], startDate, endDate, maxResults = 20, signal } = {}) {
+  async discover({ query = 'educação profissional', domains = ['in.gov.br'], startDate, endDate, maxResults = 20, candidateFilter, signal } = {}) {
     const startedAt = new Date().toISOString();
     if (!domains.some((domain) => normalizeHostname(domain) === 'in.gov.br' || normalizeHostname(domain).endsWith('.in.gov.br'))) {
       return createDiscoveryResult({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, status: 'not_applicable', trace: createProviderTrace({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, startedAt }) });
@@ -158,24 +268,55 @@ export class DirectOfficialWebProvider {
     const urls = buildDouEditionUrls({ startDate: startDate || new Date(), endDate: endDate || startDate || new Date(), sections: this.sections, baseUrl: this.baseUrl, maxDays: this.maxDays });
     const items = [];
     const errors = [];
-    for (const editionUrl of urls) {
-      try {
-        const html = await this.requestText(editionUrl, { signal });
+    // Counting what each edition actually yielded is what distinguishes "no act
+    // was published" from "the page was never parsed" — two situations that
+    // otherwise both report zero.
+    const diagnostics = { editionsRead: 0, anchorItems: 0, embeddedItems: 0, emptyEditions: 0, htmlBytes: 0 };
+    // One edition per day per section, fetched sequentially, meant a useful
+    // lookback cost more wall clock than a serverless invocation has. Editions
+    // are independent, so they go in bounded-concurrency batches instead: the
+    // window can now be wide enough to actually catch an EPT act.
+    const batchSize = Math.max(1, Number(this.concurrency) || 6);
+    for (let index = 0; index < urls.length && items.length < maxResults; index += batchSize) {
+      const batch = urls.slice(index, index + batchSize);
+      const settled = await Promise.allSettled(batch.map((editionUrl) => this.requestText(editionUrl, { signal })));
+      settled.forEach((result, offset) => {
+        const editionUrl = batch[offset];
+        if (result.status === 'rejected') {
+          errors.push({ url: editionUrl, error: sanitizeProviderError(result.reason, 'direct_official_fetch_failed') });
+          return;
+        }
         const date = new URL(editionUrl).searchParams.get('data');
         const match = String(date || '').match(/^(\d{2})-(\d{2})-(20\d{2})$/);
         const iso = match ? `${match[3]}-${match[2]}-${match[1]}` : isoDate(startDate || new Date());
-        items.push(...parseListing(html, editionUrl, iso, sectionFromUrl(editionUrl)));
-      } catch (error) {
-        errors.push({ url: editionUrl, error: sanitizeProviderError(error, 'direct_official_fetch_failed') });
-      }
-      if (items.length >= maxResults) break;
+        const anchored = parseListing(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
+        // Both parsers always run. Gating the payload on "no anchors found" made
+        // it unreachable: an edition page carries a couple of navigation links
+        // matching the article URL shape, so anchors were never empty while the
+        // day's acts were never among them.
+        const embedded = parseEmbeddedEdition(result.value, editionUrl, iso, sectionFromUrl(editionUrl));
+        diagnostics.editionsRead += 1;
+        diagnostics.anchorItems += anchored.length;
+        diagnostics.embeddedItems += embedded.length;
+        diagnostics.htmlBytes = Math.max(diagnostics.htmlBytes, String(result.value || '').length);
+        if (!anchored.length && !embedded.length) diagnostics.emptyEditions += 1;
+        // One sample is enough to describe the shape; every edition renders alike.
+        if (!diagnostics.markers) diagnostics.markers = editionMarkers(result.value);
+        const discovered = [...anchored, ...embedded];
+        items.push(...(typeof candidateFilter === 'function' ? discovered.filter(candidateFilter) : discovered));
+      });
     }
     const unique = [...new Map(items.map((item) => [item.externalId, item])).values()].slice(0, Math.max(0, Number(maxResults) || 20));
+    // Anchors repeated on every edition collapse to almost nothing here. Without
+    // this count the run reported dozens of parsed anchors and a single
+    // candidate, with no way to see that they were the same navigation links.
+    diagnostics.uniqueCandidates = unique.length;
     return createDiscoveryResult({
       items: unique,
       errors,
       provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL,
       status: errors.length && !unique.length ? 'error' : errors.length ? 'partial' : unique.length ? 'ok' : 'no_edition',
+      diagnostics,
       trace: createProviderTrace({ provider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, startedAt, requestCount: urls.length, query }),
     });
   }
@@ -184,15 +325,31 @@ export class DirectOfficialWebProvider {
     const startedAt = new Date().toISOString();
     const documents = [];
     const errors = [];
-    const candidates = [...new Set((Array.isArray(urls) ? urls : []).map((value) => String(value || '').trim()))].slice(0, 20);
+    const candidates = [...new Set((Array.isArray(urls) ? urls : []).map((value) => String(value || '').trim()))].slice(0, this.maxDocuments);
+    // Eligibility is decided on the act's body, so every discovered act has to be
+    // fetched before it can qualify. One at a time, that cost more than the
+    // invocation had left after discovery, and the whole edition was discarded
+    // for lack of content rather than for lack of relevance.
+    const batchSize = Math.max(1, Number(this.concurrency) || 6);
+    const allowed = [];
     for (const candidate of candidates) {
       const url = normalizeHttpsUrl(candidate, { domains: ['in.gov.br'] });
       if (!url || !isDouUrl(url, { article: true })) {
         errors.push({ url: candidate, error: 'url_not_allowed' });
         continue;
       }
-      try {
-        const html = await this.requestText(url, { signal });
+      allowed.push(url);
+    }
+    for (let index = 0; index < allowed.length; index += batchSize) {
+      const batch = allowed.slice(index, index + batchSize);
+      const settled = await Promise.allSettled(batch.map((url) => this.requestText(url, { signal })));
+      settled.forEach((result, offset) => {
+        const url = batch[offset];
+        if (result.status === 'rejected') {
+          errors.push({ url, error: sanitizeProviderError(result.reason, 'direct_official_fetch_failed') });
+          return;
+        }
+        const html = result.value;
         const content = extractArticleBody(html);
         documents.push({
           externalId: `dou:${articleIdFromUrl(url)}`,
@@ -207,9 +364,7 @@ export class DirectOfficialWebProvider {
           focus,
           provenance: { articleId: articleIdFromUrl(url), extractedAt: new Date().toISOString(), extractionProvider: RADAR_PROVIDER_NAMES.DIRECT_OFFICIAL, contentHash: contentHash(content) },
         });
-      } catch (error) {
-        errors.push({ url, error: sanitizeProviderError(error, 'direct_official_fetch_failed') });
-      }
+      });
     }
     return createRetrievalResult({
       documents,

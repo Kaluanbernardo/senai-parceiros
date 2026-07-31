@@ -13,31 +13,11 @@ function folded(value) {
   return safeText(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
 }
 
-const CORE_TERMS = ['educacao profissional', 'educacao tecnologica', 'formacao profissional', 'formacao tecnica', 'vocational education', 'technical education', 'tvet', 'vet', 'apprenticeship', 'aprendizagem profissional', 'qualificacao profissional'];
-const STRATEGIC_TERMS = ['industria', 'industrial', 'manufacturing', 'competencias', 'skills', 'inovacao', 'innovation', 'inteligencia artificial', 'artificial intelligence', 'digital', 'sustentabilidade', 'green', 'descarbonizacao', 'economia circular', 'trabalho', 'employment'];
-
 function ageInDays(date, now) {
   if (!date) return null;
   const timestamp = new Date(`${date}T12:00:00Z`).getTime();
   if (Number.isNaN(timestamp)) return null;
   return Math.floor((now.getTime() - timestamp) / 86400000);
-}
-
-export function calculateRadarRelevance(item, { now = new Date() } = {}) {
-  const haystack = folded([item?.title, item?.summaryPt, ...(item?.topics || [])].join(' '));
-  const coreMatches = CORE_TERMS.filter((term) => haystack.includes(term)).length;
-  const strategicMatches = STRATEGIC_TERMS.filter((term) => haystack.includes(term)).length;
-  const thematic = Math.min(50, Math.min(35, coreMatches * 9) + Math.min(15, strategicMatches * 4));
-  const ageDays = ageInDays(item?.publishedAt, now);
-  const recency = ageDays === null || ageDays < -7 ? 0 : ageDays <= 30 ? 30 : ageDays <= 90 ? 24 : ageDays <= 180 ? 18 : ageDays <= 365 ? 10 : 0;
-  const provider = safeText(item?.provider).toLowerCase();
-  const sourceQuality = item?.official ? 20 : ['openalex', 'crossref'].includes(provider) ? 18 : provider.startsWith('curated-') ? 14 : 15;
-  const breakdown = { thematic, recency, sourceQuality };
-  return {
-    score: thematic + recency + sourceQuality,
-    breakdown,
-    explanation: `Tema ${thematic}/50 · recência ${recency}/30 · qualidade da fonte ${sourceQuality}/20`,
-  };
 }
 
 function noveltyFor(date, now = new Date()) {
@@ -85,12 +65,8 @@ export function normalizeRadarItem(item, index = 0) {
     updatedAt: safeText(item?.updatedAt) || null,
     isPlaceholder: Boolean(item?.isPlaceholder),
   };
-  const relevance = calculateRadarRelevance(base);
   return {
     ...base,
-    relevanceScore: relevance.score,
-    relevanceBreakdown: relevance.breakdown,
-    relevanceExplanation: relevance.explanation,
     ...noveltyFor(validDate),
   };
 }
@@ -99,11 +75,12 @@ export function dedupeRadarItems(items) {
   const seen = new Set();
   const seenTitles = new Set();
   return items.map(normalizeRadarItem).filter((item) => {
-    const key = item.doi || item.externalId || `${item.sourceName}:${item.title.toLocaleLowerCase('pt-BR')}`;
+    const stableId = item.doi || item.externalId;
+    const key = stableId || `${item.sourceName}:${item.title.toLocaleLowerCase('pt-BR')}`;
     const titleKey = folded(item.title).replace(/[^a-z0-9]+/g, ' ').trim();
-    if (seen.has(key) || (titleKey && seenTitles.has(`${item.section}:${titleKey}`))) return false;
+    if (seen.has(key) || (!stableId && titleKey && seenTitles.has(`${item.section}:${titleKey}`))) return false;
     seen.add(key);
-    if (titleKey) seenTitles.add(`${item.section}:${titleKey}`);
+    if (!stableId && titleKey) seenTitles.add(`${item.section}:${titleKey}`);
     return true;
   });
 }
@@ -118,6 +95,35 @@ function fromDate(period) {
 
 function dateValue(value) {
   return value ? new Date(`${value}T12:00:00`).getTime() : 0;
+}
+
+/**
+ * Widest window, which is also the default view.  Items whose source page
+ * exposes no parsable date are a labelled class ("Referência sem data"), not old
+ * items, so they stay visible here; a deliberately narrower window is a recency
+ * question they cannot answer.  Dropping them everywhere made collected results
+ * disappear from the interface with no signal at all.
+ */
+const UNDATED_VISIBLE_PERIOD = '1y';
+
+export function countUndatedItems(items) {
+  return (Array.isArray(items) ? items : []).filter((item) => !item?.publishedAt).length;
+}
+
+/**
+ * Single definition of what deserves to be collected, stored and shown: dated
+ * news inside the 12-month window, plus undated institutional references.
+ * Archive, scheduled and placeholder items stay out.
+ *
+ * `isNews` alone used to gate collection, snapshot writing and display. It is
+ * false for undated items, and institutional portals frequently publish without
+ * a parsable date, so those pages were discarded at the earliest step and could
+ * never reach a reader no matter what the interface did.
+ */
+export function isEligibleRadarItem(item) {
+  return Boolean(item)
+    && (item.isNews || item.noveltyStatus === 'reference')
+    && !item.isPlaceholder;
 }
 
 export function filterRadarItems(items, filters = {}) {
@@ -136,10 +142,10 @@ export function filterRadarItems(items, filters = {}) {
       && (!geography || item.geography === geography)
       && (!topic || item.topics.some((entry) => entry.toLocaleLowerCase('pt-BR') === topic))
       && (!contentType || item.contentType === contentType)
-      && (!cutoff || (item.publishedAt && dateValue(item.publishedAt) >= cutoff.getTime()));
+      && (!cutoff || (item.publishedAt
+        ? dateValue(item.publishedAt) >= cutoff.getTime()
+        : filters.period === UNDATED_VISIBLE_PERIOD));
   });
-  const sort = filters.sort === 'date' ? 'date' : 'relevance';
-  return filtered.sort((left, right) => sort === 'relevance'
-    ? right.relevanceScore - left.relevanceScore || dateValue(right.publishedAt) - dateValue(left.publishedAt)
-    : dateValue(right.publishedAt) - dateValue(left.publishedAt) || right.relevanceScore - left.relevanceScore);
+  return filtered.sort((left, right) => dateValue(right.publishedAt) - dateValue(left.publishedAt)
+    || left.title.localeCompare(right.title, 'pt-BR'));
 }

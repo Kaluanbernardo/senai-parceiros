@@ -21,8 +21,8 @@ O Vite local usa os mesmos handlers de api/ por meio de server/viteApiPlugin.js.
 - OPENROUTER_MODEL: openrouter/auto.
 - OPENROUTER_COST_QUALITY_TRADEOFF: 7.
 - RADAR_LIVE_SOURCES: deixe false para a base curada de demonstração; use true no ambiente controlado para habilitar as buscas acadêmicas live no OpenAlex e Crossref.
-- OPENALEX_API_KEY: opcional, mantida apenas no servidor quando fornecida.
-- OPENALEX_MAILTO: opcional, usado no User-Agent do OpenAlex para identificação do aplicativo.
+- OPENALEX_API_KEY: obrigatória para o Radar de pesquisadores; a chave gratuita deve existir somente no servidor.
+- OPENALEX_MAILTO: legado opcional; o OpenAlex substituiu o antigo "polite pool" por autenticação com API key.
 
 Nunca use prefixo VITE_ nessas variáveis, não as inclua em exportações e não as envie no chat ou no repositório. Antes do handoff, remova e revogue chaves pessoais.
 
