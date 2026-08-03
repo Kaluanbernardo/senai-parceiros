@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -129,6 +128,40 @@ export default function RadarPage() {
   useEffect(() => { loadItems(); }, [section]);
 
   /**
+   * Second phase of a collection, run as its own request.
+   *
+   * Collecting ten external sources consumes almost the whole function budget,
+   * which left the editorial pass no time when both shared one invocation: in
+   * production it never rewrote a single item. Each request gets its own budget,
+   * so the rewrite is issued separately and repeated until the backlog is empty
+   * — the operator still presses one button.
+   */
+  const rewriteCollected = async (maxPasses = 5) => {
+    let rewritten = 0;
+    let lastRun = null;
+    for (let pass = 0; pass < maxPasses; pass += 1) {
+      setRewriting(true);
+      const response = await fetch('/api/radar/refresh?mode=editorial', { method: 'POST', credentials: 'include' });
+      const body = await response.json().catch(() => ({}));
+      lastRun = body.lastRun || lastRun;
+      const status = body.lastRun?.sourceStatus?.['Títulos e resumos editoriais'];
+      if (!response.ok || !body.stats) {
+        const reason = status?.errors?.length ? `: ${status.errors.join(', ')}` : '';
+        return { severity: 'warning', message: `Nenhum texto foi reescrito${reason}.`, lastRun };
+      }
+      rewritten += body.stats.rewritten || 0;
+      // A pass that rewrote nothing will not do better on the next one: either
+      // the queue is empty or every attempt is being refused.
+      if (!body.stats.rewritten || !body.remaining) {
+        if (rewritten > 0) return { severity: 'success', message: `${rewritten} texto(s) reescrito(s) em português.`, lastRun };
+        const reason = status?.errors?.length ? `: ${status.errors.join(', ')}` : status?.candidates ? '.' : ' — não havia texto pendente.';
+        return { severity: status?.candidates ? 'warning' : 'success', message: `Nenhum texto foi reescrito${reason}`, lastRun };
+      }
+    }
+    return { severity: 'success', message: `${rewritten} texto(s) reescrito(s) em português; ainda há fila, colete de novo para continuar.`, lastRun };
+  };
+
+  /**
    * Reading the radar never touches the network, so a new snapshot only exists
    * after the protected refresh runs.  Until this button the collection could be
    * triggered solely by the daily cron or by hand against the endpoint, which
@@ -159,62 +192,25 @@ export default function RadarPage() {
         return;
       }
       const driver = body.store?.driver || 'memory';
-      setCollectResult(driver === 'memory'
-        ? {
+      const collected = `Coleta concluída em ${Math.round((body.durationMs || 0) / 1000)}s: ${body.lastRun?.itemCount ?? 0} item(ns) gravado(s)`;
+      if (driver === 'memory') {
+        setCollectResult({
           severity: 'warning',
-          message: 'Coleta concluída, mas o snapshot está apenas em memória e será perdido na próxima requisição. Configure RADAR_STORE_DRIVER para um adapter durável.',
-          lastRun: body.lastRun,
-        }
-        : {
-          severity: 'success',
-          message: `Coleta concluída em ${Math.round((body.durationMs || 0) / 1000)}s: ${body.lastRun?.itemCount ?? 0} item(ns) gravado(s) no snapshot durável.`,
+          message: `${collected}, mas o snapshot está apenas em memória e será perdido na próxima requisição. Configure RADAR_STORE_DRIVER para um adapter durável.`,
           lastRun: body.lastRun,
         });
+        return;
+      }
+      const editorial = await rewriteCollected();
+      setCollectResult({
+        severity: editorial.severity,
+        message: `${collected} no snapshot durável. ${editorial.message}`,
+        lastRun: editorial.lastRun || body.lastRun,
+      });
     } catch {
       setCollectResult({ severity: 'error', message: 'A coleta não respondeu. Ela consulta várias fontes externas e pode exceder o tempo limite da função.' });
     } finally {
       setCollecting(false);
-      await loadItems();
-    }
-  };
-
-  /**
-   * Rewriting is separate from collecting on purpose: a collection spends the
-   * whole function budget on the external sources before the editorial pass
-   * gets a turn, so in production the rewrites never ran. This touches no
-   * source — it reworks the snapshot that is already stored.
-   */
-  const rewriteNow = async () => {
-    setRewriting(true);
-    setCollectResult(null);
-    try {
-      const response = await fetch('/api/radar/refresh?mode=editorial', { method: 'POST', credentials: 'include' });
-      const body = await response.json().catch(() => ({}));
-      if (response.status === 401) {
-        setCollectResult({ severity: 'error', message: 'Sua sessão expirou. Entre novamente como administrador.' });
-        return;
-      }
-      const editorial = body.lastRun?.sourceStatus?.['Títulos e resumos editoriais'];
-      if (!response.ok) {
-        setCollectResult({
-          severity: 'warning',
-          message: body.error === 'empty_snapshot'
-            ? 'Não há snapshot para reescrever. Faça uma coleta primeiro.'
-            : `A reescrita não pôde ser concluída${editorial?.errors?.length ? `: ${editorial.errors.join(', ')}` : ''}.`,
-          lastRun: body.lastRun,
-        });
-        return;
-      }
-      setCollectResult({
-        severity: body.stats?.rewritten > 0 ? 'success' : 'warning',
-        message: body.stats?.rewritten > 0
-          ? `${body.stats.rewritten} item(ns) reescrito(s) em ${Math.round((body.durationMs || 0) / 1000)}s.${body.remaining > 0 ? ` Restam ${body.remaining}; rode de novo para continuar.` : ''}`
-          : `Nenhum item foi reescrito${editorial?.errors?.length ? `: ${editorial.errors.join(', ')}` : '. Verifique se o provedor de IA está configurado.'}`,
-        lastRun: body.lastRun,
-      });
-    } catch {
-      setCollectResult({ severity: 'error', message: 'A reescrita não respondeu.' });
-    } finally {
       setRewriting(false);
       await loadItems();
     }
@@ -255,26 +251,14 @@ export default function RadarPage() {
             <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
           </Tooltip>
           {isAdmin && (
-            <Tooltip describeChild title="Consulta as fontes oficiais agora e grava um novo snapshot" arrow>
+            <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
               <Button
                 variant="contained"
                 startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
                 onClick={collectNow}
                 disabled={collecting || loading}
               >
-                {collecting ? 'Coletando…' : 'Coletar agora'}
-              </Button>
-            </Tooltip>
-          )}
-          {isAdmin && (
-            <Tooltip describeChild title="Reescreve em português claro os itens do snapshot atual, sem consultar as fontes" arrow>
-              <Button
-                variant="outlined"
-                startIcon={rewriting ? <CircularProgress size={16} color="inherit" /> : <AutoFixHighIcon />}
-                onClick={rewriteNow}
-                disabled={collecting || loading || rewriting}
-              >
-                {rewriting ? 'Reescrevendo…' : 'Reescrever textos'}
+                {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
               </Button>
             </Tooltip>
           )}
