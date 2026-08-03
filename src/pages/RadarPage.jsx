@@ -158,7 +158,7 @@ export default function RadarPage() {
         return { severity: status?.candidates ? 'warning' : 'success', message: `Nenhum texto foi reescrito${reason}`, lastRun };
       }
     }
-    return { severity: 'success', message: `${rewritten} texto(s) reescrito(s) em português; ainda há fila, colete de novo para continuar.`, lastRun };
+    return { severity: 'success', message: `${rewritten} texto(s) reescrito(s) em português; ainda há fila, clique de novo para continuar.`, lastRun };
   };
 
   /**

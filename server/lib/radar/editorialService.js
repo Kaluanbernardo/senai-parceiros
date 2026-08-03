@@ -207,7 +207,7 @@ function providerEnabled() {
  * nothing to do" — the two have very different fixes.
  */
 function emptyStats() {
-  return { candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, errors: [] };
+  return { pending: 0, candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, errors: [] };
 }
 
 export async function editorializeRadarItems(items = [], { previousItems = [], deadlineAt: runDeadlineAt = null } = {}) {
@@ -216,11 +216,17 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   stats.reused = result.filter((item) => item.editorialStatus === 'ai').length;
   if (!providerEnabled()) return { items: result, stats: { ...stats, enabled: false } };
   const maxItems = Math.max(0, Number(process.env.RADAR_EDITORIAL_MAX_ITEMS || DEFAULT_MAX_ITEMS_PER_RUN));
-  const candidates = result
+  // The whole backlog, before the per-run cap. Reporting only the capped slice
+  // made a run that filled its quota look like a run that finished the queue:
+  // the caller saw nothing left to do and stopped, leaving every item beyond the
+  // cap with the source's own wording. Official acts sort first, so on a
+  // snapshot with hundreds of them the research items were never reached.
+  const pending = result
     .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
     .sort((left, right) => editorialPriority(left) - editorialPriority(right)
-      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')))
-    .slice(0, maxItems);
+      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')));
+  const candidates = pending.slice(0, maxItems);
+  stats.pending = pending.length;
   stats.candidates = candidates.length;
   const byId = new Map(result.map((item, index) => [itemId(item), index]));
   // This pass runs after every collector and before the snapshot is written, so

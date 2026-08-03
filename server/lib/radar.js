@@ -981,7 +981,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     const { stats } = editorialResult.value;
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
       !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
-      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors });
+      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors });
   }
   const snapshotItems = editorialResult.status === 'fulfilled' && editorialResult.value ? editorialResult.value.items : collected;
   const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);
@@ -1052,7 +1052,7 @@ export async function refreshRadarEditorials() {
     ...(stored.sourceStatus || {}),
     'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais',
       !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
-      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors }),
+      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors }),
   };
   // `fetchedAt` dates the collection, not the rewrite. Advancing it here would
   // tell every reader the sources were consulted again when they were not.
@@ -1070,7 +1070,7 @@ export async function refreshRadarEditorials() {
     refreshed: !writeError,
     stats,
     // What is left tells the operator whether to run this again.
-    remaining: Math.max(0, stats.candidates - stats.rewritten),
+    remaining: Math.max(0, stats.pending - stats.rewritten),
     durationMs: Date.now() - startedAt,
     lastRun,
     store: radarStore.status(),

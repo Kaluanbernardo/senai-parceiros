@@ -186,14 +186,56 @@ describe('reescrita editorial do Radar', () => {
     delete process.env.RADAR_SUMMARY_PROVIDER;
   });
 
-  it('respeita o teto de itens reescritos por coleta', async () => {
+  it('respeita o teto de itens reescritos por coleta e ainda relata a fila inteira', async () => {
+    // Reporting only the capped slice made a run that filled its quota look like
+    // a run that emptied the queue: the caller stopped and everything beyond the
+    // cap kept the source's wording.
     process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const { items: result } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`teto-${index + 1}`)));
+    const { items: result, stats } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`teto-${index + 1}`)));
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(result.filter((item) => item.editorialStatus === 'ai')).toHaveLength(6);
+    expect(stats).toMatchObject({ pending: 12, candidates: 6, rewritten: 6 });
+  });
+
+  it('reescreve o item de pesquisa em inglês assim que os atos deixam de ocupar a fila', async () => {
+    // Official acts sort first by design. On a snapshot carrying hundreds of
+    // them, a cap counted as the whole queue meant the research items were never
+    // reached — which is how an OpenAlex paper stayed in English indefinitely.
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
+    const paper = {
+      id: 'openalex-1',
+      externalId: 'openalex-1',
+      section: 'research',
+      title: 'Analisis Job Mismatch pada Pelatihan Vokasi Nonformal',
+      summaryPt: 'The phenomenon of job mismatch is one of the challenges in the development of vocational education and training because it indicates a discrepancy between the competencies possessed by graduates.',
+      sourceName: 'OpenAlex',
+      contentType: 'artigo',
+      topics: ['EPT', 'Vocational and Entrepreneurial Education'],
+      publishedAt: '2026-08-02',
+    };
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: 'Análise de desalinhamento profissional na formação vocacional não formal',
+      summary: 'O estudo acompanha egressos de um centro de formação profissional na Indonésia e mede a distância entre as competências que eles adquiriram e as que os empregos exigem.',
+      topics: ['EPT', 'educação profissional e empreendedora'],
+    })));
+
+    const first = await editorializeRadarItems([...Array.from({ length: 6 }, (_, index) => gazetteItem(`ato-${index + 1}`)), paper]);
+
+    // The paper loses the first pass to the acts, and the caller is told so.
+    expect(first.stats).toMatchObject({ pending: 7, candidates: 6, rewritten: 6 });
+    expect(first.items.at(-1).rawSourceText).toBe(true);
+
+    const second = await editorializeRadarItems(first.items, { previousItems: first.items });
+
+    expect(second.stats).toMatchObject({ pending: 1, rewritten: 1 });
+    const rewritten = second.items.find((item) => item.externalId === 'openalex-1');
+    expect(rewritten.displayTitle).toBe('Análise de desalinhamento profissional na formação vocacional não formal');
+    expect(rewritten.topics).toEqual(['EPT', 'educação profissional e empreendedora']);
+    expect(rewritten.rawSourceText).toBe(false);
   });
 
   it('conta o que reescreveu e o que recusou, para distinguir modelo ruim de coleta vazia', async () => {
