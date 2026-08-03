@@ -200,6 +200,40 @@ describe('reescrita editorial do Radar', () => {
     expect(stats).toMatchObject({ pending: 12, candidates: 6, rewritten: 6 });
   });
 
+  it('reescreve primeiro o que o leitor vê primeiro, e não o que é ato oficial', async () => {
+    // The interface sorts by publication date descending, so the top of the tab
+    // is the only thing most people ever look at. Ordering the queue by kind
+    // rewrote March acts ahead of an August paper, and the visible top of the
+    // list stayed in the source's wording run after run.
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '1';
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+    const oldAct = gazetteItem('antigo', { publishedAt: '2026-03-25' });
+    const recentNews = {
+      id: 'novo', externalId: 'novo', section: 'government', publishedAt: '2026-08-03',
+      title: 'MEC announces new funding for technical schools',
+      summaryPt: 'The ministry announced new funding for technical schools across the country this week.',
+      sourceName: 'MEC / SETEC', contentType: 'notícia institucional', topics: ['EPT'],
+    };
+
+    const { items } = await editorializeRadarItems([oldAct, recentNews]);
+
+    expect(items.find((item) => item.externalId === 'novo').editorialStatus).toBe('ai');
+    expect(items.find((item) => item.externalId === 'antigo').editorialStatus).toBe('source');
+  });
+
+  it('gasta o prazo que o chamador concedeu, e não um teto proprio mais curto', async () => {
+    // The standalone rewrite has no collection ahead of it and the whole budget
+    // to spend; capping it at the 25s meant for the tail of a collection halved
+    // its throughput for no reason.
+    process.env.RADAR_EDITORIAL_DEADLINE_MS = '1';
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+
+    const { stats } = await editorializeRadarItems([gazetteItem('x')], { deadlineAt: Date.now() + 30_000 });
+
+    expect(stats).toMatchObject({ rewritten: 1, deadlineReached: false });
+    delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
+  });
+
   it('não deixa os atos oficiais matarem de fome as outras seções', async () => {
     // Production accumulated hundreds of state-gazette acts. Under strict
     // priority they filled the quota on every run, so 481 rewrites happened
