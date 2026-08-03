@@ -250,10 +250,16 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // the caller saw nothing left to do and stopped, leaving every item beyond the
   // cap with the source's own wording. Official acts sort first, so on a
   // snapshot with hundreds of them the research items were never reached.
+  // Served in the order a reader meets them: the interface sorts by publication
+  // date descending, so the top of every tab is what a person actually sees, and
+  // it must be the first thing fixed. Ordering by kind instead fought that —
+  // state-gazette acts from March were rewritten ahead of an August paper, and
+  // the visible top of the list stayed in the source's wording through run after
+  // run. Kind now only breaks ties between items published the same day.
   const pending = interleaveBySection(result
     .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
-    .sort((left, right) => editorialPriority(left) - editorialPriority(right)
-      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || ''))));
+    .sort((left, right) => String(right.publishedAt || '').localeCompare(String(left.publishedAt || ''))
+      || editorialPriority(left) - editorialPriority(right)));
   const candidates = pending.slice(0, maxItems);
   stats.pending = pending.length;
   stats.candidates = candidates.length;
@@ -264,11 +270,14 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // rewrites — so the pass stops starting batches well before that, and the
   // items it did not reach simply keep the source's wording until next time.
   //
-  // The caller's deadline is what the platform actually enforces, and collection
-  // has already spent most of it by the time we get here; a budget of our own
-  // would be measured from the wrong instant. Whichever runs out first wins.
-  const ownDeadlineAt = Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
-  const deadlineAt = Math.min(ownDeadlineAt, Number(runDeadlineAt) || Infinity);
+  // The caller's deadline is what the platform actually enforces, so it wins
+  // outright when supplied. Taking the tighter of the two capped the standalone
+  // rewrite — which has no collection ahead of it and the whole budget to spend
+  // — at the 25s meant for the tail of a collection, cutting its throughput in
+  // half for no reason. The own budget remains the default for callers that pass
+  // no deadline at all.
+  const deadlineAt = Number(runDeadlineAt)
+    || Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
 
   for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
     if (Date.now() >= deadlineAt) {
