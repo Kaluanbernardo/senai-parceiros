@@ -26,6 +26,7 @@ O Vite local usa os mesmos handlers de api/ por meio de server/viteApiPlugin.js.
 - RADAR_SUMMARY_PROVIDER: habilita os resumos acadêmicos por IA. Deixe vazio, false ou off para desligar.
 - RADAR_EDITORIAL_PROVIDER: habilita os títulos e resumos editoriais em português. Quando não definida, segue RADAR_SUMMARY_PROVIDER.
 - RADAR_EDITORIAL_MAX_ITEMS: teto de itens reescritos por coleta, padrão 48.
+- RADAR_EDITORIAL_DEADLINE_MS: prazo da fase editorial, padrão 25000. Ela roda depois de todos os coletores e antes da gravação do snapshot, então o prazo existe para que um timeout da função não custe à coleta tudo o que ela já reuniu.
 
 Nunca use prefixo VITE_ nessas variáveis, não as inclua em exportações e não as envie no chat ou no repositório. Antes do handoff, remova e revogue chaves pessoais.
 

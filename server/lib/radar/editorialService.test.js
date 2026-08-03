@@ -222,6 +222,34 @@ describe('reescrita editorial do Radar', () => {
     expect(stats.errors).toContain('invalid_output');
   });
 
+  it('para de reescrever ao esgotar o prazo, para não custar o snapshot da coleta', async () => {
+    // The pass runs after every collector and before the snapshot write. A
+    // serverless function killed here loses the whole run, so the deadline
+    // matters more than finishing the backlog.
+    process.env.RADAR_EDITORIAL_DEADLINE_MS = '1000';
+    vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
+      await new Promise((resolve) => { setTimeout(resolve, 1100); });
+      const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+      return {
+        ok: true,
+        json: async () => ({
+          model: 'test/model',
+          usage: { total_tokens: 100 },
+          choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+        }),
+      };
+    }));
+
+    const { items, stats } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`prazo-${index + 1}`)));
+
+    // One batch went out before the clock ran down; the rest keep the source's
+    // wording rather than putting the run's snapshot at risk.
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(stats).toMatchObject({ deadlineReached: true, rewritten: 6 });
+    expect(items).toHaveLength(12);
+    delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
+  });
+
   it('atende primeiro os diários oficiais e depois os itens em inglês', () => {
     expect(editorialPriority(gazetteItem('1'))).toBe(0);
     expect(editorialPriority({ sourceName: 'Cedefop', title: 'Skills forecast for the green transition' })).toBe(1);

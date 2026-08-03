@@ -965,8 +965,8 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     // interface; only these counts tell them apart.
     const { stats } = editorialResult.value;
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
-      !stats.enabled ? 'disabled' : stats.failedBatches ? 'partial' : 'ok',
-      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, model: stats.model || null, errors: stats.errors });
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors });
   }
   const snapshotItems = editorialResult.status === 'fulfilled' && editorialResult.value ? editorialResult.value.items : collected;
   const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);

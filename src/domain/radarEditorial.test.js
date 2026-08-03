@@ -64,6 +64,20 @@ describe('readableTitleCase', () => {
     const title = 'Cedefop divulga estudo sobre competências verdes';
     expect(readableTitleCase(title)).toBe(title);
   });
+
+  it('rewrites the act reference even when an excerpt is appended to it', () => {
+    // The DOU composes "<act reference> — <evidence excerpt>" whenever the act's
+    // own title does not carry the theme, which is the common case. Judging the
+    // whole string let the excerpt dilute the reference below the threshold, so
+    // the act stayed shouted exactly where this rule was needed.
+    expect(readableTitleCase('PORTARIA SETEC/MEC Nº 1.234, DE 15 DE JULHO DE 2026 — Institui o programa de apoio à oferta de cursos técnicos.'))
+      .toBe('Portaria SETEC/MEC nº 1.234, de 15 de julho de 2026 — Institui o programa de apoio à oferta de cursos técnicos.');
+  });
+
+  it('rewrites both segments when the excerpt is shouted too', () => {
+    expect(readableTitleCase('RESOLUÇÃO CNE/CP Nº 1, DE 5 DE JANEIRO DE 2026 — DISPÕE SOBRE AS DIRETRIZES CURRICULARES'))
+      .toBe('Resolução CNE/CP nº 1, de 5 de janeiro de 2026 — Dispõe sobre as diretrizes curriculares');
+  });
 });
 
 describe('display fields', () => {
