@@ -104,8 +104,10 @@ export default function RadarPage() {
 
   const activeSection = sections.find((entry) => entry.value === section) || sections[0];
 
-  const loadItems = async () => {
-    setLoading(true);
+  const loadItems = async ({ quiet = false } = {}) => {
+    // A quiet reload refreshes the cards without blanking the grid, which is
+    // what lets the rewrite phase show its progress on the items themselves.
+    if (!quiet) setLoading(true);
     setError('');
     try {
       const serverQuery = section === 'research' && filters.query.trim().length >= 3 ? `&query=${encodeURIComponent(filters.query.trim().slice(0, 120))}` : '';
@@ -121,7 +123,7 @@ export default function RadarPage() {
       setItems([]);
       setError('Não foi possível carregar este radar agora. Tente atualizar em instantes.');
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   };
 
@@ -136,7 +138,7 @@ export default function RadarPage() {
    * so the rewrite is issued separately and repeated until the backlog is empty
    * — the operator still presses one button.
    */
-  const rewriteCollected = async (maxPasses = 5) => {
+  const rewriteCollected = async (prefix = '', maxPasses = 5) => {
     let rewritten = 0;
     let lastRun = null;
     for (let pass = 0; pass < maxPasses; pass += 1) {
@@ -150,6 +152,16 @@ export default function RadarPage() {
         return { severity: 'warning', message: `Nenhum texto foi reescrito${reason}.`, lastRun };
       }
       rewritten += body.stats.rewritten || 0;
+      // A pass takes about half a minute and there can be five of them. Without
+      // a sign of life between them the button is indistinguishable from broken,
+      // so each pass reports where it got to and refreshes the cards — the items
+      // changing on screen is the progress bar.
+      setCollectResult({
+        severity: 'info',
+        message: `${prefix}Reescrevendo os textos em português: ${rewritten} pronto(s), ${body.remaining} na fila…`,
+        lastRun,
+      });
+      await loadItems({ quiet: true });
       // A pass that rewrote nothing will not do better on the next one: either
       // the queue is empty or every attempt is being refused.
       if (!body.stats.rewritten || !body.remaining) {
@@ -201,10 +213,14 @@ export default function RadarPage() {
         });
         return;
       }
-      const editorial = await rewriteCollected();
+      const collectedMessage = `${collected} no snapshot durável. `;
+      // Shown now rather than at the end: the rewrite phase that follows can run
+      // for minutes, and the collection has already succeeded.
+      setCollectResult({ severity: 'info', message: `${collectedMessage}Reescrevendo os textos em português…`, lastRun: body.lastRun });
+      const editorial = await rewriteCollected(collectedMessage);
       setCollectResult({
         severity: editorial.severity,
-        message: `${collected} no snapshot durável. ${editorial.message}`,
+        message: `${collectedMessage}${editorial.message}`,
         lastRun: editorial.lastRun || body.lastRun,
       });
     } catch {
