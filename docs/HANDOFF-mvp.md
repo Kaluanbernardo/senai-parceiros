@@ -41,7 +41,7 @@ Nunca use prefixo VITE_ nessas variáveis, não as inclua em exportações e nã
 - exportação XLSX, PDF, Word e PowerPoint;
 - Gerador de Prompt provider-independent com esquema por categoria.
 - Radar EPT com abas de novas pesquisas, novidades governamentais e novidades internacionais, filtros, links originais, fontes permitidas e fallback curado.
-- Reescrita editorial sob demanda: o botão "Reescrever textos" (admin) e `POST /api/radar/refresh?mode=editorial` reescrevem o snapshot já guardado sem consultar fonte nenhuma. Existe porque a coleta gasta quase todo o limite de função nas dez fontes externas antes de a fase editorial ter vez; separada, ela roda em segundos e pode ser repetida até a fila acabar (`remaining` na resposta).
+- Reescrita editorial como segunda fase de "Coletar agora": terminada a coleta, a interface emite `POST /api/radar/refresh?mode=editorial` e repete até a fila acabar (`remaining` na resposta). São requisições separadas porque a coleta gasta quase todo o limite de função nas dez fontes externas, e no mesmo invocation a fase editorial não tinha tempo de reescrever nada; para o operador continua sendo um botão só.
 - Radar em português: títulos e resumos editoriais em linguagem simples para atos dos diários oficiais e tradução do conteúdo publicado em inglês, sempre com o título original preservado no cartão. Sem provedor de IA configurado, valem apenas as regras determinísticas (caixa legível do ato, glossário de tipos e temas), e o cartão avisa quando o texto exibido ainda é o da fonte.
 
 As respostas da seleção vivem somente na memória da página. O site não grava histórico. O painel administrativo ainda edita o catálogo apenas na sessão do navegador; a persistência compartilhada será conectada na etapa Azure.
