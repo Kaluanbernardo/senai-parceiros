@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getSession } from '../../server/lib/cookies.js';
 import { methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { refreshRadarSnapshot, getRadarStoreStatus } from '../../server/lib/radar.js';
+import { refreshRadarEditorials, refreshRadarSnapshot, getRadarStoreStatus } from '../../server/lib/radar.js';
 import { emitOperationalAlert } from '../../server/lib/alerts.js';
 
 function safeEqual(left, right) {
@@ -24,6 +24,14 @@ export default async function handler(req, res) {
   const authorized = hasCronSecret(req) || session?.role === 'admin';
   if (!authorized) return res.status(401).json({ error: 'authentication_required' });
   if (session?.role === 'admin' && !hasCronSecret(req) && !requireSameOrigin(req, res)) return;
+  // Collecting ten external sources consumes almost the whole function budget
+  // before the editorial pass gets a turn, so rewriting has to be runnable on
+  // its own. It touches no source: it reads the stored snapshot, rewrites what
+  // is still showing the source's wording and writes it back.
+  if (new URL(req.url || '/api/radar/refresh', 'http://localhost').searchParams.get('mode') === 'editorial') {
+    const editorial = await refreshRadarEditorials();
+    return res.status(editorial.refreshed ? 200 : 503).json(editorial);
+  }
   const startedAt = Date.now();
   let result;
   try {
