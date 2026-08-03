@@ -91,6 +91,57 @@ describe('radar domain', () => {
     expect(result.stale).toBe(false);
   });
 
+  it('entrega o ato do diário oficial em português legível mesmo sem reescrita editorial', async () => {
+    // Reading never calls a model, so the deterministic presentation layer is
+    // all a reader gets on a GET. An act must not reach the card shouting its
+    // own legal reference.
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'ato',
+        section: 'government',
+        title: 'PORTARIA SETEC/MEC Nº 1.234, DE 15 DE JULHO DE 2026',
+        summaryPt: 'Relação com educação profissional: autoriza cursos técnicos.',
+        publishedAt: '2026-07-15',
+        sourceName: 'Diário Oficial da União',
+        contentType: 'ato oficial',
+        externalId: 'dou:ato',
+      })],
+      fetchedAt: '2026-07-16T12:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: false, persist: false });
+
+    expect(result.items[0].displayTitle).toBe('Portaria SETEC/MEC nº 1.234, de 15 de julho de 2026');
+    expect(result.items[0].rawSourceText).toBe(true);
+    expect(result.items[0].title).toBe('PORTARIA SETEC/MEC Nº 1.234, DE 15 DE JULHO DE 2026');
+  });
+
+  it('traduz na leitura o tipo e os temas que a fonte publicou em inglês', async () => {
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'en',
+        section: 'research',
+        title: 'Vocational pathways in manufacturing',
+        summaryPt: 'Estudo sobre percursos de educação profissional na indústria.',
+        publishedAt: '2026-07-01',
+        sourceName: 'OpenAlex',
+        contentType: 'journal-article',
+        topics: ['TVET', 'skills development'],
+        externalId: 'doi:en',
+      })],
+      fetchedAt: '2026-07-02T12:00:00.000Z',
+      liveProvider: true,
+    });
+
+    const result = await getRadarItems({ filters: { section: 'research' }, live: false, persist: false });
+
+    expect(result.items[0].contentType).toBe('artigo científico');
+    expect(result.items[0].topics).toEqual(['educação profissional (TVET)', 'desenvolvimento de competências']);
+  });
+
   it('não marca como obsoleto um snapshot válido só porque a leitura não coleta', async () => {
     radarStore.configure({ driver: 'memory' });
     radarStore.writeSnapshot({
@@ -588,7 +639,23 @@ describe('radar domain', () => {
 
     await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
 
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('openrouter.ai'))).toBe(false);
+    // The editorial pass may legitimately call the provider on this run — it is
+    // what rewrites official acts. The academic summariser must not: it has its
+    // own budget and no research item was collected.
+    const summaryCalls = fetchMock.mock.calls.filter(([url, request]) => String(url).includes('openrouter.ai')
+      && JSON.parse(request.body).response_format?.json_schema?.name === 'radar_research_summaries');
+    expect(summaryCalls).toHaveLength(0);
+  });
+
+  it('relata a reescrita editorial mesmo quando ela está desligada', async () => {
+    // Without this entry a disabled pass and a model silently ignoring the
+    // strict schema are indistinguishable in the interface: in both cases every
+    // item keeps the source's own wording.
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><body></body></html>', { status: 200 })));
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
+
+    expect(result.sourceStatus['Títulos e resumos editoriais']).toMatchObject({ status: 'disabled', count: 0 });
   });
 
   it('serves the last snapshot when every live source fails', async () => {

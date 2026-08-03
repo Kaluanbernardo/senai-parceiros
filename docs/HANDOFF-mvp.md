@@ -18,11 +18,14 @@ O Vite local usa os mesmos handlers de api/ por meio de server/viteApiPlugin.js.
 - AUTH_USER_USERNAME e AUTH_USER_PASSWORD: credencial de usuário.
 - AI_PROVIDER: atualmente openrouter.
 - OPENROUTER_API_KEY: chave somente no servidor.
-- OPENROUTER_MODEL: openrouter/auto.
+- OPENROUTER_MODEL: openrouter/auto. Todo fluxo exige JSON Schema estrito, e um modelo que o ignora degrada em silêncio — o lote é descartado e o item mantém o texto da fonte. Meça um candidato antes de adotá-lo com `npm run ai:smoke -- --model=<id> --runs=5`.
 - OPENROUTER_COST_QUALITY_TRADEOFF: 7.
 - RADAR_LIVE_SOURCES: deixe false para a base curada de demonstração; use true no ambiente controlado para habilitar as buscas acadêmicas live no OpenAlex e Crossref.
 - OPENALEX_API_KEY: obrigatória para o Radar de pesquisadores; a chave gratuita deve existir somente no servidor.
 - OPENALEX_MAILTO: legado opcional; o OpenAlex substituiu o antigo "polite pool" por autenticação com API key.
+- RADAR_SUMMARY_PROVIDER: habilita os resumos acadêmicos por IA. Deixe vazio, false ou off para desligar.
+- RADAR_EDITORIAL_PROVIDER: habilita os títulos e resumos editoriais em português. Quando não definida, segue RADAR_SUMMARY_PROVIDER.
+- RADAR_EDITORIAL_MAX_ITEMS: teto de itens reescritos por coleta, padrão 48.
 
 Nunca use prefixo VITE_ nessas variáveis, não as inclua em exportações e não as envie no chat ou no repositório. Antes do handoff, remova e revogue chaves pessoais.
 
@@ -36,6 +39,7 @@ Nunca use prefixo VITE_ nessas variáveis, não as inclua em exportações e nã
 - exportação XLSX, PDF, Word e PowerPoint;
 - Gerador de Prompt provider-independent com esquema por categoria.
 - Radar EPT com abas de novas pesquisas, novidades governamentais e novidades internacionais, filtros, links originais, fontes permitidas e fallback curado.
+- Radar em português: títulos e resumos editoriais em linguagem simples para atos dos diários oficiais e tradução do conteúdo publicado em inglês, sempre com o título original preservado no cartão. Sem provedor de IA configurado, valem apenas as regras determinísticas (caixa legível do ato, glossário de tipos e temas), e o cartão avisa quando o texto exibido ainda é o da fonte.
 
 As respostas da seleção vivem somente na memória da página. O site não grava histórico. O painel administrativo ainda edita o catálogo apenas na sessão do navegador; a persistência compartilhada será conectada na etapa Azure.
 

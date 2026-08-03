@@ -3,6 +3,7 @@ import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json
 import { dedupeRadarItems, filterRadarItems, isEligibleRadarItem, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
 import { radarStore } from './radarStore.js';
+import { editorializeRadarItems } from './radar/editorialService.js';
 import { summarizeResearchItems } from './radar/researchSummaryService.js';
 import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract } from './radar/summaries.js';
 import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
@@ -180,7 +181,7 @@ function webItem(candidate, source, index) {
     sourceName: source.name,
     sourceUrl,
     contentType: 'notícia institucional',
-    topics: ['EPT', 'VET'],
+    topics: ['EPT'],
     geography: source.geography,
     official: source.official,
     provider: 'institutional-web',
@@ -264,7 +265,7 @@ function feedItem(block, feed, index) {
     sourceName: feed.name,
     sourceUrl,
     contentType: 'notícia institucional',
-    topics: ['EPT', 'VET'],
+    topics: ['EPT'],
     geography: feed.geography,
     official: feed.official,
     provider: 'rss',
@@ -318,7 +319,7 @@ function openAlexItem(work) {
     sourceName: 'OpenAlex',
     sourceUrl: work?.doi || work?.primary_location?.landing_page_url || work?.id,
     contentType: work?.type || 'trabalho acadêmico',
-    topics: ['EPT', 'VET', ...(work?.topics || []).slice(0, 2).map((topic) => topic.display_name)],
+    topics: ['EPT', ...(work?.topics || []).slice(0, 2).map((topic) => topic.display_name)],
     geography: work?.authorships?.[0]?.institutions?.[0]?.country_code || 'Internacional',
     official: false,
     provider: 'openalex',
@@ -435,7 +436,7 @@ export async function fetchCrossrefItems({ query = 'vocational education trainin
       sourceName: 'Crossref',
       sourceUrl: work.URL || `https://doi.org/${work.DOI}`,
       contentType: work.type || 'trabalho acadêmico',
-      topics: ['EPT', 'VET', 'pesquisa acadêmica'],
+      topics: ['EPT', 'pesquisa acadêmica'],
       geography: 'Internacional',
       official: false,
       provider: 'crossref',
@@ -505,7 +506,7 @@ export async function fetchOecdItems({ limit = 100, maxPages = 10, previousCover
       sourceName: 'OCDE',
       sourceUrl: work.URL || (work.DOI ? `https://doi.org/${work.DOI}` : undefined),
       contentType: work.type || 'publicação internacional',
-      topics: ['VET', 'competências', 'políticas públicas'],
+      topics: ['EPT', 'competências', 'políticas públicas'],
       geography: 'Internacional',
       official: true,
       provider: 'crossref-oecd',
@@ -662,6 +663,9 @@ function douItemFromDocument(document, candidate = {}) {
     externalId,
     section: 'government',
     title,
+    // The act's own title, without the evidence excerpt appended above, is what
+    // the card cites for traceability once an editorial headline replaces it.
+    originalTitle,
     summaryPt: summary,
     publishedAt: document?.publishedAt || candidate?.publishedAt,
     sourceName: 'Diário Oficial da União',
@@ -945,7 +949,26 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   }
   const summarizedResearch = summaryResult.status === 'fulfilled' ? summaryResult.value : mergedResearch;
   const nonResearch = items.filter((item) => item.section !== 'research');
-  const snapshotItems = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
+  // Editorial rewriting runs after the eligibility filter so that no rewrite is
+  // ever spent on an item the snapshot would discard anyway.
+  const collected = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
+  const [editorialResult] = live
+    ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [] })])
+    : [{ status: 'fulfilled', value: null }];
+  if (editorialResult.status === 'rejected') {
+    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', {
+      error: String(editorialResult.reason?.message || 'editorial_unavailable').slice(0, 160),
+    });
+  } else if (editorialResult.value) {
+    // Reported even when nothing was rewritten. A model that silently ignores
+    // the strict schema and a run with no candidate look identical in the
+    // interface; only these counts tell them apart.
+    const { stats } = editorialResult.value;
+    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
+      !stats.enabled ? 'disabled' : stats.failedBatches ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, model: stats.model || null, errors: stats.errors });
+  }
+  const snapshotItems = editorialResult.status === 'fulfilled' && editorialResult.value ? editorialResult.value.items : collected;
   const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);
   if (hydrateError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: hydrateError });
   if (persist && liveProvider) {
