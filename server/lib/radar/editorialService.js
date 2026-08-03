@@ -20,6 +20,7 @@ import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
 
 const EDITORIAL_BATCH_SIZE = 6;
 const DEFAULT_MAX_ITEMS_PER_RUN = 48;
+const DEFAULT_DEADLINE_MS = 25_000;
 const MAX_SOURCE_TEXT = 900;
 
 const EDITORIAL_SCHEMA = {
@@ -206,7 +207,7 @@ function providerEnabled() {
  * nothing to do" — the two have very different fixes.
  */
 function emptyStats() {
-  return { candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, errors: [] };
+  return { candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, errors: [] };
 }
 
 export async function editorializeRadarItems(items = [], { previousItems = [] } = {}) {
@@ -222,8 +223,18 @@ export async function editorializeRadarItems(items = [], { previousItems = [] } 
     .slice(0, maxItems);
   stats.candidates = candidates.length;
   const byId = new Map(result.map((item, index) => [itemId(item), index]));
+  // This pass runs after every collector and before the snapshot is written, so
+  // time spent here is time the write may not get. A serverless function killed
+  // mid-rewrite loses the whole run — every source collected, not just the
+  // rewrites — so the pass stops starting batches well before that, and the
+  // items it did not reach simply keep the source's wording until next time.
+  const deadlineAt = Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
 
   for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
+    if (Date.now() >= deadlineAt) {
+      stats.deadlineReached = true;
+      break;
+    }
     const batch = candidates.slice(index, index + EDITORIAL_BATCH_SIZE);
     stats.batches += 1;
     try {

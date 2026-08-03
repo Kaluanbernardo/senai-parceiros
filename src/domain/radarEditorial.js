@@ -189,23 +189,36 @@ function restoreAcronyms(token) {
   return known && foldedKey(token) ? token.toLocaleUpperCase('pt-BR') : token;
 }
 
+function shoutedToSentenceCase(value) {
+  const letters = value.match(/\p{L}/gu)?.length || 0;
+  const uppercase = value.match(/\p{Lu}/gu)?.length || 0;
+  if (letters < 8 || uppercase / letters < 0.6) return value;
+  const lowered = value.toLocaleLowerCase('pt-BR')
+    .replace(/\bn[º°o]\b\.?/g, 'nº');
+  const restored = lowered.replace(/\p{L}[\p{L}\p{N}/.-]*/gu, (token) => restoreAcronyms(token));
+  return restored.replace(/\p{L}/u, (first) => first.toLocaleUpperCase('pt-BR'));
+}
+
 /**
  * Gazette listings publish act titles in full upper case. Shouting is not
  * information, and it is the first thing that makes an official act look
- * unreadable next to a news headline, so a title that is mostly upper case is
- * rewritten to sentence case. A title that already mixes case is left exactly
- * as the source published it.
+ * unreadable next to a news headline, so a shouted title is rewritten to
+ * sentence case. Text the source already published in mixed case is left
+ * exactly as it is.
+ *
+ * Shouting is judged per segment, not over the whole string. The DOU composes a
+ * title as "<referência do ato> — <trecho que o qualificou>", and the excerpt is
+ * ordinary prose: measured over the whole title it diluted the reference below
+ * the threshold, so the act stayed shouted in exactly the common case this rule
+ * exists for.
  */
 export function readableTitleCase(value) {
   const source = safeText(value);
   if (!source) return source;
-  const letters = source.match(/\p{L}/gu)?.length || 0;
-  const uppercase = source.match(/\p{Lu}/gu)?.length || 0;
-  if (letters < 8 || uppercase / letters < 0.6) return source;
-  const lowered = source.toLocaleLowerCase('pt-BR')
-    .replace(/\bn[º°o]\b\.?/g, 'nº');
-  const restored = lowered.replace(/\p{L}[\p{L}\p{N}/.-]*/gu, (token) => restoreAcronyms(token));
-  return restored.charAt(0).toLocaleUpperCase('pt-BR') + restored.slice(1);
+  return source
+    .split(/(\s+[—–-]\s+)/)
+    .map((segment) => (/^\s+[—–-]\s+$/.test(segment) ? segment : shoutedToSentenceCase(segment)))
+    .join('');
 }
 
 const THEME_PREFIX = /^rela[çc][ãa]o com (?:a )?(?:educa[çc][ãa]o profissional|vet|ept)\s*:\s*/i;
