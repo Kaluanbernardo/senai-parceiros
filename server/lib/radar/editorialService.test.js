@@ -54,7 +54,7 @@ describe('reescrita editorial do Radar', () => {
   it('substitui o título legal do ato por uma manchete em linguagem simples', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const [item] = await editorializeRadarItems([gazetteItem('1234')]);
+    const { items: [item] } = await editorializeRadarItems([gazetteItem('1234')]);
 
     expect(item.displayTitle).toBe(EDITORIAL_TITLE);
     expect(item.displaySummary).toBe(EDITORIAL_SUMMARY);
@@ -85,7 +85,7 @@ describe('reescrita editorial do Radar', () => {
       topics: ['competências verdes', 'EPT'],
     })));
 
-    const [item] = await editorializeRadarItems([english]);
+    const { items: [item] } = await editorializeRadarItems([english]);
 
     expect(item.displayTitle).toBe('Previsão de competências para a transição verde na Europa');
     expect(item.topics).toEqual(['competências verdes', 'EPT']);
@@ -95,7 +95,7 @@ describe('reescrita editorial do Radar', () => {
   it('mantém os temas coletados quando o modelo devolve uma lista de tamanho diferente', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: ['EPT', 'tema inventado'] })));
 
-    const [item] = await editorializeRadarItems([gazetteItem('9')]);
+    const { items: [item] } = await editorializeRadarItems([gazetteItem('9')]);
 
     expect(item.topics).toEqual(['EPT']);
   });
@@ -103,7 +103,7 @@ describe('reescrita editorial do Radar', () => {
   it('descarta uma manchete que apenas repete a referência do ato', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: 'Portaria nº 1.234, de 15 de julho de 2026', summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const [item] = await editorializeRadarItems([gazetteItem('1234')]);
+    const { items: [item] } = await editorializeRadarItems([gazetteItem('1234')]);
 
     expect(item.editorialTitle).toBeNull();
     expect(item.displayTitle).toBe('Portaria nº 1234, de 15 de julho de 2026');
@@ -118,7 +118,7 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    const [item] = await editorializeRadarItems([gazetteItem('77')]);
+    const { items: [item] } = await editorializeRadarItems([gazetteItem('77')]);
 
     expect(item.editorialTitle).toBeNull();
     expect(item.editorialSummary).toBeNull();
@@ -129,7 +129,7 @@ describe('reescrita editorial do Radar', () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
     const items = Array.from({ length: 7 }, (_, index) => gazetteItem(`lote-${index + 1}`));
-    const result = await editorializeRadarItems(items);
+    const { items: result } = await editorializeRadarItems(items);
 
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(result.every((item) => item.editorialStatus === 'ai')).toBe(true);
@@ -147,7 +147,7 @@ describe('reescrita editorial do Radar', () => {
     };
     vi.stubGlobal('fetch', vi.fn());
 
-    const [item] = await editorializeRadarItems([current], { previousItems: [previous] });
+    const { items: [item] } = await editorializeRadarItems([current], { previousItems: [previous] });
 
     expect(fetch).not.toHaveBeenCalled();
     expect(item.displayTitle).toBe(EDITORIAL_TITLE);
@@ -167,7 +167,7 @@ describe('reescrita editorial do Radar', () => {
     };
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const [item] = await editorializeRadarItems([current], { previousItems: [previous] });
+    const { items: [item] } = await editorializeRadarItems([current], { previousItems: [previous] });
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(item.displayTitle).toBe(EDITORIAL_TITLE);
@@ -178,7 +178,7 @@ describe('reescrita editorial do Radar', () => {
     process.env.RADAR_SUMMARY_PROVIDER = 'false';
     vi.stubGlobal('fetch', vi.fn());
 
-    const [item] = await editorializeRadarItems([gazetteItem('off')]);
+    const { items: [item] } = await editorializeRadarItems([gazetteItem('off')]);
 
     expect(fetch).not.toHaveBeenCalled();
     // The deterministic layer still applies, so the card never shows the shout.
@@ -190,10 +190,36 @@ describe('reescrita editorial do Radar', () => {
     process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const result = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`teto-${index + 1}`)));
+    const { items: result } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`teto-${index + 1}`)));
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(result.filter((item) => item.editorialStatus === 'ai')).toHaveLength(6);
+  });
+
+  it('conta o que reescreveu e o que recusou, para distinguir modelo ruim de coleta vazia', async () => {
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      // Valid JSON that the Radar refuses: a headline still in English.
+      title: 'Federal institutes are allowed to open new technical courses',
+      summary: 'The act allows three federal institutes to open new technical courses in the next academic term.',
+      topics: item.temas,
+    })));
+
+    const { stats } = await editorializeRadarItems([gazetteItem('a'), gazetteItem('b')]);
+
+    expect(stats).toMatchObject({ enabled: true, candidates: 2, rewritten: 0, rejected: 2, failedBatches: 0 });
+    expect(stats.model).toBe('openrouter:test/model');
+  });
+
+  it('registra o lote perdido quando o modelo ignora o schema estrito', async () => {
+    // A model answering prose is what `invalid_output` means; the run must say
+    // so instead of looking like a collection with nothing to rewrite.
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ model: 'test/model', choices: [{ message: { content: 'Claro! Aqui vai o resumo…' } }] }) })));
+
+    const { stats } = await editorializeRadarItems([gazetteItem('z')]);
+
+    expect(stats).toMatchObject({ enabled: true, candidates: 1, rewritten: 0, failedBatches: 1 });
+    expect(stats.errors).toContain('invalid_output');
   });
 
   it('atende primeiro os diários oficiais e depois os itens em inglês', () => {

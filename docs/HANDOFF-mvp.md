@@ -18,7 +18,7 @@ O Vite local usa os mesmos handlers de api/ por meio de server/viteApiPlugin.js.
 - AUTH_USER_USERNAME e AUTH_USER_PASSWORD: credencial de usuário.
 - AI_PROVIDER: atualmente openrouter.
 - OPENROUTER_API_KEY: chave somente no servidor.
-- OPENROUTER_MODEL: openrouter/auto.
+- OPENROUTER_MODEL: openrouter/auto. Todo fluxo exige JSON Schema estrito, e um modelo que o ignora degrada em silêncio — o lote é descartado e o item mantém o texto da fonte. Meça um candidato antes de adotá-lo com `npm run ai:smoke -- --model=<id> --runs=5`.
 - OPENROUTER_COST_QUALITY_TRADEOFF: 7.
 - RADAR_LIVE_SOURCES: deixe false para a base curada de demonstração; use true no ambiente controlado para habilitar as buscas acadêmicas live no OpenAlex e Crossref.
 - OPENALEX_API_KEY: obrigatória para o Radar de pesquisadores; a chave gratuita deve existir somente no servidor.

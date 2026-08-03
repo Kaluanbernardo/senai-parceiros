@@ -647,6 +647,17 @@ describe('radar domain', () => {
     expect(summaryCalls).toHaveLength(0);
   });
 
+  it('relata a reescrita editorial mesmo quando ela está desligada', async () => {
+    // Without this entry a disabled pass and a model silently ignoring the
+    // strict schema are indistinguishable in the interface: in both cases every
+    // item keeps the source's own wording.
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><body></body></html>', { status: 200 })));
+
+    const result = await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
+
+    expect(result.sourceStatus['Títulos e resumos editoriais']).toMatchObject({ status: 'disabled', count: 0 });
+  });
+
   it('serves the last snapshot when every live source fails', async () => {
     vi.stubGlobal('fetch', vi.fn((url) => {
       if (String(url).includes('api.openalex.org')) return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));

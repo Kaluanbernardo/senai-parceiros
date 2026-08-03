@@ -954,13 +954,21 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const collected = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
   const [editorialResult] = live
     ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [] })])
-    : [{ status: 'fulfilled', value: collected }];
+    : [{ status: 'fulfilled', value: null }];
   if (editorialResult.status === 'rejected') {
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', {
       error: String(editorialResult.reason?.message || 'editorial_unavailable').slice(0, 160),
     });
+  } else if (editorialResult.value) {
+    // Reported even when nothing was rewritten. A model that silently ignores
+    // the strict schema and a run with no candidate look identical in the
+    // interface; only these counts tell them apart.
+    const { stats } = editorialResult.value;
+    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
+      !stats.enabled ? 'disabled' : stats.failedBatches ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, model: stats.model || null, errors: stats.errors });
   }
-  const snapshotItems = editorialResult.status === 'fulfilled' ? editorialResult.value : collected;
+  const snapshotItems = editorialResult.status === 'fulfilled' && editorialResult.value ? editorialResult.value.items : collected;
   const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);
   if (hydrateError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: hydrateError });
   if (persist && liveProvider) {

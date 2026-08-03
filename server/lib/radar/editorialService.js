@@ -198,19 +198,34 @@ function providerEnabled() {
   return Boolean(configured) && !['false', 'off', '0', 'none'].includes(configured);
 }
 
+/**
+ * A model that ignores the strict schema, or whose output fails validation,
+ * produces exactly the same visible result as a run with nothing to rewrite:
+ * every item keeps the source's wording. Counting both outcomes is what lets an
+ * operator tell "the model is not honouring the contract" from "there was
+ * nothing to do" — the two have very different fixes.
+ */
+function emptyStats() {
+  return { candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, errors: [] };
+}
+
 export async function editorializeRadarItems(items = [], { previousItems = [] } = {}) {
   const result = reuseStoredEditorials(Array.isArray(items) ? items : [], previousItems);
-  if (!providerEnabled()) return result;
+  const stats = emptyStats();
+  stats.reused = result.filter((item) => item.editorialStatus === 'ai').length;
+  if (!providerEnabled()) return { items: result, stats: { ...stats, enabled: false } };
   const maxItems = Math.max(0, Number(process.env.RADAR_EDITORIAL_MAX_ITEMS || DEFAULT_MAX_ITEMS_PER_RUN));
   const candidates = result
     .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
     .sort((left, right) => editorialPriority(left) - editorialPriority(right)
       || String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')))
     .slice(0, maxItems);
+  stats.candidates = candidates.length;
   const byId = new Map(result.map((item, index) => [itemId(item), index]));
 
   for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
     const batch = candidates.slice(index, index + EDITORIAL_BATCH_SIZE);
+    stats.batches += 1;
     try {
       const generated = await generateStructured({
         task: 'radar_editorial_items',
@@ -222,13 +237,20 @@ export async function editorializeRadarItems(items = [], { previousItems = [] } 
       for (const rewritten of applyGenerated(batch, generated)) {
         const position = byId.get(itemId(rewritten));
         if (position !== undefined) result[position] = rewritten;
+        if (rewritten.editorialStatus === 'ai') stats.rewritten += 1;
+        else stats.rejected += 1;
       }
-    } catch {
+      stats.model = `${generated.trace.provider}:${generated.trace.model}`;
+    } catch (error) {
       // The deterministic presentation layer already applies to every item, so
       // a failed batch costs readability, never an item.
+      stats.failedBatches += 1;
+      stats.rejected += batch.length;
+      const code = String(error?.message || 'provider_error').slice(0, 60);
+      if (!stats.errors.includes(code)) stats.errors.push(code);
     }
   }
-  return result;
+  return { items: result, stats: { ...stats, enabled: true } };
 }
 
 export { EDITORIAL_BATCH_SIZE };
