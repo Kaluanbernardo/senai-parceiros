@@ -47,6 +47,19 @@ const PORTUGUESE_MARKERS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'para',
  * the answer decides whether an item is sent for translation and whether a
  * generated text is accepted.
  */
+/**
+ * Whether a fragment carries Portuguese at all.
+ *
+ * Weaker than `isLikelyEnglish` and deliberately so: a translated academic title
+ * keeps the field's canonical English term — "Vocational Education and Training
+ * in Brazil: uma análise das políticas públicas" — and reads as English by
+ * majority, even though it plainly was translated. When the question is "did
+ * this come back in Portuguese", presence is the right test, not dominance.
+ */
+export function hasPortugueseMarkers(value) {
+  return foldedKey(value).split(' ').filter(Boolean).some((word) => PORTUGUESE_MARKERS.has(word));
+}
+
 export function isLikelyEnglish(value) {
   const words = foldedKey(value).split(' ').filter(Boolean);
   if (words.length < 2) return false;

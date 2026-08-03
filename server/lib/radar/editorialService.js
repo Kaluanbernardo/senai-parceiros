@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { normalizeRadarItem } from '../../../src/domain/radar.js';
-import { EDITORIAL_RULES_VERSION, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
+import { EDITORIAL_RULES_VERSION, hasPortugueseMarkers, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
 import { generateStructured } from '../structuredGeneration.js';
 import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
 
@@ -20,6 +20,15 @@ import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
 
 const EDITORIAL_BATCH_SIZE = 6;
 const DEFAULT_MAX_ITEMS_PER_RUN = 48;
+/**
+ * Bumped whenever the acceptance rules change. An item whose stored editorial is
+ * missing one of its two halves was refused by the rules of its day, and without
+ * this it would never be offered again: `editorialStatus` is already 'ai', so it
+ * had left the queue for good — half translated, permanently. Kept out of the
+ * input hash on purpose, so relaxing a rule retries only what was refused
+ * instead of re-running the hundreds of items that already came out whole.
+ */
+const EDITORIAL_VALIDATION_VERSION = 2;
 const DEFAULT_DEADLINE_MS = 25_000;
 const MAX_SOURCE_TEXT = 900;
 
@@ -61,20 +70,12 @@ export function editorialInputHash(item) {
 }
 
 /**
- * Serves the queue a section at a time instead of draining it in priority
- * order.
+ * Serves the queue a section at a time instead of draining it in priority order.
  *
- * Strict priority starved whole sections. Production accumulated hundreds of
- * state-gazette acts, all of them priority 0; they filled the per-run quota on
- * every single run, so the research tab — where every item is in English and the
- * need is most visible — was never reached at all. 481 rewrites had happened and
- * not one of them was a paper.
+ * Strict priority starved whole sections: production accumulated hundreds of
+ * state-gazette acts, they filled the quota on every single run, and the
+ * research tab was never reached at all.
  *
- * Priority still decides the order *within* a section, which is what it is good
- * for. Across sections the quota is shared round-robin, so every tab advances on
- * every run.
- */
-/**
  * Shares of the per-run quota. Research carries the heaviest backlog by far —
  * every OpenAlex and Crossref item is published in English, while government
  * sources are already in Portuguese and only need the act rewritten — so it
@@ -105,6 +106,14 @@ function interleaveBySection(items) {
   }
   return ordered;
 }
+
+function needsAnotherAttempt(item) {
+  if (item?.editorialStatus !== 'ai') return true;
+  if (safeEditorial(item.editorialTitle) && safeEditorial(item.editorialSummary)) return false;
+  return Number(item?.editorialProvenance?.validationVersion || 0) < EDITORIAL_VALIDATION_VERSION;
+}
+
+const safeEditorial = (value) => (typeof value === 'string' ? value.trim() : '');
 
 /**
  * An official act is the case this pass exists for, and the budget is finite,
@@ -168,11 +177,32 @@ function folded(value) {
  */
 const ACT_REFERENCE_OPENING = /^\S{2,24}\s+n[ºo°]?\s*[\d.]+/i;
 
+const HEADLINE_TITLE_MAX = 140;
+const TRANSLATED_TITLE_MAX = 300;
+
+/**
+ * A paper's title is translated, not rewritten into a headline, and academic
+ * titles routinely run past the length a headline should ever have. Judging both
+ * by the same cap silently discarded correct translations — which is how the
+ * summaries came back in Portuguese while the titles above them did not.
+ */
+export function editorialTitleLimit(item) {
+  return item?.section === 'research' ? TRANSLATED_TITLE_MAX : HEADLINE_TITLE_MAX;
+}
+
 export function validateEditorialTitle(value, item = {}) {
-  const title = cleanText(value, 200);
-  if (title.length < 12 || title.length > 140) return false;
-  if (ACT_REFERENCE_OPENING.test(title)) return false;
+  const limit = editorialTitleLimit(item);
+  const title = cleanText(value, limit + 40);
+  if (title.length < 12 || title.length > limit) return false;
   if (folded(title) === folded(item.title)) return false;
+  if (item?.section === 'research') {
+    // Translated titles keep the field's canonical English terms, so demanding
+    // that the whole string not read as English rejected the very translations
+    // this pass exists to produce. What must hold is that it is no longer the
+    // source's own title and that it came back carrying Portuguese.
+    return hasPortugueseMarkers(title);
+  }
+  if (ACT_REFERENCE_OPENING.test(title)) return false;
   return !isLikelyEnglish(title);
 }
 
@@ -189,7 +219,7 @@ function applyGenerated(items, generated) {
   return items.map((item) => {
     const entry = byId.get(itemId(item));
     if (!entry) return item;
-    const title = validateEditorialTitle(entry.title, item) ? cleanText(entry.title, 140) : null;
+    const title = validateEditorialTitle(entry.title, item) ? cleanText(entry.title, editorialTitleLimit(item)) : null;
     const summary = validateEditorialSummary(entry.summary, item) ? cleanText(entry.summary, 1000) : null;
     if (!title && !summary) return item;
     // Topics are replaced only when the model returned exactly the list it was
@@ -206,7 +236,7 @@ function applyGenerated(items, generated) {
       editorialStatus: 'ai',
       editorialInputHash: editorialInputHash(item),
       editorialUpdatedAt: new Date().toISOString(),
-      editorialProvenance: { provider: generated.trace.provider, model: generated.trace.model, rulesVersion: EDITORIAL_RULES_VERSION },
+      editorialProvenance: { provider: generated.trace.provider, model: generated.trace.model, rulesVersion: EDITORIAL_RULES_VERSION, validationVersion: EDITORIAL_VALIDATION_VERSION },
     });
   });
 }
@@ -274,7 +304,7 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // the visible top of the list stayed in the source's wording through run after
   // run. Kind now only breaks ties between items published the same day.
   const pending = interleaveBySection(result
-    .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
+    .filter((item) => needsAnotherAttempt(item) && needsEditorialTreatment(item) && (item.title || item.summaryPt))
     .sort((left, right) => String(right.publishedAt || '').localeCompare(String(left.publishedAt || ''))
       || editorialPriority(left) - editorialPriority(right)));
   const candidates = pending.slice(0, maxItems);

@@ -286,6 +286,86 @@ describe('reescrita editorial do Radar', () => {
     expect(items[0].displayTitle).toBe('Percursos de aprendizagem profissional na manufatura avançada');
   });
 
+  it('aceita a tradução longa de um título acadêmico', async () => {
+    // 140 characters is the ceiling for a headline about an act. Academic titles
+    // pass it routinely, and in Portuguese they get longer still — the shared cap
+    // discarded correct translations, which is why the summaries came back in
+    // Portuguese while the titles above them stayed in English.
+    const longTitle = 'Percursos de educação profissional na manufatura avançada: um estudo comparativo entre quatro países da União Europeia e suas políticas de qualificação';
+    expect(longTitle.length).toBeGreaterThan(140);
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: longTitle, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+
+    const { items: [item] } = await editorializeRadarItems([{
+      id: 'paper', externalId: 'paper', section: 'research', title: 'Vocational pathways in advanced manufacturing',
+      summaryPt: 'The study compares apprenticeship systems and the requirements of the jobs graduates hold.',
+      sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'], publishedAt: '2026-08-02',
+    }]);
+
+    expect(item.displayTitle).toBe(longTitle);
+  });
+
+  it('aceita a tradução que preserva o termo canônico da área em inglês', async () => {
+    // "Vocational Education and Training" is how the field names itself; a
+    // translation that keeps it reads as English by majority and was thrown away
+    // whole.
+    const mixed = 'Vocational Education and Training in Brazil: uma análise das políticas públicas';
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: mixed, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+
+    const { items: [item] } = await editorializeRadarItems([{
+      id: 'paper', externalId: 'paper', section: 'research', title: 'Vocational education and training in Brazil: a policy analysis',
+      summaryPt: 'The paper analyses vocational training policy in Brazil and the requirements of the jobs graduates hold.',
+      sourceName: 'Crossref', contentType: 'artigo científico', topics: ['EPT'], publishedAt: '2026-07-30',
+    }]);
+
+    expect(item.displayTitle).toBe(mixed);
+  });
+
+  it('ainda recusa o título de pesquisa que voltou sem nenhum português', () => {
+    expect(validateEditorialTitle('Analysis of skills mismatch in nonformal vocational training', { section: 'research', title: 'outro' })).toBe(false);
+  });
+
+  it('devolve à fila o artigo que ficou com resumo mas sem título', async () => {
+    // applyGenerated marks an item 'ai' when either half is accepted, so a paper
+    // whose title was refused had left the queue for good — half translated,
+    // permanently. Relaxing the rule has to be able to reach it.
+    const paper = {
+      id: 'meio', externalId: 'meio', section: 'research', title: 'Apprenticeship systems and the jobs graduates hold',
+      summaryPt: 'The paper compares apprenticeship systems across four countries and the requirements of those jobs.',
+      sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'], publishedAt: '2026-08-01',
+      editorialStatus: 'ai',
+      editorialTitle: null,
+      editorialSummary: 'O estudo compara sistemas de aprendizagem profissional em quatro países e o que a indústria exige de quem se forma.',
+      editorialProvenance: { provider: 'openrouter', model: 'antigo', validationVersion: 1 },
+    };
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: 'Sistemas de aprendizagem profissional e os empregos de quem se forma',
+      summary: EDITORIAL_SUMMARY,
+      topics: item.temas,
+    })));
+
+    const { items: [item], stats } = await editorializeRadarItems([paper], { previousItems: [] });
+
+    expect(stats).toMatchObject({ pending: 1, rewritten: 1 });
+    expect(item.displayTitle).toBe('Sistemas de aprendizagem profissional e os empregos de quem se forma');
+  });
+
+  it('não reprocessa o item cuja reescrita já saiu completa', async () => {
+    const done = {
+      ...gazetteItem('pronto'),
+      editorialStatus: 'ai',
+      editorialTitle: EDITORIAL_TITLE,
+      editorialSummary: EDITORIAL_SUMMARY,
+      editorialProvenance: { provider: 'openrouter', model: 'antigo', validationVersion: 1 },
+    };
+    vi.stubGlobal('fetch', vi.fn());
+
+    const { stats } = await editorializeRadarItems([done], { previousItems: [] });
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(stats).toMatchObject({ pending: 0, rewritten: 0 });
+  });
+
   it('não deixa os atos oficiais matarem de fome as outras seções', async () => {
     // Production accumulated hundreds of state-gazette acts. Under strict
     // priority they filled the quota on every run, so 481 rewrites happened
