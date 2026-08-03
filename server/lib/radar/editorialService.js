@@ -74,6 +74,14 @@ export function editorialInputHash(item) {
  * for. Across sections the quota is shared round-robin, so every tab advances on
  * every run.
  */
+/**
+ * Shares of the per-run quota. Research carries the heaviest backlog by far —
+ * every OpenAlex and Crossref item is published in English, while government
+ * sources are already in Portuguese and only need the act rewritten — so it
+ * takes half the quota instead of a third.
+ */
+const SECTION_SHARE = { research: 2, government: 1, international: 1 };
+
 function interleaveBySection(items) {
   const bySection = new Map();
   for (const item of items) {
@@ -81,10 +89,19 @@ function interleaveBySection(items) {
     if (!bySection.has(section)) bySection.set(section, []);
     bySection.get(section).push(item);
   }
-  const queues = [...bySection.values()];
+  const queues = [...bySection.entries()]
+    .map(([section, queue]) => ({ queue, share: SECTION_SHARE[section] || 1, cursor: 0 }))
+    .sort((left, right) => right.share - left.share);
   const ordered = [];
-  for (let position = 0; queues.some((queue) => position < queue.length); position += 1) {
-    for (const queue of queues) if (position < queue.length) ordered.push(queue[position]);
+  for (let advanced = true; advanced;) {
+    advanced = false;
+    for (const entry of queues) {
+      for (let taken = 0; taken < entry.share && entry.cursor < entry.queue.length; taken += 1) {
+        ordered.push(entry.queue[entry.cursor]);
+        entry.cursor += 1;
+        advanced = true;
+      }
+    }
   }
   return ordered;
 }

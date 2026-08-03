@@ -250,7 +250,14 @@ export function needsEditorialTreatment(item) {
   if (!item) return false;
   if (safeText(item.editorialTitle) && safeText(item.editorialSummary)) return false;
   if (isOfficialAct(item)) return true;
-  return isLikelyEnglish(item.title) || isLikelyEnglish(stripEvidencePrefix(item.summaryPt));
+  // The abstract counts as visible text. A paper whose source published no
+  // usable summary falls back to a Portuguese sentence saying so, and that
+  // sentence was the only thing inspected besides the title: an English paper
+  // whose title alone was too short for the detector never entered the queue at
+  // all, which is why Crossref and OpenAlex lagged behind every other source.
+  return isLikelyEnglish(item.title)
+    || isLikelyEnglish(stripEvidencePrefix(item.summaryPt))
+    || isLikelyEnglish(item.abstractText);
 }
 
 const OFFICIAL_ACT_SOURCES = new Set(['diario oficial da uniao', 'diario oficial do estado de sao paulo']);
