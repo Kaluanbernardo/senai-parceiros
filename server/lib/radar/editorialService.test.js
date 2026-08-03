@@ -250,6 +250,20 @@ describe('reescrita editorial do Radar', () => {
     delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
   });
 
+  it('respeita o prazo do chamador quando ele é mais curto que o próprio', async () => {
+    // Collection has already spent most of the platform's budget by the time
+    // this pass starts, so a budget measured from here would start from the
+    // wrong instant and overshoot the function limit.
+    process.env.RADAR_EDITORIAL_DEADLINE_MS = '30000';
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+
+    const { stats } = await editorializeRadarItems([gazetteItem('a'), gazetteItem('b')], { deadlineAt: Date.now() - 1 });
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(stats).toMatchObject({ deadlineReached: true, rewritten: 0, batches: 0 });
+    delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
+  });
+
   it('atende primeiro os diários oficiais e depois os itens em inglês', () => {
     expect(editorialPriority(gazetteItem('1'))).toBe(0);
     expect(editorialPriority({ sourceName: 'Cedefop', title: 'Skills forecast for the green transition' })).toBe(1);

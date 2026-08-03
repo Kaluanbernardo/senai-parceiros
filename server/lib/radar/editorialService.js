@@ -210,7 +210,7 @@ function emptyStats() {
   return { candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, errors: [] };
 }
 
-export async function editorializeRadarItems(items = [], { previousItems = [] } = {}) {
+export async function editorializeRadarItems(items = [], { previousItems = [], deadlineAt: runDeadlineAt = null } = {}) {
   const result = reuseStoredEditorials(Array.isArray(items) ? items : [], previousItems);
   const stats = emptyStats();
   stats.reused = result.filter((item) => item.editorialStatus === 'ai').length;
@@ -228,7 +228,12 @@ export async function editorializeRadarItems(items = [], { previousItems = [] } 
   // mid-rewrite loses the whole run — every source collected, not just the
   // rewrites — so the pass stops starting batches well before that, and the
   // items it did not reach simply keep the source's wording until next time.
-  const deadlineAt = Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
+  //
+  // The caller's deadline is what the platform actually enforces, and collection
+  // has already spent most of it by the time we get here; a budget of our own
+  // would be measured from the wrong instant. Whichever runs out first wins.
+  const ownDeadlineAt = Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
+  const deadlineAt = Math.min(ownDeadlineAt, Number(runDeadlineAt) || Infinity);
 
   for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
     if (Date.now() >= deadlineAt) {

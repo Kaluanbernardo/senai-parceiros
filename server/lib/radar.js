@@ -811,7 +811,22 @@ function storedItemStillQualifies(item) {
   return true;
 }
 
+/**
+ * Wall-clock budget for a whole collection run, kept below the platform's
+ * function limit so the snapshot write is always reached.
+ *
+ * Collection alone measured 51s in production against a 60s limit, which left
+ * the editorial pass no room at all: without a shared budget it would start a
+ * batch it could not finish and take the entire run down with it.
+ */
+const DEFAULT_RUN_BUDGET_MS = 55_000;
+
+function runBudgetMs() {
+  return Math.max(5_000, Number(process.env.RADAR_RUN_BUDGET_MS || DEFAULT_RUN_BUDGET_MS));
+}
+
 export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
+  const runStartedAt = Date.now();
   // A warm serverless reader can outlive the instance that writes a new Blob
   // snapshot. Always reload the durable snapshot so GETs do not serve the
   // document first hydrated by this process for the rest of its lifetime.
@@ -953,7 +968,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   // ever spent on an item the snapshot would discard anyway.
   const collected = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
   const [editorialResult] = live
-    ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [] })])
+    ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [], deadlineAt: runStartedAt + runBudgetMs() })])
     : [{ status: 'fulfilled', value: null }];
   if (editorialResult.status === 'rejected') {
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', {
@@ -1010,6 +1025,56 @@ export async function refreshRadarSnapshot({ filters = {} } = {}) {
     await safeStoreCall(() => radarStore.flush());
     return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: cause };
   }
+}
+
+/**
+ * Rewrites the stored snapshot without collecting anything.
+ *
+ * A full collection spends its entire budget on ten external sources before the
+ * editorial pass gets a turn, so on a platform whose function limit is close to
+ * the collection's own duration the rewrites never run — which is exactly what
+ * production showed. Reading the snapshot costs nothing, so this path turns the
+ * backlog into a job that can be run on demand, as often as needed, and whose
+ * only cost is the model.
+ */
+export async function refreshRadarEditorials() {
+  const startedAt = Date.now();
+  const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: true }));
+  const stored = radarStore.getSnapshot();
+  if (!stored?.items?.length) {
+    return { refreshed: false, error: hydrateError || 'empty_snapshot', stats: null, lastRun: radarStore.getLastRun(), store: radarStore.status() };
+  }
+  const { items, stats } = await editorializeRadarItems(stored.items.map(normalizeRadarItem), {
+    previousItems: stored.items,
+    deadlineAt: startedAt + runBudgetMs(),
+  });
+  const sourceStatus = {
+    ...(stored.sourceStatus || {}),
+    'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais',
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors }),
+  };
+  // `fetchedAt` dates the collection, not the rewrite. Advancing it here would
+  // tell every reader the sources were consulted again when they were not.
+  radarStore.writeSnapshot({ ...stored, items, sourceStatus });
+  const writeError = await safeStoreCall(() => radarStore.flush());
+  const lastRun = radarStore.recordRun({
+    status: writeError ? 'failed' : 'ok',
+    fetchedAt: stored.fetchedAt,
+    itemCount: items.length,
+    sourceStatus,
+    durationMs: Date.now() - startedAt,
+    error: writeError || undefined,
+  });
+  return {
+    refreshed: !writeError,
+    stats,
+    // What is left tells the operator whether to run this again.
+    remaining: Math.max(0, stats.candidates - stats.rewritten),
+    durationMs: Date.now() - startedAt,
+    lastRun,
+    store: radarStore.status(),
+  };
 }
 
 export function getRadarStoreStatus() {

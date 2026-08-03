@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ],
+  "functions": {
+    "api/radar/refresh.js": { "maxDuration": 60 }
+  },
   "crons": [
     { "path": "/api/radar/refresh", "schedule": "0 12 * * *" }
   ]

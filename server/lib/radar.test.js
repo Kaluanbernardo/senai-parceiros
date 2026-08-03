@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarEditorials, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 
 const baseItems = [
@@ -645,6 +645,60 @@ describe('radar domain', () => {
     const summaryCalls = fetchMock.mock.calls.filter(([url, request]) => String(url).includes('openrouter.ai')
       && JSON.parse(request.body).response_format?.json_schema?.name === 'radar_research_summaries');
     expect(summaryCalls).toHaveLength(0);
+  });
+
+  it('reescreve o snapshot guardado sem consultar nenhuma fonte', async () => {
+    // Collection spends the whole function budget before the editorial pass gets
+    // a turn, so on a platform whose limit is close to the collection's own
+    // duration the rewrites never run. This path exists to be run on its own.
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    process.env.OPENROUTER_MODEL = 'test/model';
+    process.env.RADAR_EDITORIAL_PROVIDER = 'openrouter';
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'ato', section: 'government', title: 'PORTARIA Nº 1, DE 2 DE JANEIRO DE 2026',
+        summaryPt: 'Relação com educação profissional: autoriza cursos técnicos.',
+        publishedAt: '2026-01-02', sourceName: 'Diário Oficial da União', contentType: 'ato oficial', externalId: 'dou:ato',
+      })],
+      fetchedAt: '2026-01-03T12:00:00.000Z',
+      sourceStatus: { DOU: { name: 'Diário Oficial da União', status: 'ok', count: 1 } },
+      liveProvider: true,
+    });
+    const fetchMock = vi.fn(async (_url, request) => {
+      const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+      return {
+        ok: true,
+        json: async () => ({
+          model: 'test/model',
+          usage: { total_tokens: 200 },
+          choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: 'Institutos federais podem abrir cursos técnicos em mecatrônica', summary: 'A portaria autoriza três institutos federais a oferecer cursos técnicos em mecatrônica já no próximo semestre letivo.', topics: item.temas })) }) } }],
+        }),
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await refreshRadarEditorials();
+
+    // Every request went to the model; no collector was touched.
+    expect(fetchMock.mock.calls.every(([url]) => String(url).includes('openrouter.ai'))).toBe(true);
+    expect(result).toMatchObject({ refreshed: true, remaining: 0 });
+    expect(result.stats).toMatchObject({ rewritten: 1, candidates: 1 });
+    // The collection date belongs to the collection; a rewrite must not claim it.
+    expect(radarStore.getSnapshot().fetchedAt).toBe('2026-01-03T12:00:00.000Z');
+    expect(radarStore.getSnapshot().items[0].displayTitle).toBe('Institutos federais podem abrir cursos técnicos em mecatrônica');
+    expect(radarStore.getSnapshot().sourceStatus.DOU).toMatchObject({ count: 1 });
+  });
+
+  it('não reescreve nada quando não há snapshot guardado', async () => {
+    radarStore.configure({ driver: 'memory' });
+    vi.stubGlobal('fetch', vi.fn());
+
+    const result = await refreshRadarEditorials();
+
+    expect(result).toMatchObject({ refreshed: false, error: 'empty_snapshot' });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('relata a reescrita editorial mesmo quando ela está desligada', async () => {

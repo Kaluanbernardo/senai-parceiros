@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -98,6 +99,7 @@ export default function RadarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [collecting, setCollecting] = useState(false);
+  const [rewriting, setRewriting] = useState(false);
   const [collectResult, setCollectResult] = useState(null);
   const [filters, setFilters] = useState({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
@@ -176,6 +178,48 @@ export default function RadarPage() {
     }
   };
 
+  /**
+   * Rewriting is separate from collecting on purpose: a collection spends the
+   * whole function budget on the external sources before the editorial pass
+   * gets a turn, so in production the rewrites never ran. This touches no
+   * source — it reworks the snapshot that is already stored.
+   */
+  const rewriteNow = async () => {
+    setRewriting(true);
+    setCollectResult(null);
+    try {
+      const response = await fetch('/api/radar/refresh?mode=editorial', { method: 'POST', credentials: 'include' });
+      const body = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        setCollectResult({ severity: 'error', message: 'Sua sessão expirou. Entre novamente como administrador.' });
+        return;
+      }
+      const editorial = body.lastRun?.sourceStatus?.['Títulos e resumos editoriais'];
+      if (!response.ok) {
+        setCollectResult({
+          severity: 'warning',
+          message: body.error === 'empty_snapshot'
+            ? 'Não há snapshot para reescrever. Faça uma coleta primeiro.'
+            : `A reescrita não pôde ser concluída${editorial?.errors?.length ? `: ${editorial.errors.join(', ')}` : ''}.`,
+          lastRun: body.lastRun,
+        });
+        return;
+      }
+      setCollectResult({
+        severity: body.stats?.rewritten > 0 ? 'success' : 'warning',
+        message: body.stats?.rewritten > 0
+          ? `${body.stats.rewritten} item(ns) reescrito(s) em ${Math.round((body.durationMs || 0) / 1000)}s.${body.remaining > 0 ? ` Restam ${body.remaining}; rode de novo para continuar.` : ''}`
+          : `Nenhum item foi reescrito${editorial?.errors?.length ? `: ${editorial.errors.join(', ')}` : '. Verifique se o provedor de IA está configurado.'}`,
+        lastRun: body.lastRun,
+      });
+    } catch {
+      setCollectResult({ severity: 'error', message: 'A reescrita não respondeu.' });
+    } finally {
+      setRewriting(false);
+      await loadItems();
+    }
+  };
+
   const collectDiagnostics = collectResult?.lastRun
     ? JSON.stringify(collectResult.lastRun, null, 2)
     : '';
@@ -208,7 +252,7 @@ export default function RadarPage() {
           {/* describeChild keeps the visible label as the accessible name; without
               it the tooltip text replaces the button name for screen readers. */}
           <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
-            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting}>Recarregar</Button>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
           </Tooltip>
           {isAdmin && (
             <Tooltip describeChild title="Consulta as fontes oficiais agora e grava um novo snapshot" arrow>
@@ -219,6 +263,18 @@ export default function RadarPage() {
                 disabled={collecting || loading}
               >
                 {collecting ? 'Coletando…' : 'Coletar agora'}
+              </Button>
+            </Tooltip>
+          )}
+          {isAdmin && (
+            <Tooltip describeChild title="Reescreve em português claro os itens do snapshot atual, sem consultar as fontes" arrow>
+              <Button
+                variant="outlined"
+                startIcon={rewriting ? <CircularProgress size={16} color="inherit" /> : <AutoFixHighIcon />}
+                onClick={rewriteNow}
+                disabled={collecting || loading || rewriting}
+              >
+                {rewriting ? 'Reescrevendo…' : 'Reescrever textos'}
               </Button>
             </Tooltip>
           )}
