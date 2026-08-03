@@ -234,6 +234,58 @@ describe('reescrita editorial do Radar', () => {
     delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
   });
 
+  it('dá a Novas Pesquisas metade da cota, que é onde a fila é maior', async () => {
+    // Every OpenAlex and Crossref item is published in English; government
+    // sources are already in Portuguese and only need the act rewritten.
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
+    vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
+    const paper = (id) => ({
+      id, externalId: id, section: 'research', title: 'Vocational pathways in advanced manufacturing',
+      summaryPt: 'The study compares apprenticeship systems and the requirements of the jobs graduates hold in industry.',
+      sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'], publishedAt: '2026-08-02',
+    });
+
+    const { items } = await editorializeRadarItems([
+      ...Array.from({ length: 6 }, (_, index) => gazetteItem(`ato-${index + 1}`, { publishedAt: '2026-08-02' })),
+      ...Array.from({ length: 6 }, (_, index) => paper(`paper-${index + 1}`)),
+    ]);
+
+    const rewritten = items.filter((item) => item.editorialStatus === 'ai');
+    expect(rewritten).toHaveLength(6);
+    // Two research items for every act, the 2:1 share the queue declares.
+    expect(rewritten.filter((item) => item.section === 'research')).toHaveLength(4);
+    expect(rewritten.filter((item) => item.section === 'government')).toHaveLength(2);
+  });
+
+  it('enfileira o artigo cujo abstract é inglês mesmo quando a fonte não deu resumo', async () => {
+    // The Portuguese "no summary available" fallback was the only thing checked
+    // besides the title, so a paper whose title alone was too short for the
+    // detector never entered the queue at all.
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: 'Percursos de aprendizagem profissional na manufatura avançada',
+      summary: 'O estudo compara sistemas de aprendizagem profissional em quatro países e mede a distância entre a formação e o que a indústria exige.',
+      topics: item.temas,
+    })));
+
+    const { items, stats } = await editorializeRadarItems([{
+      id: 'crossref-1',
+      externalId: 'crossref-1',
+      section: 'research',
+      title: 'Apprenticeship pathways',
+      summaryPt: 'A fonte não disponibilizou resumo deste trabalho.',
+      abstractText: 'This paper compares apprenticeship systems across four countries and the requirements of the jobs graduates hold.',
+      sourceName: 'Crossref',
+      contentType: 'artigo científico',
+      topics: ['EPT'],
+      publishedAt: '2026-07-30',
+    }]);
+
+    expect(stats).toMatchObject({ pending: 1, rewritten: 1 });
+    expect(items[0].displayTitle).toBe('Percursos de aprendizagem profissional na manufatura avançada');
+  });
+
   it('não deixa os atos oficiais matarem de fome as outras seções', async () => {
     // Production accumulated hundreds of state-gazette acts. Under strict
     // priority they filled the quota on every run, so 481 rewrites happened
