@@ -68,6 +68,22 @@ function describeFailures(lastRun) {
   return `: ${detail}`;
 }
 
+/**
+ * The wording the source itself published, shown only when the card leads with
+ * something else — an editorial headline or a translation.  Traceability is the
+ * point: a reader must always be able to match the card back to the act or the
+ * paper it came from.
+ */
+function originalTitleOf(item) {
+  const original = item.originalTitle || item.title;
+  return original && original !== item.displayTitle ? original : '';
+}
+
+function summaryLabel(item) {
+  if (item.section === 'research') return 'Em poucas palavras';
+  return item.editorialSummary ? 'O que isso significa' : 'Por que está no Radar';
+}
+
 function localDate(date) {
   if (!date) return 'Data não informada';
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`));
@@ -272,13 +288,17 @@ export default function RadarPage() {
                     </Box>
                     <Chip size="small" color={item.noveltyStatus === 'new' ? 'success' : 'info'} variant="outlined" label={item.noveltyLabel} />
                   </Stack>
-                  <Typography variant="h6" sx={{ mt: 1.25, lineHeight: 1.3, overflowWrap: 'anywhere' }}>{item.title}</Typography>
-                  {item.originalTitle && item.originalTitle !== item.title && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>Título original: {item.originalTitle}</Typography>}
+                  {/* The editorial headline is what the card leads with; the
+                      wording the source published stays one line below, so the
+                      rewrite never costs the reader the original reference. */}
+                  <Typography variant="h6" sx={{ mt: 1.25, lineHeight: 1.3, overflowWrap: 'anywhere' }}>{item.displayTitle}</Typography>
+                  {originalTitleOf(item) && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}>Título original: {originalTitleOf(item)}</Typography>}
                   <Divider sx={{ my: 1.5 }} />
-                  {item.summaryStatus !== 'unavailable' ? (
+                  {item.displaySummary ? (
                     <>
-                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>{item.section === 'research' ? 'Em poucas palavras' : 'Por que está no Radar'}</Typography>
-                      <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.summaryPt}</Typography>
+                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>{summaryLabel(item)}</Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.displaySummary}</Typography>
+                      {item.rawSourceText && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontStyle: 'italic' }}>Texto reproduzido da fonte; a versão editorial em português ainda não foi gerada para este item.</Typography>}
                     </>
                   ) : (
                     <Typography variant="caption" color="text.secondary">A fonte não disponibilizou um resumo deste item.</Typography>
@@ -296,7 +316,7 @@ export default function RadarPage() {
         </Grid>
       )}
       {!loading && !error && visibleItems.length === 0 && <Box sx={{ textAlign: 'center', py: 8 }}><Typography variant="h6" color="text.secondary">Nenhum item encontrado</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Tente remover um filtro ou ampliar o período.</Typography></Box>}
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: títulos e resumos são reescritos em português claro a partir do documento original, que continua identificado no cartão. Cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
     </Box>
   );
 }

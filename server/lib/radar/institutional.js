@@ -41,17 +41,19 @@ const SEMANTIC_PATTERNS = [
   ['certificação profissional', /\bcertificacao profissional\b/],
   ['reconhecimento de saberes', /\breconhecimento de saberes\b/],
   ['EPT', /(?:^|\W)ept(?:\W|$)/],
-  ['vocational education and training', /\bvocational (?:education|training|learning)\b/],
-  ['vocational skills', /\bvocational skills?\b/],
-  ['technical and vocational education', /\btechnical and vocational\b/],
-  ['TVET', /(?:^|\W)tvet(?:\W|$)/],
-  ['apprenticeship', /\bapprentice(?:ship|ships|s)?\b/],
-  ['work-based learning', /\bwork[- ]based learning\b/],
-  ['career and technical education', /\bcareer and technical education\b/],
-  ['workforce development', /\bworkforce development\b/],
-  ['vocational excellence', /\bvocational excellence\b/],
-  ['qualification frameworks', /\bqualifications? frameworks?\b/],
-  ['skills development', /\bskills? (?:development|system|systems|policy|policies|training)\b/],
+  // The label is what the interface shows as the item's theme, so it is written
+  // in Portuguese even when the pattern it detects is English.
+  ['educação profissional (VET)', /\bvocational (?:education|training|learning)\b/],
+  ['competências profissionais', /\bvocational skills?\b/],
+  ['educação técnica e profissional', /\btechnical and vocational\b/],
+  ['educação profissional (TVET)', /(?:^|\W)tvet(?:\W|$)/],
+  ['aprendizagem profissional', /\bapprentice(?:ship|ships|s)?\b/],
+  ['aprendizagem no trabalho', /\bwork[- ]based learning\b/],
+  ['educação técnica e de carreira', /\bcareer and technical education\b/],
+  ['desenvolvimento da força de trabalho', /\bworkforce development\b/],
+  ['excelência em educação profissional', /\bvocational excellence\b/],
+  ['marcos nacionais de qualificação', /\bqualifications? frameworks?\b/],
+  ['desenvolvimento de competências', /\bskills? (?:development|system|systems|policy|policies|training)\b/],
 ];
 
 export function semanticEvidence(title, summary = '', context = '') {
@@ -168,8 +170,7 @@ function institutionalThemeSummary(candidate, source) {
   const sentences = clean.match(/[^.!?;]+[.!?;]?/g)?.map((value) => value.trim()).filter(Boolean) || [];
   const evidenceSentence = sentences.find((sentence) => semanticEvidence('', sentence).eligible);
   const excerpt = evidenceSentence || (semanticEvidence(candidate.title).eligible ? `O título explicita o tema: “${candidate.title}”.` : clean);
-  const label = source.section === 'international' ? 'Relação com VET' : 'Relação com educação profissional';
-  return `${label}: ${excerpt}`.trim();
+  return `Relação com educação profissional: ${excerpt}`.trim();
 }
 
 function institutionalItem(candidate, source, fetchedAt) {

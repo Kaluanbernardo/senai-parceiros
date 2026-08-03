@@ -1,3 +1,5 @@
+import { displaySummaryFor, displayTitleFor, needsEditorialTreatment, translateContentType, translateTopics } from './radarEditorial.js';
+
 export const RADAR_SECTIONS = ['research', 'government', 'international'];
 export const RADAR_SECTION_LABELS = {
   research: 'Novas pesquisas',
@@ -44,8 +46,8 @@ export function normalizeRadarItem(item, index = 0) {
     publishedAt: validDate,
     sourceName,
     sourceUrl: safeText(item?.sourceUrl) || null,
-    contentType: safeText(item?.contentType, 'atualização'),
-    topics: Array.isArray(item?.topics) ? item.topics.filter(Boolean).map(String) : [],
+    contentType: translateContentType(safeText(item?.contentType, 'atualização')),
+    topics: translateTopics(Array.isArray(item?.topics) ? item.topics.filter(Boolean).map(String) : []),
     geography: safeText(item?.geography, 'Internacional'),
     official: Boolean(item?.official),
     provider: safeText(item?.provider, 'unknown'),
@@ -64,10 +66,22 @@ export function normalizeRadarItem(item, index = 0) {
     summaryProvenance: item?.summaryProvenance && typeof item.summaryProvenance === 'object' ? { ...item.summaryProvenance } : null,
     updatedAt: safeText(item?.updatedAt) || null,
     isPlaceholder: Boolean(item?.isPlaceholder),
+    editorialTitle: safeText(item?.editorialTitle) || null,
+    editorialSummary: safeText(item?.editorialSummary) || null,
+    editorialStatus: ['ai', 'source'].includes(item?.editorialStatus) ? item.editorialStatus : (safeText(item?.editorialTitle) ? 'ai' : 'source'),
+    editorialInputHash: safeText(item?.editorialInputHash) || null,
+    editorialUpdatedAt: safeText(item?.editorialUpdatedAt) || null,
+    editorialProvenance: item?.editorialProvenance && typeof item.editorialProvenance === 'object' ? { ...item.editorialProvenance } : null,
   };
   return {
     ...base,
     ...noveltyFor(validDate),
+    // What the interface shows is derived here so that every reader of an item
+    // — card, filter, search — agrees on it, and so that an item stored before
+    // the editorial pass existed still displays in readable Portuguese.
+    displayTitle: displayTitleFor(base),
+    displaySummary: displaySummaryFor(base),
+    rawSourceText: needsEditorialTreatment(base),
   };
 }
 
@@ -135,7 +149,10 @@ export function filterRadarItems(items, filters = {}) {
   const contentType = safeText(filters.contentType);
   const cutoff = fromDate(filters.period);
   const filtered = dedupeRadarItems(items).filter((item) => {
-    const haystack = [item.title, item.summaryPt, item.sourceName, item.geography, ...item.topics].join(' ').toLocaleLowerCase('pt-BR');
+    // Search has to cover both what the reader sees and what the source
+    // published: a query typed from the card must match, and a query with the
+    // act's own number must keep finding it.
+    const haystack = [item.displayTitle, item.displaySummary, item.title, item.originalTitle, item.summaryPt, item.sourceName, item.geography, ...item.topics].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR');
     return (!section || item.section === section)
       && (!query || haystack.includes(query))
       && (!source || item.sourceName === source)
@@ -147,5 +164,5 @@ export function filterRadarItems(items, filters = {}) {
         : filters.period === UNDATED_VISIBLE_PERIOD));
   });
   return filtered.sort((left, right) => dateValue(right.publishedAt) - dateValue(left.publishedAt)
-    || left.title.localeCompare(right.title, 'pt-BR'));
+    || left.displayTitle.localeCompare(right.displayTitle, 'pt-BR'));
 }

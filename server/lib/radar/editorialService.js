@@ -1,0 +1,234 @@
+import crypto from 'node:crypto';
+import { normalizeRadarItem } from '../../../src/domain/radar.js';
+import { EDITORIAL_RULES_VERSION, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
+import { generateStructured } from '../structuredGeneration.js';
+import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
+
+/**
+ * Editorial rewriting for Radar items.
+ *
+ * An official act arrives titled "PORTARIA Nº 1.234, DE 15 DE JULHO DE 2026"
+ * and summarised by the clause that matched our thematic filter. Both are
+ * faithful to the source and neither tells a reader what changed, for whom.
+ * This pass produces a plain-language headline and a two-to-three sentence
+ * explanation, and translates whatever the source published in English.
+ *
+ * It is an enrichment, like the research summaries: budgeted, cached across
+ * runs, and always degrading to the deterministic presentation layer in
+ * src/domain/radarEditorial.js rather than to the raw source text.
+ */
+
+const EDITORIAL_BATCH_SIZE = 6;
+const DEFAULT_MAX_ITEMS_PER_RUN = 48;
+const MAX_SOURCE_TEXT = 900;
+
+const EDITORIAL_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      minItems: 1,
+      maxItems: EDITORIAL_BATCH_SIZE,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'title', 'summary', 'topics'],
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string' },
+          summary: { type: 'string' },
+          topics: { type: 'array', items: { type: 'string' } },
+        },
+      },
+    },
+  },
+};
+
+const itemId = (item) => String(item?.externalId || item?.id || '');
+
+function sourceTextFor(item) {
+  const text = stripEvidencePrefix(item?.summaryPt) || String(item?.abstractText || '');
+  return text.replace(/\s+/g, ' ').trim().slice(0, MAX_SOURCE_TEXT);
+}
+
+export function editorialInputHash(item) {
+  return crypto.createHash('sha256')
+    .update([EDITORIAL_RULES_VERSION, itemId(item), String(item?.title || ''), sourceTextFor(item), (item?.topics || []).join('|')].join('\n'))
+    .digest('hex');
+}
+
+/**
+ * An official act is the case this pass exists for, and the budget is finite,
+ * so gazettes are rewritten before anything else and English-language items
+ * before Portuguese ones.
+ */
+export function editorialPriority(item) {
+  if (isOfficialAct(item)) return 0;
+  if (isLikelyEnglish(item?.title) || isLikelyEnglish(sourceTextFor(item))) return 1;
+  return 2;
+}
+
+function editorialMode(item) {
+  // A paper's title is its citation. Translating it keeps the item readable
+  // without inventing a headline the literature cannot be searched by.
+  return item?.section === 'research' ? 'traducao' : 'editorial';
+}
+
+function editorialMessages(items) {
+  return [
+    {
+      role: 'system',
+      content: [
+        'Você escreve o Radar EPT do SENAI-SP para gestores que não são especialistas em legislação nem em pesquisa acadêmica.',
+        'Responda sempre em português do Brasil, mesmo quando o texto recebido estiver em inglês.',
+        'Para modo "editorial": escreva um título de até 110 caracteres dizendo o que o documento faz e para quem, sem começar por número de ato, e um resumo de duas a três frases explicando em linguagem simples o que muda na prática.',
+        'Para modo "traducao": traduza o título fielmente, sem reescrevê-lo, e escreva um resumo de duas a três frases em linguagem simples sobre o que o trabalho investiga e o que encontrou.',
+        'Não use jargão jurídico ou acadêmico; se um termo técnico for indispensável, explique-o na mesma frase.',
+        'Use somente as informações recebidas. Nunca invente prazos, valores, números, vagas ou efeitos.',
+        'Se o texto recebido não permitir dizer o que muda, diga o que o documento é e sobre o que trata, sem especular.',
+        'Em "topics", devolva os temas recebidos traduzidos para o português, na mesma ordem e na mesma quantidade, sem acrescentar nem remover temas.',
+      ].join(' '),
+    },
+    {
+      role: 'user',
+      content: JSON.stringify(items.map((item) => ({
+        id: itemId(item),
+        modo: editorialMode(item),
+        tipo: item.contentType || 'publicação',
+        fonte: item.sourceName,
+        data: item.publishedAt || 'sem data informada',
+        titulo: item.title,
+        texto: sourceTextFor(item),
+        temas: item.topics || [],
+      }))),
+    },
+  ];
+}
+
+function cleanText(value, max) {
+  return String(value || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function folded(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/**
+ * A generated headline that opens with the act's own reference reproduces the
+ * problem this pass was added to solve, so it is rejected rather than stored.
+ */
+const ACT_REFERENCE_OPENING = /^\S{2,24}\s+n[ºo°]?\s*[\d.]+/i;
+
+export function validateEditorialTitle(value, item = {}) {
+  const title = cleanText(value, 200);
+  if (title.length < 12 || title.length > 140) return false;
+  if (ACT_REFERENCE_OPENING.test(title)) return false;
+  if (folded(title) === folded(item.title)) return false;
+  return !isLikelyEnglish(title);
+}
+
+export function validateEditorialSummary(value, item = {}) {
+  const summary = cleanText(value, 1200);
+  if (summary.length > 1000) return false;
+  if (summary.split(/\s+/).filter(Boolean).length < 12) return false;
+  if (folded(summary) === folded(item.title)) return false;
+  return !isLikelyEnglish(summary);
+}
+
+function applyGenerated(items, generated) {
+  const byId = new Map((generated.data?.items || []).map((entry) => [String(entry.id), entry]));
+  return items.map((item) => {
+    const entry = byId.get(itemId(item));
+    if (!entry) return item;
+    const title = validateEditorialTitle(entry.title, item) ? cleanText(entry.title, 140) : null;
+    const summary = validateEditorialSummary(entry.summary, item) ? cleanText(entry.summary, 1000) : null;
+    if (!title && !summary) return item;
+    // Topics are replaced only when the model returned exactly the list it was
+    // given, translated. A different length means it added or dropped a theme,
+    // and a theme is also a filter option.
+    const translatedTopics = Array.isArray(entry.topics) ? entry.topics.map((topic) => cleanText(topic, 80)).filter(Boolean) : [];
+    const topics = translatedTopics.length === (item.topics || []).length ? translatedTopics : item.topics;
+    return normalizeRadarItem({
+      ...item,
+      topics,
+      originalTitle: item.originalTitle || item.title,
+      editorialTitle: title,
+      editorialSummary: summary,
+      editorialStatus: 'ai',
+      editorialInputHash: editorialInputHash(item),
+      editorialUpdatedAt: new Date().toISOString(),
+      editorialProvenance: { provider: generated.trace.provider, model: generated.trace.model, rulesVersion: EDITORIAL_RULES_VERSION },
+    });
+  });
+}
+
+/**
+ * Rewriting is expensive and the source text of an item does not change between
+ * runs, so a stored editorial is reused whenever the input that produced it is
+ * still the input we would send today.
+ */
+function reuseStoredEditorials(items, previousItems) {
+  const stored = new Map((Array.isArray(previousItems) ? previousItems : [])
+    .filter((item) => item.editorialStatus === 'ai' && item.editorialInputHash)
+    .map((item) => [itemId(item), item]));
+  // Every item leaves this pass normalized, rewritten or not: the display
+  // fields the interface reads are derived there, and a caller must never have
+  // to know which items the model happened to reach.
+  return items.map((item) => {
+    const previous = stored.get(itemId(item));
+    if (!previous || previous.editorialInputHash !== editorialInputHash(item)) return normalizeRadarItem(item);
+    return normalizeRadarItem({
+      ...item,
+      topics: previous.topics?.length ? previous.topics : item.topics,
+      originalTitle: item.originalTitle || item.title,
+      editorialTitle: previous.editorialTitle,
+      editorialSummary: previous.editorialSummary,
+      editorialStatus: 'ai',
+      editorialInputHash: previous.editorialInputHash,
+      editorialUpdatedAt: previous.editorialUpdatedAt,
+      editorialProvenance: previous.editorialProvenance,
+    });
+  });
+}
+
+function providerEnabled() {
+  const configured = String(process.env.RADAR_EDITORIAL_PROVIDER ?? process.env.RADAR_SUMMARY_PROVIDER ?? '').trim().toLowerCase();
+  return Boolean(configured) && !['false', 'off', '0', 'none'].includes(configured);
+}
+
+export async function editorializeRadarItems(items = [], { previousItems = [] } = {}) {
+  const result = reuseStoredEditorials(Array.isArray(items) ? items : [], previousItems);
+  if (!providerEnabled()) return result;
+  const maxItems = Math.max(0, Number(process.env.RADAR_EDITORIAL_MAX_ITEMS || DEFAULT_MAX_ITEMS_PER_RUN));
+  const candidates = result
+    .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
+    .sort((left, right) => editorialPriority(left) - editorialPriority(right)
+      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')))
+    .slice(0, maxItems);
+  const byId = new Map(result.map((item, index) => [itemId(item), index]));
+
+  for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
+    const batch = candidates.slice(index, index + EDITORIAL_BATCH_SIZE);
+    try {
+      const generated = await generateStructured({
+        task: 'radar_editorial_items',
+        schema: EDITORIAL_SCHEMA,
+        messages: editorialMessages(batch),
+        maxOutputTokens: 1200,
+      });
+      await recordAiUsageAtomic('radar-editorial', generated.trace.usage);
+      for (const rewritten of applyGenerated(batch, generated)) {
+        const position = byId.get(itemId(rewritten));
+        if (position !== undefined) result[position] = rewritten;
+      }
+    } catch {
+      // The deterministic presentation layer already applies to every item, so
+      // a failed batch costs readability, never an item.
+    }
+  }
+  return result;
+}
+
+export { EDITORIAL_BATCH_SIZE };
