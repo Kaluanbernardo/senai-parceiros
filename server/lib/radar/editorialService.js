@@ -61,9 +61,38 @@ export function editorialInputHash(item) {
 }
 
 /**
+ * Serves the queue a section at a time instead of draining it in priority
+ * order.
+ *
+ * Strict priority starved whole sections. Production accumulated hundreds of
+ * state-gazette acts, all of them priority 0; they filled the per-run quota on
+ * every single run, so the research tab — where every item is in English and the
+ * need is most visible — was never reached at all. 481 rewrites had happened and
+ * not one of them was a paper.
+ *
+ * Priority still decides the order *within* a section, which is what it is good
+ * for. Across sections the quota is shared round-robin, so every tab advances on
+ * every run.
+ */
+function interleaveBySection(items) {
+  const bySection = new Map();
+  for (const item of items) {
+    const section = item.section || 'other';
+    if (!bySection.has(section)) bySection.set(section, []);
+    bySection.get(section).push(item);
+  }
+  const queues = [...bySection.values()];
+  const ordered = [];
+  for (let position = 0; queues.some((queue) => position < queue.length); position += 1) {
+    for (const queue of queues) if (position < queue.length) ordered.push(queue[position]);
+  }
+  return ordered;
+}
+
+/**
  * An official act is the case this pass exists for, and the budget is finite,
  * so gazettes are rewritten before anything else and English-language items
- * before Portuguese ones.
+ * before Portuguese ones — within their own section.
  */
 export function editorialPriority(item) {
   if (isOfficialAct(item)) return 0;
@@ -221,10 +250,10 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // the caller saw nothing left to do and stopped, leaving every item beyond the
   // cap with the source's own wording. Official acts sort first, so on a
   // snapshot with hundreds of them the research items were never reached.
-  const pending = result
+  const pending = interleaveBySection(result
     .filter((item) => item.editorialStatus !== 'ai' && needsEditorialTreatment(item) && (item.title || item.summaryPt))
     .sort((left, right) => editorialPriority(left) - editorialPriority(right)
-      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')));
+      || String(right.publishedAt || '').localeCompare(String(left.publishedAt || ''))));
   const candidates = pending.slice(0, maxItems);
   stats.pending = pending.length;
   stats.candidates = candidates.length;

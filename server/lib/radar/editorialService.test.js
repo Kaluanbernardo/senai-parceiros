@@ -200,10 +200,39 @@ describe('reescrita editorial do Radar', () => {
     expect(stats).toMatchObject({ pending: 12, candidates: 6, rewritten: 6 });
   });
 
-  it('reescreve o item de pesquisa em inglês assim que os atos deixam de ocupar a fila', async () => {
-    // Official acts sort first by design. On a snapshot carrying hundreds of
-    // them, a cap counted as the whole queue meant the research items were never
-    // reached — which is how an OpenAlex paper stayed in English indefinitely.
+  it('não deixa os atos oficiais matarem de fome as outras seções', async () => {
+    // Production accumulated hundreds of state-gazette acts. Under strict
+    // priority they filled the quota on every run, so 481 rewrites happened
+    // without a single paper being reached. Every section must advance.
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: item.modo === 'traducao' ? 'Título acadêmico traduzido para o português' : EDITORIAL_TITLE,
+      summary: EDITORIAL_SUMMARY,
+      topics: item.temas,
+    })));
+    const paper = (id) => ({
+      id, externalId: id, section: 'research', title: 'Vocational pathways in advanced manufacturing',
+      summaryPt: 'The study compares apprenticeship systems and the requirements of the jobs graduates hold in industry.',
+      sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'], publishedAt: '2026-08-02',
+    });
+
+    const { items, stats } = await editorializeRadarItems([
+      ...Array.from({ length: 20 }, (_, index) => gazetteItem(`ato-${index + 1}`)),
+      ...Array.from({ length: 3 }, (_, index) => paper(`paper-${index + 1}`)),
+    ]);
+
+    expect(stats).toMatchObject({ pending: 23, candidates: 6, rewritten: 6 });
+    // Half the quota went to the section that would otherwise never be served.
+    const papers = items.filter((item) => item.section === 'research' && item.editorialStatus === 'ai');
+    expect(papers).toHaveLength(3);
+    expect(papers[0].displayTitle).toBe('Título acadêmico traduzido para o português');
+  });
+
+  it('traduz o artigo em inglês na mesma execução em que atende os atos', async () => {
+    // The exact item reported from production: an OpenAlex paper whose title is
+    // not even English, but whose abstract is. It must be served alongside the
+    // acts, not after them.
     process.env.RADAR_EDITORIAL_MAX_ITEMS = '6';
     const paper = {
       id: 'openalex-1',
@@ -223,16 +252,10 @@ describe('reescrita editorial do Radar', () => {
       topics: ['EPT', 'educação profissional e empreendedora'],
     })));
 
-    const first = await editorializeRadarItems([...Array.from({ length: 6 }, (_, index) => gazetteItem(`ato-${index + 1}`)), paper]);
+    const { items, stats } = await editorializeRadarItems([...Array.from({ length: 6 }, (_, index) => gazetteItem(`ato-${index + 1}`)), paper]);
 
-    // The paper loses the first pass to the acts, and the caller is told so.
-    expect(first.stats).toMatchObject({ pending: 7, candidates: 6, rewritten: 6 });
-    expect(first.items.at(-1).rawSourceText).toBe(true);
-
-    const second = await editorializeRadarItems(first.items, { previousItems: first.items });
-
-    expect(second.stats).toMatchObject({ pending: 1, rewritten: 1 });
-    const rewritten = second.items.find((item) => item.externalId === 'openalex-1');
+    expect(stats).toMatchObject({ pending: 7, candidates: 6, rewritten: 6 });
+    const rewritten = items.find((item) => item.externalId === 'openalex-1');
     expect(rewritten.displayTitle).toBe('Análise de desalinhamento profissional na formação vocacional não formal');
     expect(rewritten.topics).toEqual(['EPT', 'educação profissional e empreendedora']);
     expect(rewritten.rawSourceText).toBe(false);
