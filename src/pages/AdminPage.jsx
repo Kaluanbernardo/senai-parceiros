@@ -144,7 +144,7 @@ export default function AdminPage() {
   const loadImportBatches = async () => {
     setBatchesBusy(true);
     try {
-      const response = await fetch('/api/admin/catalog/import-batches', { credentials: 'include' });
+      const response = await fetch('/api/admin/catalog-import-batches', { credentials: 'include' });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha ao carregar histórico.');
       setBatches(body.batches || []);
@@ -165,7 +165,7 @@ export default function AdminPage() {
     if (!rollbackBatch) return;
     setBatchesBusy(true);
     try {
-      const response = await fetch('/api/admin/catalog/import-rollback', {
+      const response = await fetch('/api/admin/catalog-import-rollback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -194,7 +194,7 @@ export default function AdminPage() {
       let binary = '';
       const bytes = new Uint8Array(buffer);
       for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]);
-      const response = await fetch('/api/admin/catalog/import-preview', {
+      const response = await fetch('/api/admin/catalog-import-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -215,7 +215,7 @@ export default function AdminPage() {
     if (!xlsxPreview) return;
     setXlsxBusy(true);
     try {
-      const response = await fetch('/api/admin/catalog/import-commit', {
+      const response = await fetch('/api/admin/catalog-import-commit', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions: xlsxDecisions }),
       });

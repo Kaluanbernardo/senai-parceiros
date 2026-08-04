@@ -143,7 +143,7 @@ export default function SelectionPage() {
     let nextState = InterviewPlanner.next(answeredState);
     let providerTrace = { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: 'request_failed' };
     try {
-      const response = await fetch('/api/selection/interview/next', {
+      const response = await fetch('/api/selection/interview-next', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

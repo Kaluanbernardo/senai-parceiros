@@ -14,19 +14,22 @@ import adminStatus from './routes/admin/status.js';
 import catalog from '../api/catalog.js';
 import { loadServerEnv } from './lib/envFile.js';
 
+// As chaves espelham exatamente o roteamento por arquivos da Vercel: um mapa
+// mais permissivo aqui faria o desenvolvimento passar com caminhos que só
+// existem em memória, e a rota quebraria apenas em produção.
 const handlers = {
   '/api/auth/login': login,
   '/api/auth/entra': entra,
   '/api/auth/session': session,
   '/api/auth/logout': logout,
   '/api/selection/evaluate': evaluate,
-  '/api/selection/interview/next': interviewNext,
+  '/api/selection/interview-next': interviewNext,
   '/api/radar/items': radarItems,
   '/api/radar/refresh': radarRefresh,
-  '/api/admin/catalog/import-preview': catalogImportPreview,
-  '/api/admin/catalog/import-commit': catalogImportCommit,
-  '/api/admin/catalog/import-rollback': catalogImportRollback,
-  '/api/admin/catalog/import-batches': catalogImportBatches,
+  '/api/admin/catalog-import-preview': catalogImportPreview,
+  '/api/admin/catalog-import-commit': catalogImportCommit,
+  '/api/admin/catalog-import-rollback': catalogImportRollback,
+  '/api/admin/catalog-import-batches': catalogImportBatches,
   '/api/admin/status': adminStatus,
   '/api/catalog': catalog,
 };
