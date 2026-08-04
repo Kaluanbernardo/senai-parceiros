@@ -199,6 +199,36 @@ export default function SelectionPage() {
     }
   }
 
+  /**
+   * Atalhos de teclado da entrevista.
+   *
+   * Enter avança (Shift+Enter continua quebrando linha). A seta esquerda volta
+   * quando o cursor já está no início do texto — posição em que ela não teria
+   * efeito nenhum de qualquer forma. A seta direita só avança com Alt: durante
+   * a digitação o cursor fica permanentemente no fim do texto, então bindá-la
+   * sozinha faria a pessoa pular uma pergunta sem querer.
+   */
+  function handleAnswerKeyDown(event) {
+    if (busy) return;
+    if (event.nativeEvent?.isComposing) return;
+    const field = event.target;
+    const caretAtStart = field.selectionStart === 0 && field.selectionEnd === 0;
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      nextQuestion();
+      return;
+    }
+    if (event.key === 'ArrowRight' && event.altKey) {
+      event.preventDefault();
+      nextQuestion();
+      return;
+    }
+    if (event.key === 'ArrowLeft' && (event.altKey || caretAtStart)) {
+      event.preventDefault();
+      previousQuestion();
+    }
+  }
+
   function reviewAnswers() {
     setPhase('interview');
     setReviewing(true);
@@ -326,14 +356,23 @@ export default function SelectionPage() {
         <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'rgba(0,51,102,.05)', display: 'flex', gap: 1 }}>
           <LightbulbOutlinedIcon color="primary" /><Typography variant="body2">{question.example}</Typography>
         </Box>
-        <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
+        <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} onKeyDown={handleAnswerKeyDown} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>{question.answerHint}</Typography>
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
-        <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-          <Button startIcon={<ArrowBackIcon />} onClick={previousQuestion}>Voltar</Button>
-          <Button variant="contained" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
-        </Stack>
       </Paper>
+      <Box sx={{ minHeight: 24 }} />
+      {/* Barra fixa: as ações não mudam de lugar quando a pergunta, o exemplo
+          ou a conversa acima crescem. A largura mínima dos botões impede que
+          a troca de rótulo ("Calculando…") desloque a posição deles. */}
+      <Box sx={{ position: 'sticky', bottom: 0, zIndex: 3, mt: 3, pt: 1.75, mx: { xs: -2, md: -4 }, px: { xs: 2, md: 4 }, pb: 1.75, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
+          <Button startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: 132, justifyContent: 'flex-start' }}>Voltar</Button>
+          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'center' }}>
+            Enter avança · Shift+Enter quebra linha · ← volta · Alt+→ avança
+          </Typography>
+          <Button variant="contained" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy} sx={{ minWidth: 232, justifyContent: 'center' }}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
+        </Stack>
+      </Box>
     </Box>
   );
 }
