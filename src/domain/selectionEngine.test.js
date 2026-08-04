@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import stakeholders from '../data/stakeholders.json';
-import { buildLocalEvaluation, mergeAiEvaluation, rankProviderCandidates, selectShortlist } from './selectionEngine';
+import { buildLocalEvaluation, computeEligibilityThreshold, mergeAiEvaluation, rankProviderCandidates, selectShortlist } from './selectionEngine';
 
 const candidates = [
   {
@@ -196,6 +196,86 @@ describe('selection engine', () => {
     expect(evaluated.severeRisk).toMatchObject({ confirmed: true });
     expect(evaluated.strategicValue).toBe(0);
     expect(merged.shortlist.some((entry) => entry.candidate.id === 101)).toBe(false);
+  });
+
+  it('records the derived weights, the rubric and the interpreted context in the trace', () => {
+    const result = buildLocalEvaluation({
+      ...input,
+      brief: { context: input.answers.context, themes: ['inteligência artificial'], evidencePreferences: ['publicações'], feasibility: { geography: 'Brasil', timeframe: 'urgente' }, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] },
+      candidates,
+    });
+    const { criteria, contextProfile, shortlistPolicy } = result.trace;
+
+    expect(Number(Object.values(criteria.weights).reduce((total, value) => total + value, 0).toFixed(2))).toBe(1);
+    expect(criteria.adjustments.map((item) => item.id)).toEqual(expect.arrayContaining(['deadline_pressure', 'evidence_demand']));
+    expect(criteria.subcriteria.find((item) => item.dimension === 'alignment').subcriteria.length).toBeGreaterThanOrEqual(3);
+    expect(contextProfile.priorities.length).toBeGreaterThan(0);
+    expect(contextProfile.prioritiesFromUser).toBe(true);
+    expect(shortlistPolicy.threshold).toBeGreaterThanOrEqual(shortlistPolicy.absoluteFloor);
+  });
+
+  it('opens every dimension into weighted subcriteria that carry their own evidence', () => {
+    const result = buildLocalEvaluation({ ...input, candidates });
+    const { criteria } = result.shortlist[0];
+
+    for (const dimension of ['impact', 'alignment', 'credibility', 'collaboration', 'feasibility', 'risk']) {
+      const detail = criteria[dimension];
+      expect(detail.subscores.length).toBeGreaterThanOrEqual(3);
+      expect(Number(detail.subscores.reduce((total, item) => total + item.weight, 0).toFixed(2))).toBe(1);
+      expect(detail.subscores.every((item) => item.evidence.length > 0)).toBe(true);
+      const recomposed = Math.round(detail.subscores.reduce((total, item) => total + item.score * item.weight, 0));
+      expect(Math.abs(recomposed - detail.score)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('ranks the same catalog differently when the objective changes the weights', () => {
+    const pool = [
+      { id: 'partner', nome: 'Rede com parceria', instituicao: 'Rede A', pais: 'Brasil', areas: 'manufatura avançada', descricao: 'Projeto conjunto de manufatura avançada com o SENAI.', relacao: '✅ Parceria entre SENAI e a rede formalizada em 2019.', website: 'https://a.example' },
+      { id: 'scholar', nome: 'Pesquisadora sem parceria', instituicao: 'Universidade B', pais: 'Brasil', areas: 'manufatura avançada', pesquisa: 'Publicações e artigos sobre manufatura avançada.', citacoes: '9000', scholar: 'https://scholar.example' },
+    ];
+    const answers = { context: 'manufatura avançada', themes: 'manufatura avançada' };
+    const brief = { context: 'manufatura avançada', themes: ['manufatura avançada'], collaborationModel: 'projeto conjunto', evidencePreferences: [], feasibility: {}, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] };
+
+    const partnership = buildLocalEvaluation({ category: 'organization', objective: 'project_partner', answers, brief, candidates: pool });
+    const research = buildLocalEvaluation({ category: 'researcher', objective: 'research_support', answers, brief: { ...brief, collaborationModel: '', evidencePreferences: ['publicações'] }, candidates: pool });
+
+    expect(partnership.shortlist[0].candidate.id).toBe('partner');
+    expect(research.shortlist[0].candidate.id).toBe('scholar');
+  });
+
+  it('discounts terms that every catalog record repeats', () => {
+    const generic = Array.from({ length: 8 }, (_, index) => ({
+      id: `generic-${index}`,
+      nome: `Instituição ${index}`,
+      instituicao: `Instituição ${index}`,
+      pais: 'Brasil',
+      descricao: 'Atuação em educação profissional para a indústria paulista.',
+    }));
+    const specific = { id: 'specific', nome: 'Centro de Economia Circular', instituicao: 'Centro Circular', pais: 'Brasil', descricao: 'Atuação em educação profissional para a indústria paulista com foco em economia circular e descarbonização.' };
+    const answers = { context: 'educação profissional para a indústria paulista com economia circular', themes: 'economia circular' };
+
+    const result = buildLocalEvaluation({
+      category: 'organization',
+      objective: 'guided',
+      answers,
+      brief: { context: answers.context, themes: ['economia circular'], evidencePreferences: [], feasibility: {}, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] },
+      candidates: [...generic, specific],
+    });
+    const byId = new Map(result.candidatePool.map((entry) => [entry.candidate.id, entry]));
+
+    // Todos repetem "educação profissional" e "indústria paulista"; só um traz
+    // o termo que realmente distingue o pedido.
+    expect(byId.get('specific').dimensions.alignment).toBeGreaterThan(byId.get('generic-0').dimensions.alignment + 10);
+    expect(result.shortlist[0].candidate.id).toBe('specific');
+  });
+
+  it('raises the eligibility cut when one candidate stands far above the catalog', () => {
+    const entries = [
+      { candidate: { id: 1, instituicao: 'A' }, total: 90, strategicValue: 90 },
+      { candidate: { id: 2, instituicao: 'B' }, total: 30, strategicValue: 30 },
+    ];
+    expect(computeEligibilityThreshold(entries)).toBe(50);
+    expect(computeEligibilityThreshold([{ candidate: { id: 3 }, total: 20, strategicValue: 20 }])).toBe(28);
   });
 
   it('calibrates an advanced-manufacturing partnership case with real catalog records', () => {

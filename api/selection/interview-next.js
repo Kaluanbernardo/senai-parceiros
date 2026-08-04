@@ -65,16 +65,12 @@ function asQuestion(value, state) {
   if (!question || typeof question !== 'object') return null;
   const targetField = String(value.targetField || question.targetField || question.id || '').trim();
   if (!targetField || !eligibleTargetFields(state).includes(targetField) || !question.prompt || !question.reasonTag) return null;
-  const existingDefinition = Object.values(state.questionDefinitions || {}).find((item) => targetFieldFor(item) === targetField);
   const answerEntry = Object.entries(state.answers || {}).find(([id]) => id === targetField || targetFieldFor(state.questionDefinitions?.[id]) === targetField);
   const answerText = String(answerEntry?.[1] || '').trim();
   const alreadyAnswered = Boolean(answerText) && !/^(?:n[aã]o sei|ainda n[aã]o sei|desconhe[cç]o|\?|-)$/i.test(answerText);
-  // Legacy direct-field check retained below for old serialized states.
-  /* // const alreadyAnswered = Object.prototype.hasOwnProperty.call(state.answers || {}, targetField)
-    // && String(state.answers?.[targetField] || '').trim()
-    && !/^(?:n[aã]o sei|ainda n[aã]o sei|desconhe[cç]o|\?|-)$/i.test(String(state.answers[targetField]).trim());
-  */
-  if (existingDefinition && alreadyAnswered) return null;
+  // Um campo já coberto — perguntado antes ou entregue de passagem numa
+  // resposta anterior — nunca volta como próxima pergunta, mesmo reescrito.
+  if (alreadyAnswered || state.derived?.[targetField]) return null;
   const id = `adaptive_${(state.askedIds || []).length + 1}_${targetField}`;
   if ((state.askedIds || []).includes(id)) return null;
   if (question.prompt.length > 600 || String(question.helper || '').length > 500 || String(question.example || '').length > 500) return null;
@@ -141,6 +137,7 @@ export default async function handler(req, res) {
     const local = localFallback(answeredState, 'provider_unavailable');
     if (local.state.status === 'ready') return res.status(200).json(local);
     if (!canUseAi('interview')) return res.status(200).json(localFallback(answeredState, 'ai_budget_exceeded'));
+    const localCoverage = InterviewPlanner.coverage(answeredState);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 18000);
@@ -156,24 +153,34 @@ export default async function handler(req, res) {
         lastAnswer: answer || 'não informado',
         coverage: coverageFor(answeredState),
         remainingGaps: answeredState.validation?.missing || [],
-        coveredFields: answeredState.coveredFields || [],
-        remainingRequiredFields: answeredState.validation?.missing || [],
+        coveredFields: localCoverage.covered,
+        remainingRequiredFields: localCoverage.missing,
+        // Só o que o campo já cobre, não o texto inteiro: a resposta original
+        // já vai no transcript e repeti-la só encareceria o prompt.
+        derivedFields: Object.fromEntries(Object.entries(answeredState.derived || {}).map(([field, detail]) => [field, (detail.evidence || []).slice(0, 3)])),
         semanticFacts: answeredState.semanticFacts || [],
+        minQuestions: MIN_QUESTIONS,
+        maxQuestions: MAX_QUESTIONS,
       }, { signal: controller.signal });
       const budget = await recordAiUsageAtomic('interview', ai.trace?.usage);
-      const askedCount = answeredState.askedIds.length;
-      if (ai.shouldStop && askedCount >= MIN_QUESTIONS && !(answeredState.validation?.missing || []).length) {
-        const ready = { ...answeredState, currentQuestion: null, status: 'ready', validation: { ...answeredState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };
-        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, stopReason: ai.stopReason, budget } });
+      // O que a IA extraiu da resposta entra no estado antes de qualquer
+      // decisão: um campo já satisfeito não deve virar a próxima pergunta,
+      // e pode ser o que encerra a entrevista.
+      const enrichedState = InterviewPlanner.withProviderCoverage(answeredState, ai.fieldsSatisfied);
+      const coverage = InterviewPlanner.coverage(enrichedState);
+      const askedCount = enrichedState.askedIds.length;
+      if ((ai.shouldStop || !coverage.missing.length) && coverage.canStop) {
+        const ready = { ...enrichedState, currentQuestion: null, status: 'ready', validation: { ...enrichedState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };
+        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, stopReason: ai.stopReason || 'coverage_complete', coverage, budget } });
       }
-      const question = asQuestion(ai, answeredState);
-      if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(local);
+      const question = asQuestion(ai, enrichedState);
+      if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(localFallback(enrichedState, question ? 'question_budget_reached' : 'provider_question_rejected'));
       const next = withAdaptiveQuestion({
-        ...answeredState,
-        semanticFacts: [...new Set([...(answeredState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
+        ...enrichedState,
+        semanticFacts: [...new Set([...(enrichedState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
         remainingGaps: ai.remainingGaps || [],
       }, question);
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, budget } });
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return res.status(200).json(localFallback(answeredState, reason));

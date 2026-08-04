@@ -17,7 +17,7 @@ export const INTERVIEW_TARGET_FIELDS = Object.freeze([
 export const nextQuestionSchema = Object.freeze({
   type: 'object',
   additionalProperties: false,
-  required: ['shouldStop', 'stopReason', 'targetField', 'prompt', 'helper', 'example', 'answerKind', 'reasonTag', 'dimensionsCovered', 'factsExtracted', 'remainingGaps', 'adaptationExplanation'],
+  required: ['shouldStop', 'stopReason', 'targetField', 'prompt', 'helper', 'example', 'answerKind', 'reasonTag', 'dimensionsCovered', 'factsExtracted', 'fieldsSatisfied', 'remainingGaps', 'adaptationExplanation'],
   properties: {
     shouldStop: { type: 'boolean' },
     stopReason: { type: 'string' },
@@ -29,6 +29,22 @@ export const nextQuestionSchema = Object.freeze({
     reasonTag: { type: 'string' },
     dimensionsCovered: { type: 'array', items: { type: 'string', enum: INTERVIEW_DIMENSIONS } },
     factsExtracted: { type: 'array', items: { type: 'string' } },
+    // Campos que a última resposta já entregou sem terem sido perguntados.
+    // É o que permite encerrar a entrevista assim que o mínimo necessário
+    // estiver coberto, em vez de percorrer um roteiro fixo.
+    fieldsSatisfied: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['field', 'value', 'confidence'],
+        properties: {
+          field: { type: 'string', enum: INTERVIEW_TARGET_FIELDS },
+          value: { type: 'string' },
+          confidence: { type: 'number' },
+        },
+      },
+    },
     remainingGaps: { type: 'array', items: { type: 'string' } },
     adaptationExplanation: { type: 'string' },
   },
@@ -56,6 +72,13 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
   const dimensionsCovered = Array.isArray(value.dimensionsCovered)
     ? value.dimensionsCovered.filter((item) => INTERVIEW_DIMENSIONS.includes(item)) : [];
   const factsExtracted = Array.isArray(value.factsExtracted) ? value.factsExtracted.map((item) => text(item, 180)).filter(Boolean) : [];
+  const fieldsSatisfied = Array.isArray(value.fieldsSatisfied)
+    ? value.fieldsSatisfied
+      .map((item) => ({ field: text(item?.field, 80), value: text(item?.value, 500), confidence: Number(item?.confidence) }))
+      .filter((item) => INTERVIEW_TARGET_FIELDS.includes(item.field) && item.value && Number.isFinite(item.confidence))
+      .map((item) => ({ ...item, confidence: Math.max(0, Math.min(1, item.confidence)) }))
+      .slice(0, INTERVIEW_TARGET_FIELDS.length)
+    : [];
   const remainingGaps = Array.isArray(value.remainingGaps) ? value.remainingGaps.map((item) => text(item, 180)).filter(Boolean) : [];
   const answerKind = ['text', 'textarea', 'multiline'].includes(nested.answerKind) ? nested.answerKind : 'textarea';
   const normalized = {
@@ -75,6 +98,7 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
     },
     dimensionsCovered,
     factsExtracted,
+    fieldsSatisfied,
     remainingGaps,
     adaptationExplanation: text(value.adaptationExplanation, 300),
   };
@@ -120,14 +144,22 @@ function interviewPrompt(state) {
       targetField: text(state.currentQuestion.targetField || state.currentQuestion.id, 80),
     } : null,
     lastAnswer: text(state.lastAnswer, 4000),
-    limits: { minQuestions: 8, maxQuestions: 20, aggregateCharacters: 24000 },
+    derivedFields: state.derivedFields && typeof state.derivedFields === 'object' ? state.derivedFields : {},
+    limits: {
+      minQuestions: Number(state.minQuestions) || 4,
+      maxQuestions: Number(state.maxQuestions) || 12,
+      aggregateCharacters: 24000,
+    },
   };
   return [
-    'Você é o entrevistador adaptativo da ferramenta de stakeholders do SENAI-SP.',
-    'Gere uma única próxima pergunta realmente dependente do transcript completo e da última resposta. A pergunta deve diferenciar stakeholders do catálogo.',
-    'Escolha somente um targetField do enum. Não invente fatos, não recomende stakeholders, não repita um campo já coberto e não revele raciocínio interno.',
-    'Use linguagem simples para uma pessoa leiga. Adapte o exemplo ao contexto informado (benchmarking não é evento; escola não é pesquisador). Responda somente no JSON schema.',
-    'Não encerre antes de 8 perguntas ou com campo obrigatório ausente; nunca ultrapasse 20.',
+    'Você conduz uma entrevista conversacional para a ferramenta de stakeholders do SENAI-SP. Fale como alguém que está realmente escutando, não como um formulário.',
+    'Escreva UMA próxima pergunta que só faça sentido depois de ler a última resposta: retome a situação, o vocabulário e os detalhes que a pessoa deu. Nunca reutilize uma frase genérica.',
+    'Antes de perguntar, extraia: liste em fieldsSatisfied todo campo que a última resposta já respondeu, mesmo sem ter sido perguntado, com o valor em texto e a confiança de 0 a 1. Um campo em fieldsSatisfied ou em coveredFields NÃO pode ser perguntado de novo, nem com outras palavras.',
+    'Objetivo da entrevista: obter o mínimo necessário para diferenciar stakeholders do catálogo — contexto, resultado esperado, temas, público, geografia e restrições. Assim que isso estiver coberto, responda shouldStop=true. Perguntar além disso é desperdiçar o tempo da pessoa.',
+    'Se a resposta anterior foi vaga ou "não sei", faça uma pergunta de descoberta concreta e fácil, com um exemplo do próprio contexto dela — não repita a mesma pergunta em outras palavras.',
+    'Escolha somente um targetField do enum. Não invente fatos, não recomende stakeholders e não revele raciocínio interno.',
+    'Use linguagem simples, de uma frase. Adapte o exemplo ao contexto informado (benchmarking não é evento; escola não é pesquisador). Responda somente no JSON schema.',
+    `Não encerre antes de ${payload.limits.minQuestions} perguntas ou com campo obrigatório ausente em remainingRequiredFields; nunca ultrapasse ${payload.limits.maxQuestions}.`,
     JSON.stringify(payload),
   ].join('\n');
 }

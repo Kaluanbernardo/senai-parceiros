@@ -92,12 +92,18 @@ async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, 
   if (!apiKey) throw new Error(`${provider}_not_configured`);
   const tradeoff = Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF));
   const { candidates: _catalog, ...inputContext } = input || {};
+  const criteria = inputContext.criteria || null;
   const prompt = [
     'Você é um avaliador de stakeholders do SENAI-SP.',
     'Avalie exclusivamente os candidatos fornecidos, considerando o contexto e as respostas.',
     'Use apenas informações presentes no perfil; registre lacunas em gaps e não invente evidências.',
     'Além do contexto informado, considere o baseline SENAI-SP: competitividade e desenvolvimento sustentável da indústria paulista; educação profissional conectada ao trabalho; inovação e tecnologia; desenvolvimento regional; parcerias; Indústria 4.0; ESG; descarbonização e economia circular.',
-    'Pontue cada dimensão de 0 a 100. Risco grave só pode ser confirmado com evidência objetiva e verificável.',
+    // A rubrica vem do mesmo cálculo local que produz a nota final. Pontuar
+    // fora dela faz a nota do provider e a nota reconstruída divergirem.
+    criteria
+      ? `Pontue cada dimensão de 0 a 100 seguindo exatamente esta rubrica, que é a mesma usada no cálculo final. Para cada dimensão, avalie os subcritérios listados e componha a nota com os pesos indicados: ${JSON.stringify(criteria.subcriteria)}. Os pesos das dimensões nesta seleção são ${JSON.stringify(criteria.weights)} e foram derivados destes ajustes: ${JSON.stringify((criteria.adjustments || []).map((item) => item.reason))}. Não reescreva os pesos; use-os para calibrar o quanto cada dimensão importa nesta decisão.`
+      : 'Pontue cada dimensão de 0 a 100.',
+    'Risco grave só pode ser confirmado com evidência objetiva e verificável.',
     'Não aplique a mesma nota a candidatos diferentes sem justificar a equivalência. Para cada candidato, explique em dimensionRationale quais fatos sustentam as dimensões, registre comparativeEdge (em que ele difere dos demais) e tradeoffs (o que se ganha e o que se perde).',
     'Retorne o id de cada candidato como texto, exatamente como foi fornecido.',
     'Em evidence, cite somente nomes de campos ou URLs que aparecem no perfil fornecido.',

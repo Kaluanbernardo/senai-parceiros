@@ -54,6 +54,81 @@ function DecisionMatrix({ entries }) {
   );
 }
 
+const DIMENSION_ORDER = ['impact', 'alignment', 'credibility', 'collaboration', 'feasibility', 'risk'];
+const percent = (value) => `${Math.round((Number(value) || 0) * 1000) / 10}%`;
+
+/**
+ * Mostra por que os pesos desta seleção são o que são. Sem isso, qualquer
+ * nota parece arbitrária, mesmo quando não é.
+ */
+function CriteriaPanel({ criteria }) {
+  if (!criteria?.weights) return null;
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" fontWeight={700}>Como os critérios foram calibrados</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: .5 }}>
+        Os pesos partem do perfil do objetivo “{criteria.profile}” e são ajustados pelas suas respostas, dentro de faixas fixas. Valor estratégico pesa {percent(criteria.groupWeights?.strategic)} e viabilidade {percent(criteria.groupWeights?.viability)}.
+      </Typography>
+      <Grid container spacing={1} sx={{ mt: 1 }}>
+        {DIMENSION_ORDER.map((dimension) => (
+          <Grid size={{ xs: 6, md: 4 }} key={dimension}>
+            <Typography variant="caption" color="text.secondary">{DIMENSION_LABELS[dimension]}</Typography>
+            <Typography fontWeight={700}>{percent(criteria.weights[dimension])}</Typography>
+            <Typography variant="caption" color="text.secondary">base {percent(criteria.baseline?.[dimension])}</Typography>
+          </Grid>
+        ))}
+      </Grid>
+      {criteria.adjustments?.length ? (
+        <Box sx={{ mt: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">Ajustes aplicados a partir da entrevista:</Typography>
+          <Stack component="ul" spacing={.25} sx={{ pl: 2.5, mt: .5, mb: 0 }}>
+            {criteria.adjustments.map((adjustment) => (
+              <Typography component="li" variant="body2" key={adjustment.id}>
+                {adjustment.reason} ({Object.entries(adjustment.deltas || {}).map(([dimension, delta]) => `${DIMENSION_LABELS[dimension]} ${delta > 0 ? '+' : ''}${Math.round(delta * 100)}`).join(', ')})
+              </Typography>
+            ))}
+          </Stack>
+        </Box>
+      ) : <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Nenhum ajuste foi disparado: os pesos do perfil do objetivo foram mantidos.</Typography>}
+    </Paper>
+  );
+}
+
+/** Abre a nota de um candidato nos subcritérios que a compõem. */
+function SubcriteriaPanel({ entry }) {
+  if (!entry?.criteria) return null;
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" fontWeight={700}>Composição da nota de {entry.candidate.nome || entry.candidate.instituicao}</Typography>
+      <Stack spacing={1.25} sx={{ mt: 1 }}>
+        {DIMENSION_ORDER.map((dimension) => {
+          const detail = entry.criteria[dimension];
+          if (!detail) return null;
+          return (
+            <Box key={dimension}>
+              <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                <Typography variant="body2" fontWeight={700}>{DIMENSION_LABELS[dimension]}</Typography>
+                <Typography variant="body2" fontWeight={700}>{format(detail.score)}</Typography>
+              </Stack>
+              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, mt: .25 }}>
+                <Box component="tbody">
+                  {detail.subscores.map((sub) => (
+                    <Box component="tr" key={sub.id}>
+                      <Box component="td" sx={{ py: .25, pr: 1, color: 'text.secondary', width: '46%' }}>{sub.label}</Box>
+                      <Box component="td" sx={{ py: .25, pr: 1, whiteSpace: 'nowrap' }}>{Math.round(sub.score)} × {percent(sub.weight)}</Box>
+                      <Box component="td" sx={{ py: .25, color: 'text.secondary' }}>{sub.evidence.join(' · ')}</Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          );
+        })}
+      </Stack>
+    </Paper>
+  );
+}
+
 function ExportButtons({ result, metadata }) {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -209,7 +284,33 @@ export default function SelectionResults({ result, onReview, onRestart }) {
       )}
       {selectedTab === 2 && (
         <Stack spacing={2}>
-          <Paper variant="outlined" sx={{ p: 2 }}><Typography variant="subtitle1" fontWeight={700}>Como o resultado foi calculado</Typography><Typography variant="body2" sx={{ mt: 1 }}>{result.trace.formula}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{result.trace.sourcePolicy}</Typography></Paper>
+          <Paper variant="outlined" sx={{ p: 2 }}><Typography variant="subtitle1" fontWeight={700}>Como o resultado foi calculado</Typography><Typography variant="body2" sx={{ mt: 1 }}>{result.trace.formula}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{result.trace.sourcePolicy}</Typography>{result.trace.shortlistPolicy ? <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Corte de elegibilidade aplicado: {result.trace.shortlistPolicy.threshold}/100 (piso fixo {result.trace.shortlistPolicy.absoluteFloor}, ou {percent(result.trace.shortlistPolicy.relativeToBest)} da melhor nota deste catálogo).</Typography> : null}</Paper>
+          <CriteriaPanel criteria={result.trace.criteria} />
+          {result.trace.contextProfile ? (
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="subtitle1" fontWeight={700}>O que foi lido do seu contexto</Typography>
+              <Grid container spacing={1.5} sx={{ mt: .25 }}>
+                {[
+                  ['Temas usados na comparação', result.trace.contextProfile.themeTokens],
+                  [result.trace.contextProfile.prioritiesFromUser ? 'Prioridades estratégicas reconhecidas nas suas respostas' : 'Prioridades estratégicas do baseline SENAI-SP (nenhuma foi nomeada por você)', result.trace.contextProfile.priorities],
+                  ['Público', result.trace.contextProfile.audiences],
+                  ['Contribuição desejada', result.trace.contextProfile.contributions],
+                  ['Evidência esperada', result.trace.contextProfile.evidence],
+                  ['Geografia', result.trace.contextProfile.geography],
+                  ['Prazo', result.trace.contextProfile.horizons],
+                  ['Restrições eliminatórias', result.trace.contextProfile.hardConstraints],
+                ].filter(([, values]) => values?.length).map(([label, values]) => (
+                  <Grid size={{ xs: 12, md: 6 }} key={label}>
+                    <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
+                    <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ mt: .5 }}>
+                      {values.slice(0, 12).map((value) => <Chip key={value} size="small" variant="outlined" label={value} />)}
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          ) : null}
+          {selected ? <SubcriteriaPanel entry={selected} /> : null}
           <Paper variant="outlined" sx={{ p: 2 }}><Typography variant="subtitle1" fontWeight={700}>Perguntas e respostas</Typography>{Object.entries(result.trace.answers || {}).map(([key, answer]) => <Box key={key} sx={{ mt: 1 }}><Typography variant="caption" color="text.secondary">{key}</Typography><Typography variant="body2">{answer || 'não informado'}</Typography></Box>)}</Paper>
           {selected && <Paper variant="outlined" sx={{ p: 2 }}><Typography variant="subtitle1" fontWeight={700}>Ficha técnica e evidências de {selected.candidate.nome || selected.candidate.instituicao}</Typography>{selected.comparativeEdge && <Typography variant="body2" sx={{ mt: 1 }}><strong>Diferencial comparativo:</strong> {selected.comparativeEdge}</Typography>}{selected.tradeoffs?.map((tradeoff) => <Alert key={tradeoff} severity="warning" sx={{ mt: 1 }}>{tradeoff}</Alert>)}{(selected.evidence || []).map((field) => <Box key={field} sx={{ mt: 1 }}><Typography variant="caption" color="text.secondary">{field}</Typography><Typography variant="body2">{typeof selected.candidate[field] === 'string' ? selected.candidate[field] : selected.candidate[field] ? JSON.stringify(selected.candidate[field]) : 'não localizado'}</Typography></Box>)}{selected.candidate.website && <Button size="small" href={selected.candidate.website} target="_blank" rel="noreferrer" sx={{ mt: 1 }}>Abrir fonte institucional</Button>}{selected.candidate.scholar && <Button size="small" href={selected.candidate.scholar} target="_blank" rel="noreferrer" sx={{ mt: 1, ml: 1 }}>Abrir perfil público</Button>}{selected.gaps?.map((gap) => <Alert key={gap} severity="info" sx={{ mt: 1 }}>{gap}</Alert>)}</Paper>}
         </Stack>

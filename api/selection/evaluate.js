@@ -19,8 +19,11 @@ export default async function handler(req, res) {
   await hydrateRateLimitStore({ force: true });
   try {
     const payload = await readJson(req);
+    // O briefing traz um campo por informação coberta, não por pergunta feita:
+    // uma resposta rica cobre vários campos de uma vez, então o teto acompanha
+    // o número de campos canônicos, e não o número de perguntas.
     const validAnswers = payload?.answers && typeof payload.answers === 'object' && !Array.isArray(payload.answers)
-      && Object.keys(payload.answers).length <= 20
+      && Object.keys(payload.answers).length <= 32
       && Object.values(payload.answers).every((value) => typeof value === 'string' && value.length <= 4000);
     if (!payload || !payload.category || !payload.objective || !['researcher', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
@@ -44,7 +47,9 @@ export default async function handler(req, res) {
     let fallback = false;
     try {
       const providerPool = rankProviderCandidates(local.candidatePool, 30);
-      ai = await evaluateWithProvider({ input: evaluationInput, candidates: providerPool.map((entry) => entry.candidate) });
+      // O provider recebe a mesma rubrica e os mesmos pesos derivados que o
+      // cálculo local usa, para que as duas notas sejam comparáveis.
+      ai = await evaluateWithProvider({ input: { ...evaluationInput, criteria: local.trace?.criteria || null }, candidates: providerPool.map((entry) => entry.candidate) });
       ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
       ai.budget = await recordAiUsageAtomic('selection', ai.usage);
       ai.evaluations = ai.evaluations.map((evaluation) => ({
