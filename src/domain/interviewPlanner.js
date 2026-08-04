@@ -486,6 +486,54 @@ export function next(state) {
   return withNext(state);
 }
 
+/**
+ * Volta uma pergunta durante a entrevista.
+ *
+ * Descarta a pergunta em aberto, reabre a anterior com a resposta registrada
+ * e recalcula a cobertura — inclusive o que aquela resposta cobria
+ * indiretamente, já que ela volta a ser editável. A pergunta reaberta mantém a
+ * redação que a pessoa viu (guardada em `questionDefinitions`), e não uma
+ * versão recomposta a partir de outro turno.
+ */
+export function back(state) {
+  if (!state) return state;
+  const askedIds = [...(state.askedIds || [])];
+  if (askedIds.length <= 1) return state;
+  const discardedId = askedIds.pop();
+  const previousId = askedIds[askedIds.length - 1];
+  const definition = state.questionDefinitions?.[previousId] || questionById(previousId);
+  if (!definition) return state;
+  const answers = { ...state.answers };
+  delete answers[discardedId];
+  const history = (state.history || []).filter((entry) => entry.questionId !== previousId);
+  const uncertainties = (state.uncertainties || []).filter((id) => id !== previousId);
+  const reopened = {
+    ...state,
+    askedIds,
+    answers,
+    history,
+    transcript: history,
+    uncertainties,
+    // `answer()` preserva um contexto sedado em `start({ context })` em vez de
+    // sobrescrevê-lo. Ao reabrir a pergunta de contexto ele deixa de ser
+    // autoritativo — sem isso, a nova resposta seria descartada.
+    context: (definition.targetField || definition.id) === 'context' ? '' : state.context,
+    lastAnswered: history.at(-1)?.questionId,
+    lastStage: definition.stage,
+    currentQuestion: definition,
+    status: 'active',
+  };
+  const next = { ...reopened, derived: recomputeDerived(reopened, history) };
+  const validated = validationFor(next);
+  return {
+    ...next,
+    coveredFields: coveredFieldsFor(next),
+    remainingRequiredFields: validated.missing,
+    validation: validated,
+    progress: { asked: askedIds.length, max: MAX_QUESTIONS },
+  };
+}
+
 export function revise(state, questionId, value) {
   const definition = definitionFor(state, questionId);
   if (!state || !state.askedIds?.includes(questionId) || !definition) return state;
@@ -554,5 +602,5 @@ export function finalize(state) {
   return brief;
 }
 
-export const InterviewPlanner = Object.freeze({ start, answer, next, revise, finalize, coverage, withProviderCoverage });
+export const InterviewPlanner = Object.freeze({ start, answer, next, back, revise, finalize, coverage, withProviderCoverage });
 export { QUESTION_BANK };

@@ -82,6 +82,43 @@ describe('InterviewPlanner', () => {
     expect(rich.askedIds.length).toBeGreaterThanOrEqual(MIN_QUESTIONS);
   });
 
+  it('reopens the previous question with its answer and recomputes coverage', () => {
+    let state = start({ category: 'researcher', objective: 'speaker' });
+    const firstPrompt = state.currentQuestion.prompt;
+    state = answerAndNext(state, 'Evento sobre economia circular para instrutores em São Paulo, ainda este mês.');
+    const second = state.currentQuestion.id;
+    expect(state.coveredFields).toContain('themes');
+
+    const rewound = InterviewPlanner.back(state);
+
+    expect(rewound.currentQuestion.id).toBe('context');
+    expect(rewound.currentQuestion.prompt).toBe(firstPrompt);
+    expect(rewound.answers.context).toMatch(/economia circular/);
+    expect(rewound.askedIds).not.toContain(second);
+    expect(rewound.status).toBe('active');
+    // A resposta voltou a ser editável, então o que ela cobria sai da cobertura.
+    expect(rewound.coveredFields).not.toContain('themes');
+    expect(rewound.validation.missing).toContain('themes');
+  });
+
+  it('has nothing to go back to on the first question', () => {
+    const state = start({ category: 'school', objective: 'benchmark' });
+    expect(InterviewPlanner.back(state)).toBe(state);
+    expect(InterviewPlanner.back(null)).toBe(null);
+  });
+
+  it('re-asks the reopened question and moves on normally after a new answer', () => {
+    let state = start({ category: 'organization', objective: 'project_partner' });
+    state = answerAndNext(state, 'Projeto piloto com empresas do interior.');
+    state = InterviewPlanner.back(state);
+    state = answerAndNext(state, 'Na verdade é uma comparação de currículos com escolas técnicas.');
+
+    expect(state.status).toBe('active');
+    expect(state.currentQuestion).toBeTruthy();
+    expect(state.history.filter((turn) => turn.questionId === 'context')).toHaveLength(1);
+    expect(state.answers.context).toMatch(/comparação de currículos/);
+  });
+
   it('keeps the displayed transcript and maps an adaptive turn to a canonical brief field', () => {
     let state = start({ category: 'school', objective: 'benchmark' });
     state = answerAndNext(state, 'Quero comparar currÃ­culos e gestÃ£o com empresas.');

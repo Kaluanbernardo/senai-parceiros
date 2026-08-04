@@ -50,12 +50,26 @@ function eligibleTargetFields(state) {
     .filter(Boolean);
 }
 
+/**
+ * Classifica o motivo do roteiro local para que a interface não trate tudo
+ * como falha. "A IA não está configurada" pede uma ação de configuração;
+ * um timeout pede nova tentativa; ter recusado a pergunta da IA, ou simplesmente
+ * ter concluído a entrevista, não é problema nenhum e não deve alarmar.
+ */
+function fallbackKind(reason) {
+  if (reason === 'ai_not_configured' || /_not_configured$/.test(String(reason))) return 'not_configured';
+  if (reason === 'ai_budget_exceeded' || reason === 'budget_exceeded') return 'budget';
+  if (reason === 'provider_question_rejected' || reason === 'question_budget_reached' || reason === 'coverage_complete') return 'none';
+  return 'error';
+}
+
 function localFallback(answeredState, reason = 'provider_unavailable') {
   const nextState = InterviewPlanner.next(answeredState);
+  const kind = fallbackKind(reason);
   return {
     state: nextState,
     question: nextState.currentQuestion,
-    trace: { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: reason },
+    trace: { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackKind: kind, degraded: kind !== 'none', fallbackReason: reason },
   };
 }
 
@@ -134,8 +148,10 @@ export default async function handler(req, res) {
     }
     await hydrateUsageBudget({ force: true });
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
+    // A entrevista já cobriu o necessário: não há próxima pergunta para a IA
+    // escrever, então não chamá-la aqui é economia, não indisponibilidade.
     const local = localFallback(answeredState, 'provider_unavailable');
-    if (local.state.status === 'ready') return res.status(200).json(local);
+    if (local.state.status === 'ready') return res.status(200).json(localFallback(answeredState, 'coverage_complete'));
     if (!canUseAi('interview')) return res.status(200).json(localFallback(answeredState, 'ai_budget_exceeded'));
     const localCoverage = InterviewPlanner.coverage(answeredState);
 
@@ -171,7 +187,7 @@ export default async function handler(req, res) {
       const askedCount = enrichedState.askedIds.length;
       if ((ai.shouldStop || !coverage.missing.length) && coverage.canStop) {
         const ready = { ...enrichedState, currentQuestion: null, status: 'ready', validation: { ...enrichedState.validation, valid: true }, progress: { asked: askedCount, max: MAX_QUESTIONS } };
-        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, stopReason: ai.stopReason || 'coverage_complete', coverage, budget } });
+        return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, degraded: false, stopReason: ai.stopReason || 'coverage_complete', coverage, budget } });
       }
       const question = asQuestion(ai, enrichedState);
       if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(localFallback(enrichedState, question ? 'question_budget_reached' : 'provider_question_rejected'));
@@ -180,7 +196,7 @@ export default async function handler(req, res) {
         semanticFacts: [...new Set([...(enrichedState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
         remainingGaps: ai.remainingGaps || [],
       }, question);
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return res.status(200).json(localFallback(answeredState, reason));

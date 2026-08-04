@@ -61,6 +61,24 @@ export default function SelectionPage() {
   const conversation = useMemo(() => (plannerState?.history || []).filter((turn) => turn.answer), [plannerState]);
   const capturedFields = useMemo(() => Object.entries(plannerState?.derived || {}).map(([field, detail]) => ({ field, label: fieldLabel(field), evidence: detail.evidence || [] })), [plannerState]);
   const remainingRequired = plannerState?.validation?.missing || [];
+  // O aviso descreve o que de fato aconteceu. Antes, qualquer turno resolvido
+  // localmente — inclusive a entrevista simplesmente ter terminado — aparecia
+  // como "IA indisponível", o que não era verdade.
+  const adaptiveNotice = useMemo(() => {
+    if (!adaptiveStatus) return null;
+    if (!adaptiveStatus.fallback) {
+      return { severity: 'info', retryable: false, message: `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.` };
+    }
+    const kind = adaptiveStatus.fallbackKind || (adaptiveStatus.degraded === false ? 'none' : 'error');
+    if (kind === 'none') return null;
+    if (kind === 'not_configured') {
+      return { severity: 'info', retryable: false, message: 'A IA não está configurada neste ambiente, então a entrevista segue pelo roteiro local. Configure OPENROUTER_API_KEY (ou o provedor Azure) para as perguntas serem escritas pelo modelo.' };
+    }
+    if (kind === 'budget') {
+      return { severity: 'warning', retryable: false, message: 'O limite diário de uso de IA foi atingido; a entrevista segue pelo roteiro local até a cota renovar.' };
+    }
+    return { severity: 'warning', retryable: true, message: `A IA não respondeu a tempo${adaptiveStatus.fallbackReason ? ` (${adaptiveStatus.fallbackReason})` : ''}; o roteiro local assumiu. Você pode tentar de novo ou continuar.` };
+  }, [adaptiveStatus]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
   const currentAnswer = plannerState?.answers?.[question?.id] || '';
@@ -188,44 +206,25 @@ export default function SelectionPage() {
       else setQuestionIndex((index) => index - 1);
       return;
     }
-    if (plannerState && plannerState.askedIds.length > 1) {
-      setError('Para revisar uma resposta anterior, use “Revisar respostas” ao final da entrevista.');
+    if (plannerState) {
+      // Reabre a pergunta anterior com a resposta registrada. Só volta ao
+      // início quando não há turno anterior para reabrir.
+      const rewound = InterviewPlanner.back(plannerState);
+      if (rewound !== plannerState) {
+        setError('');
+        setPlannerState(rewound);
+        setAnswers(rewound.answers || {});
+        setAdaptiveStatus(null);
+        setAdaptiveRetry(null);
+        return;
+      }
+      setPhase('setup');
       return;
     }
     if (questionIndex === 0) {
       setPhase('setup');
     } else {
       setQuestionIndex((index) => index - 1);
-    }
-  }
-
-  /**
-   * Atalhos de teclado da entrevista.
-   *
-   * Enter avança (Shift+Enter continua quebrando linha). A seta esquerda volta
-   * quando o cursor já está no início do texto — posição em que ela não teria
-   * efeito nenhum de qualquer forma. A seta direita só avança com Alt: durante
-   * a digitação o cursor fica permanentemente no fim do texto, então bindá-la
-   * sozinha faria a pessoa pular uma pergunta sem querer.
-   */
-  function handleAnswerKeyDown(event) {
-    if (busy) return;
-    if (event.nativeEvent?.isComposing) return;
-    const field = event.target;
-    const caretAtStart = field.selectionStart === 0 && field.selectionEnd === 0;
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      nextQuestion();
-      return;
-    }
-    if (event.key === 'ArrowRight' && event.altKey) {
-      event.preventDefault();
-      nextQuestion();
-      return;
-    }
-    if (event.key === 'ArrowLeft' && (event.altKey || caretAtStart)) {
-      event.preventDefault();
-      previousQuestion();
     }
   }
 
@@ -314,15 +313,11 @@ export default function SelectionPage() {
       </Stack>
       {/* O progresso acompanha o que já foi entendido, não uma cota de perguntas. */}
       <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : Math.min(100, ((conversation.length + capturedFields.length) / Math.max(conversation.length + capturedFields.length + remainingRequired.length, 1)) * 100)} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
-      {!reviewing && adaptiveStatus && (
-        <Alert severity={adaptiveStatus.fallback ? 'warning' : 'info'} sx={{ mt: 2 }}>
+      {!reviewing && adaptiveNotice && (
+        <Alert severity={adaptiveNotice.severity} sx={{ mt: 2 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1}>
-            <Typography variant="body2" sx={{ flex: 1 }}>
-              {adaptiveStatus.fallback
-                ? 'IA indisponível; roteiro local em uso. Você pode continuar e revisar as respostas ao final.'
-                : `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.`}
-            </Typography>
-            {adaptiveStatus.fallback && adaptiveRetry && <>
+            <Typography variant="body2" sx={{ flex: 1 }}>{adaptiveNotice.message}</Typography>
+            {adaptiveNotice.retryable && adaptiveRetry && <>
               <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
               <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Continuar localmente</Button>
             </>}
@@ -356,7 +351,7 @@ export default function SelectionPage() {
         <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'rgba(0,51,102,.05)', display: 'flex', gap: 1 }}>
           <LightbulbOutlinedIcon color="primary" /><Typography variant="body2">{question.example}</Typography>
         </Box>
-        <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} onKeyDown={handleAnswerKeyDown} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
+        <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>{question.answerHint}</Typography>
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
       </Paper>
@@ -365,12 +360,12 @@ export default function SelectionPage() {
           ou a conversa acima crescem. A largura mínima dos botões impede que
           a troca de rótulo ("Calculando…") desloque a posição deles. */}
       <Box sx={{ position: 'sticky', bottom: 0, zIndex: 3, mt: 3, pt: 1.75, mx: { xs: -2, md: -4 }, px: { xs: 2, md: 4 }, pb: 1.75, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+        {/* Os dois botões têm o mesmo peso visual: mesma variante, mesma
+            altura e mesma largura mínima. A cor é o que distingue a ação
+            principal da de retorno. */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
-          <Button startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: 132, justifyContent: 'flex-start' }}>Voltar</Button>
-          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'center' }}>
-            Enter avança · Shift+Enter quebra linha · ← volta · Alt+→ avança
-          </Typography>
-          <Button variant="contained" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy} sx={{ minWidth: 232, justifyContent: 'center' }}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
+          <Button variant="contained" color="inherit" size="large" disableElevation startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: 232, bgcolor: 'action.selected', color: 'text.primary', '&:hover': { bgcolor: 'action.disabledBackground' } }}>Pergunta anterior</Button>
+          <Button variant="contained" size="large" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy} sx={{ minWidth: 232 }}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
         </Stack>
       </Box>
     </Box>
