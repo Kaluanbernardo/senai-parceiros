@@ -1,9 +1,9 @@
 import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver.js';
 
 export const CATEGORY_LABELS = {
-  researcher: 'Pesquisador(a)',
-  school: 'Escola ou instituição de EPT',
-  organization: 'Outra organização',
+  researcher: 'Especialista',
+  school: 'Instituição de Educação',
+  organization: 'Instituição relacionada',
 };
 
 export const OBJECTIVE_LABELS = {

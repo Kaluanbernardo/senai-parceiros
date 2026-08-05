@@ -1,14 +1,21 @@
-import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION, getCatalogHeaders } from './catalogImportSchema';
+import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION, resolveCatalogColumns } from './catalogImportSchema';
 
 // Backwards-compatible export for the existing prompt UI and tests. The
 // import schema is the single source of truth for both sides of the flow.
 export const CATEGORY_SCHEMAS = CATALOG_COLUMNS;
 
-export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria }) {
+/**
+ * @param {string[]} [columns] recorte de colunas pedido. Vazio significa todas.
+ *   Pedir só o necessário encurta a pesquisa e reduz o campo em que o modelo
+ *   pode inventar: cada coluna a mais é uma pergunta a mais que ele vai tentar
+ *   responder mesmo sem fonte.
+ */
+export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria, columns }) {
   const selectedCategory = CATALOG_COLUMNS[category] ? category : 'organization';
-  const schema = CATALOG_COLUMNS[selectedCategory];
+  const schema = resolveCatalogColumns(selectedCategory, columns);
   const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}) — ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
-  const headers = getCatalogHeaders(selectedCategory).join(' | ');
+  const headers = schema.map((column) => column.name).join(' | ');
+  const total = CATALOG_COLUMNS[selectedCategory].length;
   const sections = [
     'CONTEXTO DA BUSCA',
     `- Contexto: ${context || 'não informado'}`,
@@ -24,6 +31,9 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     `schema_version deve ser exatamente ${CATALOG_SCHEMA_VERSION}. tipo_registro deve ser exatamente ${selectedCategory}.`,
     'A tabela importável deve ficar na aba Stakeholders, com uma linha de cabeçalho e uma entidade por linha. Use exatamente as colunas abaixo, nesta ordem:',
     headers,
+    schema.length < total
+      ? `São ${schema.length} colunas das ${total} previstas para esta categoria. Não acrescente nenhuma coluna fora desta lista: colunas a mais fazem o arquivo ser recusado na importação.`
+      : 'Não acrescente nenhuma coluna fora desta lista.',
     'Crie uma aba Metadados separada para contexto, critérios, limitações, fontes que falharam e data de geração. Não misture prosa com as linhas da aba Stakeholders.',
     '',
     'REGRAS DE EVIDÊNCIA',

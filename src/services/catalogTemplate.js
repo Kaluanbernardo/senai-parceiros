@@ -1,18 +1,24 @@
-import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogColumns, getCatalogHeaders } from '../domain/catalogImportSchema';
+import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, resolveCatalogColumns } from '../domain/catalogImportSchema';
 
-export async function buildCatalogTemplate(category) {
+/**
+ * @param {string[]} [columns] mesmo recorte passado ao prompt. O template tem
+ *   de trazer exatamente as colunas que o prompt pediu, senão o usuário recebe
+ *   duas definições diferentes do mesmo arquivo.
+ */
+export async function buildCatalogTemplate(category, columns) {
   const exceljs = await import('exceljs');
   const Workbook = exceljs.Workbook || exceljs.default?.Workbook;
   if (!Workbook) throw new Error('ExcelJS indisponível.');
   const workbook = new Workbook();
   workbook.creator = 'SENAI-SP Parceiros';
   const sheet = workbook.addWorksheet(CATALOG_SHEET_NAME);
-  const headers = getCatalogHeaders(category);
+  const selected = resolveCatalogColumns(category, columns);
+  const headers = selected.map((column) => column.name);
   sheet.addRow(headers);
   sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B3B60' } };
   sheet.views = [{ state: 'frozen', ySplit: 1 }];
-  sheet.columns = getCatalogColumns(category).map((column) => ({ header: column.name, width: Math.min(Math.max(column.name.length + 4, 16), 34) }));
+  sheet.columns = selected.map((column) => ({ header: column.name, width: Math.min(Math.max(column.name.length + 4, 16), 34) }));
   sheet.addRow(headers.map((header) => header === 'schema_version' ? CATALOG_SCHEMA_VERSION : header === 'tipo_registro' ? category : ''));
   const metadata = workbook.addWorksheet(CATALOG_METADATA_SHEET_NAME);
   metadata.addRows([

@@ -8,16 +8,16 @@ const COMMON_COLUMNS = [
   { name: 'nome', type: 'texto', required: true, description: 'Nome oficial ou nome completo.' },
   { name: 'pais', type: 'texto', required: true, description: 'País de atuação principal.' },
   { name: 'cidade_estado', type: 'texto', required: false, description: 'Cidade e estado/província, quando públicos.' },
-  { name: 'resumo', type: 'texto', required: false, description: 'Resumo curto baseado em fatos públicos.' },
+  { name: 'resumo', type: 'texto', required: false, essential: true, description: 'Resumo curto baseado em fatos públicos.' },
   { name: 'descricao', type: 'texto', required: false, description: 'Descrição detalhada e pública.' },
-  { name: 'areas_temas', type: 'lista', required: false, description: 'Temas separados por ponto e vírgula.' },
+  { name: 'areas_temas', type: 'lista', required: false, essential: true, description: 'Temas separados por ponto e vírgula.' },
   { name: 'aderencia_contexto', type: 'texto', required: false, description: 'Aderência ao contexto pesquisado.' },
   { name: 'relacao_publica', type: 'texto', required: false, description: 'Relação pública com SENAI-SP, indústria ou ecossistema relevante.' },
   { name: 'evidencias_publicas', type: 'lista', required: false, description: 'Fatos/evidências e URLs resumidos, separados por ponto e vírgula.' },
   { name: 'riscos_sinais', type: 'lista', required: false, description: 'Riscos ou sinais públicos que exigem validação, separados por ponto e vírgula.' },
-  { name: 'website_oficial', type: 'url', required: false, description: 'URL institucional.' },
+  { name: 'website_oficial', type: 'url', required: false, essential: true, description: 'URL institucional.' },
   { name: 'contato_publico', type: 'texto', required: false, description: 'Contato profissional publicado.' },
-  { name: 'fontes', type: 'lista', required: false, description: 'URLs separadas por ponto e vírgula.' },
+  { name: 'fontes', type: 'lista', required: false, essential: true, description: 'URLs separadas por ponto e vírgula.' },
   { name: 'data_consulta', type: 'data', required: false, description: 'Data no formato AAAA-MM-DD.' },
   { name: 'confianca', type: 'numero_0_100', required: false, description: 'Confiança da coleta entre 0 e 100.' },
   { name: 'dados_nao_localizados', type: 'lista', required: false, description: 'Campos não localizados, separados por ponto e vírgula.' },
@@ -25,9 +25,9 @@ const COMMON_COLUMNS = [
 
 const CATEGORY_COLUMNS = {
   researcher: [
-    { name: 'instituicao_atual', type: 'texto', description: 'Instituição e vínculo atual.' },
+    { name: 'instituicao_atual', type: 'texto', essential: true, description: 'Instituição e vínculo atual.' },
     { name: 'cargo', type: 'texto', description: 'Cargo ou função pública atual.' },
-    { name: 'areas_especialidade', type: 'lista', description: 'Áreas de especialidade.' },
+    { name: 'areas_especialidade', type: 'lista', essential: true, description: 'Áreas de especialidade.' },
     { name: 'linhas_pesquisa', type: 'texto', description: 'Linhas de pesquisa relacionadas.' },
     { name: 'publicacoes_relevantes', type: 'lista', description: 'Título | URL | ano; ...' },
     { name: 'citacoes', type: 'numero', description: 'Citações públicas, quando localizadas.' },
@@ -36,9 +36,9 @@ const CATEGORY_COLUMNS = {
     { name: 'openalex_id', type: 'texto', description: 'Identificador OpenAlex.' },
   ],
   school: [
-    { name: 'tipo_instituicao', type: 'texto', description: 'Tipo e natureza da instituição.' },
+    { name: 'tipo_instituicao', type: 'texto', essential: true, description: 'Tipo e natureza da instituição.' },
     { name: 'nivel_rede', type: 'texto', description: 'national, regional ou local.' },
-    { name: 'areas_formacao', type: 'lista', description: 'Áreas de formação.' },
+    { name: 'areas_formacao', type: 'lista', essential: true, description: 'Áreas de formação.' },
     { name: 'niveis_oferta', type: 'lista', description: 'Níveis e modalidades de EPT.' },
     { name: 'relacao_industria', type: 'texto', description: 'Evidências da relação com indústria e trabalho.' },
     { name: 'escala', type: 'texto', description: 'Alcance, unidades ou público atendido.' },
@@ -48,8 +48,8 @@ const CATEGORY_COLUMNS = {
   ],
   organization: [
     { name: 'natureza_juridica', type: 'texto', description: 'Pública, privada, terceiro setor ou outra.' },
-    { name: 'setor', type: 'texto', description: 'Setor de atividade.' },
-    { name: 'atuacao', type: 'texto', description: 'Atuação e alcance.' },
+    { name: 'setor', type: 'texto', essential: true, description: 'Setor de atividade.' },
+    { name: 'atuacao', type: 'texto', essential: true, description: 'Atuação e alcance.' },
     { name: 'programas_relevantes', type: 'lista', description: 'Programas relacionados ao contexto.' },
     { name: 'parcerias_industriais', type: 'lista', description: 'Parcerias e relação com a indústria.' },
     { name: 'alcance_geografico', type: 'texto', description: 'Alcance territorial.' },
@@ -87,15 +87,62 @@ export function normalizeCell(value) {
   return String(value).trim();
 }
 
+/** Colunas sem as quais a linha não vira registro. */
+export function getRequiredHeaders(category) {
+  return getCatalogColumns(category).filter((column) => column.required).map((column) => column.name);
+}
+
+/** Recorte sugerido: o suficiente para um registro útil e conferível. */
+export function getEssentialHeaders(category) {
+  return getCatalogColumns(category).filter((column) => column.required || column.essential).map((column) => column.name);
+}
+
+/**
+ * Resolve o recorte de colunas pedido para uma lista de colunas de verdade.
+ *
+ * As obrigatórias entram sempre, mesmo que não tenham sido escolhidas: sem elas
+ * o arquivo não importa, e é melhor acrescentá-las em silêncio do que deixar o
+ * usuário gerar uma pesquisa inteira que será recusada no fim. Nomes
+ * desconhecidos são descartados, e a ordem canônica é preservada para que o
+ * cabeçalho gerado seja sempre o mesmo para o mesmo recorte.
+ */
+export function resolveCatalogColumns(category, selected) {
+  const columns = getCatalogColumns(category);
+  if (!Array.isArray(selected) || !selected.length) return [...columns];
+  const wanted = new Set(selected);
+  return columns.filter((column) => column.required || wanted.has(column.name));
+}
+
+/**
+ * Valida o cabeçalho aceitando um subconjunto das colunas da categoria.
+ *
+ * Antes exigia o conjunto completo na ordem exata, o que obrigava a IA a
+ * devolver 26 colunas mesmo quando a busca precisava de seis — e fazia o
+ * gerador de prompt pedir tudo, já que qualquer recorte produzia um arquivo
+ * rejeitado na importação.
+ *
+ * O que continua obrigatório: estarem presentes as colunas sem as quais não há
+ * registro, não haver coluna desconhecida (que indicaria arquivo de outra
+ * categoria ou invenção do modelo) e não haver coluna repetida (que tornaria
+ * ambígua a leitura da linha). A ordem é livre porque a linha é lida pelo nome
+ * da coluna, não pela posição.
+ */
 export function validateCatalogHeaders(headers, category) {
   const expected = getCatalogHeaders(category);
-  const actual = headers.map((header) => String(header || '').trim());
+  const actual = headers.map((header) => String(header || '').trim()).filter(Boolean);
+  const known = new Set(expected);
   const errors = [];
-  if (actual.length !== expected.length) errors.push(`Cabeçalho deve ter ${expected.length} colunas; recebido ${actual.length}.`);
-  expected.forEach((header, index) => {
-    if (actual[index] !== header) errors.push(`Coluna ${index + 1}: esperado "${header}", recebido "${actual[index] || '(vazio)'}".`);
-  });
-  return { valid: errors.length === 0, errors, expected, actual };
+
+  const missing = getRequiredHeaders(category).filter((header) => !actual.includes(header));
+  if (missing.length) errors.push(`Faltam colunas obrigatórias: ${missing.join(', ')}.`);
+
+  const unknown = actual.filter((header) => !known.has(header));
+  if (unknown.length) errors.push(`Colunas desconhecidas para ${category}: ${unknown.join(', ')}.`);
+
+  const duplicated = actual.filter((header, index) => actual.indexOf(header) !== index);
+  if (duplicated.length) errors.push(`Colunas repetidas: ${[...new Set(duplicated)].join(', ')}.`);
+
+  return { valid: errors.length === 0, errors, expected, actual, missing, unknown, present: actual.filter((header) => known.has(header)) };
 }
 
 export function validateCatalogRow(row, category, rowNumber = 2) {
@@ -116,7 +163,14 @@ export function validateCatalogRow(row, category, rowNumber = 2) {
     }
   }
   if (row.data_consulta && !/^\d{4}-\d{2}-\d{2}$/.test(row.data_consulta)) errors.push(`Linha ${rowNumber}: data_consulta deve usar AAAA-MM-DD.`);
-  if (row.confianca !== '' && (Number.isNaN(Number(row.confianca)) || Number(row.confianca) < 0 || Number(row.confianca) > 100)) errors.push(`Linha ${rowNumber}: confianca deve estar entre 0 e 100.`);
+  // Coluna ausente não é valor inválido: com subconjunto de colunas, `confianca`
+  // pode simplesmente não ter sido pedida. Antes, `undefined !== ''` entrava na
+  // checagem e Number(undefined) reprovava a linha.
+  const confianca = row.confianca;
+  if (confianca !== '' && confianca !== undefined && confianca !== null
+      && (Number.isNaN(Number(confianca)) || Number(confianca) < 0 || Number(confianca) > 100)) {
+    errors.push(`Linha ${rowNumber}: confianca deve estar entre 0 e 100.`);
+  }
   return { valid: errors.length === 0, errors };
 }
 

@@ -16,7 +16,7 @@ export default function OrgCard({ item, onClick }) {
   const areas = item.areas ? item.areas.split(';').slice(0, 3) : [];
   const moreAreas = item.areas ? Math.max(0, item.areas.split(';').length - 3) : 0;
   const displayName = formatInstitutionName(item.nome);
-  const eyebrow = item.categoria === 'Escola' ? 'Escola ou instituto' : 'Organização';
+  const eyebrow = item.categoria === 'Escola' ? 'Instituição de Educação' : 'Instituição relacionada';
 
   return (
     <Card

@@ -37,7 +37,7 @@ export default function PesquisadorCard({ item, onClick }) {
           <Box sx={{ mb: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
               <Typography variant="caption" color="secondary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>
-                Pesquisador EPT
+                Especialista EPT
               </Typography>
               {item.h_index ? <Chip label={`h-index ${item.h_index}`} size="small" color="secondary" variant="outlined" sx={{ height: 23, fontWeight: 700 }} /> : null}
             </Box>

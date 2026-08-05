@@ -46,6 +46,25 @@ describe('catalog XLSX import', () => {
     expect(rollbackCatalogImport(preview.batchId).rolledBack).toBe(true);
   });
 
+  it('imports a workbook that carries only the columns the search needed', async () => {
+    // O arquivo que o gerador de prompt passa a produzir quando o usuário pede
+    // um recorte: seis colunas em vez das vinte e seis da categoria.
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(CATALOG_SHEET_NAME);
+    sheet.addRow(['schema_version', 'tipo_registro', 'nome', 'pais', 'resumo', 'website_oficial']);
+    sheet.addRow([CATALOG_SCHEMA_VERSION, 'school', 'Centro de Formação Teste', 'Brasil', 'Rede pública de EPT.', 'https://example.org/centro']);
+    const contentBase64 = Buffer.from(await workbook.xlsx.writeBuffer()).toString('base64');
+
+    const parsed = await parseCatalogWorkbook({ filename: 'recorte.xlsx', contentBase64 });
+
+    expect(parsed.errors).toEqual([]);
+    // A categoria vem de tipo_registro: só com colunas comuns o cabeçalho
+    // serviria para as três.
+    expect(parsed.category).toBe('school');
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'Centro de Formação Teste', pais: 'Brasil' });
+    expect(previewCatalogImport(parsed, []).counts).toMatchObject({ total: 1, new: 1, invalid: 0 });
+  });
+
   it('rejects a workbook with headers from another schema', async () => {
     const category = 'organization';
     const workbook = new ExcelJS.Workbook();

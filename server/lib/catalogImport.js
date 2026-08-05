@@ -22,9 +22,20 @@ function rowValues(row) {
   });
 }
 
-function detectCategory(headers, requestedCategory) {
-  if (requestedCategory && getCatalogHeaders(requestedCategory).every((header, index) => headers[index] === header)) return requestedCategory;
-  return ['researcher', 'school', 'organization'].find((category) => validateCatalogHeaders(headers, category).valid) || null;
+/**
+ * Descobre a categoria da planilha.
+ *
+ * Com o cabeçalho completo, as colunas específicas de cada categoria já a
+ * identificam. Aceitando subconjunto, uma planilha que só traga colunas comuns
+ * é válida para as três — e aí quem decide é o valor declarado em
+ * `tipo_registro`, que é coluna obrigatória justamente por isso.
+ */
+function detectCategory(headers, requestedCategory, declaredType) {
+  const candidates = ['researcher', 'school', 'organization'].filter((category) => validateCatalogHeaders(headers, category).valid);
+  if (!candidates.length) return null;
+  if (requestedCategory && candidates.includes(requestedCategory)) return requestedCategory;
+  if (declaredType && candidates.includes(declaredType)) return declaredType;
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 export function catalogKey(category, record) {
@@ -73,7 +84,12 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
   if (sheet.rowCount < 2) throw new Error('stakeholders_rows_required');
   if (sheet.rowCount - 1 > MAX_ROWS) throw new Error('too_many_rows');
   const headers = rowValues(sheet.getRow(1));
-  const category = detectCategory(headers, requestedCategory);
+  // O tipo declarado na primeira linha de dados desempata quando o cabeçalho
+  // traz só colunas comuns às três categorias.
+  const declaredType = headers.includes('tipo_registro')
+    ? rowValues(sheet.getRow(2))[headers.indexOf('tipo_registro')]
+    : '';
+  const category = detectCategory(headers, requestedCategory, declaredType);
   if (!category) throw new Error('invalid_headers');
   const headerValidation = validateCatalogHeaders(headers, category);
   if (!headerValidation.valid) throw new Error(`invalid_headers:${headerValidation.errors.join(' ')}`);

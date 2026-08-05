@@ -49,7 +49,7 @@ export default function EscolaCard({ item, onClick }) {
         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ mb: 1.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>Escola ou instituto</Typography>
+              <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 0.9 }}>Instituição de Educação</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <CountryFlag pais={item.pais} size={14} />
                 <Typography variant="caption" color="text.secondary" fontWeight={600}>{item.pais}</Typography>

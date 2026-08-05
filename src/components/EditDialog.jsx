@@ -32,7 +32,7 @@ const FIELD_CONFIGS = {
     { key: 'logo', label: 'Logo (URL)', gridSize: 6 },
   ],
   pesquisador: [
-    { key: 'nome', label: 'Nome do Pesquisador', required: true, gridSize: 6 },
+    { key: 'nome', label: 'Nome do especialista', required: true, gridSize: 6 },
     { key: 'instituicao', label: 'Instituicao', required: true, gridSize: 6 },
     { key: 'pais', label: 'Pais', required: true, gridSize: 4 },
     { key: 'h_index', label: 'h-index', gridSize: 4 },
@@ -96,7 +96,7 @@ export default function EditDialog({ open, onClose, onSave, item, type, isNew })
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ fontWeight: 700 }}>
-        {isNew ? 'Adicionar' : 'Editar'} {type === 'stakeholder' ? 'Stakeholder' : type === 'escola' ? 'Escola' : 'Pesquisador'}
+        {isNew ? 'Adicionar' : 'Editar'} {type === 'stakeholder' ? 'Stakeholder' : type === 'escola' ? 'Instituição de Educação' : 'Especialista'}
       </DialogTitle>
       <DialogContent>
         {type !== 'pesquisador' ? (
