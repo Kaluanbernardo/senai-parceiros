@@ -25,9 +25,14 @@ function walk(directory) {
 
 /** Caminhos servidos pela Vercel, derivados dos arquivos em `api/`. */
 function deployedRoutes() {
-  return walk(path.join(root, 'api'))
+  const files = walk(path.join(root, 'api'))
     .filter((file) => file.endsWith('.js'))
     .map((file) => `/api/${path.relative(path.join(root, 'api'), file).replace(/\\/g, '/').replace(/\.js$/, '')}`);
+  const rewrites = JSON.parse(readFileSync(path.join(root, 'vercel.json'), 'utf8')).rewrites
+    .map((rewrite) => rewrite.source)
+    .filter((source) => source.startsWith('/api/'))
+    .map((source) => source.replace(/:([^/]+)/g, '[$1]'));
+  return [...files, ...rewrites];
 }
 
 /** Um segmento dinâmico `[action]` casa exatamente um segmento do caminho. */

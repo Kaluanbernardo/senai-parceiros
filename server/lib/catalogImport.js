@@ -5,7 +5,8 @@ import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME
 import { normalizeResearcherName } from '../../src/domain/researcherCatalog.js';
 import { catalogStore } from './catalogStore.js';
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+// JSON transport adds about 33% in base64; 3 MiB stays below Vercel's request limit.
+const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const MAX_ROWS = 1000;
 
 function fold(value) {
