@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { InterviewPlanner, MAX_QUESTIONS, finalize, start } from './interviewPlanner';
+import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, finalize, start } from './interviewPlanner';
 
 function answerAndNext(state, value = 'Resposta suficiente para esta pergunta') {
   return InterviewPlanner.next(InterviewPlanner.answer(state, value));
@@ -38,9 +38,85 @@ describe('InterviewPlanner', () => {
 
     expect(benchmarking.currentQuestion.id).toBe('benchmark_focus');
     expect(benchmarking.currentQuestion.prompt).toMatch(/gestão curricular|integração/i);
-    expect(event.currentQuestion.id).toBe('audience');
     expect(event.currentQuestion.prompt).toMatch(/economia circular|instrutores/i);
     expect(event.currentQuestion.prompt).not.toBe(benchmarking.currentQuestion.prompt);
+  });
+
+  it('opens with a question written for the chosen category and objective', () => {
+    const benchmarking = start({ category: 'school', objective: 'benchmark' });
+    const partnership = start({ category: 'organization', objective: 'project_partner' });
+
+    expect(benchmarking.currentQuestion.prompt).not.toBe(partnership.currentQuestion.prompt);
+    expect(benchmarking.currentQuestion.prompt).toMatch(/institui/i);
+    expect(partnership.currentQuestion.prompt).toMatch(/iniciativa|organiza/i);
+  });
+
+  it('does not ask again what the answer already covered', () => {
+    let state = start({ category: 'researcher', objective: 'speaker' });
+    state = answerAndNext(state, 'Será um evento sobre economia circular para instrutores e gestores do SENAI-SP em São Paulo, ainda este mês.');
+
+    // Público, tema, geografia e prazo saíram de uma única resposta: repetir
+    // essas perguntas é o que fazia a entrevista parecer um formulário.
+    expect(state.coveredFields).toEqual(expect.arrayContaining(['themes', 'audience', 'geography', 'timeframe']));
+    expect(state.validation.missing).not.toContain('audience');
+    const ids = [];
+    while (state.currentQuestion && ids.length < MAX_QUESTIONS) {
+      ids.push(state.currentQuestion.id);
+      state = answerAndNext(state, 'Resposta suficiente');
+    }
+    expect(ids).not.toContain('audience');
+    expect(ids).not.toContain('themes');
+  });
+
+  it('ends as soon as the required information is covered instead of filling a quota', () => {
+    let rich = start({ category: 'organization', objective: 'project_partner' });
+    rich = answerAndNext(rich, 'Precisamos de um projeto piloto de economia circular com empresas de São Paulo, para instrutores, ainda este mês; não podemos custear viagens e o resultado esperado é um indicador de reaproveitamento de resíduos.');
+    let asked = rich.askedIds.length;
+    while (rich.currentQuestion && asked < MAX_QUESTIONS) {
+      rich = answerAndNext(rich, 'Queremos construir um laboratório conjunto com evidência pública de resultados.');
+      asked = rich.askedIds.length;
+    }
+
+    expect(rich.status).toBe('ready');
+    expect(rich.askedIds.length).toBeLessThan(MAX_QUESTIONS);
+    expect(rich.askedIds.length).toBeGreaterThanOrEqual(MIN_QUESTIONS);
+  });
+
+  it('reopens the previous question with its answer and recomputes coverage', () => {
+    let state = start({ category: 'researcher', objective: 'speaker' });
+    const firstPrompt = state.currentQuestion.prompt;
+    state = answerAndNext(state, 'Evento sobre economia circular para instrutores em São Paulo, ainda este mês.');
+    const second = state.currentQuestion.id;
+    expect(state.coveredFields).toContain('themes');
+
+    const rewound = InterviewPlanner.back(state);
+
+    expect(rewound.currentQuestion.id).toBe('context');
+    expect(rewound.currentQuestion.prompt).toBe(firstPrompt);
+    expect(rewound.answers.context).toMatch(/economia circular/);
+    expect(rewound.askedIds).not.toContain(second);
+    expect(rewound.status).toBe('active');
+    // A resposta voltou a ser editável, então o que ela cobria sai da cobertura.
+    expect(rewound.coveredFields).not.toContain('themes');
+    expect(rewound.validation.missing).toContain('themes');
+  });
+
+  it('has nothing to go back to on the first question', () => {
+    const state = start({ category: 'school', objective: 'benchmark' });
+    expect(InterviewPlanner.back(state)).toBe(state);
+    expect(InterviewPlanner.back(null)).toBe(null);
+  });
+
+  it('re-asks the reopened question and moves on normally after a new answer', () => {
+    let state = start({ category: 'organization', objective: 'project_partner' });
+    state = answerAndNext(state, 'Projeto piloto com empresas do interior.');
+    state = InterviewPlanner.back(state);
+    state = answerAndNext(state, 'Na verdade é uma comparação de currículos com escolas técnicas.');
+
+    expect(state.status).toBe('active');
+    expect(state.currentQuestion).toBeTruthy();
+    expect(state.history.filter((turn) => turn.questionId === 'context')).toHaveLength(1);
+    expect(state.answers.context).toMatch(/comparação de currículos/);
   });
 
   it('keeps the displayed transcript and maps an adaptive turn to a canonical brief field', () => {

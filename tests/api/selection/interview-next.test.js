@@ -1,7 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import handler from '../../../api/selection/interview-next.js';
 import { createSessionToken } from '../../../server/lib/cookies.js';
 import { InterviewPlanner } from '../../../src/domain/interviewPlanner.js';
+import { generateNextQuestionWithProvider } from '../../../server/lib/ai.js';
+
+vi.mock('../../../server/lib/ai.js', () => ({ generateNextQuestionWithProvider: vi.fn() }));
 
 process.env.AUTH_SESSION_SECRET = 'test-session-secret-that-is-long-enough-123';
 
@@ -29,7 +32,30 @@ function request(state, answer = 'Escola para benchmarking de formação dual') 
 afterEach(() => {
   delete process.env.OPENAI_API_KEY;
   delete process.env.OPENROUTER_API_KEY;
+  vi.mocked(generateNextQuestionWithProvider).mockReset();
 });
+
+const providerAnswer = {
+  shouldStop: false,
+  stopReason: '',
+  targetField: 'benchmark_focus',
+  question: { id: 'x', targetField: 'benchmark_focus', prompt: 'Qual prática dessa comparação é a que você quer transferir?', helper: '', example: '', answerKind: 'textarea', reasonTag: 'aprofundar_benchmark' },
+  dimensionsCovered: ['alignment'],
+  factsExtracted: [],
+  fieldsSatisfied: [],
+  remainingGaps: [],
+  adaptationExplanation: '',
+  trace: { provider: 'openrouter', model: 'test/model' },
+};
+
+/** Avança a entrevista local até um estado com uma pergunta em aberto. */
+async function advance(state, answers) {
+  let current = state;
+  for (const value of answers) {
+    current = InterviewPlanner.next(InterviewPlanner.answer(current, value));
+  }
+  return current;
+}
 
 describe('POST /api/selection/interview/next', () => {
   it('returns a transient local fallback when no AI provider is configured', async () => {
@@ -41,6 +67,90 @@ describe('POST /api/selection/interview/next', () => {
     expect(res.body.trace.provider).toBe('local-fallback');
     expect(res.body.state.currentQuestion).toBeTruthy();
     expect(res.body.state).not.toHaveProperty('storageKey');
+  });
+
+  it('serves the question written by the provider and keeps what it extracted', async () => {
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      fieldsSatisfied: [{ field: 'audience', value: 'coordenação pedagógica', confidence: 0.9 }],
+    });
+
+    const res = response();
+    await handler(request(state, 'Comparar como outras escolas organizam a formação dual'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(generateNextQuestionWithProvider).toHaveBeenCalledOnce();
+    expect(res.body.trace.provider).toBe('openrouter');
+    expect(res.body.question.prompt).toBe(providerAnswer.question.prompt);
+    expect(res.body.state.derived.audience).toMatchObject({ value: 'coordenação pedagógica', source: 'provider' });
+    expect(res.body.state.validation.missing).not.toContain('audience');
+  });
+
+  it('refuses a question about a field the answer already covered', async () => {
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = InterviewPlanner.start({ category: 'organization', objective: 'project_partner' });
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      targetField: 'audience',
+      question: { ...providerAnswer.question, targetField: 'audience', prompt: 'Quem é o público?' },
+      fieldsSatisfied: [{ field: 'audience', value: 'instrutores da rede', confidence: 0.9 }],
+    });
+
+    const res = response();
+    await handler(request(state, 'Um piloto com instrutores da rede'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.trace.fallbackReason).toBe('provider_question_rejected');
+    expect(res.body.state.derived).toHaveProperty('audience');
+    expect(res.body.state.currentQuestion.targetField).not.toBe('audience');
+  });
+
+  it('stops when the fields the provider extracted complete the required coverage', async () => {
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = await advance(
+      InterviewPlanner.start({ category: 'school', objective: 'benchmark' }),
+      ['Resposta de contexto', 'Resposta seguinte', 'Mais uma resposta'],
+    );
+    const missing = InterviewPlanner.coverage(state).missing;
+    expect(missing.length).toBeGreaterThan(0);
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      shouldStop: true,
+      stopReason: 'informação suficiente',
+      fieldsSatisfied: missing.map((field) => ({ field, value: `valor de ${field}`, confidence: 0.9 })),
+    });
+
+    const res = response();
+    await handler(request(state, 'Última resposta com bastante detalhe'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(generateNextQuestionWithProvider).toHaveBeenCalledOnce();
+    expect(res.body.trace.stopReason).toBe('informação suficiente');
+    expect(res.body.state.status).toBe('ready');
+    expect(res.body.question).toBeNull();
+    expect(res.body.state.askedIds.length).toBeLessThan(8);
+  });
+
+  it('ignores a low-confidence or unknown field claimed by the provider', async () => {
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      fieldsSatisfied: [
+        { field: 'geography', value: 'talvez Brasil', confidence: 0.2 },
+        { field: 'campo_inventado', value: 'x', confidence: 1 },
+      ],
+    });
+
+    const res = response();
+    await handler(request(state, 'Comparar a formação dual de outras escolas'), res);
+
+    expect(generateNextQuestionWithProvider).toHaveBeenCalledOnce();
+    expect(res.body.trace.provider).toBe('openrouter');
+    expect(res.body.state.derived).not.toHaveProperty('geography');
+    expect(res.body.state.derived).not.toHaveProperty('campo_inventado');
   });
 
   it('rejects a question mismatch without calling the planner', async () => {

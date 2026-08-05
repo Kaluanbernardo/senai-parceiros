@@ -21,7 +21,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import BusinessIcon from '@mui/icons-material/Business';
 import { useData } from '../context/DataContext';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
-import { InterviewPlanner, QUESTION_BANK } from '../domain/interviewPlanner';
+import { InterviewPlanner, QUESTION_BANK, fieldLabel } from '../domain/interviewPlanner';
 import { buildLocalEvaluation, getCandidatePool } from '../domain/selectionEngine';
 import SelectionResults from '../components/SelectionResults';
 
@@ -56,6 +56,29 @@ export default function SelectionPage() {
   const [adaptiveRetry, setAdaptiveRetry] = useState(null);
 
   const reviewQuestions = useMemo(() => (plannerState?.askedIds || []).map((id) => plannerState?.questionDefinitions?.[id] || QUESTION_BANK.find((item) => item.id === id)).filter(Boolean).map((item) => ({ ...item, label: item.prompt, example: 'Revise a resposta registrada e ajuste apenas o que desejar.' })), [plannerState]);
+  // A conversa até aqui fica visível: é o que diferencia uma entrevista de um
+  // formulário com uma pergunta por tela.
+  const conversation = useMemo(() => (plannerState?.history || []).filter((turn) => turn.answer), [plannerState]);
+  const capturedFields = useMemo(() => Object.entries(plannerState?.derived || {}).map(([field, detail]) => ({ field, label: fieldLabel(field), evidence: detail.evidence || [] })), [plannerState]);
+  const remainingRequired = plannerState?.validation?.missing || [];
+  // O aviso descreve o que de fato aconteceu. Antes, qualquer turno resolvido
+  // localmente — inclusive a entrevista simplesmente ter terminado — aparecia
+  // como "IA indisponível", o que não era verdade.
+  const adaptiveNotice = useMemo(() => {
+    if (!adaptiveStatus) return null;
+    if (!adaptiveStatus.fallback) {
+      return { severity: 'info', retryable: false, message: `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.` };
+    }
+    const kind = adaptiveStatus.fallbackKind || (adaptiveStatus.degraded === false ? 'none' : 'error');
+    if (kind === 'none') return null;
+    if (kind === 'not_configured') {
+      return { severity: 'info', retryable: false, message: 'A IA não está configurada neste ambiente, então a entrevista segue pelo roteiro local. Configure OPENROUTER_API_KEY (ou o provedor Azure) para as perguntas serem escritas pelo modelo.' };
+    }
+    if (kind === 'budget') {
+      return { severity: 'warning', retryable: false, message: 'O limite diário de uso de IA foi atingido; a entrevista segue pelo roteiro local até a cota renovar.' };
+    }
+    return { severity: 'warning', retryable: true, message: `A IA não respondeu a tempo${adaptiveStatus.fallbackReason ? ` (${adaptiveStatus.fallbackReason})` : ''}; o roteiro local assumiu. Você pode tentar de novo ou continuar.` };
+  }, [adaptiveStatus]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
   const currentAnswer = plannerState?.answers?.[question?.id] || '';
@@ -120,7 +143,7 @@ export default function SelectionPage() {
     let nextState = InterviewPlanner.next(answeredState);
     let providerTrace = { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: 'request_failed' };
     try {
-      const response = await fetch('/api/selection/interview/next', {
+      const response = await fetch('/api/selection/interview-next', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -183,8 +206,19 @@ export default function SelectionPage() {
       else setQuestionIndex((index) => index - 1);
       return;
     }
-    if (plannerState && plannerState.askedIds.length > 1) {
-      setError('Para revisar uma resposta anterior, use “Revisar respostas” ao final da entrevista.');
+    if (plannerState) {
+      // Reabre a pergunta anterior com a resposta registrada. Só volta ao
+      // início quando não há turno anterior para reabrir.
+      const rewound = InterviewPlanner.back(plannerState);
+      if (rewound !== plannerState) {
+        setError('');
+        setPlannerState(rewound);
+        setAnswers(rewound.answers || {});
+        setAdaptiveStatus(null);
+        setAdaptiveRetry(null);
+        return;
+      }
+      setPhase('setup');
       return;
     }
     if (questionIndex === 0) {
@@ -224,7 +258,7 @@ export default function SelectionPage() {
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>SELEÇÃO GUIADA</Typography>
         <Typography variant="h3" sx={{ mt: 1, fontSize: { xs: '2rem', md: '3rem' } }}>Vamos descobrir quem você precisa encontrar.</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>Começaremos pela categoria. Depois, algumas perguntas simples transformarão seu contexto em critérios de busca.</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>Começaremos pela categoria. Depois é uma conversa: cada pergunta parte do que você acabou de responder e ela termina assim que houver informação suficiente.</Typography>
         <Typography variant="h6" fontWeight={800} sx={{ mt: 4, mb: 1.5 }}>1. Que tipo de stakeholder você quer selecionar?</Typography>
         <Grid container spacing={2}>
           {CATEGORY_OPTIONS.map((option) => (
@@ -275,25 +309,43 @@ export default function SelectionPage() {
     <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
         <Box><Typography variant="overline" color="secondary.main" fontWeight={800}>ENTREVISTA GUIADA</Typography><Typography variant="h5" fontWeight={800}>{CATEGORY_LABELS[category]}</Typography></Box>
-        <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : 'Pergunta ' + (plannerState?.progress?.asked || 1) + ' de até ' + (plannerState?.progress?.max || 20)} color="primary" variant="outlined" />
+        <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : remainingRequired.length ? 'Faltam ' + remainingRequired.length + ' informação(ões)' : 'Quase lá'} color="primary" variant="outlined" />
       </Stack>
-      <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : ((plannerState?.progress?.asked || 1) / (plannerState?.progress?.max || 20)) * 100} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
-      {!reviewing && adaptiveStatus && (
-        <Alert severity={adaptiveStatus.fallback ? 'warning' : 'info'} sx={{ mt: 2 }}>
+      {/* O progresso acompanha o que já foi entendido, não uma cota de perguntas. */}
+      <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : Math.min(100, ((conversation.length + capturedFields.length) / Math.max(conversation.length + capturedFields.length + remainingRequired.length, 1)) * 100)} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
+      {!reviewing && adaptiveNotice && (
+        <Alert severity={adaptiveNotice.severity} sx={{ mt: 2 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1}>
-            <Typography variant="body2" sx={{ flex: 1 }}>
-              {adaptiveStatus.fallback
-                ? 'IA indisponível; roteiro local em uso. Você pode continuar e revisar as respostas ao final.'
-                : `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.`}
-            </Typography>
-            {adaptiveStatus.fallback && adaptiveRetry && <>
+            <Typography variant="body2" sx={{ flex: 1 }}>{adaptiveNotice.message}</Typography>
+            {adaptiveNotice.retryable && adaptiveRetry && <>
               <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
               <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Continuar localmente</Button>
             </>}
           </Stack>
         </Alert>
       )}
-      <Paper variant="outlined" sx={{ mt: 4, p: { xs: 2.5, md: 5 } }}>
+      {!reviewing && conversation.length > 0 && (
+        <Paper variant="outlined" sx={{ mt: 3, p: { xs: 2, md: 2.5 }, bgcolor: 'action.hover' }}>
+          <Typography variant="subtitle2" fontWeight={800} color="text.secondary">A conversa até aqui</Typography>
+          <Stack spacing={1.25} sx={{ mt: 1.25 }}>
+            {conversation.map((turn) => (
+              <Box key={turn.turn}>
+                <Typography variant="caption" color="text.secondary" display="block">{turn.displayedQuestion}</Typography>
+                <Typography variant="body2" sx={{ borderLeft: '3px solid', borderColor: 'secondary.main', pl: 1.25, mt: .25 }}>{turn.answer}</Typography>
+              </Box>
+            ))}
+          </Stack>
+          {capturedFields.length > 0 && (
+            <Box sx={{ mt: 1.75 }}>
+              <Typography variant="caption" color="text.secondary" display="block">Já anotei destas respostas, sem precisar perguntar de novo:</Typography>
+              <Stack direction="row" gap={.75} flexWrap="wrap" sx={{ mt: .75 }}>
+                {capturedFields.map((item) => <Chip key={item.field} size="small" variant="outlined" color="success" label={item.label} title={item.evidence.join(' · ')} />)}
+              </Stack>
+            </Box>
+          )}
+        </Paper>
+      )}
+      <Paper variant="outlined" sx={{ mt: 3, p: { xs: 2.5, md: 5 } }}>
         <Typography variant="h4" sx={{ fontSize: { xs: '1.65rem', md: '2.35rem' } }}>{question.label}</Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>{question.helper}</Typography>
         <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'rgba(0,51,102,.05)', display: 'flex', gap: 1 }}>
@@ -302,11 +354,20 @@ export default function SelectionPage() {
         <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>{question.answerHint}</Typography>
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
-        <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-          <Button startIcon={<ArrowBackIcon />} onClick={previousQuestion}>Voltar</Button>
-          <Button variant="contained" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
-        </Stack>
       </Paper>
+      <Box sx={{ minHeight: 24 }} />
+      {/* Barra fixa: as ações não mudam de lugar quando a pergunta, o exemplo
+          ou a conversa acima crescem. A largura mínima dos botões impede que
+          a troca de rótulo ("Calculando…") desloque a posição deles. */}
+      <Box sx={{ position: 'sticky', bottom: 0, zIndex: 3, mt: 3, pt: 1.75, mx: { xs: -2, md: -4 }, px: { xs: 2, md: 4 }, pb: 1.75, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+        {/* Os dois botões têm o mesmo peso visual: mesma variante, mesma
+            altura e mesma largura mínima. A cor é o que distingue a ação
+            principal da de retorno. */}
+        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
+          <Button variant="contained" color="inherit" size="large" disableElevation startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: 232, bgcolor: 'action.selected', color: 'text.primary', '&:hover': { bgcolor: 'action.disabledBackground' } }}>Pergunta anterior</Button>
+          <Button variant="contained" size="large" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy} sx={{ minWidth: 232 }}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
+        </Stack>
+      </Box>
     </Box>
   );
 }

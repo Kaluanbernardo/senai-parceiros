@@ -35,6 +35,29 @@ describe('adaptive interview provider', () => {
     expect(() => normalizeQuestion({ ...validResponse, question: { ...validResponse.question, prompt: '' } })).toThrow('invalid_structured_output');
   });
 
+  it('keeps only satisfied fields that the brief understands, with a usable confidence', () => {
+    const value = normalizeQuestion({
+      ...validResponse,
+      fieldsSatisfied: [
+        { field: 'audience', value: 'instrutores', confidence: 0.9 },
+        { field: 'geography', value: 'São Paulo', confidence: 3 },
+        { field: 'campo_inventado', value: 'x', confidence: 1 },
+        { field: 'timeframe', value: '', confidence: 1 },
+        { field: 'budget', value: 'sem verba', confidence: 'alta' },
+      ],
+    });
+
+    expect(value.fieldsSatisfied).toEqual([
+      { field: 'audience', value: 'instrutores', confidence: 0.9 },
+      { field: 'geography', value: 'São Paulo', confidence: 1 },
+    ]);
+  });
+
+  it('requires the extraction field in the strict schema', () => {
+    expect(nextQuestionSchema.required).toContain('fieldsSatisfied');
+    expect(nextQuestionSchema.properties.fieldsSatisfied.items.properties.field.enum).toContain('audience');
+  });
+
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'test-key';
