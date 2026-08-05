@@ -65,6 +65,23 @@ describe('catalog XLSX import', () => {
     expect(previewCatalogImport(parsed, []).counts).toMatchObject({ total: 1, new: 1, invalid: 0 });
   });
 
+  it('imports CSV directly using the same catalog contract', async () => {
+    const csv = [
+      'schema_version,tipo_registro,nome,pais,resumo,areas_temas,website_oficial',
+      `${CATALOG_SCHEMA_VERSION},organization,Instituto CSV,Brasil,Organização de teste,EPT; indústria,https://example.org/csv`,
+    ].join('\n');
+
+    const parsed = await parseCatalogWorkbook({
+      filename: 'pesquisa.csv',
+      category: 'organization',
+      contentBase64: Buffer.from(csv).toString('base64'),
+    });
+
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'Instituto CSV', areas: ['EPT', 'indústria'] });
+    expect(previewCatalogImport(parsed, []).counts.new).toBe(1);
+  });
+
   it('rejects a workbook with headers from another schema', async () => {
     const category = 'organization';
     const workbook = new ExcelJS.Workbook();

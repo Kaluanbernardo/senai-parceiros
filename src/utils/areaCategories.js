@@ -150,7 +150,7 @@ const AREA_MAP = [
  */
 export function getCategoriasFromAreas(areasStr) {
   if (!areasStr) return [];
-  const areasLower = areasStr.toLowerCase();
+  const areasLower = (Array.isArray(areasStr) ? areasStr.join('; ') : String(areasStr)).toLowerCase();
   const found = new Set();
   for (const { pattern, cats } of AREA_MAP) {
     if (areasLower.includes(pattern.toLowerCase())) {

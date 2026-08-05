@@ -18,6 +18,8 @@ describe('generateResearchPrompt', () => {
     }
     expect(prompt).toContain('XLSX');
     expect(prompt).toContain('CSV UTF-8');
+    expect(prompt).toContain('podem ser importados diretamente');
+    expect(prompt).toContain('h_index');
     expect(prompt).toContain('não localizado');
     expect(prompt).toContain('Não invente');
   });

@@ -15,7 +15,7 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { CATEGORY_LABELS } from '../domain/interview';
-import { getEssentialHeaders } from '../domain/catalogImportSchema';
+import { getCatalogHeaders } from '../domain/catalogImportSchema';
 import { generateResearchPrompt } from '../domain/promptGenerator';
 import { buildCatalogTemplate, downloadTemplateBuffer } from '../services/catalogTemplate';
 import PageContainer from '../design-system/primitives/PageContainer';
@@ -31,7 +31,7 @@ export default function PromptGeneratorPage() {
   }
 
   function generate() {
-    setPrompt(generateResearchPrompt({ ...form, columns: getEssentialHeaders(form.category) }));
+    setPrompt(generateResearchPrompt({ ...form, columns: getCatalogHeaders(form.category) }));
   }
 
   async function copyPrompt() {
@@ -51,7 +51,7 @@ export default function PromptGeneratorPage() {
 
   async function downloadTemplate() {
     try {
-      const buffer = await buildCatalogTemplate(form.category, getEssentialHeaders(form.category));
+      const buffer = await buildCatalogTemplate(form.category, getCatalogHeaders(form.category));
       downloadTemplateBuffer(buffer, form.category);
       setSnack('Template XLSX baixado.');
     } catch (error) {
@@ -89,10 +89,10 @@ export default function PromptGeneratorPage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 7 }}>
-          <Card variant="outlined" sx={{ minHeight: { md: 520 }, height: 'fit-content', bgcolor: T.surface.inverted, color: T.ink.onInverted }}>
+          <Card variant="outlined" sx={{ height: 520, bgcolor: T.surface.inverted, color: T.ink.onInverted }}>
             <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" fontWeight={800}>Pedido pronto para copiar</Typography>
-              {!prompt ? <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', minHeight: 300 }}><Typography color="rgba(255,255,255,.65)" textAlign="center">Preencha o que souber e clique em Criar pedido.</Typography></Box> : <TextField multiline fullWidth value={prompt} InputProps={{ readOnly: true }} sx={{ mt: 2, flex: 1, '& .MuiInputBase-root': { color: 'rgba(255,255,255,.9)', alignItems: 'flex-start', fontFamily: 'monospace', fontSize: 13, height: '100%' }, '& textarea': { height: '100% !important', overflow: 'auto !important' }, '& fieldset': { borderColor: 'rgba(255,255,255,.3)' } }} />}
+              {!prompt ? <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', minHeight: 0 }}><Typography color="rgba(255,255,255,.65)" textAlign="center">Preencha o que souber e clique em Criar pedido.</Typography></Box> : <Box component="pre" role="region" aria-label="Pedido de pesquisa gerado" tabIndex={0} sx={{ mt: 2, mb: 0, flex: 1, minHeight: 0, overflow: 'auto', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', color: 'rgba(255,255,255,.9)', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6 }}>{prompt}</Box>}
               {prompt && <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}><Button variant="contained" color="primary" startIcon={<ContentCopyIcon />} onClick={copyPrompt}>Copiar pedido</Button><Button variant="outlined" sx={{ color: 'white', borderColor: 'rgba(255,255,255,.5)' }} startIcon={<DownloadIcon />} onClick={downloadPrompt}>Baixar texto</Button></Box>}
             </CardContent>
           </Card>

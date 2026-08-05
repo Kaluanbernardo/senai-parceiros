@@ -29,7 +29,10 @@ function normalizeState(value) {
 
 class CatalogStore {
   constructor() {
-    this.driver = String(process.env.CATALOG_STORE_DRIVER || (process.env.CATALOG_STORE_FILE ? 'file' : 'memory')).toLowerCase();
+    const defaultDriver = process.env.NODE_ENV === 'test'
+      ? 'memory'
+      : (process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL ? 'vercel_blob' : 'file');
+    this.driver = String(process.env.CATALOG_STORE_DRIVER || (process.env.CATALOG_STORE_FILE ? 'file' : defaultDriver)).toLowerCase();
     this.filePath = process.env.CATALOG_STORE_FILE || path.join(process.cwd(), '.data', 'catalog-store.json');
     this.blobPath = process.env.CATALOG_BLOB_PATH || 'senai/catalog/manifest.json';
     this.state = emptyState();

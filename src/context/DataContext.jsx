@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { canonicalizeResearchers, resolveResearcherId } from '../domain/researcherCatalog';
 import { useAuth } from './AuthContext';
 
@@ -50,6 +51,7 @@ function upsertRecords(previous, incoming = []) {
 
 export function DataProvider({ children }) {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const [stakeholders, setStakeholders] = useState([]);
   const [escolas, setEscolas] = useState([]);
   const [pesquisadores, setPesquisadores] = useState([]);
@@ -99,6 +101,14 @@ export function DataProvider({ children }) {
       });
     return () => { active = false; };
   }, [user, ensureSeeds, refreshCatalog]);
+
+  useEffect(() => {
+    if (!user || !catalogReady) return undefined;
+    const update = () => refreshCatalog().catch(() => undefined);
+    update();
+    window.addEventListener('focus', update);
+    return () => window.removeEventListener('focus', update);
+  }, [user, catalogReady, pathname, refreshCatalog]);
 
   // Generic CRUD helpers
   const updateItem = useCallback((collection, setCollection, id, updates) => {

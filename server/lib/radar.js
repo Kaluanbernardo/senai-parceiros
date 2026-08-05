@@ -1,7 +1,7 @@
 import seedItems from '../../src/data/radar-seeds.json' with { type: 'json' };
-import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json' };
 import { dedupeRadarItems, filterRadarItems, isEligibleRadarItem, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
-import { canonicalizeResearchers } from '../../src/domain/researcherCatalog.js';
+import { getCatalog } from './catalog.js';
+import { hydrateCatalogStore } from './catalogImport.js';
 import { radarStore } from './radarStore.js';
 import { editorializeRadarItems } from './radar/editorialService.js';
 import { summarizeResearchItems } from './radar/researchSummaryService.js';
@@ -364,13 +364,6 @@ export async function fetchOpenAlexItems({ query = '"vocational education and tr
   return items;
 }
 
-function trackedResearcherNames(limit = 8) {
-  return canonicalizeResearchers(pesquisadores).records
-    .filter((record) => record.nome && (record.scholar || record.orcid || record.openalex_id))
-    .slice(0, Math.max(0, Math.min(Number(limit) || 8, 12)))
-    .map((record) => record.nome);
-}
-
 function researcherNameMatches(authors, name) {
   const expected = String(name || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter((token) => token.length > 2);
   return expected.length > 0 && (authors || []).some((author) => {
@@ -380,7 +373,7 @@ function researcherNameMatches(authors, name) {
 }
 
 export async function fetchTrackedResearcherItems({ limitResearchers, previousCoverage = null } = {}) {
-  const catalog = canonicalizeResearchers(pesquisadores).records;
+  const catalog = await getTrackedResearcherCatalog();
   const selected = Number(limitResearchers) > 0 ? catalog.slice(0, Number(limitResearchers)) : catalog;
   const result = await collectTrackedResearcherStudies({
     catalog: selected,
@@ -392,6 +385,11 @@ export async function fetchTrackedResearcherItems({ limitResearchers, previousCo
   Object.defineProperty(result.items, 'coverage', { value: result.coverage, enumerable: false });
   Object.defineProperty(result.items, 'errors', { value: result.errors, enumerable: false });
   return result.items;
+}
+
+export async function getTrackedResearcherCatalog() {
+  await hydrateCatalogStore({ force: true });
+  return getCatalog('researcher');
 }
 
 export async function fetchCrossrefItems({ query = 'vocational education training', limit = 12 } = {}) {

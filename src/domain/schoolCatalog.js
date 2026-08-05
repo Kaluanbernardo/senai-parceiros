@@ -91,7 +91,9 @@ function normalizeRecord(record, source) {
     acronym: record.sigla || '',
     scope,
     categoria: 'Escola',
-    areas: record.areas || record.areas_formacao || '',
+    areas: Array.isArray(record.areas || record.areas_formacao)
+      ? (record.areas || record.areas_formacao).join('; ')
+      : (record.areas || record.areas_formacao || ''),
     hasPartnership: source === 'stakeholders' && positiveRelation && !negativeRelation,
     _source: source,
     _sourceId: record.id,

@@ -35,7 +35,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import AdminTable from '../components/AdminTable';
 import EditDialog from '../components/EditDialog';
@@ -43,6 +43,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const data = useData();
   const [tab, setTab] = useState(0);
   const [editItem, setEditItem] = useState(null);
@@ -55,6 +56,8 @@ export default function AdminPage() {
   const fileInputRef = useRef(null);
   const xlsxInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
+  const [catalogImportOpen, setCatalogImportOpen] = useState(searchParams.get('import') === '1');
+  const [catalogImportCategory, setCatalogImportCategory] = useState('');
   const [xlsxPreview, setXlsxPreview] = useState(null);
   const [xlsxDecisions, setXlsxDecisions] = useState({});
   const [xlsxBusy, setXlsxBusy] = useState(false);
@@ -138,6 +141,12 @@ export default function AdminPage() {
 
   const handleXlsxClick = () => {
     setMenuAnchor(null);
+    setCatalogImportOpen(true);
+  };
+
+  const chooseCatalogFile = () => {
+    if (!catalogImportCategory) return;
+    setCatalogImportOpen(false);
     setTimeout(() => xlsxInputRef.current?.click(), 100);
   };
 
@@ -198,7 +207,7 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
+        body: JSON.stringify({ filename: file.name, category: catalogImportCategory, contentBase64: btoa(binary) }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
@@ -296,7 +305,7 @@ export default function AdminPage() {
             </MenuItem>
             <MenuItem onClick={handleXlsxClick}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Stakeholders XLSX" secondary="Prévia e confirmação administrativa" />
+              <ListItemText primary="Importar XLSX ou CSV" secondary="Escolha o tipo, revise e confirme" />
             </MenuItem>
             <MenuItem onClick={handleBatchesClick}>
               <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
@@ -362,10 +371,28 @@ export default function AdminPage() {
         accept=".json"
         onChange={handleFileChange}
       />
-      <input type="file" ref={xlsxInputRef} style={{ display: 'none' }} accept=".xlsx" onChange={handleXlsxFileChange} />
+      <input type="file" ref={xlsxInputRef} style={{ display: 'none' }} accept=".xlsx,.csv" onChange={handleXlsxFileChange} />
+
+      <Dialog open={catalogImportOpen} onClose={() => setCatalogImportOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>O que você está importando?</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <InputLabel>Tipo de conteúdo</InputLabel>
+            <Select label="Tipo de conteúdo" value={catalogImportCategory} onChange={(event) => setCatalogImportCategory(event.target.value)}>
+              <MenuItem value="researcher">Especialistas e pesquisadores</MenuItem>
+              <MenuItem value="school">Instituições de educação</MenuItem>
+              <MenuItem value="organization">Outras organizações</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCatalogImportOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={chooseCatalogFile} disabled={!catalogImportCategory}>Escolher arquivo</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={Boolean(xlsxPreview)} onClose={() => !xlsxBusy && setXlsxPreview(null)} fullWidth maxWidth="md">
-        <DialogTitle>Prévia da importação XLSX</DialogTitle>
+        <DialogTitle>Prévia da importação</DialogTitle>
         <DialogContent dividers>
           {xlsxPreview && <>
             <Alert severity="info" sx={{ mb: 2 }}>Categoria: {xlsxPreview.category} · {xlsxPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>

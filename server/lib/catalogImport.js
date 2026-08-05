@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { Readable } from 'node:stream';
 import ExcelJS from 'exceljs';
 import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogHeaders, normalizeCell, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from '../../src/domain/catalogImportSchema.js';
 import { normalizeResearcherName } from '../../src/domain/researcherCatalog.js';
@@ -73,13 +74,14 @@ function mergeRecord(existing, imported) {
 }
 
 export async function parseCatalogWorkbook({ contentBase64, filename, category: requestedCategory } = {}) {
-  if (!filename || !/\.xlsx$/i.test(filename) || /\.(xlsm|xls)$/i.test(filename)) throw new Error('xlsx_only');
+  if (!filename || !/\.(xlsx|csv)$/i.test(filename) || /\.(xlsm|xls)$/i.test(filename)) throw new Error('xlsx_or_csv_only');
   if (typeof contentBase64 !== 'string') throw new Error('file_content_required');
   const buffer = Buffer.from(contentBase64, 'base64');
   if (!buffer.length || buffer.length > MAX_FILE_BYTES) throw new Error('file_too_large');
   const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer, { ignoreNodes: ['extLst'] });
-  const sheet = workbook.getWorksheet(CATALOG_SHEET_NAME);
+  const sheet = /\.csv$/i.test(filename)
+    ? await workbook.csv.read(Readable.from(buffer), { parserOptions: { ignoreEmpty: true, trim: true } })
+    : (await workbook.xlsx.load(buffer, { ignoreNodes: ['extLst'] })).getWorksheet(CATALOG_SHEET_NAME);
   if (!sheet) throw new Error('stakeholders_sheet_required');
   if (sheet.rowCount < 2) throw new Error('stakeholders_rows_required');
   if (sheet.rowCount - 1 > MAX_ROWS) throw new Error('too_many_rows');

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarEditorials, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
+import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarEditorials, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, getTrackedResearcherCatalog, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
+import { catalogStore } from './catalogStore.js';
 
 const baseItems = [
   normalizeRadarItem({ id: 'a', section: 'research', title: 'IA na indústria', summaryPt: 'Competências para manufatura', publishedAt: '2026-07-10', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['IA', 'indústria'], relevanceScore: 90, externalId: 'doi:a' }),
@@ -8,7 +9,25 @@ const baseItems = [
 ];
 
 describe('radar domain', () => {
-  afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); radarStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; });
+  afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); radarStore.configure({ driver: 'memory' }); catalogStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; });
+
+  it('usa pesquisadores importados no catálogo acompanhado pelo Radar', async () => {
+    catalogStore.configure({ driver: 'memory' });
+    catalogStore.replaceCategory('researcher', [{
+      id: 'r-import-1',
+      nome: 'Pesquisadora Importada',
+      instituicao: 'Instituto de Teste',
+      pais: 'Brasil',
+      areas: ['educação profissional'],
+      openalex_id: 'A123',
+    }], ['hash-import-1']);
+
+    const catalog = await getTrackedResearcherCatalog();
+
+    expect(catalog).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'r-import-1', nome: 'Pesquisadora Importada' }),
+    ]));
+  });
   it('deduplicates by DOI or external identifier', () => {
     expect(dedupeRadarItems([...baseItems, { ...baseItems[0], id: 'copy' }])).toHaveLength(2);
     expect(dedupeRadarItems([{ title: 'Sem identificador', sourceName: 'Fonte' }, { title: 'Sem identificador', sourceName: 'Fonte' }])).toHaveLength(1);

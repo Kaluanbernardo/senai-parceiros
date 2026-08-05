@@ -1,12 +1,15 @@
 import React from 'react';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
 import ToolCard from '../design-system/primitives/ToolCard';
@@ -14,6 +17,7 @@ import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 export default function CatalogHomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const categories = [
     {
       path: '/catalogo/especialistas',
@@ -44,6 +48,17 @@ export default function CatalogHomePage() {
         accent="catalog"
         dense
       />
+
+      {user?.role === 'admin' && (
+        <Button
+          variant="outlined"
+          startIcon={<FileUploadOutlinedIcon />}
+          onClick={() => navigate('/admin?import=1')}
+          sx={{ mt: 3 }}
+        >
+          Importar planilha
+        </Button>
+      )}
 
       <Grid container spacing={2} sx={{ mt: 3 }}>
         {categories.map((item) => (
