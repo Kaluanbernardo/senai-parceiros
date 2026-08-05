@@ -52,6 +52,7 @@ function valueOf(entry, dimension) {
  * evidência num subcritério, ela é a explicação mais concreta possível.
  */
 function flatReason(entries, dimension, value) {
+  const total = entries.length;
   const subscores = entries.map((entry) => entry?.criteria?.[dimension]?.subscores || []);
   if (subscores.every((list) => list.length)) {
     // A evidência só explica o empate quando é a mesma para todos. Igualdade
@@ -61,9 +62,9 @@ function flatReason(entries, dimension, value) {
       const match = list.find((item) => item.id === sub.id);
       return match && match.score === sub.score && String(match.evidence) === String(sub.evidence);
     }));
-    if (shared?.evidence?.length) return `${shared.label.toLowerCase()}: ${shared.evidence[0]}`;
+    if (shared?.evidence?.length) return `${total === 1 ? 'O candidato tem' : `Os ${total} têm`} a mesma situação: ${shared.evidence[0]}.`;
   }
-  return `${value}/100 para todos os ${entries.length}`;
+  return `${total === 1 ? 'Nota' : `Todos os ${total} tiraram`} ${value} de 100 aqui.`;
 }
 
 /**
@@ -86,6 +87,12 @@ export function buildDimensionRanges(entries = [], { threshold = DISCRIMINATION_
       amplitude,
       discriminates,
       reason: discriminates ? '' : flatReason(entries, dimension, min),
+      // Quem está em cada ponta, por nome: um número solto não diz nada a quem
+      // está lendo, e era o principal motivo de a comparação continuar confusa.
+      leaderName: nameOf(entries[values.indexOf(max)]),
+      leaderRank: values.indexOf(max) + 1,
+      trailerName: nameOf(entries[values.indexOf(min)]),
+      trailerRank: values.indexOf(min) + 1,
       points: entries.map((entry, index) => ({
         rank: index + 1,
         id: entry.candidate?.id,

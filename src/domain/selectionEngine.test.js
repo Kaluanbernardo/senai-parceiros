@@ -123,12 +123,28 @@ describe('selection engine', () => {
     expect(new Set(selected.slice(0, 20).map((entry) => entry.candidate.instituicao)).size).toBe(20);
   });
 
-  it('exposes a candidate-specific differential and trade-offs', () => {
-    const result = buildLocalEvaluation({ ...input, brief: { context: input.answers.context, themes: ['IA', 'manufatura'], feasibility: { geography: 'Brasil' }, collaborationModel: 'palestra' }, candidates });
+  it('justifies a candidate with facts from the record, not with normalized tokens', () => {
+    const result = buildLocalEvaluation({ ...input, brief: { context: input.answers.context, themes: ['inteligência artificial', 'manufatura avançada'], feasibility: { geography: 'Brasil' }, collaborationModel: 'palestra' }, candidates });
     const first = result.shortlist[0];
-    expect(first.comparativeEdge).toContain('Diferencia-se');
+    const text = [first.explanation.headline, ...first.explanation.why, ...first.explanation.against].join(' ');
+
+    expect(first.explanation.headline).toContain('Instituto A');
+    expect(first.explanation.why.length).toBeGreaterThan(0);
+    // O número de citações vem do cadastro e é conferível.
+    expect(text).toContain('1.200');
+    // O defeito que motivou esta mudança: o texto era montado com fragmentos
+    // sem acento dos termos que casaram ("formacao", "transicao", "educacao"),
+    // o que fazia a justificativa parecer aleatória.
+    expect(text).not.toMatch(/\b(?:formacao|transicao|educacao|profissional,|aderencia)\b/);
     expect(first.dimensionRationale).toEqual(expect.objectContaining({ impact: expect.any(String), risk: expect.any(String) }));
     expect(Array.isArray(first.tradeoffs)).toBe(true);
+  });
+
+  it('admits when the public record does not confirm the requested themes', () => {
+    const unrelated = { id: 50, nome: 'Especialista em Poesia', instituicao: 'Casa das Letras', pais: 'Brasil', areas: 'Poesia moderna' };
+    const result = buildLocalEvaluation({ ...input, candidates: [unrelated] });
+
+    expect(result.candidatePool[0].explanation.why[0]).toMatch(/não confirma|precisa de validação/i);
   });
 
   it('does not treat absence of partnership evidence as a risk signal', () => {

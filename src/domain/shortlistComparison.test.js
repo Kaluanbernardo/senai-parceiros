@@ -35,7 +35,12 @@ describe('shortlist comparison', () => {
     expect(flat).toEqual(expect.arrayContaining(['collaboration', 'risk']));
     const collaboration = ranges.find((range) => range.dimension === 'collaboration');
     expect(collaboration.amplitude).toBe(0);
-    expect(collaboration.reason).toContain('74/100');
+    expect(collaboration.reason).toContain('74 de 100');
+    expect(collaboration.reason).toContain('Todos os 5');
+    // Quem está em cada ponta aparece por nome, não por número solto.
+    const alignment = ranges.find((range) => range.dimension === 'alignment');
+    expect(alignment.leaderName).toBe('Jos Akkermans');
+    expect(alignment.trailerName).toBe('Matthew Schmidt');
   });
 
   it('only blames a shared subcriterion when the evidence is really shared', () => {

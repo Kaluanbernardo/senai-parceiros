@@ -30,54 +30,63 @@ function taxonomy(entries) {
 export const STRATEGIC_PRIORITIES = taxonomy([
   {
     id: 'advanced_manufacturing',
+    short: 'manufatura avançada',
     label: 'Manufatura avançada e Indústria 4.0',
     weight: 1,
     terms: ['manufatura avancada', 'industria 4.0', 'industria 40', 'automacao', 'robotica', 'mecatronica', 'sistemas de manufatura', 'producao enxuta', 'lean', 'gemeo digital', 'digital twin', 'usinagem', 'metalmecanica', 'manufacturing', 'fabricacao'],
   },
   {
     id: 'digital_ai',
+    short: 'inteligência artificial e tecnologias digitais',
     label: 'Inteligência artificial, dados e transformação digital',
     weight: 1,
     terms: ['inteligencia artificial', 'artificial intelligence', 'machine learning', 'aprendizagem de maquina', 'ciencia de dados', 'big data', 'analytics', 'transformacao digital', 'competencias digitais', 'iot', 'internet das coisas', 'computacao', 'software', 'programacao', 'ciberseguranca'],
   },
   {
     id: 'sustainability',
+    short: 'sustentabilidade e economia circular',
     label: 'Sustentabilidade, ESG, descarbonização e economia circular',
     weight: 1,
     terms: ['sustentabilidade', 'economia circular', 'circularidade', 'descarbonizacao', 'esg', 'residuos', 'reciclagem', 'energia renovavel', 'eficiencia energetica', 'transicao energetica', 'emissoes', 'clima', 'ambiental'],
   },
   {
     id: 'vet_quality',
+    short: 'educação profissional',
     label: 'Qualidade e inovação da educação profissional',
     weight: 1.1,
     terms: ['educacao profissional', 'ensino tecnico', 'formacao profissional', 'ept', 'vet', 'tvet', 'curriculo', 'competencias', 'aprendizagem pratica', 'formacao dual', 'sistema dual', 'aprendizagem baseada em projetos', 'certificacao', 'qualificacao', 'vocational'],
   },
   {
     id: 'employability',
+    short: 'empregabilidade',
     label: 'Empregabilidade e transição escola-trabalho',
     weight: 1,
     terms: ['empregabilidade', 'transicao escola trabalho', 'mercado de trabalho', 'insercao produtiva', 'requalificacao', 'reskilling', 'upskilling', 'estagio', 'aprendiz', 'egressos', 'workforce', 'empregos'],
   },
   {
     id: 'applied_research',
+    short: 'pesquisa aplicada e inovação',
     label: 'Pesquisa aplicada, inovação e transferência tecnológica',
     weight: 1,
     terms: ['pesquisa aplicada', 'inovacao', 'transferencia tecnologica', 'p&d', 'pesquisa e desenvolvimento', 'prototipagem', 'laboratorio', 'instituto de inovacao', 'startup', 'empreendedorismo', 'patente', 'tecnologia industrial'],
   },
   {
     id: 'regional_inclusion',
+    short: 'desenvolvimento regional',
     label: 'Desenvolvimento regional, acesso e inclusão produtiva',
     weight: 0.9,
     terms: ['desenvolvimento regional', 'interiorizacao', 'inclusao', 'diversidade', 'acesso', 'vulnerabilidade', 'territorio', 'arranjo produtivo', 'pequenas empresas', 'mpe', 'comunidade'],
   },
   {
     id: 'teacher_development',
+    short: 'formação docente',
     label: 'Formação e desenvolvimento de docentes e instrutores',
     weight: 0.9,
     terms: ['formacao docente', 'formacao de instrutores', 'desenvolvimento docente', 'capacitacao de professores', 'docentes', 'instrutores', 'pedagogico', 'didatica', 'teacher training'],
   },
   {
     id: 'health_safety',
+    short: 'saúde e segurança no trabalho',
     label: 'Saúde, segurança e condições de trabalho na indústria',
     weight: 0.8,
     terms: ['saude e seguranca', 'seguranca do trabalho', 'sst', 'ergonomia', 'nr 12', 'acidente de trabalho', 'saude ocupacional'],
@@ -97,12 +106,12 @@ export const CONTRIBUTION_TYPES = taxonomy([
 
 /** Públicos e beneficiários típicos das iniciativas do SENAI-SP. */
 export const AUDIENCE_PROFILES = taxonomy([
-  { id: 'instructors', label: 'Docentes e instrutores', terms: ['docente', 'instrutor', 'professor', 'formador', 'corpo docente'] },
-  { id: 'managers', label: 'Gestores e lideranças educacionais', terms: ['gestor', 'gestao', 'diretor', 'coordenador', 'lideranca', 'direcao', 'coordenacao'] },
-  { id: 'students', label: 'Estudantes e aprendizes', terms: ['estudante', 'aluno', 'aprendiz', 'jovem', 'egresso', 'turma'] },
-  { id: 'industry', label: 'Empresas e profissionais da indústria', terms: ['empresa', 'industria', 'empresario', 'setor produtivo', 'empregador', 'fabrica', 'trabalhador', 'profissional'] },
-  { id: 'policy', label: 'Formuladores de política e sistema S', terms: ['politica publica', 'governo', 'ministerio', 'secretaria', 'orgao publico', 'sistema s', 'conselho'] },
-  { id: 'researchers', label: 'Pesquisadores e comunidade acadêmica', terms: ['pesquisador', 'academico', 'universidade', 'comunidade cientifica', 'pos graduacao'] },
+  { id: 'instructors', short: 'docentes e instrutores', label: 'Docentes e instrutores', terms: ['docente', 'instrutor', 'professor', 'formador', 'corpo docente'] },
+  { id: 'managers', short: 'gestores', label: 'Gestores e lideranças educacionais', terms: ['gestor', 'gestao', 'diretor', 'coordenador', 'lideranca', 'direcao', 'coordenacao'] },
+  { id: 'students', short: 'estudantes', label: 'Estudantes e aprendizes', terms: ['estudante', 'aluno', 'aprendiz', 'jovem', 'egresso', 'turma'] },
+  { id: 'industry', short: 'empresas da indústria', label: 'Empresas e profissionais da indústria', terms: ['empresa', 'industria', 'empresario', 'setor produtivo', 'empregador', 'fabrica', 'trabalhador', 'profissional'] },
+  { id: 'policy', short: 'gestão pública', label: 'Formuladores de política e sistema S', terms: ['politica publica', 'governo', 'ministerio', 'secretaria', 'orgao publico', 'sistema s', 'conselho'] },
+  { id: 'researchers', short: 'pesquisadores', label: 'Pesquisadores e comunidade acadêmica', terms: ['pesquisador', 'academico', 'universidade', 'comunidade cientifica', 'pos graduacao'] },
 ]);
 
 /** Tipos de evidência pública que sustentam uma recomendação. */
@@ -188,7 +197,7 @@ export function matchTaxonomy(text, entries) {
   return entries
     .map((entry) => {
       const matched = countTerms(folded, entry.terms);
-      return { id: entry.id, label: entry.label, rank: entry.rank, weight: entry.weight ?? 1, matched, strength: Math.min(1, matched.length / 2) };
+      return { id: entry.id, label: entry.label, short: entry.short || entry.label, rank: entry.rank, weight: entry.weight ?? 1, matched, strength: Math.min(1, matched.length / 2) };
     })
     .filter((entry) => entry.matched.length > 0)
     .sort((left, right) => right.matched.length - left.matched.length || String(left.id).localeCompare(String(right.id)));

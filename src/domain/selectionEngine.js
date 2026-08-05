@@ -1,5 +1,6 @@
 import { mergeSchoolSources } from './schoolCatalog';
 import { extractSignals } from './answerSignals.js';
+import { explainCandidate } from './candidateExplanation.js';
 import {
   DIMENSIONS, DIMENSION_GROUPS, SELECTION_CRITERIA_VERSION, SUBCRITERIA,
   deriveDimensionWeights, describeCriteria, groupShares,
@@ -145,6 +146,9 @@ export function buildContextProfile({ brief = {}, answers = {}, category, object
     // institucional entra em `priorities`, com peso próprio, e nunca dilui
     // este conjunto.
     themeTokens: [...new Set(tokens([userWords, answerWords].filter(Boolean).join(' ')))],
+    // As palavras do usuário como ele as escreveu, para a justificativa citar
+    // "educação profissional" em vez do token normalizado "educacao".
+    themePhrases: [...new Set([...(brief.themes || []), ...String(answers.themes || '').split(/[;\n]/)].map((phrase) => String(phrase).trim()).filter((phrase) => phrase.length > 3))],
     priorities: signals.priorities.length ? signals.priorities : matchTaxonomy(SENAI_STRATEGIC_BASELINE.join(' '), STRATEGIC_PRIORITIES),
     prioritiesFromUser: signals.priorities.length > 0,
     audiences: signals.audiences,
@@ -395,7 +399,8 @@ export function composeTotals(dimensions, criteria, severeRisk) {
 }
 
 function scoreCandidate({ candidate, profile, criteria, terms }) {
-  const text = fold(candidateText(candidate));
+  const raw = candidateText(candidate);
+  const text = fold(raw);
   const severeRisk = confirmedSevereRisk(candidate);
   const partnership = partnershipState(candidate);
 
@@ -416,6 +421,20 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
   const strongest = [...DIMENSIONS].sort((left, right) => dimensions[right] - dimensions[left])[0];
   const weakest = [...DIMENSIONS].sort((left, right) => dimensions[left] - dimensions[right])[0];
 
+  const explanation = explainCandidate({
+    candidate,
+    profile,
+    dimensions,
+    partnership,
+    text: raw,
+    matches: {
+      priorities: matchTaxonomy(raw, STRATEGIC_PRIORITIES).filter((item) => profile.priorities.some((wanted) => wanted.id === item.id)),
+      audiences: matchTaxonomy(raw, AUDIENCE_PROFILES).filter((item) => profile.audiences.some((wanted) => wanted.id === item.id)),
+      contributions: matchTaxonomy(raw, CONTRIBUTION_TYPES).filter((item) => profile.contributions.some((wanted) => wanted.id === item.id)),
+      geographyScore: feasibility.subscores.find((item) => item.id === 'geography_fit')?.score,
+    },
+  });
+
   return {
     candidate,
     dimensions,
@@ -425,19 +444,11 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
     total,
     severeRisk,
     partnership,
+    explanation,
     confidence: clamp(30 + clamp01(fields.length / 9) * 45 + clamp01(matchedTokens.length / 6) * 25),
-    summary: distinctive.length
-      ? `Aderência sustentada por ${distinctive.join(', ')}${candidate.pais ? `, com atuação em ${candidate.pais}` : ''}.`
-      : 'Aderência contextual ainda precisa de validação humana: nenhum termo específico do briefing aparece no perfil público.',
-    comparativeEdge: distinctive.length
-      ? `Diferencia-se por combinar ${distinctive.slice(0, 3).join(', ')}${partnership.confirmed ? ' e relação já existente com o SENAI' : ''}${candidate.pais ? `, a partir de ${candidate.pais}` : ''}.`
-      : `Diferencia-se pouco no material público disponível; a decisão depende de ${DIMENSION_LABELS[strongest]}.`,
-    tradeoffs: [
-      dimensions[weakest] < 55 ? `Ponto fraco em ${DIMENSION_LABELS[weakest]} (${dimensions[weakest]}/100).` : null,
-      profile.geography.length && feasibility.subscores.find((item) => item.id === 'geography_fit')?.score < 65 ? 'Exige validar a viabilidade fora do escopo geográfico informado.' : null,
-      fields.length < 7 ? 'Há lacunas de informação pública que reduzem a confiança.' : null,
-      !partnership.confirmed ? 'Não há parceria registrada: o primeiro contato precisa ser construído.' : null,
-    ].filter(Boolean).slice(0, 3),
+    summary: explanation.why[0],
+    comparativeEdge: explanation.why.slice(1).join(' ') || `Diferencia-se sobretudo por ${DIMENSION_LABELS[strongest]}.`,
+    tradeoffs: explanation.against,
     dimensionRationale: Object.fromEntries(DIMENSIONS.map((dimension) => [
       dimension,
       `${DIMENSION_LABELS[dimension]} ${dimensions[dimension]}/100 — ${detail[dimension].subscores.map((item) => `${item.label}: ${item.score}`).join('; ')}.`,

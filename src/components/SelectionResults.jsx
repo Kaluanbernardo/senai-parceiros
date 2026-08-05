@@ -37,7 +37,7 @@ function decisionBand(value) {
  * Dimensões que não separam ninguém saem do gráfico e são declaradas, em vez
  * de ocuparem um eixo fingindo informação.
  */
-function DimensionRanges({ ranges, selectedId, onSelect }) {
+function DimensionRanges({ ranges, legend, selectedId, onSelect }) {
   const discriminating = ranges.filter((range) => range.discriminates);
   const flat = ranges.filter((range) => !range.discriminates);
 
@@ -45,8 +45,22 @@ function DimensionRanges({ ranges, selectedId, onSelect }) {
     <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
       <Typography variant="subtitle1" fontWeight={700}>Onde a shortlist se diferencia</Typography>
       <Typography variant="caption" color="text.secondary">
-        Cada faixa mostra só o intervalo que aquela dimensão ocupa entre estes candidatos. Os números são a posição no ranking.
+        Cada linha mostra só o trecho de nota que estes candidatos ocupam — por isso uma diferença pequena fica visível. Clique num número para ver o perfil.
       </Typography>
+      {/* Sem a legenda a pessoa vê "4" e não sabe de quem se trata. */}
+      <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ mt: 1.5 }}>
+        {legend.map((item) => (
+          <Chip
+            key={item.id}
+            size="small"
+            clickable
+            onClick={() => onSelect?.(item.rank - 1)}
+            variant={item.id === selectedId ? 'filled' : 'outlined'}
+            color={item.id === selectedId ? 'secondary' : 'default'}
+            label={`${item.rank}. ${item.name}`}
+          />
+        ))}
+      </Stack>
       {!discriminating.length && (
         <Alert severity="info" sx={{ mt: 2 }}>Nenhuma dimensão separa estes candidatos de forma acionável: eles são equivalentes no que o catálogo permite verificar.</Alert>
       )}
@@ -55,8 +69,11 @@ function DimensionRanges({ ranges, selectedId, onSelect }) {
           <Box key={range.dimension}>
             <Stack direction="row" justifyContent="space-between" alignItems="baseline">
               <Typography variant="body2" fontWeight={700} sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Typography>
-              <Typography variant="caption" color="text.secondary">varia {range.amplitude} pontos</Typography>
+              <Typography variant="caption" color="text.secondary">notas de {range.min} a {range.max}</Typography>
             </Stack>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Mais forte: <strong>{range.leaderName}</strong> ({range.max}) · mais fraco: {range.trailerName} ({range.min})
+            </Typography>
             <Box sx={{ position: 'relative', height: 44, mt: 1.5 }}>
               <Box sx={{ position: 'absolute', top: 15, left: 0, right: 0, height: 4, borderRadius: 2, bgcolor: 'action.selected' }} />
               {range.points.map((point) => (
@@ -89,7 +106,7 @@ function DimensionRanges({ ranges, selectedId, onSelect }) {
       </Stack>
       {flat.length > 0 && (
         <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary" display="block" fontWeight={700}>Não diferenciam esta shortlist</Typography>
+          <Typography variant="caption" color="text.secondary" display="block" fontWeight={700}>Aqui todos estão empatados</Typography>
           {flat.map((range) => (
             <Typography key={range.dimension} variant="caption" color="text.secondary" display="block" sx={{ mt: .5 }}>
               <Box component="strong" sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Box> — {range.reason}
@@ -270,6 +287,11 @@ export default function SelectionResults({ result, onReview, onRestart }) {
   // A comparação é derivada da própria shortlist: as faixas, os vizinhos, os
   // perfis e a combinação só fazem sentido em relação a quem entrou na lista.
   const comparison = useMemo(() => buildShortlistComparison(shortlist), [shortlist]);
+  const legend = useMemo(() => shortlist.map((entry, index) => ({
+    rank: index + 1,
+    id: entry.candidate.id,
+    name: entry.candidate.nome || entry.candidate.instituicao || `Candidato ${index + 1}`,
+  })), [shortlist]);
   const metadata = useMemo(() => ({
     title: 'Avaliação de stakeholders SENAI-SP',
     category: CATEGORY_LABELS[result?.trace?.category] || result?.trace?.category,
@@ -342,12 +364,30 @@ export default function SelectionResults({ result, onReview, onRestart }) {
                   <Grid size={{ xs: 6, md: 2 }}><Typography variant="caption" color="text.secondary">Viabilidade</Typography><LinearProgress color="success" variant="determinate" value={entry.viability} sx={{ mt: .7, height: 7, borderRadius: 4 }} /><Typography variant="caption">{format(entry.viability)}</Typography></Grid>
                   <Grid size={{ xs: 6, md: 1 }}><Button size="small" onClick={() => { setSelectedIndex(index); setSelectedTab(1); }}>Detalhes</Button></Grid>
                 </Grid>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1.2 }}>{entry.summary}</Typography>
-                {entry.comparativeEdge && <Typography variant="body2" sx={{ mt: .75 }}><strong>Diferencial:</strong> {entry.comparativeEdge}</Typography>}
-                {comparison.neighbors.get(entry.candidate.id) && (
-                  <Typography variant="body2" sx={{ mt: .75, color: 'primary.main' }}>{comparison.neighbors.get(entry.candidate.id).sentence}</Typography>
+                {entry.explanation?.headline && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1.2, fontStyle: 'italic' }}>{entry.explanation.headline}</Typography>
                 )}
-                {entry.tradeoffs?.length ? <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: .5 }}><strong>Trade-offs:</strong> {entry.tradeoffs.join(' · ')}</Typography> : null}
+                {/* Por que esta pessoa serve para isto — cada frase apoiada num
+                    fato do cadastro, em vez de uma lista de termos que casaram. */}
+                {entry.explanation?.why?.length ? (
+                  <Box sx={{ mt: 1.25 }}>
+                    <Typography variant="caption" fontWeight={700} color="success.dark">Por que foi indicado</Typography>
+                    <Stack component="ul" spacing={.4} sx={{ pl: 2.5, mt: .4, mb: 0 }}>
+                      {entry.explanation.why.map((reason) => <Typography component="li" variant="body2" key={reason}>{reason}</Typography>)}
+                    </Stack>
+                  </Box>
+                ) : null}
+                {entry.explanation?.against?.length ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="caption" fontWeight={700} color="warning.dark">O que checar antes</Typography>
+                    <Stack component="ul" spacing={.4} sx={{ pl: 2.5, mt: .4, mb: 0 }}>
+                      {entry.explanation.against.map((item) => <Typography component="li" variant="body2" color="text.secondary" key={item}>{item}</Typography>)}
+                    </Stack>
+                  </Box>
+                ) : null}
+                {comparison.neighbors.get(entry.candidate.id) && (
+                  <Typography variant="body2" sx={{ mt: 1, color: 'primary.main' }}>{comparison.neighbors.get(entry.candidate.id).sentence}</Typography>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -356,7 +396,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
       {selectedTab === 1 && (
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, lg: 7 }}>
-            <DimensionRanges ranges={comparison.ranges} selectedId={selected?.candidate.id} onSelect={setSelectedIndex} />
+            <DimensionRanges ranges={comparison.ranges} legend={legend} selectedId={selected?.candidate.id} onSelect={setSelectedIndex} />
           </Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
             <Stack spacing={2}>
