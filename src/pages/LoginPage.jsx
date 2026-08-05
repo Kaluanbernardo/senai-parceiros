@@ -75,8 +75,7 @@ export default function LoginPage() {
           {BRAND_NAME.tagline}
         </Typography>
         <Typography sx={{ mt: 2, maxWidth: 440, color: T.ink.onInvertedMuted, display: { xs: 'none', md: 'block' } }}>
-          Seleção de parceiros com critérios explicáveis, catálogo de referências públicas
-          e acompanhamento do que muda na educação profissional.
+          Encontre pessoas e instituições, pesquise referências e acompanhe novidades da educação profissional.
         </Typography>
       </Box>
 
@@ -94,7 +93,7 @@ export default function LoginPage() {
         <Card component="form" onSubmit={handleSubmit} sx={{ width: '100%', maxWidth: 400, p: { xs: 3, sm: 4 } }}>
           <Typography variant="h3" sx={{ color: T.ink.strong }}>Entrar</Typography>
           <Typography variant="body2" sx={{ mt: .75, mb: 3, color: T.ink.muted }}>
-            O acesso é restrito à equipe autorizada do {BRAND_NAME.institution}.
+            Entre para acessar as ferramentas do {BRAND_NAME.product}.
           </Typography>
 
           {provider === 'entra' ? (
@@ -133,7 +132,7 @@ export default function LoginPage() {
           )}
 
           <Typography variant="caption" sx={{ display: 'block', mt: 3, color: T.ink.subtle }}>
-            As avaliações não ficam salvas na ferramenta.
+            Suas respostas são usadas apenas durante esta sessão.
           </Typography>
         </Card>
       </Box>

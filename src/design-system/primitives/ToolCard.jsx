@@ -20,7 +20,7 @@ import { DESIGN_TOKENS as T } from '../tokens';
  * O `ButtonBase` anterior virou `CardActionArea` para o cartão ganhar o realce
  * de toque padrão do MUI, e a seta deixou de ser um enfeite estático: ela anda.
  */
-export default function ToolCard({ icon, label, description, themeKey = 'selection', meta, onClick, actionLabel = 'Abrir ferramenta' }) {
+export default function ToolCard({ icon, label, description, themeKey = 'selection', meta, onClick, actionLabel = 'Abrir' }) {
   const tone = T.tools[themeKey] || T.tools.selection;
 
   return (
@@ -46,8 +46,8 @@ export default function ToolCard({ icon, label, description, themeKey = 'selecti
               width: 44,
               height: 44,
               borderRadius: `${T.radius.sm}px`,
-              bgcolor: tone.soft,
-              color: tone.dark,
+              bgcolor: tone.main,
+              color: tone.contrast,
             }}
           >
             {icon}
@@ -59,7 +59,8 @@ export default function ToolCard({ icon, label, description, themeKey = 'selecti
             <Chip
               size="small"
               label={meta}
-              sx={{ bgcolor: tone.soft, color: tone.dark, fontWeight: 700, height: 22, fontSize: T.fontSize.overline }}
+              variant="outlined"
+              sx={{ bgcolor: T.surface.raised, color: tone.dark, borderColor: tone.main, fontWeight: 700, height: 22, fontSize: T.fontSize.overline }}
             />
           )}
         </Stack>

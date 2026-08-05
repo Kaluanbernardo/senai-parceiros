@@ -8,9 +8,7 @@ import TextField from '@mui/material/TextField';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import { SORT_OPTIONS } from '../../domain/catalogFilters';
-import { DESIGN_TOKENS as T } from '../../design-system/tokens';
 
 /**
  * Contagem, ordenação e densidade da lista.
@@ -25,8 +23,6 @@ import { DESIGN_TOKENS as T } from '../../design-system/tokens';
  * rolar muito para comparar nomes; a lista mostra três vezes mais por tela.
  */
 export default function ResultsToolbar({ shown, total, noun, sort, onSortChange, view, onViewChange }) {
-  const filtering = shown < total;
-
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -35,19 +31,14 @@ export default function ResultsToolbar({ shown, total, noun, sort, onSortChange,
       gap={1.5}
       sx={{ py: 1.5 }}
     >
-      <Typography
-        // `aria-live="polite"` avisa a mudança sem interromper a digitação.
+      <Box
         aria-live="polite"
-        sx={{ fontSize: T.fontSize.small, color: T.ink.muted }}
+        sx={{ position: 'absolute', width: 1, height: 1, p: 0, m: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}
       >
-        <Box component="strong" sx={{ color: T.ink.strong, fontWeight: 750 }}>
-          {shown.toLocaleString('pt-BR')}
-        </Box>{' '}
-        {shown === 1 ? noun.singular : noun.plural}
-        {filtering && ` de ${total.toLocaleString('pt-BR')}`}
-      </Typography>
+        Lista atualizada.
+      </Box>
 
-      <Stack direction="row" gap={1} alignItems="center" justifyContent={{ xs: 'space-between', sm: 'flex-end' }}>
+      <Stack direction="row" gap={1} alignItems="center" justifyContent="flex-end" sx={{ width: '100%' }}>
         <TextField
           select
           size="small"

@@ -68,7 +68,7 @@ function providerHeaders(provider) {
   if (provider !== 'openrouter') return {};
   return {
     'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://senai-parceiros.vercel.app',
-    'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Parceiros',
+    'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Farol de Parcerias',
     'X-OpenRouter-Metadata': 'enabled',
   };
 }

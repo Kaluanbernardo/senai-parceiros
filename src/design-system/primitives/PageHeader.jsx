@@ -22,12 +22,7 @@ export default function PageHeader({ eyebrow, title, description, actions, accen
       gap={{ xs: 2, md: 3 }}
     >
       <Box sx={{ minWidth: 0 }}>
-        {eyebrow && (
-          <Stack direction="row" alignItems="center" gap={1} sx={{ mb: .75 }}>
-            <Box aria-hidden sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: tone.main, flexShrink: 0 }} />
-            <Typography variant="overline" sx={{ color: tone.dark }}>{eyebrow}</Typography>
-          </Stack>
-        )}
+        {eyebrow && <Typography variant="overline" sx={{ display: 'block', mb: .75, color: tone.dark }}>{eyebrow}</Typography>}
         <Typography variant={dense ? 'h2' : 'h1'} sx={{ color: T.ink.strong }}>{title}</Typography>
         {description && (
           // A medida de linha para em ~65 caracteres. Descrição correndo a

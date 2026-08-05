@@ -39,7 +39,7 @@ function ExternalLink({ link, tone }) {
         href={link.href}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`${link.label} — abre em nova aba`}
+        aria-label={`${link.label}, abre em nova aba`}
         // Sem isto, clicar no link externo também abriria o modal de detalhe
         // atrás dele: os dois alvos se sobrepõem.
         onClick={(event) => event.stopPropagation()}

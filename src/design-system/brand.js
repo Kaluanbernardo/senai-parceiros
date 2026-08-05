@@ -8,13 +8,10 @@
  * PROCEDÊNCIA DOS VALORES
  * -----------------------
  * O manual de identidade indicado para esta implementação
- * (cronos-media.sesisenaisp.org.br/.../arq_81_221108_*.pdf) não é alcançável a
- * partir do ambiente onde este código foi escrito: a política de rede recusa a
- * conexão com o domínio. Os valores abaixo, portanto, NÃO foram transcritos do
- * manual — eles reconstroem a identidade institucional a partir do que o
- * próprio produto já havia fixado ("manter azul institucional e vermelho SENAI
- * como marca, com superfícies neutras mais claras", docs/PLANO-ONDAS-2-6.md) e
- * a organizam numa escala completa e acessível.
+ * (cronos-media.sesisenaisp.org.br/.../arq_81_221108_*.pdf) define o vermelho
+ * SENAI como cor primária, com branco, preto e cinza como base. A escala abaixo
+ * preserva esse núcleo e cria apenas os tons de interface necessários para
+ * estados, foco e leitura na web.
  *
  * COMO CONFERIR COM O MANUAL
  * --------------------------
@@ -24,7 +21,8 @@
  */
 
 /**
- * Azul institucional. @manual conferir contra a página de cores primárias.
+ * Azul de apoio. Não é uma cor de ação: mantém uma temperatura discreta nos
+ * neutros técnicos sem competir com o vermelho institucional.
  *
  * A escala vai do 900 (superfícies escuras, rodapé, cabeçalho) ao 50 (fundos de
  * destaque). O 700 é o tom de ação: é ele que aparece em botões, links e ícones
@@ -55,7 +53,7 @@ export const RED = Object.freeze({
   900: '#6E0715',
   800: '#8E0C1E',
   700: '#B01228',
-  600: '#C8102E',
+  600: '#E30613',
   500: '#DC2B45',
   400: '#E95F73',
   300: '#F2949F',
@@ -64,22 +62,32 @@ export const RED = Object.freeze({
   50: '#FDF2F4',
 });
 
+export const GREEN = Object.freeze({
+  800: '#07533A',
+  700: '#0F6E4C',
+});
+
+export const AMBER = Object.freeze({
+  800: '#603800',
+  700: '#8A5300',
+});
+
 /**
  * Neutros. Puxados levemente para o azul para não brigarem com a marca — um
  * cinza rigorosamente neutro ao lado do azul institucional parece esverdeado.
  */
 export const NEUTRAL = Object.freeze({
-  950: '#0A1622',
-  900: '#132639',
-  800: '#1E3850',
-  700: '#3A5169',
-  600: '#546C86',
-  500: '#7288A0',
-  400: '#9AACBF',
-  300: '#C2CFDC',
-  200: '#DBE4EC',
-  100: '#EBF0F5',
-  50: '#F5F8FB',
+  950: '#111214',
+  900: '#1C1E21',
+  800: '#2C2F33',
+  700: '#45494F',
+  600: '#5E636B',
+  500: '#777D86',
+  400: '#9A9FA7',
+  300: '#C4C7CC',
+  200: '#DADCE0',
+  100: '#ECEDEF',
+  50: '#F5F5F6',
   0: '#FFFFFF',
 });
 
@@ -88,9 +96,9 @@ export const NEUTRAL = Object.freeze({
  * marca sem serem confundidas com eles.
  */
 export const FEEDBACK = Object.freeze({
-  success: '#0F6E4C',
+  success: GREEN[700],
   successSoft: '#E4F4ED',
-  warning: '#8A5300',
+  warning: AMBER[700],
   warningSoft: '#FCF0DC',
   danger: '#96122A',
   dangerSoft: '#FBE9EC',
@@ -99,14 +107,11 @@ export const FEEDBACK = Object.freeze({
 });
 
 /**
- * Tipografia. @manual o manual do SENAI-SP especifica a família institucional;
- * enquanto ela não estiver disponível como webfont neste projeto, a pilha
- * abaixo usa a fonte de sistema, que é rápida e legível em qualquer plataforma.
- *
- * `display` e `text` estão separados de propósito: quando a família do manual
- * entrar, ela normalmente se aplica só aos títulos.
+ * Tipografia. Montserrat é a família indicada pelo manual e é servida localmente
+ * pelo pacote do projeto, evitando dependência de uma fonte remota no primeiro
+ * carregamento.
  */
-const SYSTEM_STACK = '"Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif';
+const SYSTEM_STACK = '"Montserrat", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif';
 
 export const TYPE = Object.freeze({
   display: SYSTEM_STACK,
@@ -122,25 +127,15 @@ export const BRAND_NAME = Object.freeze({
   institution: 'SENAI-SP',
   /** Usado ao lado do logotipo, que já traz "SENAI" desenhado. */
   region: 'São Paulo',
-  product: 'Parceiros',
-  full: 'SENAI-SP Parceiros',
-  tagline: 'Inteligência em educação profissional e parcerias',
-  owner: 'Gerência de Educação',
+  product: 'Farol de Parcerias',
+  full: 'SENAI-SP Farol de Parcerias',
+  tagline: 'Conexões para transformar ideias em ação',
 });
 
 /**
  * Caminho do logotipo oficial, servido da pasta `public/`.
  *
- * O arquivo NÃO acompanha o repositório. Enquanto ele faltar, `Wordmark`
- * detecta a ausência pelo `onError` do `<img>` e desenha o lockup tipográfico
- * de reserva — a interface não quebra, apenas fica sem a marca.
- *
- * PARA ATIVAR: salve o PNG (ou SVG, ajustando a extensão aqui) do logotipo
- * institucional em `public/senai-logo.png`. Nenhuma outra alteração é
- * necessária.
- *
- * Preferir SVG quando houver: o logotipo aparece em 26px de altura no
- * cabeçalho e em 35px na tela de acesso, e um PNG de baixa resolução fica
- * visivelmente serrilhado em tela retina.
+ * O SVG oficial fica no repositório. `Wordmark` mantém um fallback tipográfico
+ * caso o arquivo deixe de carregar, sem bloquear a navegação.
  */
-export const LOGO_ASSET = '/senai-logo.png';
+export const LOGO_ASSET = '/senai-logo.svg';

@@ -1,5 +1,5 @@
 import React from 'react';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import BusinessIcon from '@mui/icons-material/Business';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import RadarIcon from '@mui/icons-material/Radar';
@@ -11,7 +11,7 @@ const ICONS = {
   selection: SearchIcon,
   catalog: LibraryBooksIcon,
   radar: RadarIcon,
-  prompt: AutoAwesomeIcon,
+  prompt: ArticleOutlinedIcon,
   researcher: ScienceIcon,
   school: SchoolIcon,
   organization: BusinessIcon,

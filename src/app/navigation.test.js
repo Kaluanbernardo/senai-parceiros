@@ -44,7 +44,7 @@ describe('trilha', () => {
   it('encadeia início › ferramenta em uma página de primeiro nível', () => {
     expect(getBreadcrumbs('/radar')).toEqual([
       { label: 'Início', route: '/' },
-      { label: 'Radar EPT/VET' },
+      { label: 'Radar' },
     ]);
   });
 

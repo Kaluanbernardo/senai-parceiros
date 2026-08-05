@@ -510,7 +510,7 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
     tradeoffs: explanation.against,
     dimensionRationale: Object.fromEntries(DIMENSIONS.map((dimension) => [
       dimension,
-      `${DIMENSION_LABELS[dimension]} ${dimensions[dimension]}/100 — ${detail[dimension].subscores.map((item) => `${item.label}: ${item.score}`).join('; ')}.`,
+      `${DIMENSION_LABELS[dimension]} ${dimensions[dimension]}/100: ${detail[dimension].subscores.map((item) => `${item.label}: ${item.score}`).join('; ')}.`,
     ])),
     evidence: fields.slice(0, 6),
     gaps: [

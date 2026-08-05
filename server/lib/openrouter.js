@@ -147,7 +147,7 @@ export async function evaluateWithOpenRouter({ input, candidates, signal }) {
     provider: 'openrouter',
     headers: {
       'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://senai-parceiros.vercel.app',
-      'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Parceiros',
+      'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Farol de Parcerias',
       'X-OpenRouter-Metadata': 'enabled',
     },
     plugins: [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) }],

@@ -13,6 +13,13 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { CountryFlag } from '../utils/countryCode';
 import { formatInstitutionName } from '../domain/institutionName';
+import { DESIGN_TOKENS as T } from '../design-system/tokens';
+
+const catalogActionSx = {
+  color: T.tools.catalog.main,
+  borderColor: T.tools.catalog.main,
+  '&:hover': { borderColor: T.tools.catalog.dark, bgcolor: T.tools.catalog.soft },
+};
 
 function InfoRow({ label, children }) {
   return (
@@ -95,6 +102,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 href={item.website}
                 target="_blank"
                 rel="noopener noreferrer"
+                sx={catalogActionSx}
               >
                 Website
               </Button>
@@ -103,12 +111,12 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
               <Button
                 variant="outlined"
                 size="small"
-                color="secondary"
                 startIcon={<SchoolIcon />}
                 component="a"
                 href={item.scholar}
                 target="_blank"
                 rel="noopener noreferrer"
+                sx={catalogActionSx}
               >
                 {profileLabels[item.profileType] || 'Perfil Acadêmico'}
               </Button>
@@ -142,7 +150,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                   bgcolor: 'grey.50',
                   borderRadius: 1,
                   borderLeft: 3,
-                  borderColor: 'secondary.main',
+                  borderColor: T.tools.catalog.main,
                   lineHeight: 1.7,
                 }}
               >
@@ -178,7 +186,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                       label={area.trim()}
                       size="small"
                       variant="outlined"
-                      color="primary"
+                      sx={{ color: T.tools.catalog.main, borderColor: T.tools.catalog.main }}
                     />
                   ))}
                 </Box>
@@ -191,10 +199,10 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                   variant="body2"
                   sx={{
                     p: 1.5,
-                    bgcolor: 'primary.50',
+                    bgcolor: T.tools.catalog.soft,
                     borderRadius: 1,
                     borderLeft: 3,
-                    borderColor: 'primary.main',
+                    borderColor: T.tools.catalog.main,
                     fontWeight: 500,
                   }}
                 >
