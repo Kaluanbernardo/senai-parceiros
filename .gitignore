@@ -28,7 +28,9 @@ __pycache__/
 *.pyc
 
 # Claude
-.claude/
+.claude/*
+# ...exceto skills versionadas do projeto
+!.claude/skills/
 
 # Local brainstorming artifacts
 .superpowers/
