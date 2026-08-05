@@ -27,9 +27,9 @@ export const TOOL_REGISTRY = Object.freeze([
     themeKey: 'catalog',
     status: 'ready',
     children: Object.freeze([
-      Object.freeze({ route: '/catalogo/pesquisadores', label: 'Pesquisadores', iconKey: 'researcher' }),
-      Object.freeze({ route: '/catalogo/escolas', label: 'Escolas', iconKey: 'school' }),
-      Object.freeze({ route: '/catalogo/organizacoes', label: 'Organizações', iconKey: 'organization' }),
+      Object.freeze({ route: '/catalogo/pesquisadores', label: 'Especialistas', iconKey: 'researcher' }),
+      Object.freeze({ route: '/catalogo/escolas', label: 'Instituições de Educação', iconKey: 'school' }),
+      Object.freeze({ route: '/catalogo/organizacoes', label: 'Instituições relacionadas', iconKey: 'organization' }),
     ]),
   }),
   Object.freeze({

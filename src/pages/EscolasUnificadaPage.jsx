@@ -80,7 +80,7 @@ export default function EscolasUnificadaPage() {
     <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Escolas &amp; Institutos
+          Instituições de Educação
         </Typography>
         <IconButton onClick={() => setShowFilters((v) => !v)} color="primary">
           <FilterListIcon />
@@ -162,7 +162,7 @@ export default function EscolasUnificadaPage() {
       </Collapse>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {filtered.length} de {allEscolas.length} escolas e institutos
+        {filtered.length} de {allEscolas.length} instituições de educação
       </Typography>
 
       <Grid container spacing={2}>
@@ -176,7 +176,7 @@ export default function EscolasUnificadaPage() {
       {filtered.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            Nenhuma escola encontrada
+            Nenhuma instituição encontrada
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Tente ajustar os filtros ou a busca

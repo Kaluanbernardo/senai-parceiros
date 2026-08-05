@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATALOG_SCHEMA_VERSION, getCatalogHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
+import { CATALOG_SCHEMA_VERSION, getCatalogHeaders, getRequiredHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
 
 describe('catalog import schema', () => {
   it('keeps category headers deterministic and validates the version/type', () => {
@@ -12,6 +12,57 @@ describe('catalog import schema', () => {
     row.nome = 'Pesquisador de teste';
     row.pais = 'Brasil';
     expect(validateCatalogRow(row, 'researcher').valid).toBe(true);
+  });
+
+  describe('cabeçalho parcial', () => {
+    it('accepts a subset that keeps the required columns', () => {
+      // O recorte que o gerador de prompt passa a permitir: seis colunas em vez
+      // de vinte e seis. Antes era recusado por contagem.
+      const subset = ['schema_version', 'tipo_registro', 'nome', 'pais', 'resumo', 'website_oficial'];
+      const validation = validateCatalogHeaders(subset, 'researcher');
+
+      expect(validation.valid).toBe(true);
+      expect(validation.missing).toEqual([]);
+    });
+
+    it('does not care about column order', () => {
+      const shuffled = ['nome', 'pais', 'tipo_registro', 'schema_version'];
+      expect(validateCatalogHeaders(shuffled, 'school').valid).toBe(true);
+    });
+
+    it('refuses a subset that drops a required column', () => {
+      const semNome = ['schema_version', 'tipo_registro', 'pais'];
+      const validation = validateCatalogHeaders(semNome, 'researcher');
+
+      expect(validation.valid).toBe(false);
+      expect(validation.missing).toContain('nome');
+      expect(validation.errors.join(' ')).toMatch(/obrigatórias/);
+    });
+
+    it('refuses a column the category does not define', () => {
+      const inventada = [...getRequiredHeaders('researcher'), 'foto_do_perfil'];
+      const validation = validateCatalogHeaders(inventada, 'researcher');
+
+      expect(validation.valid).toBe(false);
+      expect(validation.unknown).toEqual(['foto_do_perfil']);
+    });
+
+    it('refuses a repeated column, which would make the row ambiguous', () => {
+      const repetida = [...getRequiredHeaders('organization'), 'setor', 'setor'];
+      expect(validateCatalogHeaders(repetida, 'organization').valid).toBe(false);
+      expect(validateCatalogHeaders(repetida, 'organization').errors.join(' ')).toMatch(/repetidas/);
+    });
+
+    it('does not treat an absent optional column as an invalid value', () => {
+      // `confianca` fora do recorte: undefined não pode reprovar a linha.
+      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Especialista', pais: 'Brasil' };
+      expect(validateCatalogRow(row, 'researcher').valid).toBe(true);
+    });
+
+    it('still rejects a confidence outside the range when the column is there', () => {
+      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Especialista', pais: 'Brasil', confianca: '140' };
+      expect(validateCatalogRow(row, 'researcher').valid).toBe(false);
+    });
   });
 
   it('normalizes list fields and preserves the no-media contract', () => {

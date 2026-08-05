@@ -69,8 +69,8 @@ export default function AdminPage() {
 
   const tabConfig = [
     { label: 'Stakeholders', icon: <HandshakeIcon />, type: 'stakeholder', data: data.stakeholders },
-    { label: 'Escolas', icon: <SchoolIcon />, type: 'escola', data: data.escolas },
-    { label: 'Pesquisadores', icon: <ScienceIcon />, type: 'pesquisador', data: data.pesquisadores },
+    { label: 'Instituições de Educação', icon: <SchoolIcon />, type: 'escola', data: data.escolas },
+    { label: 'Especialistas', icon: <ScienceIcon />, type: 'pesquisador', data: data.pesquisadores },
   ];
 
   const currentTab = tabConfig[tab];
@@ -118,7 +118,7 @@ export default function AdminPage() {
 
   // Export handler
   const handleExport = (type) => {
-    const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Escolas', pesquisadores: 'Pesquisadores' };
+    const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Instituições de Educação', pesquisadores: 'Especialistas' };
     if (type === 'all') {
       data.exportAll();
       showSnack('Todos os JSONs exportados!');
@@ -241,7 +241,7 @@ export default function AdminPage() {
         const parsed = JSON.parse(ev.target.result);
         if (!Array.isArray(parsed)) throw new Error('JSON deve ser um array');
         data.importData(importType, parsed);
-        const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Escolas', pesquisadores: 'Pesquisadores' };
+        const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Instituições de Educação', pesquisadores: 'Especialistas' };
         showSnack(`${typeLabels[importType]} importado com sucesso! (${parsed.length} registros)`);
       } catch (err) {
         showSnack(`Erro ao importar: ${err.message}`, 'error');
@@ -280,11 +280,11 @@ export default function AdminPage() {
             </MenuItem>
             <MenuItem onClick={() => handleExport('escolas')}>
               <ListItemIcon><FileDownloadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Escolas JSON</ListItemText>
+              <ListItemText>Instituições de Educação (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleExport('pesquisadores')}>
               <ListItemIcon><FileDownloadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Pesquisadores JSON</ListItemText>
+              <ListItemText>Especialistas (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleExport('all')}>
               <ListItemIcon><DownloadIcon fontSize="small" color="primary" /></ListItemIcon>
@@ -309,11 +309,11 @@ export default function AdminPage() {
             </MenuItem>
             <MenuItem onClick={() => handleImportClick('escolas')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Escolas JSON</ListItemText>
+              <ListItemText>Instituições de Educação (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleImportClick('pesquisadores')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Pesquisadores JSON</ListItemText>
+              <ListItemText>Especialistas (JSON)</ListItemText>
             </MenuItem>
           </Menu>
         </Toolbar>

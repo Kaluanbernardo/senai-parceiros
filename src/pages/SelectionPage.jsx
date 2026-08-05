@@ -27,8 +27,8 @@ import SelectionResults from '../components/SelectionResults';
 
 const CATEGORY_OPTIONS = [
   { id: 'researcher', label: CATEGORY_LABELS.researcher, description: 'Pessoa com conhecimento especializado, produção ou experiência relevante.', icon: <ScienceIcon sx={{ fontSize: 34 }} /> },
-  { id: 'school', label: CATEGORY_LABELS.school, description: 'Escola, centro de formação ou instituição de educação profissional.', icon: <SchoolIcon sx={{ fontSize: 34 }} /> },
-  { id: 'organization', label: CATEGORY_LABELS.organization, description: 'Empresa, órgão público, associação, fundação ou rede.', icon: <BusinessIcon sx={{ fontSize: 34 }} /> },
+  { id: 'school', label: CATEGORY_LABELS.school, description: 'Escola, centro de formação ou rede de educação profissional.', icon: <SchoolIcon sx={{ fontSize: 34 }} /> },
+  { id: 'organization', label: CATEGORY_LABELS.organization, description: 'Empresa, órgão público, associação, fundação ou outra instituição relacionada.', icon: <BusinessIcon sx={{ fontSize: 34 }} /> },
 ];
 
 const OBJECTIVE_OPTIONS = [

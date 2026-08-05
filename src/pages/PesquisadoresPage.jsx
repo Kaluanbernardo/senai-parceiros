@@ -89,7 +89,7 @@ export default function PesquisadoresPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Pesquisadores em EPT
+          Especialistas em EPT
         </Typography>
         <IconButton onClick={() => setShowFilters(!showFilters)} color="primary">
           <FilterListIcon />
@@ -192,7 +192,7 @@ export default function PesquisadoresPage() {
       {filtered.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            Nenhum pesquisador encontrado
+            Nenhum especialista encontrado
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Tente ajustar os filtros ou a busca
