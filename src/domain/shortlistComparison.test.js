@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDimensionRanges, compareWithNeighbor, groupByProfile, suggestCombination } from './shortlistComparison';
+import { buildDimensionRanges, compareWithNeighbor, describeRow, groupByProfile, suggestCombination } from './shortlistComparison';
 
 function entry(id, dimensions, name = `Candidato ${id}`) {
   return { candidate: { id, nome: name }, dimensions, total: 70 };
@@ -111,6 +111,44 @@ describe('shortlist comparison', () => {
     expect(suggestCombination(identical)).toBeNull();
     expect(groupByProfile(identical)).toHaveLength(1);
     expect(groupByProfile(identical)[0].dimension).toBeNull();
+  });
+
+  describe('linha da tabela de comparação', () => {
+    it('names a sole leader', () => {
+      const row = describeRow([78, 68, 76], ['Elly', 'Acacia', 'Piety']);
+      expect(row.soleLeader).toBe('Elly');
+      expect(row.sentence).toBe('Elly lidera por 10 pontos.');
+    });
+
+    it('never presents one of several tied leaders as the winner', () => {
+      // O caso encontrado no navegador: 36 e 36 no topo, 30 embaixo. A tabela
+      // dizia "Acacia lidera por 6 pontos" e marcava os dois como "melhor".
+      const row = describeRow([30, 36, 36], ['Piety', 'Acacia', 'Elly']);
+
+      expect(row.soleLeader).toBeNull();
+      expect(row.leaders).toEqual(['Acacia', 'Elly']);
+      expect(row.sentence).toBe('Acacia e Elly empatam no topo, 6 pontos à frente de Piety.');
+      expect(row.sentence).not.toMatch(/lidera/);
+    });
+
+    it('lists three tied leaders without repeating the conjunction', () => {
+      const row = describeRow([73, 73, 73, 52], ['Piety', 'Acacia', 'Elly', 'Daniel']);
+      expect(row.sentence).toBe('Piety, Acacia e Elly empatam no topo, 21 pontos à frente de Daniel.');
+    });
+
+    it('declares a full tie instead of inventing a gap', () => {
+      const row = describeRow([73, 73, 73], ['Piety', 'Acacia', 'Elly']);
+      expect(row).toMatchObject({ tied: true, gap: 0, soleLeader: null });
+      expect(row.sentence).toBe('Empatados entre os selecionados.');
+    });
+
+    it('uses the singular for a one point gap', () => {
+      expect(describeRow([70, 69], ['A', 'B']).sentence).toBe('A lidera por 1 ponto.');
+    });
+
+    it('returns nothing when there is no column to compare', () => {
+      expect(describeRow([], [])).toBeNull();
+    });
   });
 
   it('handles an empty or single-entry shortlist', () => {

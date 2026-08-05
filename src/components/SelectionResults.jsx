@@ -17,7 +17,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ScoreRadar, { DIMENSION_LABELS } from './ScoreRadar';
-import { buildShortlistComparison } from '../domain/shortlistComparison';
+import { buildShortlistComparison, describeRow } from '../domain/shortlistComparison';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { exportSelection } from '../services/exportSelection';
 
@@ -107,7 +107,10 @@ function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
             variant={priority === range.dimension ? 'filled' : 'outlined'}
             color={priority === range.dimension ? 'secondary' : 'default'}
             onClick={() => setPriority(range.dimension)}
-            sx={{ '&::first-letter': { textTransform: 'uppercase' } }}
+            // O texto do Chip fica num span interno, então a regra precisa
+            // alcançá-lo: no root ela não capitalizava nada e os chips saíam
+            // em minúscula ao lado dos rótulos capitalizados da tabela.
+            sx={{ '& .MuiChip-label::first-letter': { textTransform: 'uppercase' } }}
           />
         ))}
       </Stack>
@@ -129,9 +132,8 @@ function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
           <Box component="tbody">
             {rows.map((range) => {
               const values = columns.map((column) => Number(column.entry.dimensions?.[range.dimension]) || 0);
-              const best = Math.max(...values);
-              const worst = Math.min(...values);
-              const leader = columns[values.indexOf(best)];
+              const row = describeRow(values, columns.map((column) => column.name));
+              const { best, tied } = row;
               return (
                 <React.Fragment key={range.dimension}>
                   <Box component="tr" sx={{ bgcolor: priority === range.dimension ? 'action.hover' : 'transparent' }}>
@@ -142,7 +144,11 @@ function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
                       <Box component="td" key={column.id} sx={{ p: 1, verticalAlign: 'top' }}>
                         <Stack direction="row" alignItems="center" gap={.75}>
                           <Typography variant="body2" fontWeight={values[index] === best ? 800 : 400} color={values[index] === best ? 'primary.main' : 'text.primary'}>{values[index]}</Typography>
-                          {values[index] === best && columns.length > 1 && best > worst && <Chip size="small" color="primary" variant="outlined" label="melhor" sx={{ height: 18, fontSize: 10 }} />}
+                          {/* "melhor" só quando há um vencedor único: com dois no
+                              topo o selo repetido afirmava dois melhores. */}
+                          {values[index] === best && columns.length > 1 && !tied && (
+                            <Chip size="small" color="primary" variant="outlined" label={row.soleLeader ? 'melhor' : 'empate no topo'} sx={{ height: 18, fontSize: 10 }} />
+                          )}
                         </Stack>
                         <LinearProgress variant="determinate" value={values[index]} sx={{ mt: .4, height: 5, borderRadius: 3 }} color={values[index] === best ? 'primary' : 'inherit'} />
                       </Box>
@@ -150,11 +156,7 @@ function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
                   </Box>
                   <Box component="tr">
                     <Box component="td" colSpan={columns.length + 1} sx={{ px: 1, pb: 1.25, pt: 0 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {best === worst
-                          ? 'Empatados entre os selecionados.'
-                          : `${leader?.name} lidera por ${best - worst} ponto${best - worst > 1 ? 's' : ''}.`}
-                      </Typography>
+                      <Typography variant="caption" color="text.secondary">{row.sentence}</Typography>
                     </Box>
                   </Box>
                 </React.Fragment>
@@ -490,7 +492,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
                 </Tabs>
                 {/* O radar individual continua útil: aqui a escala de 0 a 100
                     é a referência certa, porque não se trata de comparar. */}
-                <Box display="grid" placeItems="center"><ScoreRadar dimensions={selected?.dimensions} /></Box>
+                <Box sx={{ display: 'grid', placeItems: 'center' }}><ScoreRadar dimensions={selected?.dimensions} /></Box>
                 <Divider sx={{ my: 1 }} />
                 <Grid container spacing={1}>
                   {Object.entries(DIMENSION_LABELS).map(([key, label]) => <Grid size={{ xs: 6 }} key={key}><Typography variant="caption" color="text.secondary">{label}</Typography><Typography fontWeight={700}>{format(selected?.dimensions?.[key])}</Typography></Grid>)}

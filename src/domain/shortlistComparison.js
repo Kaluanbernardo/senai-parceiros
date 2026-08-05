@@ -19,6 +19,7 @@
  * eixo do gráfico fingindo informação.
  */
 
+import { sentenceList } from './candidateExplanation.js';
 import { DIMENSION_LABELS } from './selectionEngine.js';
 
 export const SHORTLIST_COMPARISON_VERSION = 'shortlist-comparison-v1';
@@ -104,6 +105,45 @@ export function buildDimensionRanges(entries = [], { threshold = DISCRIMINATION_
       })),
     };
   }).sort((left, right) => right.amplitude - left.amplitude);
+}
+
+/**
+ * Uma linha da tabela de comparação: quem lidera, quem empata e como dizer isso
+ * sem afirmar mais do que os números sustentam.
+ *
+ * A tabela usava `indexOf(max)` para achar o líder, o que devolve o primeiro de
+ * vários empatados e o apresenta como vencedor único. No catálogo real isso
+ * aparecia já na primeira shortlist: dois candidatos com 36 em alinhamento
+ * recebiam ambos o selo "melhor" enquanto a frase abaixo dizia que só um deles
+ * liderava. É o mesmo defeito que o gate de relevância corrigiu na pontuação —
+ * a interface afirmando o que o dado não mostra.
+ */
+export function describeRow(values = [], names = []) {
+  if (!values.length) return null;
+  const best = Math.max(...values);
+  const worst = Math.min(...values);
+  const leaders = names.filter((_, index) => values[index] === best);
+  const trailer = names[values.indexOf(worst)];
+  const gap = best - worst;
+  const points = `${gap} ${gap === 1 ? 'ponto' : 'pontos'}`;
+
+  if (best === worst) {
+    return { best, worst, gap: 0, leaders, tied: true, soleLeader: null, sentence: 'Empatados entre os selecionados.' };
+  }
+  if (leaders.length === 1) {
+    return { best, worst, gap, leaders, tied: false, soleLeader: leaders[0], sentence: `${leaders[0]} lidera por ${points}.` };
+  }
+  // Empate no topo com alguém abaixo: nomeia todos os empatados em vez de
+  // eleger um deles por acidente de ordenação.
+  return {
+    best,
+    worst,
+    gap,
+    leaders,
+    tied: false,
+    soleLeader: null,
+    sentence: `${sentenceList(leaders)} empatam no topo, ${points} à frente de ${trailer}.`,
+  };
 }
 
 /**
