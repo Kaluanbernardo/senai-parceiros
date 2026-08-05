@@ -82,6 +82,40 @@ describe('catalog XLSX import', () => {
     expect(previewCatalogImport(parsed, []).counts.new).toBe(1);
   });
 
+  it('imports semicolon-delimited CSVs exported by pt-BR Excel', async () => {
+    const csv = [
+      'schema_version;tipo_registro;nome;pais;resumo;areas_temas;website_oficial',
+      `${CATALOG_SCHEMA_VERSION};researcher;Nancy Bocken;Países Baixos;Economia circular;economia circular;https://example.org/nancy`,
+    ].join('\n');
+
+    const parsed = await parseCatalogWorkbook({
+      filename: 'pesquisa-pt-br.csv',
+      contentBase64: Buffer.from(csv).toString('base64'),
+    });
+
+    expect(parsed.category).toBe('researcher');
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'Nancy Bocken', pais: 'Países Baixos' });
+    expect(parsed.errors).toEqual([]);
+  });
+
+  it('imports the Catálogo considerado sheet from an evaluation workbook', async () => {
+    const workbook = new ExcelJS.Workbook();
+    const catalog = workbook.addWorksheet('Catálogo considerado');
+    catalog.addRow(['#', 'Stakeholder', 'Instituição', 'Categoria', 'Website']);
+    catalog.addRow([1, 'SENA', '', 'Escola', 'https://sena.edu.co']);
+    const shortlist = workbook.addWorksheet('Shortlist');
+    shortlist.addRow(['Posição', 'Stakeholder', 'Instituição', 'País', 'Justificativa', 'Fontes']);
+    shortlist.addRow([1, 'SENA', '', 'Colômbia', 'Pesquisa aplicada e inovação.', 'https://sena.edu.co']);
+    const parsed = await parseCatalogWorkbook({
+      filename: 'avaliacao.xlsx',
+      category: 'school',
+      contentBase64: Buffer.from(await workbook.xlsx.writeBuffer()).toString('base64'),
+    });
+    expect(parsed.category).toBe('school');
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'SENA', pais: 'Colômbia', website: 'https://sena.edu.co' });
+  });
+
   it('rejects a workbook with headers from another schema', async () => {
     const category = 'organization';
     const workbook = new ExcelJS.Workbook();

@@ -155,7 +155,7 @@ export function validateCatalogRow(row, category, rowNumber = 2) {
     if (!String(row[column.name] || '').trim()) errors.push(`Linha ${rowNumber}: ${column.name} é obrigatório.`);
   }
   for (const field of ['website_oficial', 'google_scholar_url']) {
-    if (!row[field]) continue;
+    if (!row[field] || isUnavailableValue(row[field])) continue;
     try {
       const url = new URL(row[field]);
       if (!['http:', 'https:'].includes(url.protocol)) throw new Error('protocol');
@@ -173,6 +173,10 @@ export function validateCatalogRow(row, category, rowNumber = 2) {
     errors.push(`Linha ${rowNumber}: confianca deve estar entre 0 e 100.`);
   }
   return { valid: errors.length === 0, errors };
+}
+
+function isUnavailableValue(value) {
+  return ['não localizado', 'nao localizado', 'não informado', 'nao informado', 'n/a', '—', '-'].includes(String(value).trim().toLowerCase());
 }
 
 export function rowToCanonical(row) {

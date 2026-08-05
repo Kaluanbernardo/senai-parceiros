@@ -80,29 +80,41 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
   const buffer = Buffer.from(contentBase64, 'base64');
   if (!buffer.length || buffer.length > MAX_FILE_BYTES) throw new Error('file_too_large');
   const workbook = new ExcelJS.Workbook();
-  const sheet = /\.csv$/i.test(filename)
-    ? await workbook.csv.read(Readable.from(buffer), { parserOptions: { ignoreEmpty: true, trim: true } })
+  let reportSheet = false;
+  let sheet = /\.csv$/i.test(filename)
+    ? await workbook.csv.read(Readable.from(buffer), { parserOptions: { delimiter: detectCsvDelimiter(buffer), ignoreEmpty: true, trim: true } })
     : (await workbook.xlsx.load(buffer, { ignoreNodes: ['extLst'] })).getWorksheet(CATALOG_SHEET_NAME);
+  if (!sheet && !/\.csv$/i.test(filename)) {
+    const candidate = workbook.worksheets.find((worksheet) => {
+      const headers = rowValues(worksheet.getRow(1)).map((value) => fold(value));
+      return headers.includes('stakeholder') && headers.includes('categoria');
+    });
+    if (candidate) { sheet = candidate; reportSheet = true; }
+  }
   if (!sheet) throw new Error('stakeholders_sheet_required');
   if (sheet.rowCount < 2) throw new Error('stakeholders_rows_required');
   if (sheet.rowCount - 1 > MAX_ROWS) throw new Error('too_many_rows');
-  const headers = rowValues(sheet.getRow(1));
+  const sourceHeaders = rowValues(sheet.getRow(1));
+  const category = reportSheet ? (requestedCategory || 'organization') : null;
+  const headers = reportSheet ? getCatalogHeaders(category) : sourceHeaders;
   // O tipo declarado na primeira linha de dados desempata quando o cabeçalho
   // traz só colunas comuns às três categorias.
   const declaredType = headers.includes('tipo_registro')
     ? rowValues(sheet.getRow(2))[headers.indexOf('tipo_registro')]
     : '';
-  const category = detectCategory(headers, requestedCategory, declaredType);
-  if (!category) throw new Error('invalid_headers');
-  const headerValidation = validateCatalogHeaders(headers, category);
+  const detectedCategory = reportSheet ? category : detectCategory(headers, requestedCategory, declaredType);
+  if (!detectedCategory) throw new Error('invalid_headers');
+  const headerValidation = validateCatalogHeaders(headers, detectedCategory);
   if (!headerValidation.valid) throw new Error(`invalid_headers:${headerValidation.errors.join(' ')}`);
   const rows = [];
   const errors = [];
   for (let index = 2; index <= sheet.rowCount; index += 1) {
     const values = rowValues(sheet.getRow(index));
     if (values.every((value) => !value)) continue;
-    const row = Object.fromEntries(headers.map((header, columnIndex) => [header, values[columnIndex] || '']));
-    const validation = validateCatalogRow(row, category, index);
+    const row = reportSheet
+      ? evaluationRowToCatalog(sourceHeaders, values, detectedCategory, workbook)
+      : Object.fromEntries(headers.map((header, columnIndex) => [header, values[columnIndex] || '']));
+    const validation = validateCatalogRow(row, detectedCategory, index);
     if (!validation.valid) errors.push(...validation.errors);
     rows.push({ rowNumber: index, row, record: rowToCanonical(row), valid: validation.valid, errors: validation.errors, hash: hashRow(row) });
   }
@@ -112,7 +124,40 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
     const [key, value] = row.values.slice(1);
     if (key) metadata[String(key).trim()] = normalizeCell(value);
   });
-  return { schemaVersion: CATALOG_SCHEMA_VERSION, category, headers, rows, errors, metadata, filename, rowCount: rows.length };
+  return { schemaVersion: CATALOG_SCHEMA_VERSION, category: detectedCategory, headers, rows, errors, metadata, filename, rowCount: rows.length };
+}
+
+function evaluationRowToCatalog(headers, values, category, workbook) {
+  const source = Object.fromEntries(headers.map((header, index) => [fold(header), values[index] || '']));
+  const shortlist = workbook.getWorksheet('Shortlist');
+  const shortlistHeaders = shortlist ? rowValues(shortlist.getRow(1)).map((header) => fold(header)) : [];
+  const match = shortlist && shortlistHeaders.includes('stakeholder')
+    ? Array.from({ length: shortlist.rowCount - 1 }, (_, offset) => rowValues(shortlist.getRow(offset + 2)))
+      .map((row) => Object.fromEntries(shortlistHeaders.map((header, index) => [header, row[index] || ''])))
+      .find((row) => fold(row.stakeholder) === fold(source.stakeholder))
+    : null;
+  const sources = match?.fontes || match?.fonte || '';
+  return {
+    schema_version: CATALOG_SCHEMA_VERSION,
+    tipo_registro: category,
+    nome: source.stakeholder,
+    pais: match?.pais || 'Não informado',
+    cidade_estado: '', resumo: match?.justificativa || '', descricao: match?.diferencial_comparativo || '',
+    areas_temas: '', aderencia_contexto: match?.justificativa || '', relacao_publica: '',
+    evidencias_publicas: sources, riscos_sinais: match?.trade_offs || '', website_oficial: source.website,
+    contato_publico: '', fontes: sources, data_consulta: '', confianca: match?.confianca || '', dados_nao_localizados: '',
+    ...(category === 'school' ? { tipo_instituicao: source.categoria, areas_formacao: '' } : {}),
+    ...(category === 'organization' ? { natureza_juridica: source.categoria, setor: source.categoria, atuacao: match?.justificativa || '' } : {}),
+    ...(category === 'researcher' ? { instituicao_atual: source.instituicao, areas_especialidade: '', linhas_pesquisa: '' } : {}),
+  };
+}
+
+// CSVs exported by Excel in pt-BR normally use `;`, while API-generated CSVs
+// often use `,`. The header has no quoted values, so a small count is enough to
+// select the delimiter before handing parsing to ExcelJS.
+function detectCsvDelimiter(buffer) {
+  const header = buffer.toString('utf8').split(/\r?\n/, 1)[0] || '';
+  return (header.match(/;/g) || []).length > (header.match(/,/g) || []).length ? ';' : ',';
 }
 
 export function previewCatalogImport(parsed, catalog = []) {
