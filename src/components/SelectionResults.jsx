@@ -16,8 +16,8 @@ import Typography from '@mui/material/Typography';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ScoreRadar, { DIMENSION_LABELS, SERIES_COLORS } from './ScoreRadar';
-import { getMatrixMarkers, getRadarSeries } from './selectionVisualization';
+import ScoreRadar, { DIMENSION_LABELS } from './ScoreRadar';
+import { buildShortlistComparison } from '../domain/shortlistComparison';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { exportSelection } from '../services/exportSelection';
 
@@ -29,27 +29,122 @@ function decisionBand(value) {
   return { label: 'Baixa aderência', color: 'default' };
 }
 
-function DecisionMatrix({ entries }) {
-  const markers = getMatrixMarkers(entries);
+/**
+ * Faixas por dimensão.
+ *
+ * Cada linha usa o intervalo que a dimensão realmente ocupa nesta shortlist,
+ * não a escala de 0 a 100 — é o que torna visível uma diferença de 42 a 61.
+ * Dimensões que não separam ninguém saem do gráfico e são declaradas, em vez
+ * de ocuparem um eixo fingindo informação.
+ */
+function DimensionRanges({ ranges, selectedId, onSelect }) {
+  const discriminating = ranges.filter((range) => range.discriminates);
+  const flat = ranges.filter((range) => !range.discriminates);
+
   return (
     <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-      <Typography variant="subtitle1" fontWeight={700}>Matriz de decisão</Typography>
-      <Typography variant="caption" color="text.secondary">Eixo horizontal: viabilidade · eixo vertical: valor estratégico</Typography>
-      <Box sx={{ position: 'relative', mt: 2, height: 300, borderLeft: '2px solid #9fb3c8', borderBottom: '2px solid #9fb3c8', background: 'linear-gradient(90deg, rgba(255,244,229,.45) 0 50%, rgba(230,247,237,.45) 50%), linear-gradient(0deg, rgba(255,244,229,.4) 0 50%, rgba(230,247,237,.4) 50%)' }}>
-        <Typography sx={{ position: 'absolute', top: 8, left: 8, fontSize: 11, color: 'text.secondary' }}>alto valor</Typography>
-        <Typography sx={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'text.secondary' }}>baixo valor</Typography>
-        <Typography sx={{ position: 'absolute', right: 8, bottom: -26, fontSize: 11, color: 'text.secondary' }}>alta viabilidade</Typography>
-        <Typography sx={{ position: 'absolute', left: 8, bottom: -26, fontSize: 11, color: 'text.secondary' }}>baixa viabilidade</Typography>
-        {markers.map(({ entry, index, x, y, offsetX, offsetY, clusterSize }) => (
-          <Box key={entry.candidate.id} role="img" aria-label={(index + 1) + '. ' + (entry.candidate.nome || entry.candidate.instituicao) + ', valor estratégico ' + format(entry.strategicValue) + ', viabilidade ' + format(entry.viability)} title={entry.candidate.nome || entry.candidate.instituicao} sx={{ position: 'absolute', left: x + '%', bottom: y + '%', transform: 'translate(calc(-50% + ' + offsetX + 'px), calc(50% + ' + offsetY + 'px))', width: 30, height: 30, borderRadius: '50%', bgcolor: index === 0 ? 'secondary.main' : 'primary.main', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 12, boxShadow: 2, zIndex: 2 }}>
-            {index + 1}
-            {clusterSize > 1 && <Box component="span" sx={{ position: 'absolute', top: -8, right: -8, minWidth: 16, height: 16, borderRadius: '50%', bgcolor: 'background.paper', color: 'text.primary', border: '1px solid', borderColor: 'divider', fontSize: 9, display: 'grid', placeItems: 'center' }}>{clusterSize}</Box>}
+      <Typography variant="subtitle1" fontWeight={700}>Onde a shortlist se diferencia</Typography>
+      <Typography variant="caption" color="text.secondary">
+        Cada faixa mostra só o intervalo que aquela dimensão ocupa entre estes candidatos. Os números são a posição no ranking.
+      </Typography>
+      {!discriminating.length && (
+        <Alert severity="info" sx={{ mt: 2 }}>Nenhuma dimensão separa estes candidatos de forma acionável: eles são equivalentes no que o catálogo permite verificar.</Alert>
+      )}
+      <Stack spacing={2.5} sx={{ mt: 2.5 }}>
+        {discriminating.map((range) => (
+          <Box key={range.dimension}>
+            <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+              <Typography variant="body2" fontWeight={700} sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Typography>
+              <Typography variant="caption" color="text.secondary">varia {range.amplitude} pontos</Typography>
+            </Stack>
+            <Box sx={{ position: 'relative', height: 44, mt: 1.5 }}>
+              <Box sx={{ position: 'absolute', top: 15, left: 0, right: 0, height: 4, borderRadius: 2, bgcolor: 'action.selected' }} />
+              {range.points.map((point) => (
+                <Box
+                  key={point.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onSelect?.(point.rank - 1)}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect?.(point.rank - 1); } }}
+                  title={`#${point.rank} ${point.name} · ${point.value}/100`}
+                  aria-label={`${range.label}: posição ${point.rank}, ${point.name}, ${point.value} de 100`}
+                  sx={{
+                    position: 'absolute', top: 4, left: `${point.position * 100}%`, transform: 'translateX(-50%)',
+                    width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', cursor: 'pointer',
+                    fontSize: 11, fontWeight: 700, boxShadow: 1,
+                    bgcolor: point.id === selectedId ? 'secondary.main' : point.leader ? 'primary.main' : 'background.paper',
+                    color: point.id === selectedId || point.leader ? '#fff' : 'text.primary',
+                    border: '1px solid', borderColor: point.id === selectedId ? 'secondary.main' : 'divider',
+                    zIndex: point.id === selectedId ? 2 : 1,
+                  }}
+                >
+                  {point.rank}
+                </Box>
+              ))}
+              <Typography variant="caption" color="text.secondary" sx={{ position: 'absolute', bottom: -2, left: 0 }}>{range.min}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ position: 'absolute', bottom: -2, right: 0 }}>{range.max}</Typography>
+            </Box>
           </Box>
         ))}
-      </Box>
-      <Box component="table" sx={{ mt: 3, width: '100%', borderCollapse: 'collapse', fontSize: 12 }} aria-label="Dados da matriz de decisão">
-        <Box component="tbody">{entries.map((entry, index) => <Box component="tr" key={entry.candidate.id}><Box component="td" sx={{ py: .5, pr: 1, fontWeight: 700 }}>#{index + 1}</Box><Box component="td" sx={{ py: .5 }}>{entry.candidate.nome || entry.candidate.instituicao}</Box><Box component="td" sx={{ py: .5 }}>Valor {format(entry.strategicValue)}</Box><Box component="td" sx={{ py: .5 }}>Viabilidade {format(entry.viability)}</Box></Box>)}</Box>
-      </Box>
+      </Stack>
+      {flat.length > 0 && (
+        <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="caption" color="text.secondary" display="block" fontWeight={700}>Não diferenciam esta shortlist</Typography>
+          {flat.map((range) => (
+            <Typography key={range.dimension} variant="caption" color="text.secondary" display="block" sx={{ mt: .5 }}>
+              <Box component="strong" sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Box> — {range.reason}
+            </Typography>
+          ))}
+        </Box>
+      )}
+    </Paper>
+  );
+}
+
+/** Agrupa por onde cada candidato se destaca, para escolher entre trade-offs. */
+function ProfileGroups({ profiles, onSelect }) {
+  if (!profiles.length) return null;
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" fontWeight={700}>Perfis dentro da shortlist</Typography>
+      <Typography variant="caption" color="text.secondary">Escolher entre dois ou três perfis costuma ser mais simples do que comparar dez linhas.</Typography>
+      <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+        {profiles.map((group) => (
+          <Box key={group.dimension || 'equivalentes'}>
+            <Typography variant="body2" fontWeight={700}>{group.label}</Typography>
+            {group.hint && <Typography variant="caption" color="text.secondary" display="block">{group.hint}</Typography>}
+            <Stack direction="row" gap={.75} flexWrap="wrap" sx={{ mt: .75 }}>
+              {group.members.map((member) => (
+                <Chip key={member.id} size="small" variant="outlined" clickable onClick={() => onSelect?.(member.rank - 1)} label={`#${member.rank} ${member.name}`} />
+              ))}
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Paper>
+  );
+}
+
+/** Combinação que cobre mais dimensões junta, para quem vai convidar mais de um. */
+function CombinationSuggestion({ combination, onSelect }) {
+  if (!combination) return null;
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" fontWeight={700}>Se for convidar mais de um</Typography>
+      <Typography variant="caption" color="text.secondary">Esta combinação cobre mais terreno do que repetir perfis parecidos.</Typography>
+      <Stack spacing={1} sx={{ mt: 1.5 }}>
+        {combination.members.map((member) => (
+          <Stack key={member.id} direction="row" gap={1} alignItems="baseline">
+            <Chip size="small" clickable onClick={() => onSelect?.(member.rank - 1)} label={`#${member.rank}`} />
+            <Box>
+              <Typography variant="body2" fontWeight={700}>{member.name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {member.adds.length ? `acrescenta ${member.adds.map((add) => `${add.label} (+${add.gain})`).join(' e ')}` : 'base da combinação'}
+              </Typography>
+            </Box>
+          </Stack>
+        ))}
+      </Stack>
     </Paper>
   );
 }
@@ -172,7 +267,9 @@ export default function SelectionResults({ result, onReview, onRestart }) {
     .filter(Boolean)
     .filter((value, index, values) => values.indexOf(value) === index)
     .join(' · ');
-  const radarSeries = getRadarSeries(shortlist);
+  // A comparação é derivada da própria shortlist: as faixas, os vizinhos, os
+  // perfis e a combinação só fazem sentido em relação a quem entrou na lista.
+  const comparison = useMemo(() => buildShortlistComparison(shortlist), [shortlist]);
   const metadata = useMemo(() => ({
     title: 'Avaliação de stakeholders SENAI-SP',
     category: CATEGORY_LABELS[result?.trace?.category] || result?.trace?.category,
@@ -222,7 +319,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
       <ExportButtons result={result} metadata={metadata} />
       <Tabs value={selectedTab} onChange={(_, value) => setSelectedTab(value)} variant="scrollable">
         <Tab label="Comparação" />
-        <Tab label="Matriz e radar" />
+        <Tab label="Diferenças" />
         <Tab label="Rastreabilidade" />
       </Tabs>
       {selectedTab === 0 && (
@@ -247,6 +344,9 @@ export default function SelectionResults({ result, onReview, onRestart }) {
                 </Grid>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1.2 }}>{entry.summary}</Typography>
                 {entry.comparativeEdge && <Typography variant="body2" sx={{ mt: .75 }}><strong>Diferencial:</strong> {entry.comparativeEdge}</Typography>}
+                {comparison.neighbors.get(entry.candidate.id) && (
+                  <Typography variant="body2" sx={{ mt: .75, color: 'primary.main' }}>{comparison.neighbors.get(entry.candidate.id).sentence}</Typography>
+                )}
                 {entry.tradeoffs?.length ? <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: .5 }}><strong>Trade-offs:</strong> {entry.tradeoffs.join(' · ')}</Typography> : null}
               </CardContent>
             </Card>
@@ -255,30 +355,31 @@ export default function SelectionResults({ result, onReview, onRestart }) {
       )}
       {selectedTab === 1 && (
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, lg: 7 }}><DecisionMatrix entries={shortlist} /></Grid>
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <DimensionRanges ranges={comparison.ranges} selectedId={selected?.candidate.id} onSelect={setSelectedIndex} />
+          </Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
-            <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-              <Typography variant="subtitle1" fontWeight={700}>Comparação dos cinco primeiros</Typography>
-              <Typography variant="body2" color="text.secondary">As cores e os nomes abaixo identificam cada série do radar.</Typography>
-              <Box display="grid" placeItems="center" sx={{ mt: 1 }}><ScoreRadar series={radarSeries} /></Box>
-              <Stack spacing={.75} sx={{ mt: 1 }}>
-                {radarSeries.map((item, index) => <Stack direction="row" gap={1} alignItems="center" key={item.id}><Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: SERIES_COLORS[index % SERIES_COLORS.length] }} /><Typography variant="caption">#{item.rank} {item.label}</Typography></Stack>)}
-              </Stack>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle1" fontWeight={700}>Detalhe individual</Typography>
-              <Box sx={{ mt: .75, p: 1.5, borderRadius: 2, bgcolor: 'action.hover', borderLeft: '4px solid', borderColor: 'secondary.main' }}>
-                <Typography fontWeight={800}>{selected?.candidate.nome || selected?.candidate.instituicao}</Typography>
-                {selectedMeta ? <Typography variant="caption" color="text.secondary">{selectedMeta}</Typography> : null}
-              </Box>
-              <Tabs value={activeIndex} onChange={(_, value) => setSelectedIndex(value)} variant="scrollable" sx={{ mt: 1 }} aria-label="Selecionar stakeholder no radar">
-                {shortlist.map((entry, index) => <Tab key={entry.candidate.id} value={index} label={'#' + (index + 1) + ' ' + (entry.candidate.nome || entry.candidate.instituicao || '').slice(0, 18)} />)}
-              </Tabs>
-              <Box display="grid" placeItems="center"><ScoreRadar dimensions={selected?.dimensions} /></Box>
-              <Divider sx={{ my: 1 }} />
-              <Grid container spacing={1}>
-                {Object.entries(DIMENSION_LABELS).map(([key, label]) => <Grid size={{ xs: 6 }} key={key}><Typography variant="caption" color="text.secondary">{label}</Typography><Typography fontWeight={700}>{format(selected?.dimensions?.[key])}</Typography></Grid>)}
-              </Grid>
-            </Paper>
+            <Stack spacing={2}>
+              <ProfileGroups profiles={comparison.profiles} onSelect={setSelectedIndex} />
+              <CombinationSuggestion combination={comparison.combination} onSelect={setSelectedIndex} />
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700}>Detalhe individual</Typography>
+                <Box sx={{ mt: .75, p: 1.5, borderRadius: 2, bgcolor: 'action.hover', borderLeft: '4px solid', borderColor: 'secondary.main' }}>
+                  <Typography fontWeight={800}>{selected?.candidate.nome || selected?.candidate.instituicao}</Typography>
+                  {selectedMeta ? <Typography variant="caption" color="text.secondary">{selectedMeta}</Typography> : null}
+                </Box>
+                <Tabs value={activeIndex} onChange={(_, value) => setSelectedIndex(value)} variant="scrollable" sx={{ mt: 1 }} aria-label="Selecionar stakeholder">
+                  {shortlist.map((entry, index) => <Tab key={entry.candidate.id} value={index} label={'#' + (index + 1) + ' ' + (entry.candidate.nome || entry.candidate.instituicao || '').slice(0, 18)} />)}
+                </Tabs>
+                {/* O radar individual continua útil: aqui a escala de 0 a 100
+                    é a referência certa, porque não se trata de comparar. */}
+                <Box display="grid" placeItems="center"><ScoreRadar dimensions={selected?.dimensions} /></Box>
+                <Divider sx={{ my: 1 }} />
+                <Grid container spacing={1}>
+                  {Object.entries(DIMENSION_LABELS).map(([key, label]) => <Grid size={{ xs: 6 }} key={key}><Typography variant="caption" color="text.secondary">{label}</Typography><Typography fontWeight={700}>{format(selected?.dimensions?.[key])}</Typography></Grid>)}
+                </Grid>
+              </Paper>
+            </Stack>
           </Grid>
         </Grid>
       )}
