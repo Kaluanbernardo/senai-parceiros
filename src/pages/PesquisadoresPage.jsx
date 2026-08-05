@@ -11,9 +11,11 @@ import { useCatalogState } from '../app/useCatalogState';
 import { useData } from '../context/DataContext';
 import {
   collectFacetValues,
+  collectTokenValues,
   describeActiveFilters,
   matchesFacet,
   matchesQuery,
+  matchesTokenizedFacet,
   sortItems,
 } from '../domain/catalogFilters';
 import { CATEGORIAS, getCategoriasFromAreas } from '../utils/areaCategories';
@@ -26,6 +28,7 @@ const STATE_SCHEMA = Object.freeze({
   q: { type: 'text', default: '' },
   pais: { type: 'list' },
   area: { type: 'list' },
+  tema: { type: 'list' },
   genero: { type: 'single', default: 'todos' },
   ordem: { type: 'single', default: 'relevance' },
   exibir: { type: 'single', default: 'grid' },
@@ -34,6 +37,7 @@ const STATE_SCHEMA = Object.freeze({
 const FILTER_DEFINITIONS = [
   { key: 'pais', label: 'País' },
   { key: 'area', label: 'Área' },
+  { key: 'tema', label: 'Tema' },
   { key: 'genero', label: 'Gênero', emptyValue: 'todos', format: (value) => (value === 'F' ? 'Feminino' : 'Masculino') },
 ];
 
@@ -57,6 +61,10 @@ function summarize(text, maxSentences = 2) {
   return sentences.slice(0, maxSentences).join(' ').trim();
 }
 
+function isHttpUrl(value) {
+  try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; }
+}
+
 export default function PesquisadoresPage() {
   const { pesquisadores } = useData();
   const { state, setValue, removeValue, clear } = useCatalogState(STATE_SCHEMA);
@@ -64,6 +72,7 @@ export default function PesquisadoresPage() {
   const [selected, setSelected] = useState(null);
 
   const countries = useMemo(() => collectFacetValues(pesquisadores, 'pais'), [pesquisadores]);
+  const themes = useMemo(() => collectTokenValues(pesquisadores, 'areas'), [pesquisadores]);
 
   const filtered = useMemo(() => {
     const matched = pesquisadores.filter(
@@ -74,13 +83,14 @@ export default function PesquisadoresPage() {
         // derivação é o que mantém o filtro coerente com a ficha exibida no
         // cartão. Comparar contra o texto cru deixava as duas coisas diferentes.
         matchesFacet(getCategoriasFromAreas(item.areas), state.area) &&
+        matchesTokenizedFacet(item.areas, state.tema) &&
         (state.genero === 'todos' || item.genero === state.genero),
     );
     return sortItems(matched, state.ordem);
-  }, [pesquisadores, state.q, state.pais, state.area, state.genero, state.ordem]);
+  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.genero, state.ordem]);
 
   const activeChips = describeActiveFilters(
-    { query: state.q, pais: state.pais, area: state.area, genero: state.genero },
+    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, genero: state.genero },
     FILTER_DEFINITIONS,
   );
 
@@ -115,6 +125,7 @@ export default function PesquisadoresPage() {
             facets={[
               { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
               { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
+              { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
             ]}
           >
             <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
@@ -149,7 +160,7 @@ export default function PesquisadoresPage() {
             summary={item.miniBio || summarize(item.pesquisa)}
             tags={getCategoriasFromAreas(item.areas)}
             badge={item.h_index ? `h-index ${item.h_index}` : undefined}
-            link={item.scholar ? { href: item.scholar, label: PROFILE_LABELS[item.profileType] || 'Perfil acadêmico' } : undefined}
+            link={isHttpUrl(item.scholar) ? { href: item.scholar, label: PROFILE_LABELS[item.profileType] || 'Perfil acadêmico' } : undefined}
             onClick={() => setSelected(item)}
           />
         )}

@@ -26,6 +26,14 @@ describe('researcher catalog', () => {
     expect(result.records).toHaveLength(2);
   });
 
+  it('unites imported themes when merging the same researcher', () => {
+    const result = canonicalizeResearchers([
+      { id: 1, nome: 'Julian Kirchherr', instituicao: 'RUC', scholar: 'https://scholar.google.com/citations?user=abc', areas: 'economia circular' },
+      { id: 2, nome: 'Julian Kirchherr', instituicao: 'RUC', scholar: 'https://scholar.google.com/citations?user=abc', areas: ['políticas públicas', 'economia circular'] },
+    ]);
+    expect(result.records[0].areas).toEqual(['economia circular', 'políticas públicas']);
+  });
+
   it('canonicalizes the production catalog and absorbs legacy “Ver acima” rows', () => {
     const result = canonicalizeResearchers(researchers);
 

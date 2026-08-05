@@ -73,13 +73,14 @@ describe('catalog import schema', () => {
       pais: 'Brasil',
       instituicao_atual: 'Instituto',
       areas_temas: 'EPT; indústria',
+      areas_especialidade: 'economia circular; indústria',
       relacao_publica: 'Parceria pública com indústria',
       evidencias_publicas: 'Relatório institucional; https://example.org/fato',
       riscos_sinais: 'Não localizado',
       publicacoes_relevantes: 'Título | https://doi.org/abc | 2026',
       google_scholar_url: 'https://scholar.google.com/citations?user=abc',
     });
-    expect(record.areas).toEqual(['EPT', 'indústria']);
+    expect(record.areas).toEqual(['EPT', 'indústria', 'economia circular']);
     expect(record.artigos[0]).toMatchObject({ titulo: 'Título', url: 'https://doi.org/abc', ano: '2026' });
     expect(record.relacao).toContain('Parceria pública');
     expect(record.evidencias_publicas).toHaveLength(2);

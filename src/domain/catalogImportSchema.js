@@ -185,8 +185,8 @@ export function rowToCanonical(row) {
   const base = {
     nome: row.nome,
     pais: row.pais,
-    website: row.website_oficial,
-    website_oficial: row.website_oficial,
+    website: isUnavailableValue(row.website_oficial) ? '' : row.website_oficial,
+    website_oficial: isUnavailableValue(row.website_oficial) ? '' : row.website_oficial,
     cidade_estado: row.cidade_estado,
     descricao: row.descricao || row.resumo,
     diferencial: row.resumo,
@@ -208,12 +208,13 @@ export function rowToCanonical(row) {
   };
   if (category === 'researcher') return {
     ...base,
+    areas: [...new Set([...base.areas, ...list(row.areas_especialidade)])],
     instituicao: row.instituicao_atual,
     pesquisa: row.linhas_pesquisa,
     miniBio: row.descricao || row.resumo,
     citacoes: row.citacoes,
     h_index: row.h_index,
-    scholar: row.google_scholar_url,
+    scholar: isUnavailableValue(row.google_scholar_url) ? '' : row.google_scholar_url,
     orcid: row.orcid,
     openalex_id: row.openalex_id,
     artigos: list(row.publicacoes_relevantes).map((value) => {

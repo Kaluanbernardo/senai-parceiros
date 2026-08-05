@@ -231,7 +231,17 @@ export default function AdminPage() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
       data.mergeImportedRecords(body.category, body.records || []);
-      showSnack(`Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).`);
+      let radarUpdated = true;
+      if (body.category === 'researcher' && body.applied?.length) {
+        const radarResponse = await fetch('/api/radar/refresh', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
+        });
+        radarUpdated = radarResponse.ok;
+      }
+      showSnack(
+        `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
+        radarUpdated ? 'success' : 'warning',
+      );
       setXlsxPreview(null);
       setXlsxDecisions({});
     } catch (error) {

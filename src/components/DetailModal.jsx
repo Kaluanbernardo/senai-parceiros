@@ -32,6 +32,15 @@ function InfoRow({ label, children }) {
   );
 }
 
+function listValues(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return String(value || '').split(';').map((entry) => entry.trim()).filter(Boolean);
+}
+
+function isHttpUrl(value) {
+  try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; }
+}
+
 const naturezaColor = {
   'Pública': 'info',
   'Privada': 'warning',
@@ -91,9 +100,9 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
       <DialogContent sx={{ pt: 2 }}>
         {/* Links */}
-        {(item.website || item.scholar) && (
+        {(isHttpUrl(item.website) || isHttpUrl(item.scholar)) && (
           <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-            {item.website && (
+            {isHttpUrl(item.website) && (
               <Button
                 variant="outlined"
                 size="small"
@@ -107,7 +116,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 Website
               </Button>
             )}
-            {item.scholar && type === 'pesquisador' && (
+            {isHttpUrl(item.scholar) && type === 'pesquisador' && (
               <Button
                 variant="outlined"
                 size="small"
@@ -180,7 +189,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
             {item.areas && (
               <InfoRow label="Áreas de Atuação">
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {item.areas.split(';').map((area, i) => (
+                  {listValues(item.areas).map((area, i) => (
                     <Chip
                       key={i}
                       label={area.trim()}
@@ -254,7 +263,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
             <InfoRow label="Áreas de Pesquisa">
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {item.areas?.split(';').map((area, i) => (
+                {listValues(item.areas).map((area, i) => (
                   <Chip
                     key={i}
                     label={area.trim()}

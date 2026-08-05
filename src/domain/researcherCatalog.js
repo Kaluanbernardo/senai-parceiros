@@ -60,6 +60,12 @@ function longest(records, field) {
   return records.map((record) => record[field]).filter(Boolean).sort((a, b) => String(b).length - String(a).length)[0] || '';
 }
 
+function mergeAreas(records) {
+  return [...new Set(records.flatMap((record) => Array.isArray(record.areas)
+    ? record.areas
+    : String(record.areas || '').split(';')).map((area) => area.trim()).filter(Boolean))];
+}
+
 function mergeGroup(records) {
   const ordered = [...records].sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
   const first = ordered[0];
@@ -72,6 +78,7 @@ function mergeGroup(records) {
   }
   merged.pesquisa = longest(ordered, 'pesquisa') || merged.pesquisa || '';
   merged.miniBio = longest(ordered, 'miniBio') || merged.miniBio || '';
+  merged.areas = mergeAreas(ordered);
   merged.artigos = uniqueArticles(ordered);
   merged.aliases = [...new Set(ordered.flatMap((record) => [record.nome, ...(record.aliases || [])]).filter(Boolean))];
   merged.legacyIds = ordered.map((record) => record.id).filter((id) => id !== merged.id);

@@ -31,7 +31,9 @@ export function normalize(value) {
 
 /** Divide a busca em termos. Aspas mantêm uma expressão inteira. */
 export function parseQuery(query) {
-  const normalized = normalize(query);
+  const raw = String(query || '').trim().replace(/\\+$/, '');
+  const withoutUnmatchedClosingParen = raw.endsWith(')') && !raw.includes('(') ? raw.replace(/\)+$/, '') : raw;
+  const normalized = normalize(withoutUnmatchedClosingParen);
   if (!normalized) return [];
   const terms = normalized.match(/"[^"]+"|\S+/g) || [];
   return terms.map((term) => term.replace(/^"|"$/g, '')).filter(Boolean);
@@ -81,8 +83,8 @@ export function matchesFacet(value, selected) {
 export function matchesTokenizedFacet(value, selected, separator = ';') {
   if (!selected || selected.length === 0) return true;
   if (!value) return false;
-  const haystack = normalize(String(value).split(separator).join(' '));
-  return selected.some((entry) => haystack.includes(normalize(entry)));
+  const values = Array.isArray(value) ? value : String(value).split(separator);
+  return selected.some((entry) => values.some((valueEntry) => normalize(valueEntry).includes(normalize(entry))));
 }
 
 /** Valores distintos de um campo, para alimentar os seletores. */
@@ -100,7 +102,8 @@ export function collectTokenValues(items, field, separator = ';') {
   const seen = new Set();
   for (const item of items) {
     if (!item?.[field]) continue;
-    for (const raw of String(item[field]).split(separator)) {
+    const values = Array.isArray(item[field]) ? item[field] : String(item[field]).split(separator);
+    for (const raw of values) {
       const clean = raw.replace(/\(.*?\)/g, '').trim();
       if (clean) seen.add(clean);
     }

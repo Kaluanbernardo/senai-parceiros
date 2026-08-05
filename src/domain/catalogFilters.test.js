@@ -52,6 +52,11 @@ describe('termos da busca', () => {
     expect(parseQuery('')).toEqual([]);
     expect(parseQuery('   ')).toEqual([]);
   });
+
+  it('ignora pontuação terminal desemparelhada em links compartilhados', () => {
+    expect(parseQuery('Julian)')).toEqual(['julian']);
+    expect(parseQuery('Julian\\')).toEqual(['julian']);
+  });
 });
 
 describe('busca textual', () => {
@@ -153,6 +158,12 @@ describe('coleta de valores para os seletores', () => {
     // "Saúde (clínica)" e "Saúde (pública)" são a mesma faceta para quem filtra;
     // manter o parêntese multiplicaria a lista de opções sem informar nada.
     expect(collectTokenValues(items, 'areas')).toEqual(['Engenharia', 'Saúde']);
+  });
+
+  it('coleta temas importados armazenados como lista', () => {
+    expect(collectTokenValues([{ areas: ['economia circular', 'políticas públicas'] }], 'areas'))
+      .toEqual(['economia circular', 'políticas públicas']);
+    expect(matchesTokenizedFacet(['economia circular', 'sustentabilidade'], ['economia circular'])).toBe(true);
   });
 });
 

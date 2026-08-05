@@ -105,6 +105,12 @@ async function resolveAuthor(record) {
   const key = authorCacheKey(record);
   const cached = authorCache.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
+  const catalogOpenAlexId = authorId(record.openalex_id);
+  if (catalogOpenAlexId) {
+    const direct = { id: catalogOpenAlexId, record, resolution: 'catalog-openalex-id' };
+    authorCache.set(key, { value: direct, expiresAt: Date.now() + AUTHOR_CACHE_TTL });
+    return direct;
+  }
   let anchored = null;
   try {
     anchored = await resolveAuthorFromAnchor(record);
