@@ -30,84 +30,146 @@ function decisionBand(value) {
 }
 
 /**
- * Faixas por dimensão.
+ * Tabela de comparação lado a lado.
  *
- * Cada linha usa o intervalo que a dimensão realmente ocupa nesta shortlist,
- * não a escala de 0 a 100 — é o que torna visível uma diferença de 42 a 61.
- * Dimensões que não separam ninguém saem do gráfico e são declaradas, em vez
- * de ocuparem um eixo fingindo informação.
+ * Substitui as faixas com bolinhas, que contrariavam duas coisas conhecidas
+ * sobre como se lê uma comparação (Nielsen Norman Group):
+ *
+ *  - acima de cinco itens a comparação simultânea deixa de funcionar, e é
+ *    preciso oferecer um jeito de reduzir o conjunto — mostrávamos dez;
+ *  - a varredura acontece em linhas horizontais ("lawn mower pattern"), então
+ *    atributo por linha e candidato por coluna acompanha o olho; pontos
+ *    espalhados num eixo, não.
+ *
+ * Também segue duas recomendações que já estavam certas e ganharam reforço:
+ * esconder as linhas em que todos empatam, e enunciar a diferença por escrito
+ * em vez de deixar o usuário deduzir dos números.
+ *
+ * O seletor "o que mais importa" existe porque a decisão real costuma ser
+ * não-compensatória: primeiro se elimina por um critério, depois se pesa o
+ * resto.
  */
-function DimensionRanges({ ranges, legend, selectedId, onSelect }) {
+function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
+  const [chosen, setChosen] = useState(() => legend.slice(0, 3).map((item) => item.id));
+  const [showFlat, setShowFlat] = useState(false);
+  const [priority, setPriority] = useState('');
+
   const discriminating = ranges.filter((range) => range.discriminates);
   const flat = ranges.filter((range) => !range.discriminates);
+  const rows = priority
+    ? [...discriminating].sort((left, right) => (right.dimension === priority) - (left.dimension === priority))
+    : discriminating;
+
+  const columns = legend
+    .filter((item) => chosen.includes(item.id))
+    .map((item) => ({ ...item, entry: entries.find((entry) => entry.candidate.id === item.id) }))
+    .filter((item) => item.entry)
+    .sort((left, right) => (priority
+      ? (right.entry.dimensions[priority] || 0) - (left.entry.dimensions[priority] || 0)
+      : left.rank - right.rank));
+
+  function toggle(id) {
+    setChosen((current) => {
+      if (current.includes(id)) return current.length > 2 ? current.filter((item) => item !== id) : current;
+      return current.length >= 4 ? [...current.slice(1), id] : [...current, id];
+    });
+  }
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-      <Typography variant="subtitle1" fontWeight={700}>Onde a shortlist se diferencia</Typography>
-      <Typography variant="caption" color="text.secondary">
-        Cada linha mostra só o trecho de nota que estes candidatos ocupam — por isso uma diferença pequena fica visível. Clique num número para ver o perfil.
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" fontWeight={700}>Comparar lado a lado</Typography>
+      <Typography variant="caption" color="text.secondary" display="block">
+        Comparar mais de quatro ao mesmo tempo atrapalha mais do que ajuda. Escolha quem entra na comparação.
       </Typography>
-      {/* Sem a legenda a pessoa vê "4" e não sabe de quem se trata. */}
-      <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ mt: 1.5 }}>
+      <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ mt: 1.25 }}>
         {legend.map((item) => (
           <Chip
             key={item.id}
             size="small"
             clickable
-            onClick={() => onSelect?.(item.rank - 1)}
-            variant={item.id === selectedId ? 'filled' : 'outlined'}
-            color={item.id === selectedId ? 'secondary' : 'default'}
+            onClick={() => toggle(item.id)}
+            variant={chosen.includes(item.id) ? 'filled' : 'outlined'}
+            color={chosen.includes(item.id) ? 'primary' : 'default'}
             label={`${item.rank}. ${item.name}`}
           />
         ))}
       </Stack>
-      {!discriminating.length && (
-        <Alert severity="info" sx={{ mt: 2 }}>Nenhuma dimensão separa estes candidatos de forma acionável: eles são equivalentes no que o catálogo permite verificar.</Alert>
-      )}
-      <Stack spacing={2.5} sx={{ mt: 2.5 }}>
+
+      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>O que mais importa para você?</Typography>
+      <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ mt: .5 }}>
+        <Chip size="small" clickable label="Ordem do ranking" variant={priority ? 'outlined' : 'filled'} color={priority ? 'default' : 'secondary'} onClick={() => setPriority('')} />
         {discriminating.map((range) => (
-          <Box key={range.dimension}>
-            <Stack direction="row" justifyContent="space-between" alignItems="baseline">
-              <Typography variant="body2" fontWeight={700} sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Typography>
-              <Typography variant="caption" color="text.secondary">notas de {range.min} a {range.max}</Typography>
-            </Stack>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Mais forte: <strong>{range.leaderName}</strong> ({range.max}) · mais fraco: {range.trailerName} ({range.min})
-            </Typography>
-            <Box sx={{ position: 'relative', height: 44, mt: 1.5 }}>
-              <Box sx={{ position: 'absolute', top: 15, left: 0, right: 0, height: 4, borderRadius: 2, bgcolor: 'action.selected' }} />
-              {range.points.map((point) => (
-                <Box
-                  key={point.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelect?.(point.rank - 1)}
-                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect?.(point.rank - 1); } }}
-                  title={`#${point.rank} ${point.name} · ${point.value}/100`}
-                  aria-label={`${range.label}: posição ${point.rank}, ${point.name}, ${point.value} de 100`}
-                  sx={{
-                    position: 'absolute', top: 4, left: `${point.position * 100}%`, transform: 'translateX(-50%)',
-                    width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', cursor: 'pointer',
-                    fontSize: 11, fontWeight: 700, boxShadow: 1,
-                    bgcolor: point.id === selectedId ? 'secondary.main' : point.leader ? 'primary.main' : 'background.paper',
-                    color: point.id === selectedId || point.leader ? '#fff' : 'text.primary',
-                    border: '1px solid', borderColor: point.id === selectedId ? 'secondary.main' : 'divider',
-                    zIndex: point.id === selectedId ? 2 : 1,
-                  }}
-                >
-                  {point.rank}
-                </Box>
-              ))}
-              <Typography variant="caption" color="text.secondary" sx={{ position: 'absolute', bottom: -2, left: 0 }}>{range.min}</Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ position: 'absolute', bottom: -2, right: 0 }}>{range.max}</Typography>
-            </Box>
-          </Box>
+          <Chip
+            key={range.dimension}
+            size="small"
+            clickable
+            label={range.label}
+            variant={priority === range.dimension ? 'filled' : 'outlined'}
+            color={priority === range.dimension ? 'secondary' : 'default'}
+            onClick={() => setPriority(range.dimension)}
+            sx={{ '&::first-letter': { textTransform: 'uppercase' } }}
+          />
         ))}
       </Stack>
+
+      <Box sx={{ overflowX: 'auto', mt: 2 }}>
+        <Box component="table" sx={{ width: '100%', minWidth: 480, borderCollapse: 'collapse' }}>
+          <Box component="thead">
+            <Box component="tr">
+              <Box component="th" sx={{ textAlign: 'left', p: 1, width: '26%' }} />
+              {columns.map((column) => (
+                <Box component="th" key={column.id} sx={{ p: 1, textAlign: 'left', verticalAlign: 'bottom', borderBottom: '2px solid', borderColor: column.id === selectedId ? 'secondary.main' : 'divider', cursor: 'pointer' }} onClick={() => onSelect?.(column.rank - 1)}>
+                  <Typography variant="caption" color="text.secondary">#{column.rank}</Typography>
+                  <Typography variant="body2" fontWeight={700} lineHeight={1.2}>{column.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">nota {Math.round(column.entry.total)}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+          <Box component="tbody">
+            {rows.map((range) => {
+              const values = columns.map((column) => Number(column.entry.dimensions?.[range.dimension]) || 0);
+              const best = Math.max(...values);
+              const worst = Math.min(...values);
+              const leader = columns[values.indexOf(best)];
+              return (
+                <React.Fragment key={range.dimension}>
+                  <Box component="tr" sx={{ bgcolor: priority === range.dimension ? 'action.hover' : 'transparent' }}>
+                    <Box component="th" scope="row" sx={{ textAlign: 'left', p: 1, verticalAlign: 'top' }}>
+                      <Typography variant="body2" fontWeight={700} sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Typography>
+                    </Box>
+                    {columns.map((column, index) => (
+                      <Box component="td" key={column.id} sx={{ p: 1, verticalAlign: 'top' }}>
+                        <Stack direction="row" alignItems="center" gap={.75}>
+                          <Typography variant="body2" fontWeight={values[index] === best ? 800 : 400} color={values[index] === best ? 'primary.main' : 'text.primary'}>{values[index]}</Typography>
+                          {values[index] === best && columns.length > 1 && best > worst && <Chip size="small" color="primary" variant="outlined" label="melhor" sx={{ height: 18, fontSize: 10 }} />}
+                        </Stack>
+                        <LinearProgress variant="determinate" value={values[index]} sx={{ mt: .4, height: 5, borderRadius: 3 }} color={values[index] === best ? 'primary' : 'inherit'} />
+                      </Box>
+                    ))}
+                  </Box>
+                  <Box component="tr">
+                    <Box component="td" colSpan={columns.length + 1} sx={{ px: 1, pb: 1.25, pt: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {best === worst
+                          ? 'Empatados entre os selecionados.'
+                          : `${leader?.name} lidera por ${best - worst} ponto${best - worst > 1 ? 's' : ''}.`}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </React.Fragment>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+
       {flat.length > 0 && (
-        <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary" display="block" fontWeight={700}>Aqui todos estão empatados</Typography>
-          {flat.map((range) => (
+        <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button size="small" onClick={() => setShowFlat((value) => !value)}>
+            {showFlat ? 'Ocultar' : `Mostrar ${flat.length} ${flat.length === 1 ? 'critério em que todos empatam' : 'critérios em que todos empatam'}`}
+          </Button>
+          {showFlat && flat.map((range) => (
             <Typography key={range.dimension} variant="caption" color="text.secondary" display="block" sx={{ mt: .5 }}>
               <Box component="strong" sx={{ '&::first-letter': { textTransform: 'uppercase' } }}>{range.label}</Box> — {range.reason}
             </Typography>
@@ -411,7 +473,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
       {selectedTab === 1 && (
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, lg: 7 }}>
-            <DimensionRanges ranges={comparison.ranges} legend={legend} selectedId={selected?.candidate.id} onSelect={setSelectedIndex} />
+            <ComparisonTable ranges={comparison.ranges} legend={legend} entries={shortlist} selectedId={selected?.candidate.id} onSelect={setSelectedIndex} />
           </Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
             <Stack spacing={2}>
