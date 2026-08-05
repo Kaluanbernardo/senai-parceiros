@@ -2,9 +2,7 @@ import React from 'react';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import Groups2Icon from '@mui/icons-material/Groups2';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import RadarIcon from '@mui/icons-material/Radar';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -12,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { getNavTools } from '../app/toolRegistry';
 import { getToolIcon } from '../app/toolIcons';
-import radarSeeds from '../data/radar-seeds.json';
 import PageHeader from '../design-system/primitives/PageHeader';
 import SectionCard from '../design-system/primitives/SectionCard';
 import ToolCard from '../design-system/primitives/ToolCard';
@@ -27,9 +24,6 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { pesquisadores, escolas, stakeholders } = useData();
   const catalogSummary = `${pesquisadores.length + escolas.length + stakeholders.length} perfis públicos no catálogo`;
-  const radarSources = new Set(radarSeeds.map((item) => item.sourceName).filter(Boolean)).size;
-  const publishedDates = radarSeeds.map((item) => item.publishedAt).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date || ''));
-  const radarLastUpdate = publishedDates.length ? publishedDates.sort().at(-1) : 'base inicial';
 
   return (
     <Box sx={{ maxWidth: 1220, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 4, md: 6 } }}>
@@ -40,15 +34,7 @@ export default function HomePage() {
         accent="catalog"
       />
 
-      <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 3 }}>
-        <Chip size="small" icon={<Groups2Icon />} label={catalogSummary} />
-        <Chip size="small" icon={<RadarIcon />} label={`Radar: ${radarLastUpdate}`} />
-        <Chip size="small" label={`${radarSources} fontes monitoradas`} />
-        <Chip size="small" variant="outlined" label="Resultados temporários" />
-        <Chip size="small" variant="outlined" label="Informações públicas" />
-      </Stack>
-
-      <Typography variant="h2" sx={{ mt: 6, mb: 2, fontSize: { xs: '1.55rem', md: '2rem' } }}>Escolha por onde começar</Typography>
+      <Typography variant="h2" sx={{ mt: 5, mb: 2, fontSize: { xs: '1.55rem', md: '2rem' } }}>Escolha por onde começar</Typography>
       <Grid container spacing={2.5} alignItems="stretch">
         {getNavTools().map((tool) => (
           <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={tool.id}>

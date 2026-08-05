@@ -96,6 +96,13 @@ function InShell({ children, adminOnly = false }) {
   return <Protected adminOnly={adminOnly}><AppShell>{children}</AppShell></Protected>;
 }
 
+/** Rotas antigas do catálogo, mantidas redirecionando para as novas. */
+export const LEGACY_CATALOG_ROUTES = Object.freeze([
+  ['/catalogo/pesquisadores', '/catalogo/especialistas'],
+  ['/catalogo/escolas', '/catalogo/instituicoes-de-educacao'],
+  ['/catalogo/organizacoes', '/catalogo/outras-organizacoes'],
+]);
+
 export default function App() {
   return (
     <Routes>
@@ -104,9 +111,14 @@ export default function App() {
       <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
       <Route path="/catalogo" element={<InShell><CatalogHomePage /></InShell>} />
-      <Route path="/catalogo/pesquisadores" element={<InShell><PesquisadoresPage /></InShell>} />
-      <Route path="/catalogo/escolas" element={<InShell><EscolasUnificadaPage /></InShell>} />
-      <Route path="/catalogo/organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />
+      <Route path="/catalogo/especialistas" element={<InShell><PesquisadoresPage /></InShell>} />
+      <Route path="/catalogo/instituicoes-de-educacao" element={<InShell><EscolasUnificadaPage /></InShell>} />
+      <Route path="/catalogo/outras-organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />
+      {/* Caminhos anteriores. O catch-all abaixo mandaria para a home, o que
+          transformaria um link já compartilhado num beco sem explicação. */}
+      {LEGACY_CATALOG_ROUTES.map(([from, to]) => (
+        <Route key={from} path={from} element={<Navigate to={to} replace />} />
+      ))}
       <Route path="/admin" element={<Protected adminOnly><Suspense fallback={<PageFallback />}><AdminPage /></Suspense></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

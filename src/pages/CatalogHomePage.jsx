@@ -11,9 +11,9 @@ import PageHeader from '../design-system/primitives/PageHeader';
 import ToolCard from '../design-system/primitives/ToolCard';
 
 const CATEGORIES = [
-  { path: '/catalogo/pesquisadores', label: 'Especialistas', description: 'Pessoas com produção e experiência ligadas a EPT, VET e desenvolvimento industrial.', icon: <ScienceIcon />, themeKey: 'catalog' },
-  { path: '/catalogo/escolas', label: 'Instituições de Educação', description: 'Instituições de educação profissional e redes de formação.', icon: <SchoolIcon />, themeKey: 'catalog' },
-  { path: '/catalogo/organizacoes', label: 'Instituições relacionadas', description: 'Empresas, órgãos públicos e outras instituições relevantes.', icon: <BusinessIcon />, themeKey: 'catalog' },
+  { path: '/catalogo/especialistas', label: 'Especialistas', description: 'Pessoas com produção e experiência ligadas a EPT, VET e desenvolvimento industrial.', icon: <ScienceIcon />, themeKey: 'catalog' },
+  { path: '/catalogo/instituicoes-de-educacao', label: 'Instituições de Educação', description: 'Instituições de educação profissional e redes de formação.', icon: <SchoolIcon />, themeKey: 'catalog' },
+  { path: '/catalogo/outras-organizacoes', label: 'Outras organizações', description: 'Empresas, órgãos públicos e outras instituições relevantes.', icon: <BusinessIcon />, themeKey: 'catalog' },
 ];
 
 export default function CatalogHomePage() {

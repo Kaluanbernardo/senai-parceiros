@@ -95,7 +95,7 @@ export default function OrganizacoesPage() {
     <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Instituições relacionadas
+          Outras organizações
         </Typography>
         <IconButton onClick={() => setShowFilters((v) => !v)} color="primary">
           <FilterListIcon />
@@ -172,7 +172,7 @@ export default function OrganizacoesPage() {
       </Collapse>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {filtered.length} de {allOrgs.length} instituições
+        {filtered.length} de {allOrgs.length} organizações
       </Typography>
 
       <Grid container spacing={2}>
@@ -186,7 +186,7 @@ export default function OrganizacoesPage() {
       {filtered.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            Nenhuma instituição encontrada
+            Nenhuma organização encontrada
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             Tente ajustar os filtros ou a busca
