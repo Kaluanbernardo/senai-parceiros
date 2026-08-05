@@ -104,12 +104,19 @@ export function explainCandidate({ candidate, profile, matches, dimensions, part
   const against = [];
 
   // 1. O tema — o motivo principal de alguém entrar numa shortlist.
+  //
+  // Só afirma aderência ao pedido quando ela existe. Antes, se o usuário não
+  // nomeasse nenhuma prioridade, o código usava o baseline institucional e
+  // dizia "agenda que o seu pedido toca de perto" mesmo para uma resposta sem
+  // sentido — inventando uma relação que nunca foi pedida.
   if (phrases.length) {
     why.push(`O perfil público trata de ${sentenceList(phrases.slice(0, 3))}, exatamente ${phrases.length > 1 ? 'os temas que' : 'o tema que'} você pediu.`);
-  } else if (priorities.length) {
-    why.push(`Atua em ${sentenceList(priorities.slice(0, 2))}, agenda que o seu pedido toca de perto.`);
+  } else if (priorities.length && profile.prioritiesFromUser) {
+    why.push(`Atua em ${sentenceList(priorities.slice(0, 2))}, que é o que você pediu.`);
+  } else if (matches.themeMatches > 0) {
+    why.push('O perfil público usa parte dos termos que você escreveu, ainda que não trate exatamente do mesmo recorte.');
   } else {
-    why.push('Nada no perfil público confirma os temas que você descreveu: a indicação vem das outras dimensões e precisa de validação humana.');
+    why.push('Nada no perfil público liga esta pessoa ao que você descreveu: não há base para indicá-la para este pedido.');
   }
 
   // 2. A evidência que sustenta a indicação.
@@ -142,8 +149,11 @@ export function explainCandidate({ candidate, profile, matches, dimensions, part
   if (!partnership?.confirmed) {
     against.push('Não há parceria registrada com o SENAI: o primeiro contato precisa ser construído do zero.');
   }
-  if (!phrases.length && priorities.length) {
-    against.push('A aderência vem da agenda geral, não das palavras exatas que você usou — vale confirmar se o recorte é o mesmo.');
+  if (!phrases.length && priorities.length && profile.prioritiesFromUser) {
+    against.push('A aderência vem do tema geral, não das palavras exatas que você usou — vale confirmar se o recorte é o mesmo.');
+  }
+  if (!profile.prioritiesFromUser && !phrases.length) {
+    against.push('Suas respostas não indicaram temas reconhecíveis, então esta indicação não pôde ser checada contra o que você pediu.');
   }
   if (!contributions.length && (profile.contributions || []).length) {
     against.push('O cadastro não diz se a pessoa oferece o tipo de contribuição que você procura.');

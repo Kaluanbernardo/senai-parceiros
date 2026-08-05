@@ -78,11 +78,13 @@ export const STRATEGIC_PRIORITIES = taxonomy([
     terms: ['desenvolvimento regional', 'interiorizacao', 'inclusao', 'diversidade', 'acesso', 'vulnerabilidade', 'territorio', 'arranjo produtivo', 'pequenas empresas', 'mpe', 'comunidade'],
   },
   {
+    // "docentes" e "instrutores" sozinhos descrevem o público, não o tema:
+    // mantidos aqui, "um evento para instrutores" virava "formação docente".
     id: 'teacher_development',
     short: 'formação docente',
     label: 'Formação e desenvolvimento de docentes e instrutores',
     weight: 0.9,
-    terms: ['formacao docente', 'formacao de instrutores', 'desenvolvimento docente', 'capacitacao de professores', 'docentes', 'instrutores', 'pedagogico', 'didatica', 'teacher training'],
+    terms: ['formacao docente', 'formacao de instrutores', 'desenvolvimento docente', 'capacitacao de professores', 'formacao de professores', 'pedagogico', 'didatica', 'teacher training'],
   },
   {
     id: 'health_safety',

@@ -31,6 +31,19 @@ export const DEFAULT_WEIGHTS = {
  * uma shortlist vazia num catálogo fraco quanto uma shortlist inflada quando
  * poucos candidatos se destacam muito acima dos demais.
  */
+/**
+ * Fração mínima da especificidade do pedido que o perfil precisa cobrir para
+ * ser considerado relacionado. Abaixo disso, a coincidência é de vocabulário
+ * genérico e não sustenta uma indicação.
+ */
+export const SUPPORT_MIN_SPECIFICITY = 0.15;
+
+/** Campos da entrevista que descrevem o assunto, e não a logística. */
+const THEMATIC_ANSWER_FIELDS = Object.freeze([
+  'context', 'themes', 'desired_outcome', 'success_indicators', 'contribution_types',
+  'audience', 'communication_style', 'partnership_model', 'benchmark_focus', 'research_output',
+]);
+
 export const SHORTLIST_POLICY = Object.freeze({
   minimum: 5,
   maximum: 10,
@@ -133,7 +146,14 @@ export function buildContextProfile({ brief = {}, answers = {}, category, object
     ...(brief.contributionTypes || []),
     ...(brief.evidencePreferences || []),
   ].filter(Boolean).map(String).join(' ');
-  const answerWords = Object.values(answers || {}).filter(Boolean).map(String).join(' ');
+  // Só as respostas temáticas viram termo de aderência. Geografia, prazo,
+  // orçamento e restrições são fatos de viabilidade e têm dimensão própria —
+  // misturá-los aqui fazia "Brasil" contar como tema e um especialista em
+  // poesia "casar" com um pedido sobre inteligência artificial.
+  const answerWords = Object.entries(answers || {})
+    .filter(([field]) => THEMATIC_ANSWER_FIELDS.includes(field))
+    .map(([, value]) => value)
+    .filter(Boolean).map(String).join(' ');
   const feasibilityWords = Object.values(brief.feasibility || {}).filter(Boolean).map(String).join(' ');
   const constraintWords = [...(brief.hardConstraints || []), brief.riskRules?.description].filter(Boolean).map(String).join(' ');
   const allText = [userWords, answerWords, feasibilityWords, constraintWords].filter(Boolean).join(' \n ');
@@ -149,7 +169,12 @@ export function buildContextProfile({ brief = {}, answers = {}, category, object
     // As palavras do usuário como ele as escreveu, para a justificativa citar
     // "educação profissional" em vez do token normalizado "educacao".
     themePhrases: [...new Set([...(brief.themes || []), ...String(answers.themes || '').split(/[;\n]/)].map((phrase) => String(phrase).trim()).filter((phrase) => phrase.length > 3))],
-    priorities: signals.priorities.length ? signals.priorities : matchTaxonomy(SENAI_STRATEGIC_BASELINE.join(' '), STRATEGIC_PRIORITIES),
+    // Prioridades vindas do pedido. Quando o usuário não nomeia nenhuma, esta
+    // lista fica vazia de propósito: preenchê-la com o baseline institucional
+    // fazia todo candidato "coincidir" com uma agenda que ninguém pediu, e a
+    // justificativa passava a afirmar aderência inexistente.
+    priorities: signals.priorities,
+    baselinePriorities: matchTaxonomy(SENAI_STRATEGIC_BASELINE.join(' '), STRATEGIC_PRIORITIES),
     prioritiesFromUser: signals.priorities.length > 0,
     audiences: signals.audiences,
     contributions: signals.contributions.length ? signals.contributions : matchTaxonomy(brief.collaborationModel || '', CONTRIBUTION_TYPES),
@@ -213,17 +238,27 @@ function scoreAlignment({ candidate, profile, terms, text }) {
   const matchedMass = matchedTokens.reduce((sum, token) => sum + terms.weightOf(token), 0);
   // Sem temas informados a nota fica explicitamente neutra em vez de premiar
   // quem por acaso repete palavras genéricas do briefing.
-  const themeFit = wantedMass > 0 ? 25 + clamp01(matchedMass / wantedMass) * 75 : 50;
+  // Zero sobreposição com o que foi pedido significa zero aderência. O piso de
+  // 25 que existia aqui dava nota a quem não tinha nenhuma relação com o pedido.
+  const themeFit = wantedMass > 0 ? clamp01(matchedMass / wantedMass) * 100 : 50;
   const themeEvidence = wantedMass > 0
-    ? [`termos aderentes: ${matchedTokens.slice(0, 6).join(', ') || 'nenhum'}`]
+    ? [`termos do seu pedido presentes no perfil: ${matchedTokens.slice(0, 6).join(', ') || 'nenhum'}`]
     : ['nenhum tema foi informado na entrevista'];
 
   const candidatePriorities = matchTaxonomy(candidateText(candidate), STRATEGIC_PRIORITIES);
+  // Só as prioridades que o próprio usuário acionou entram na nota. O baseline
+  // institucional serve de desempate, com peso menor, e nunca como aderência.
   const priorityOverlap = taxonomyOverlap(profile.priorities, candidatePriorities);
-  const priorityFit = priorityOverlap ? 20 + priorityOverlap.ratio * 80 : 50;
+  const baselineOverlap = taxonomyOverlap(profile.baselinePriorities, candidatePriorities);
+  const priorityFit = priorityOverlap
+    ? priorityOverlap.ratio * 100
+    : (baselineOverlap ? Math.min(50, baselineOverlap.ratio * 100) : 50);
   const priorityEvidence = [
-    priorityOverlap?.hits.length ? `prioridades em comum: ${priorityOverlap.hits.map((item) => item.label).join('; ')}` : 'nenhuma prioridade estratégica em comum',
-    profile.prioritiesFromUser ? 'prioridades derivadas das respostas' : 'prioridades derivadas do baseline institucional',
+    priorityOverlap?.hits.length
+      ? `prioridades do seu pedido presentes no perfil: ${priorityOverlap.hits.map((item) => item.label).join('; ')}`
+      : profile.prioritiesFromUser
+        ? 'nenhuma das prioridades que você indicou aparece no perfil'
+        : 'você não indicou prioridades; só o alinhamento institucional foi considerado, com peso reduzido',
   ];
 
   const nature = fold([candidate.categoria, candidate.natureza, candidate.instituicao].filter(Boolean).join(' '));
@@ -417,6 +452,28 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
 
   const matchedTokens = profile.themeTokens.filter((token) => text.includes(token));
   const distinctive = [...matchedTokens].sort((left, right) => terms.weightOf(right) - terms.weightOf(left)).slice(0, 4);
+
+  /**
+   * Suporte factual: existe algo no perfil público que ligue este candidato ao
+   * que foi pedido? Sem isso a nota media apenas atributos do próprio
+   * candidato — credibilidade, completude, ausência de risco — que são iguais
+   * para qualquer pedido e faziam respostas sem sentido produzirem shortlist.
+   */
+  const candidatePriorityIds = new Set(matchTaxonomy(raw, STRATEGIC_PRIORITIES).map((item) => item.id));
+  const priorityMatches = profile.priorities.filter((item) => candidatePriorityIds.has(item.id));
+  // O suporte é medido em especificidade (IDF), não em contagem: casar
+  // "indústria", que aparece em quase todo o catálogo, não liga ninguém a
+  // nada. Casar "circular" liga.
+  const wantedMass = profile.themeTokens.reduce((sum, token) => sum + terms.weightOf(token), 0);
+  const matchedMass = matchedTokens.reduce((sum, token) => sum + terms.weightOf(token), 0);
+  const specificity = wantedMass > 0 ? matchedMass / wantedMass : 0;
+  const support = {
+    themeMatches: matchedTokens.length,
+    priorityMatches: priorityMatches.length,
+    specificity: Math.round(specificity * 100) / 100,
+    requestHasSignal: profile.themeTokens.length > 0 || profile.priorities.length > 0,
+    supported: priorityMatches.length > 0 || specificity >= SUPPORT_MIN_SPECIFICITY,
+  };
   const fields = sourceFields(candidate);
   const strongest = [...DIMENSIONS].sort((left, right) => dimensions[right] - dimensions[left])[0];
   const weakest = [...DIMENSIONS].sort((left, right) => dimensions[left] - dimensions[right])[0];
@@ -432,6 +489,7 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
       audiences: matchTaxonomy(raw, AUDIENCE_PROFILES).filter((item) => profile.audiences.some((wanted) => wanted.id === item.id)),
       contributions: matchTaxonomy(raw, CONTRIBUTION_TYPES).filter((item) => profile.contributions.some((wanted) => wanted.id === item.id)),
       geographyScore: feasibility.subscores.find((item) => item.id === 'geography_fit')?.score,
+      themeMatches: support.themeMatches,
     },
   });
 
@@ -444,6 +502,7 @@ function scoreCandidate({ candidate, profile, criteria, terms }) {
     total,
     severeRisk,
     partnership,
+    support,
     explanation,
     confidence: clamp(30 + clamp01(fields.length / 9) * 45 + clamp01(matchedTokens.length / 6) * 25),
     summary: explanation.why[0],
@@ -546,8 +605,12 @@ export function buildLocalEvaluation({ category, objective, answers, candidates,
   const profile = buildContextProfile({ brief: brief || {}, answers: answers || {}, category, objective });
   const terms = buildTermWeights(candidates);
   const candidatePool = sortEntries(candidates.map((candidate) => scoreCandidate({ candidate, profile, criteria, terms })));
-  const threshold = computeEligibilityThreshold(candidatePool);
-  const shortlist = selectShortlist(candidatePool, { ...SHORTLIST_POLICY, threshold });
+  // Só é candidato quem tem relação demonstrável com o pedido. Completar a
+  // lista com os "menos piores" produzia dez indicações confiantes mesmo para
+  // respostas sem sentido nenhum.
+  const supported = candidatePool.filter((entry) => entry.support.supported);
+  const threshold = computeEligibilityThreshold(supported);
+  const shortlist = supported.length ? selectShortlist(supported, { ...SHORTLIST_POLICY, threshold }) : [];
 
   return {
     shortlist,
@@ -588,6 +651,14 @@ export function buildLocalEvaluation({ category, objective, answers, candidates,
       shortlistPolicy: { ...SHORTLIST_POLICY, threshold },
       objectiveCalibration: 'os pesos partem do perfil do objetivo e são ajustados por sinais explícitos das respostas, dentro de faixas declaradas',
       providerPreselection: { limit: 30, selected: rankProviderCandidates(candidatePool, 30).map((entry) => entry.candidate.id) },
+      requestSignal: {
+        hasSignal: profile.themeTokens.length > 0 || profile.priorities.length > 0,
+        supportedCandidates: supported.length,
+        unsupportedCandidates: candidatePool.length - supported.length,
+        note: supported.length
+          ? 'Só entram na shortlist candidatos cujo perfil público toca o que foi pedido.'
+          : 'Nenhum candidato do catálogo tem relação demonstrável com o que foi descrito na entrevista.',
+      },
       shortlistExcluded: exclusionReport(candidatePool, shortlist, threshold),
       generatedAt: new Date().toISOString(),
       provider: 'local-fallback',
@@ -620,8 +691,9 @@ export function mergeAiEvaluation(local, aiResult = {}) {
   const aiById = new Map((aiResult.evaluations || []).map((evaluation) => [String(evaluation.id), evaluation]));
   const entries = (local.candidatePool || local.shortlist).map((entry) => recompute(entry, aiById.get(String(entry.candidate.id)), criteria));
   const sortedEntries = sortEntries(entries);
-  const threshold = computeEligibilityThreshold(sortedEntries);
-  const shortlist = selectShortlist(sortedEntries, { ...SHORTLIST_POLICY, threshold });
+  const supported = sortedEntries.filter((entry) => entry.support?.supported !== false);
+  const threshold = computeEligibilityThreshold(supported);
+  const shortlist = supported.length ? selectShortlist(supported, { ...SHORTLIST_POLICY, threshold }) : [];
   return {
     ...local,
     shortlist,

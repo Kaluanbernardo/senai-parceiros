@@ -38,8 +38,11 @@ describe('selection engine', () => {
   it('ranks catalog candidates and limits the shortlist to five', () => {
     const result = buildLocalEvaluation({ ...input, candidates });
 
-    expect(result.shortlist).toHaveLength(2);
+    // O especialista em História da educação fica de fora: nada no perfil dele
+    // liga a um pedido sobre inteligência artificial na indústria.
+    expect(result.shortlist).toHaveLength(1);
     expect(result.shortlist[0].candidate.id).toBe(1);
+    expect(result.candidatePool.find((entry) => entry.candidate.id === 2).support.supported).toBe(false);
     expect(result.shortlist[0].dimensions).toEqual(
       expect.objectContaining({
         impact: expect.any(Number),
@@ -144,7 +147,8 @@ describe('selection engine', () => {
     const unrelated = { id: 50, nome: 'Especialista em Poesia', instituicao: 'Casa das Letras', pais: 'Brasil', areas: 'Poesia moderna' };
     const result = buildLocalEvaluation({ ...input, candidates: [unrelated] });
 
-    expect(result.candidatePool[0].explanation.why[0]).toMatch(/não confirma|precisa de validação/i);
+    expect(result.candidatePool[0].explanation.why[0]).toMatch(/não há base|nada no perfil/i);
+    expect(result.shortlist).toHaveLength(0);
   });
 
   it('does not treat absence of partnership evidence as a risk signal', () => {
@@ -292,6 +296,56 @@ describe('selection engine', () => {
     ];
     expect(computeEligibilityThreshold(entries)).toBe(50);
     expect(computeEligibilityThreshold([{ candidate: { id: 3 }, total: 20, strategicValue: 20 }])).toBe(28);
+  });
+
+  it('refuses to rank when the answers carry no recognizable request', () => {
+    const nonsense = { context: 'asdf qwer zxcv', themes: 'blergh flurb' };
+    const result = buildLocalEvaluation({
+      category: 'researcher',
+      objective: 'speaker',
+      answers: nonsense,
+      brief: { context: nonsense.context, themes: ['blergh flurb'], desiredOutcomes: [], contributionTypes: [], evidencePreferences: [], collaborationModel: '', feasibility: {}, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] },
+      candidates,
+    });
+
+    // Uma resposta sem sentido produzia dez indicações confiantes, porque
+    // quatro das seis dimensões só medem o candidato e davam nota a qualquer um.
+    expect(result.shortlist).toHaveLength(0);
+    expect(result.trace.requestSignal.supportedCandidates).toBe(0);
+    expect(result.trace.requestSignal.note).toMatch(/nenhum candidato/i);
+    expect(result.candidatePool.every((entry) => entry.support.supported === false)).toBe(true);
+  });
+
+  it('never claims the institutional agenda was what the user asked for', () => {
+    const nonsense = { context: 'asdf qwer zxcv' };
+    const result = buildLocalEvaluation({
+      category: 'researcher',
+      objective: 'speaker',
+      answers: nonsense,
+      brief: { context: nonsense.context, themes: [], desiredOutcomes: [], contributionTypes: [], evidencePreferences: [], collaborationModel: '', feasibility: {}, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] },
+      candidates,
+    });
+    const text = result.candidatePool.map((entry) => entry.explanation.why.join(' ')).join(' ');
+
+    expect(text).not.toMatch(/que você pediu|seu pedido toca/i);
+    expect(text).toMatch(/não há base|nada no perfil/i);
+  });
+
+  it('keeps a candidate out when the overlap is only generic vocabulary', () => {
+    // "indústria" aparece nos dois registros; só o segundo trata do recorte.
+    const generic = { id: 60, nome: 'Especialista genérico', instituicao: 'Instituto X', pais: 'Brasil', areas: 'Indústria', pesquisa: 'Estudos sobre a indústria.' };
+    const specific = { id: 61, nome: 'Especialista em economia circular', instituicao: 'Instituto Y', pais: 'Brasil', areas: 'Economia circular na indústria', pesquisa: 'Reaproveitamento de resíduos industriais.' };
+    const answers = { context: 'Evento sobre economia circular e resíduos na indústria', themes: 'economia circular; resíduos' };
+    const result = buildLocalEvaluation({
+      category: 'researcher',
+      objective: 'speaker',
+      answers,
+      brief: { context: answers.context, themes: ['economia circular', 'resíduos'], desiredOutcomes: [], contributionTypes: [], evidencePreferences: [], collaborationModel: '', feasibility: {}, hardConstraints: [], riskRules: {}, diversityPreferences: {}, uncertainties: [] },
+      candidates: [generic, specific],
+    });
+
+    expect(result.shortlist.map((entry) => entry.candidate.id)).toContain(61);
+    expect(result.candidatePool.find((entry) => entry.candidate.id === 61).support.supported).toBe(true);
   });
 
   it('calibrates an advanced-manufacturing partnership case with real catalog records', () => {

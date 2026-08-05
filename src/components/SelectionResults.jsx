@@ -300,10 +300,25 @@ export default function SelectionResults({ result, onReview, onRestart }) {
   }), [result]);
 
   if (!shortlist.length) {
+    // Distingue "não entendi o que você pediu" de "entendi, mas o catálogo não
+    // tem ninguém disso": as duas situações pedem ações diferentes.
+    const signal = result?.trace?.requestSignal;
+    const unreadable = signal && !signal.hasSignal;
     return (
       <Stack spacing={2}>
-        <Alert severity="warning">Não encontramos aderência suficiente no catálogo para montar uma shortlist responsável.</Alert>
-        <Typography color="text.secondary">Revise o contexto, amplie a geografia ou ajuste as restrições.</Typography>
+        <Alert severity="warning">
+          {unreadable
+            ? 'Não consegui reconhecer nenhum tema nas suas respostas, então não há como indicar ninguém com honestidade.'
+            : 'Nenhum registro do catálogo tem relação demonstrável com o que você descreveu.'}
+        </Alert>
+        <Typography color="text.secondary">
+          {unreadable
+            ? 'Descreva a situação com suas palavras — o assunto, quem participa e o que precisa acontecer. Uma frase concreta já basta.'
+            : `Foram avaliados ${signal?.unsupportedCandidates ?? 0} registros e nenhum trata do assunto que você pediu. Vale ampliar o tema, revisar as respostas ou considerar que o catálogo ainda não cobre esse recorte.`}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Preferimos não mostrar uma lista: indicar os "menos piores" daria a impressão de que existe uma recomendação onde não existe.
+        </Typography>
         <Stack direction="row" spacing={1}>
           <Button variant="contained" startIcon={<EditIcon />} onClick={onReview}>Revisar respostas</Button>
           <Button variant="outlined" startIcon={<RestartAltIcon />} onClick={onRestart}>Começar de novo</Button>
