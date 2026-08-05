@@ -13,7 +13,7 @@ export const CATEGORY_SCHEMAS = CATALOG_COLUMNS;
 export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria, columns }) {
   const selectedCategory = CATALOG_COLUMNS[category] ? category : 'organization';
   const schema = resolveCatalogColumns(selectedCategory, columns);
-  const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}) — ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
+  const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}): ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
   const headers = schema.map((column) => column.name).join(' | ');
   const total = CATALOG_COLUMNS[selectedCategory].length;
   const sections = [

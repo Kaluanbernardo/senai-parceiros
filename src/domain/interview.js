@@ -3,15 +3,15 @@ import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleRe
 export const CATEGORY_LABELS = {
   researcher: 'Especialista',
   school: 'Instituição de Educação',
-  organization: 'Outras organizações',
+  organization: 'Organização',
 };
 
 export const OBJECTIVE_LABELS = {
-  speaker: 'Convidado(a) ou palestrante',
-  project_partner: 'Parceiro(a) de projeto ou iniciativa',
-  benchmark: 'Referência para benchmarking',
-  research_support: 'Especialista ou instituição para apoiar uma pesquisa',
-  guided: 'Ainda não sei — quero ser guiado(a)',
+  speaker: 'Convidar para uma palestra ou conversa',
+  project_partner: 'Criar um projeto em conjunto',
+  benchmark: 'Conhecer uma prática de referência',
+  research_support: 'Apoiar uma pesquisa',
+  guided: 'Ainda não sei, quero ajuda para decidir',
 };
 
 export const CATEGORY_IDS = Object.freeze(Object.keys(CATEGORY_LABELS));
@@ -20,7 +20,7 @@ export const OBJECTIVE_IDS = Object.freeze(Object.keys(OBJECTIVE_LABELS));
 const commonQuestions = [
   {
     id: 'context',
-    label: 'Em que situação você pretende envolver esse stakeholder?',
+    label: 'Em que situação você pretende envolver essa pessoa ou instituição?',
     helper: 'Descreva o evento, projeto ou decisão. Não precisa usar termos técnicos.',
     example: 'Ex.: evento sobre IA aplicada à indústria e formação profissional.',
     kind: 'textarea',
@@ -120,7 +120,7 @@ export function buildInterview({ category, objective, context = '' }) {
     example: resolveExample({ questionId: question.id, category, objective, context }),
     exampleCoverage: coverage,
     allowUnknown: true,
-    answerHint: 'Você poderá voltar e revisar esta resposta antes de calcular o ranking.',
+    answerHint: 'Você poderá revisar suas respostas antes de ver as recomendações.',
   }));
 }
 

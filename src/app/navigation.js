@@ -86,7 +86,7 @@ export function getBreadcrumbs(pathname) {
   const child = (tool.children || []).find((entry) => entry.route === pathname);
 
   if (child) {
-    trail.push({ label: tool.label, route: tool.route });
+    trail.push({ label: tool.navLabel || tool.label, route: tool.route });
     trail.push({ label: child.label });
     return trail;
   }

@@ -63,7 +63,7 @@ export default function CatalogShell({
   const remaining = items.length - visible.length;
 
   return (
-    <PageContainer width="wide">
+    <PageContainer width="wide" tool="catalog">
       <PageHeader eyebrow={eyebrow} title={title} description={description} accent="catalog" dense />
 
       {siblings.length > 0 && (
@@ -97,11 +97,11 @@ export default function CatalogShell({
       {items.length === 0 ? (
         <EmptyState
           icon={emptyIcon}
-          title={hasActiveFilters ? `Nenhum resultado para esta combinação de filtros` : `Nenhum ${noun.singular} cadastrado`}
+          title={hasActiveFilters ? 'Nenhum resultado para esta combinação de filtros' : `Nenhum ${noun.singular} encontrado`}
           description={
             hasActiveFilters
-              ? `A base tem ${total.toLocaleString('pt-BR')} ${noun.plural}, mas nenhum atende a todos os filtros ativos ao mesmo tempo. Remover um deles costuma bastar.`
-              : 'Assim que houver registros públicos verificados nesta categoria, eles aparecem aqui.'
+              ? 'Nenhum perfil atende a todos os filtros escolhidos. Remova um filtro ou tente uma busca mais ampla.'
+              : 'Ainda não há informações nesta categoria.'
           }
           action={hasActiveFilters ? onClearFilters : undefined}
           actionLabel="Limpar os filtros"
@@ -124,11 +124,8 @@ export default function CatalogShell({
           {remaining > 0 && (
             <Stack alignItems="center" sx={{ mt: 3.5 }} gap={1}>
               <Button variant="outlined" size="large" onClick={() => setLimit((current) => current + PAGE_SIZE)}>
-                Mostrar mais {Math.min(remaining, PAGE_SIZE)}
+                Mostrar mais
               </Button>
-              <Typography variant="caption" sx={{ color: T.ink.subtle }}>
-                {visible.length} de {items.length} exibidos
-              </Typography>
             </Stack>
           )}
         </>

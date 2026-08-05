@@ -116,10 +116,10 @@ export function collectTokenValues(items, field, separator = ';') {
  * respeita a curadoria de quem montou a base, e continua sendo o padrão.
  */
 export const SORT_OPTIONS = Object.freeze([
-  Object.freeze({ id: 'relevance', label: 'Ordem do catálogo' }),
-  Object.freeze({ id: 'name-asc', label: 'Nome (A–Z)' }),
-  Object.freeze({ id: 'name-desc', label: 'Nome (Z–A)' }),
-  Object.freeze({ id: 'country-asc', label: 'País (A–Z)' }),
+  Object.freeze({ id: 'relevance', label: 'Padrão' }),
+  Object.freeze({ id: 'name-asc', label: 'Nome (A-Z)' }),
+  Object.freeze({ id: 'name-desc', label: 'Nome (Z-A)' }),
+  Object.freeze({ id: 'country-asc', label: 'País (A-Z)' }),
 ]);
 
 const COMPARATORS = {

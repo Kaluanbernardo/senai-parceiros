@@ -24,7 +24,6 @@ import Typography from '@mui/material/Typography';
 import { getNavTools } from '../app/toolRegistry';
 import { getToolIcon } from '../app/toolIcons';
 import { getBreadcrumbs, isActive } from '../app/navigation';
-import { BRAND_NAME } from './brand';
 import { DESIGN_TOKENS as T } from './tokens';
 import Wordmark from './Wordmark';
 
@@ -103,6 +102,7 @@ export default function AppShell({ children, user, onLogout }) {
           >
             {NAV_TOOLS.map((tool) => {
               const active = isActive(location.pathname, tool.route, tool.matchPrefix);
+              const tone = T.tools[tool.themeKey];
               return (
                 <Button
                   key={tool.route}
@@ -112,10 +112,10 @@ export default function AppShell({ children, user, onLogout }) {
                   aria-current={active ? 'page' : undefined}
                   sx={{
                     color: active ? T.ink.onInverted : T.ink.onInvertedMuted,
-                    bgcolor: active ? 'rgba(255,255,255,.12)' : 'transparent',
+                    bgcolor: active ? tone.main : 'transparent',
                     fontWeight: active ? 750 : 600,
                     whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,.10)', color: T.ink.onInverted },
+                    '&:hover': { bgcolor: active ? tone.dark : 'rgba(255,255,255,.10)', color: T.ink.onInverted },
                     '&:focus-visible': { outline: 'none', boxShadow: T.focus.ringInverted },
                   }}
                 >
@@ -200,13 +200,10 @@ export default function AppShell({ children, user, onLogout }) {
             flexWrap: 'wrap',
             gap: 1.5,
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
           }}
         >
           <Wordmark tone="inverted" size="sm" />
-          <Typography variant="caption" sx={{ color: T.ink.onInvertedMuted }}>
-            {BRAND_NAME.owner} · Ferramenta pública em versão MVP
-          </Typography>
         </Box>
       </Box>
     </Box>
@@ -262,18 +259,19 @@ function NavDrawer({ open, onClose, pathname, onNavigate, isAdmin }) {
       <List component="nav" aria-label="Ferramentas" sx={{ py: 1 }}>
         {NAV_TOOLS.map((tool) => {
           const active = isActive(pathname, tool.route, tool.matchPrefix);
+          const tone = T.tools[tool.themeKey];
           return (
             <React.Fragment key={tool.route}>
               <ListItemButton
                 onClick={() => onNavigate(tool.route)}
                 selected={active}
                 aria-current={active ? 'page' : undefined}
-                sx={{ mx: 1, borderRadius: `${T.radius.sm}px`, '&.Mui-selected': { bgcolor: T.surface.accentSoft } }}
+                sx={{ mx: 1, borderRadius: `${T.radius.sm}px`, '&.Mui-selected': { bgcolor: tone.main, color: tone.contrast }, '&.Mui-selected:hover': { bgcolor: tone.dark } }}
               >
-                <ListItemIcon sx={{ minWidth: 38, color: active ? T.ink.accent : T.ink.muted }}>{getToolIcon(tool.iconKey)}</ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 38, color: active ? tone.contrast : tone.main }}>{getToolIcon(tool.iconKey)}</ListItemIcon>
                 <ListItemText
                   primary={tool.label}
-                  slotProps={{ primary: { fontWeight: active ? 750 : 600, fontSize: T.fontSize.small } }}
+                  slotProps={{ primary: { fontWeight: active ? 750 : 600, fontSize: T.fontSize.small, color: active ? tone.contrast : T.ink.strong } }}
                 />
               </ListItemButton>
 
@@ -288,11 +286,11 @@ function NavDrawer({ open, onClose, pathname, onNavigate, isAdmin }) {
                     onClick={() => onNavigate(child.route)}
                     selected={childActive}
                     aria-current={childActive ? 'page' : undefined}
-                    sx={{ mx: 1, pl: 6, borderRadius: `${T.radius.sm}px`, py: .5, '&.Mui-selected': { bgcolor: T.surface.accentSoft } }}
+                    sx={{ mx: 1, pl: 6, borderRadius: `${T.radius.sm}px`, py: .5, '&.Mui-selected': { bgcolor: tone.main }, '&.Mui-selected:hover': { bgcolor: tone.dark } }}
                   >
                     <ListItemText
                       primary={child.label}
-                      slotProps={{ primary: { fontSize: T.fontSize.caption, fontWeight: childActive ? 700 : 500, color: childActive ? T.ink.accent : T.ink.muted } }}
+                      slotProps={{ primary: { fontSize: T.fontSize.caption, fontWeight: childActive ? 700 : 500, color: childActive ? tone.contrast : T.ink.muted } }}
                     />
                   </ListItemButton>
                 );

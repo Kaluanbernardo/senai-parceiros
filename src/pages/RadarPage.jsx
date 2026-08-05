@@ -27,7 +27,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import RadarIcon from '@mui/icons-material/Radar';
-import { countUndatedItems, filterRadarItems, RADAR_SECTION_LABELS, RADAR_SECTIONS } from '../domain/radar';
+import { countUndatedItems, filterRadarItems, RADAR_SECTIONS } from '../domain/radar';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../design-system/primitives/EmptyState';
 import PageContainer from '../design-system/primitives/PageContainer';
@@ -36,11 +36,15 @@ import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 const sections = RADAR_SECTIONS.map((value) => ({
   value,
-  label: RADAR_SECTION_LABELS[value],
+  label: {
+    research: 'Pesquisas e estudos',
+    government: 'Brasil',
+    international: 'Outros países',
+  }[value],
   description: {
-    research: 'Produção acadêmica recente em EPT, VET e temas associados à indústria.',
-    government: 'Atualizações oficiais federais e do Estado de São Paulo com relação forte com EPT.',
-    international: 'OCDE, OIT, UNESCO-UNEVOC e outros organismos relevantes para VET.',
+    research: 'Estudos recentes sobre educação profissional, tecnologia e indústria.',
+    government: 'Decisões e iniciativas públicas do Brasil e do Estado de São Paulo.',
+    international: 'Práticas e novidades de outros países e organismos internacionais.',
   }[value],
 }));
 
@@ -171,7 +175,7 @@ export default function RadarPage() {
       // the queue is empty or every attempt is being refused.
       if (!body.stats.rewritten || !body.remaining) {
         if (rewritten > 0) return { severity: 'success', message: `${rewritten} texto(s) reescrito(s) em português.`, lastRun };
-        const reason = status?.errors?.length ? `: ${status.errors.join(', ')}` : status?.candidates ? '.' : ' — não havia texto pendente.';
+        const reason = status?.errors?.length ? `: ${status.errors.join(', ')}` : status?.candidates ? '.' : ': não havia texto pendente.';
         return { severity: status?.candidates ? 'warning' : 'success', message: `Nenhum texto foi reescrito${reason}`, lastRun };
       }
     }
@@ -256,36 +260,13 @@ export default function RadarPage() {
   const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
   return (
-    <PageContainer width="wide">
+    <PageContainer width="wide" tool="radar">
       <PageHeader
-        eyebrow="RADAR EPT · VET"
-        title="O que mudou na área?"
+        eyebrow="RADAR"
+        title="Acompanhe o que está mudando"
         description={activeSection.description}
         accent="radar"
         dense
-        actions={
-          <>
-            {/* "Recarregar" only re-reads the stored snapshot; collecting from the
-                external sources is the admin-only action next to it. */}
-            {/* describeChild keeps the visible label as the accessible name; without
-                it the tooltip text replaces the button name for screen readers. */}
-            <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
-              <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
-            </Tooltip>
-            {isAdmin && (
-              <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
-                <Button
-                  variant="contained"
-                  startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
-                  onClick={collectNow}
-                  disabled={collecting || loading}
-                >
-                  {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
-                </Button>
-              </Tooltip>
-            )}
-          </>
-        }
       />
 
       {/* As seções viraram abas sobre uma linha, como as do catálogo. Envolvidas
@@ -295,6 +276,9 @@ export default function RadarPage() {
           {sections.map((entry) => <Tab key={entry.value} value={entry.value} label={entry.label} />)}
         </Tabs>
       </Box>
+      <Typography variant="body2" sx={{ mt: 1.5, color: T.ink.muted }}>
+        Escolha uma seção. Use a busca e os filtros apenas se quiser refinar o que aparece.
+      </Typography>
 
       <Card sx={{ mt: 2.5 }}>
         <CardContent>
@@ -308,38 +292,18 @@ export default function RadarPage() {
               <TextField fullWidth size="small" label="Buscar" value={filters.query} onChange={setFilter('query')} placeholder="ex.: inteligência artificial" InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }} />
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}><FormControl fullWidth size="small"><InputLabel>Período</InputLabel><Select value={filters.period} label="Período" onChange={setFilter('period')}>{periodOptions.map((entry) => <MenuItem key={entry.value} value={entry.value}>{entry.label}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 12, md: 4 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
+            <Grid size={{ xs: 12, md: 3 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Local</InputLabel><Select value={filters.geography} label="Local" onChange={setFilter('geography')}><MenuItem value="">Todos</MenuItem>{[...new Set(items.map((item) => item.geography))].sort().map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tema</InputLabel><Select value={filters.topic} label="Tema" onChange={setFilter('topic')}><MenuItem value="">Todos</MenuItem>{options.topics.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
           </Grid>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }} gap={1}>
-            {/* `aria-live` porque a contagem muda a cada tecla digitada na busca
-                e é a única confirmação de que o filtro surtiu efeito. */}
-            <Typography variant="caption" aria-live="polite" sx={{ color: T.ink.muted }}>
-              <Box component="strong" sx={{ color: T.ink.strong, fontWeight: 750 }}>{visibleItems.length}</Box>
-              {visibleItems.length === 1 ? ' item visível' : ' itens visíveis'}
-              {undatedHidden && ` · ${undatedCount} sem data publicada, oculto(s) por este período`}
-            </Typography>
+          <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 1.5 }} gap={1}>
             <Button size="small" onClick={clearFilters}>Limpar filtros</Button>
           </Stack>
         </CardContent>
       </Card>
 
-      {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Exibindo novidades públicas verificadas da base curada enquanto as fontes automáticas se recuperam.</Alert>}
-      {collectResult && (
-        <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>
-          {collectResult.message}
-          {collectDiagnostics && (
-            // The summary above interprets the run; this is the run itself, for
-            // when the interpretation is not enough to explain what happened.
-            <Box component="details" sx={{ mt: 1 }}>
-              <Box component="summary" sx={{ cursor: 'pointer', fontSize: '.82rem' }}>Detalhes técnicos da coleta</Box>
-              <Box component="pre" sx={{ mt: 1, p: 1, maxHeight: 320, overflow: 'auto', bgcolor: 'rgba(0,0,0,.06)', borderRadius: 1, fontSize: '.72rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{collectDiagnostics}</Box>
-            </Box>
-          )}
-        </Alert>
-      )}
+      {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Algumas fontes estão temporariamente indisponíveis. Mostramos as informações públicas que já foram conferidas.</Alert>}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
       {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }} role="status" aria-label="Carregando os itens do radar"><CircularProgress /></Box> : (
@@ -354,7 +318,7 @@ export default function RadarPage() {
                           do rótulo. A faixa colorida de 4px que ficava no topo
                           de cada cartão saiu pelo mesmo motivo que a do
                           catálogo: com tudo marcado, nada fica marcado. */}
-                      <Typography variant="overline" sx={{ color: item.official ? T.tools.radar.dark : T.ink.accent }}>{item.sourceName}</Typography>
+                      <Typography variant="overline" sx={{ color: item.official ? T.tools.radar.dark : T.tools.radar.main }}>{item.sourceName}</Typography>
                       <Typography variant="caption" sx={{ display: 'block', color: T.ink.subtle }}>{item.contentType}</Typography>
                     </Box>
                     <Chip size="small" color={item.noveltyStatus === 'new' ? 'success' : 'info'} variant="outlined" label={item.noveltyLabel} />
@@ -367,7 +331,7 @@ export default function RadarPage() {
                   <Divider sx={{ my: 1.5 }} />
                   {item.displaySummary ? (
                     <>
-                      <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ display: 'block', mb: 0.35 }}>{summaryLabel(item)}</Typography>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 0.35, color: T.tools.radar.dark, fontWeight: 800 }}>{summaryLabel(item)}</Typography>
                       <Typography color="text.secondary" sx={{ fontSize: '0.9rem', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.displaySummary}</Typography>
                       {item.rawSourceText && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontStyle: 'italic' }}>Texto reproduzido da fonte; a versão editorial em português ainda não foi gerada para este item.</Typography>}
                     </>
@@ -389,17 +353,17 @@ export default function RadarPage() {
       {!loading && !error && visibleItems.length === 0 && (
         <EmptyState
           icon={<RadarIcon />}
-          title="Nenhum item nesta combinação de filtros"
+          title={items.length > 0 ? 'Nenhuma novidade para estes filtros' : 'Ainda não há novidades nesta seção'}
           description={
             items.length > 0
-              ? `Esta seção tem ${items.length} item(ns) no snapshot atual, mas nenhum atende a todos os filtros ao mesmo tempo. Ampliar o período é o ajuste que mais costuma resolver.`
-              : 'O snapshot atual desta seção está vazio. Recarregar relê o snapshot; coletar consulta as fontes externas.'
+              ? 'Nenhuma novidade atende a todos os filtros escolhidos. Amplie o período ou remova um filtro.'
+              : 'Tente novamente mais tarde.'
           }
           action={items.length > 0 ? clearFilters : undefined}
           actionLabel="Limpar os filtros"
         />
       )}
-      <Typography variant="caption" sx={{ display: 'block', mt: 4, color: T.ink.subtle }}>Rastreabilidade: títulos e resumos são reescritos em português claro a partir do documento original, que continua identificado no cartão. Cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
+      <Typography variant="caption" sx={{ display: 'block', mt: 4, color: T.ink.subtle }}>Os cartões resumem informações públicas em português claro. Use Abrir fonte original para conferir o documento completo.</Typography>
     </PageContainer>
   );
 }

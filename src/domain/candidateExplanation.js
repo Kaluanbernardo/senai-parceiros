@@ -33,7 +33,11 @@ export function sentenceList(items = [], conjunction = 'e') {
 }
 
 function firstClause(text, max = 160) {
-  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  const value = String(text || '')
+    .replace(/\bdesign instru[cç][aã]o\s+(?:T?VET|EPT)\b/gi, 'design instrucional em educação profissional')
+    .replace(/\b(?:T?VET|EPT)\b/gi, 'educação profissional')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!value) return '';
   const clause = value.split(/(?<=\.)\s/)[0] || value;
   return clause.length > max ? `${clause.slice(0, max - 1).trim()}…` : clause;
@@ -71,7 +75,7 @@ function headlineFor(candidate) {
   const areas = firstClause(candidate.areas, 110);
   const prose = firstClause(candidate.pesquisa || candidate.diferencial || candidate.descricao, 130);
   const what = areas ? `Atua em ${lower(areas)}` : prose;
-  if (what && where) return `${what} — ${where}.`;
+  if (what && where) return `${what}. ${where}.`;
   if (what) return `${what}.`;
   if (where) return `${where}.`;
   return 'O cadastro não descreve a área de atuação.';
@@ -125,7 +129,7 @@ export function explainCandidate({ candidate, profile, matches, dimensions, part
   if (articles) evidence.push(`${articles} ${articles === 1 ? 'artigo listado' : 'artigos listados'}`);
   if (candidate.scholar) evidence.push('perfil acadêmico público');
   if (candidate.website) evidence.push('site institucional');
-  if (evidence.length) why.push(`A indicação se apoia em ${sentenceList(evidence)} — dá para conferir antes de falar com a pessoa.`);
+  if (evidence.length) why.push(`A indicação se apoia em ${sentenceList(evidence)}. Dá para conferir antes do contato.`);
   else against.push('Não há fonte pública ligada ao registro: confirme os dados antes de usar esta indicação.');
 
   // 3. Adequação ao que você quer fazer.
@@ -144,13 +148,13 @@ export function explainCandidate({ candidate, profile, matches, dimensions, part
   const geographyScore = matches.geographyScore;
   if (Number.isFinite(geographyScore) && geographyScore < 65 && candidate.pais) {
     // Evita a preposição ("está em Austrália"): o país entra entre parênteses.
-    against.push(`Fica fora da preferência geográfica que você indicou (${candidate.pais}) — verifique se a participação remota resolve.`);
+    against.push(`Fica fora da preferência geográfica indicada (${candidate.pais}). Verifique se a participação remota resolve.`);
   }
   if (!partnership?.confirmed) {
     against.push('Não há parceria registrada com o SENAI: o primeiro contato precisa ser construído do zero.');
   }
   if (!phrases.length && priorities.length && profile.prioritiesFromUser) {
-    against.push('A aderência vem do tema geral, não das palavras exatas que você usou — vale confirmar se o recorte é o mesmo.');
+    against.push('A aderência vem do tema geral, não das palavras exatas usadas. Confirme se o recorte é o mesmo.');
   }
   if (!profile.prioritiesFromUser && !phrases.length) {
     against.push('Suas respostas não indicaram temas reconhecíveis, então esta indicação não pôde ser checada contra o que você pediu.');

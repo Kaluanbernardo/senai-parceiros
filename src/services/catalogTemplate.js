@@ -10,7 +10,7 @@ export async function buildCatalogTemplate(category, columns) {
   const Workbook = exceljs.Workbook || exceljs.default?.Workbook;
   if (!Workbook) throw new Error('ExcelJS indisponível.');
   const workbook = new Workbook();
-  workbook.creator = 'SENAI-SP Parceiros';
+  workbook.creator = 'SENAI-SP Farol de Parcerias';
   const sheet = workbook.addWorksheet(CATALOG_SHEET_NAME);
   const selected = resolveCatalogColumns(category, columns);
   const headers = selected.map((column) => column.name);

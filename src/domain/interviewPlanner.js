@@ -17,7 +17,7 @@ const UNKNOWN_PATTERN = /^(?:n[aã]o sei(?: ainda)?|ainda n[aã]o sei|desconhe[c
 const QUESTION_BANK = Object.freeze([
   {
     id: 'context', stage: 'intention', dimensions: ['impact', 'alignment'], kind: 'textarea', required: true,
-    prompt: 'Em que situação você pretende envolver esse stakeholder?', helper: 'Descreva o evento, projeto ou decisão sem precisar usar termos técnicos.',
+    prompt: 'Em que situação você pretende envolver essa pessoa ou instituição?', helper: 'Descreva o evento, projeto ou decisão sem precisar usar termos técnicos.',
     reasonTag: 'estabelecer_contexto',
   },
   {
@@ -102,7 +102,7 @@ const QUESTION_BANK = Object.freeze([
   },
   {
     id: 'diversity_preferences', stage: 'diversity', dimensions: ['impact', 'collaboration'], kind: 'textarea',
-    prompt: 'Você gostaria de equilibrar a shortlist de alguma forma?', helper: 'Exemplos: regiões, tipos de instituição, setores ou perspectivas diferentes.',
+    prompt: 'Você gostaria de equilibrar as recomendações de alguma forma?', helper: 'Exemplos: regiões, tipos de instituição, setores ou perspectivas diferentes.',
     reasonTag: 'definir_diversidade',
   },
   {
@@ -146,7 +146,7 @@ export const FIELD_LABELS = Object.freeze({
   budget: 'orçamento',
   constraints: 'restrições',
   risk_rules: 'riscos a observar',
-  diversity_preferences: 'equilíbrio da shortlist',
+  diversity_preferences: 'equilíbrio das recomendações',
 });
 
 export function fieldLabel(id) {
@@ -372,7 +372,7 @@ function questionForState(question, state) {
     example: resolveExample({ questionId: question.id, category: state.category, objective: state.objective, context: state.answers?.context || state.context }),
     exampleCoverage: coverage,
     allowUnknown: true,
-    answerHint: 'Você poderá revisar esta resposta antes de calcular o ranking.',
+    answerHint: 'Você poderá revisar esta resposta antes de ver as recomendações.',
   };
 }
 

@@ -4,7 +4,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -51,7 +50,7 @@ const OBJECTIVE_OPTIONS = [
  * O trilho é o que transforma dois blocos soltos numa sequência: sem ele, "1."
  * e "2." eram apenas texto em negrito, e nada ligava um ao outro.
  */
-function SetupStep({ number, title, children, done, disabled, disabledHint, last }) {
+function SetupStep({ number, title, children, done, disabled, disabledHint }) {
   return (
     <Box sx={{ display: 'flex', gap: 2, opacity: disabled ? .55 : 1 }}>
       <Stack alignItems="center" sx={{ display: { xs: 'none', md: 'flex' }, flexShrink: 0 }}>
@@ -72,10 +71,9 @@ function SetupStep({ number, title, children, done, disabled, disabledHint, last
         >
           {done ? <CheckIcon sx={{ fontSize: 17 }} /> : number}
         </Box>
-        {!last && <Box aria-hidden sx={{ flex: 1, width: 2, bgcolor: T.border.subtle, my: .5 }} />}
       </Stack>
 
-      <Box sx={{ flex: 1, minWidth: 0, pb: last ? 3 : 4 }}>
+      <Box sx={{ flex: 1, minWidth: 0, pb: 4 }}>
         <Typography variant="h4" sx={{ color: T.ink.strong }}>
           <Box component="span" sx={{ display: { md: 'none' }, color: T.ink.accent, mr: .75 }}>{number}.</Box>
           {title}
@@ -89,6 +87,10 @@ function SetupStep({ number, title, children, done, disabled, disabledHint, last
       </Box>
     </Box>
   );
+}
+
+export function shouldAdvanceOnEnter(event) {
+  return event.key === 'Enter' && !event.shiftKey && !event.isComposing && !event.nativeEvent?.isComposing;
 }
 
 export default function SelectionPage() {
@@ -118,18 +120,11 @@ export default function SelectionPage() {
   // como "IA indisponível", o que não era verdade.
   const adaptiveNotice = useMemo(() => {
     if (!adaptiveStatus) return null;
-    if (!adaptiveStatus.fallback) {
-      return { severity: 'info', retryable: false, message: `Pergunta gerada por IA${adaptiveStatus.model ? ` · ${adaptiveStatus.model}` : ''}.` };
-    }
+    if (!adaptiveStatus.fallback) return null;
     const kind = adaptiveStatus.fallbackKind || (adaptiveStatus.degraded === false ? 'none' : 'error');
     if (kind === 'none') return null;
-    if (kind === 'not_configured') {
-      return { severity: 'info', retryable: false, message: 'A IA não está configurada neste ambiente, então a entrevista segue pelo roteiro local. Configure OPENROUTER_API_KEY (ou o provedor Azure) para as perguntas serem escritas pelo modelo.' };
-    }
-    if (kind === 'budget') {
-      return { severity: 'warning', retryable: false, message: 'O limite diário de uso de IA foi atingido; a entrevista segue pelo roteiro local até a cota renovar.' };
-    }
-    return { severity: 'warning', retryable: true, message: `A IA não respondeu a tempo${adaptiveStatus.fallbackReason ? ` (${adaptiveStatus.fallbackReason})` : ''}; o roteiro local assumiu. Você pode tentar de novo ou continuar.` };
+    if (kind === 'not_configured' || kind === 'budget') return null;
+    return { severity: 'warning', retryable: true, message: 'Não foi possível adaptar a próxima pergunta. Você pode tentar novamente ou seguir com uma pergunta padrão.' };
   }, [adaptiveStatus]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
@@ -303,7 +298,7 @@ export default function SelectionPage() {
 
   if (phase === 'results') {
     return (
-      <PageContainer width="wide">
+      <PageContainer width="wide" tool="selection">
         <SelectionResults result={result} onReview={reviewAnswers} onRestart={restart} />
       </PageContainer>
     );
@@ -311,11 +306,11 @@ export default function SelectionPage() {
 
   if (phase === 'setup') {
     return (
-      <PageContainer width="page">
+      <PageContainer width="page" tool="selection">
         <PageHeader
-          eyebrow="SELEÇÃO GUIADA"
-          title="Vamos descobrir quem você precisa encontrar"
-          description="Duas escolhas rápidas e depois é uma conversa: cada pergunta parte do que você acabou de responder, e ela termina assim que houver informação suficiente."
+          eyebrow="ENCONTRAR PARCEIROS"
+          title="Quem você precisa encontrar?"
+          description="Faça duas escolhas e responda a perguntas curtas. No final, você receberá opções para conhecer e comparar."
           accent="selection"
         />
 
@@ -326,7 +321,7 @@ export default function SelectionPage() {
         <Box sx={{ mt: 4 }}>
           <SetupStep
             number={1}
-            title="Que tipo de stakeholder você quer selecionar?"
+            title="Quem você quer encontrar?"
             done={Boolean(category)}
           >
             <Grid container spacing={2}>
@@ -366,13 +361,12 @@ export default function SelectionPage() {
 
           <SetupStep
             number={2}
-            title="Para que você quer esse stakeholder?"
+            title="Para que você precisa dessa pessoa ou instituição?"
             done={Boolean(objective)}
             // Desabilitado em vez de ausente: o passo continua legível e diz o
             // que falta para liberá-lo.
             disabled={!category}
             disabledHint="Escolha uma categoria acima para liberar este passo."
-            last
           >
             <Stack gap={1}>
               {OBJECTIVE_OPTIONS.map((option) => {
@@ -409,7 +403,7 @@ export default function SelectionPage() {
             disabled={!category || !objective}
             onClick={beginInterview}
           >
-            Começar a entrevista
+            Responder às perguntas
           </Button>
           {(!category || !objective) && (
             <Typography variant="caption" sx={{ display: 'block', mt: 1, color: T.ink.subtle }}>
@@ -423,22 +417,22 @@ export default function SelectionPage() {
 
   if (!question) {
     return (
-      <PageContainer width="form" sx={{ py: { xs: 8, md: 10 }, textAlign: 'center' }}>
+      <PageContainer width="form" tool="selection" sx={{ py: { xs: 8, md: 10 }, textAlign: 'center' }}>
         <LinearProgress sx={{ maxWidth: 420, mx: 'auto', mb: 3 }} />
-        <Typography variant="h3">Preparando sua shortlist…</Typography>
-        <Typography sx={{ mt: 1, color: T.ink.muted }}>Estamos organizando as respostas antes de mostrar os resultados.</Typography>
+        <Typography variant="h3">Preparando suas recomendações…</Typography>
+        <Typography sx={{ mt: 1, color: T.ink.muted }}>Estamos cruzando suas respostas com as informações do catálogo.</Typography>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer width="form">
+    <PageContainer width="form" tool="selection">
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
         <Box>
-          <Typography variant="overline" sx={{ color: T.tools.selection.dark }}>ENTREVISTA GUIADA</Typography>
+          <Typography variant="overline" sx={{ color: T.tools.selection.dark }}>PERGUNTAS GUIADAS</Typography>
           <Typography variant="h4" sx={{ color: T.ink.strong }}>{CATEGORY_LABELS[category]}</Typography>
         </Box>
-        <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : remainingRequired.length ? 'Faltam ' + remainingRequired.length + ' informação(ões)' : 'Quase lá'} color="primary" variant="outlined" />
+        {reviewing && <Chip label="Revisando respostas" color="primary" variant="outlined" />}
       </Stack>
       {/* O progresso acompanha o que já foi entendido, não uma cota de perguntas. */}
       <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : Math.min(100, ((conversation.length + capturedFields.length) / Math.max(conversation.length + capturedFields.length + remainingRequired.length, 1)) * 100)} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
@@ -448,25 +442,25 @@ export default function SelectionPage() {
             <Typography variant="body2" sx={{ flex: 1 }}>{adaptiveNotice.message}</Typography>
             {adaptiveNotice.retryable && adaptiveRetry && <>
               <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
-              <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Continuar localmente</Button>
+              <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Seguir</Button>
             </>}
           </Stack>
         </Alert>
       )}
       {!reviewing && conversation.length > 0 && (
         <Paper variant="outlined" sx={{ mt: 3, p: { xs: 2, md: 2.5 }, bgcolor: 'action.hover' }}>
-          <Typography variant="subtitle2" fontWeight={800} color="text.secondary">A conversa até aqui</Typography>
+          <Typography variant="subtitle2" fontWeight={800} color="text.secondary">O que você já contou</Typography>
           <Stack spacing={1.25} sx={{ mt: 1.25 }}>
             {conversation.map((turn) => (
               <Box key={turn.turn}>
                 <Typography variant="caption" color="text.secondary" display="block">{turn.displayedQuestion}</Typography>
-                <Typography variant="body2" sx={{ borderLeft: '3px solid', borderColor: 'secondary.main', pl: 1.25, mt: .25 }}>{turn.answer}</Typography>
+                <Typography variant="body2" sx={{ borderLeft: '3px solid', borderColor: T.tools.selection.main, pl: 1.25, mt: .25 }}>{turn.answer}</Typography>
               </Box>
             ))}
           </Stack>
           {capturedFields.length > 0 && (
             <Box sx={{ mt: 1.75 }}>
-              <Typography variant="caption" color="text.secondary" display="block">Já anotei destas respostas, sem precisar perguntar de novo:</Typography>
+              <Typography variant="caption" color="text.secondary" display="block">Também entendi estes pontos:</Typography>
               <Stack direction="row" gap={.75} flexWrap="wrap" sx={{ mt: .75 }}>
                 {capturedFields.map((item) => <Chip key={item.field} size="small" variant="outlined" color="success" label={item.label} title={item.evidence.join(' · ')} />)}
               </Stack>
@@ -479,23 +473,24 @@ export default function SelectionPage() {
           rebaixada justamente para não competir. */}
       <Card sx={{ mt: 3, p: { xs: 2.5, md: 4 } }}>
         <Typography variant="h2" sx={{ color: T.ink.strong }}>{question.label}</Typography>
-        {question.helper && <Typography sx={{ mt: 1, color: T.ink.muted }}>{question.helper}</Typography>}
-        <Stack direction="row" gap={1.25} sx={{ mt: 2, p: 1.5, borderRadius: `${T.radius.sm}px`, bgcolor: T.surface.accentSoft }}>
-          <LightbulbOutlinedIcon sx={{ color: T.ink.accent, fontSize: 20, flexShrink: 0 }} />
-          <Typography variant="body2" sx={{ color: T.ink.base }}>{question.example}</Typography>
-        </Stack>
         <TextField
           fullWidth
           multiline={question.kind === 'textarea'}
           minRows={question.kind === 'textarea' ? 5 : 2}
           value={currentAnswer}
           onChange={(event) => setAnswer(event.target.value)}
-          placeholder="Digite sua resposta ou escreva “não sei ainda”."
+          placeholder={question.example || question.helper || 'Digite sua resposta ou escreva “não sei ainda”.'}
           aria-label={question.label}
           sx={{ mt: 3 }}
           autoFocus
+          helperText={`${question.answerHint || ''}${question.answerHint ? ' ' : ''}Enter continua. Shift + Enter cria uma nova linha.`}
+          onKeyDown={(event) => {
+            if (!busy && shouldAdvanceOnEnter(event)) {
+              event.preventDefault();
+              nextQuestion();
+            }
+          }}
         />
-        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: T.ink.subtle }}>{question.answerHint}</Typography>
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
       </Card>
 
@@ -520,7 +515,7 @@ export default function SelectionPage() {
             contornado. Antes os dois eram sólidos e só a cor os separava. */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
           <Button variant="outlined" size="large" startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: { xs: 0, sm: 210 } }}>
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Pergunta anterior</Box>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Voltar</Box>
             <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Voltar</Box>
           </Button>
           <Button
@@ -531,7 +526,7 @@ export default function SelectionPage() {
             disabled={busy}
             sx={{ minWidth: { xs: 0, sm: 210 } }}
           >
-            {busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}
+            {busy ? 'Preparando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Ver resultados' : 'Continuar'}
           </Button>
         </Stack>
       </Box>

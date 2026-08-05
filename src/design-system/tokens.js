@@ -1,4 +1,4 @@
-import { BLUE, RED, NEUTRAL, FEEDBACK, TYPE } from './brand';
+import { AMBER, BLUE, GREEN, RED, NEUTRAL, FEEDBACK, TYPE } from './brand';
 
 /**
  * Tokens semânticos.
@@ -14,9 +14,9 @@ const surface = Object.freeze({
   canvas: NEUTRAL[50],
   raised: NEUTRAL[0],
   sunken: NEUTRAL[100],
-  inverted: BLUE[900],
-  invertedSoft: BLUE[800],
-  accentSoft: BLUE[50],
+  inverted: NEUTRAL[950],
+  invertedSoft: NEUTRAL[900],
+  accentSoft: NEUTRAL[0],
 });
 
 /** Texto. `onInverted` é o par de leitura das superfícies escuras. */
@@ -26,29 +26,27 @@ const ink = Object.freeze({
   muted: NEUTRAL[600],
   subtle: NEUTRAL[500],
   onInverted: NEUTRAL[0],
-  onInvertedMuted: BLUE[200],
-  accent: BLUE[700],
+  onInvertedMuted: NEUTRAL[300],
+  accent: RED[800],
 });
 
 const border = Object.freeze({
   subtle: NEUTRAL[200],
   base: NEUTRAL[300],
   strong: NEUTRAL[400],
-  accent: BLUE[600],
+  accent: RED[700],
   onInverted: 'rgba(255,255,255,.20)',
 });
 
 /**
- * Cada ferramenta tem um acento próprio para orientar quem navega entre elas,
- * mas todos saem da paleta institucional. Antes eram roxo, teal e laranja —
- * cores que não existem na identidade do SENAI-SP e faziam o produto parecer
- * quatro produtos.
+ * Cada ferramenta tem uma cor funcional forte. O vermelho ancora a marca; azul,
+ * verde e âmbar distinguem catálogo, radar e geração sem usar fundos pastéis.
  */
 const tools = Object.freeze({
-  selection: Object.freeze({ main: BLUE[700], soft: BLUE[50], dark: BLUE[800], contrast: NEUTRAL[0] }),
-  catalog: Object.freeze({ main: BLUE[600], soft: BLUE[50], dark: BLUE[800], contrast: NEUTRAL[0] }),
-  radar: Object.freeze({ main: RED[600], soft: RED[50], dark: RED[800], contrast: NEUTRAL[0] }),
-  prompt: Object.freeze({ main: NEUTRAL[700], soft: NEUTRAL[100], dark: NEUTRAL[900], contrast: NEUTRAL[0] }),
+  selection: Object.freeze({ main: RED[700], soft: NEUTRAL[0], dark: RED[900], contrast: NEUTRAL[0] }),
+  catalog: Object.freeze({ main: BLUE[700], soft: NEUTRAL[0], dark: BLUE[900], contrast: NEUTRAL[0] }),
+  radar: Object.freeze({ main: GREEN[700], soft: NEUTRAL[0], dark: GREEN[800], contrast: NEUTRAL[0] }),
+  prompt: Object.freeze({ main: AMBER[700], soft: NEUTRAL[0], dark: AMBER[800], contrast: NEUTRAL[0] }),
 });
 
 /**
@@ -90,15 +88,14 @@ const space = Object.freeze({
 const radius = Object.freeze({ xs: 6, sm: 10, md: 14, lg: 20, xl: 28, pill: 999 });
 
 /**
- * Sombras tingidas de azul. Preto puro sobre um fundo azulado produz um cinza
- * sujo; a sombra tingida some no fundo em vez de manchá-lo.
+ * Sombras neutras e curtas: só separam superfícies interativas do fundo.
  */
 const shadow = Object.freeze({
   none: 'none',
-  hairline: '0 1px 2px rgba(8, 50, 79, .06)',
-  soft: '0 2px 4px rgba(8, 50, 79, .04), 0 8px 20px rgba(8, 50, 79, .06)',
-  raised: '0 4px 8px rgba(8, 50, 79, .06), 0 16px 36px rgba(8, 50, 79, .10)',
-  overlay: '0 12px 24px rgba(8, 50, 79, .10), 0 32px 64px rgba(8, 50, 79, .16)',
+  hairline: '0 1px 2px rgba(17, 18, 20, .06)',
+  soft: '0 2px 4px rgba(17, 18, 20, .05), 0 8px 20px rgba(17, 18, 20, .07)',
+  raised: '0 4px 8px rgba(17, 18, 20, .06), 0 16px 36px rgba(17, 18, 20, .11)',
+  overlay: '0 12px 24px rgba(17, 18, 20, .12), 0 32px 64px rgba(17, 18, 20, .18)',
 });
 
 /**
@@ -106,9 +103,9 @@ const shadow = Object.freeze({
  * escuras e um escuro para as claras — um anel só nunca é visível nos dois.
  */
 const focus = Object.freeze({
-  ring: `0 0 0 3px ${BLUE[200]}, 0 0 0 1px ${BLUE[700]}`,
+  ring: `0 0 0 3px ${RED[200]}, 0 0 0 1px ${RED[800]}`,
   ringInverted: '0 0 0 3px rgba(255,255,255,.55)',
-  outline: `2px solid ${BLUE[700]}`,
+  outline: `2px solid ${RED[800]}`,
   offset: 2,
 });
 

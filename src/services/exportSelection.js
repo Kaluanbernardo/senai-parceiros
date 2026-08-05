@@ -97,7 +97,7 @@ async function buildRichXlsx(snapshot) {
   const Workbook = exceljs.Workbook || exceljs.default?.Workbook;
   if (!Workbook) throw new Error('ExcelJS indisponível.');
   const workbook = new Workbook();
-  workbook.creator = 'SENAI-SP Parceiros';
+  workbook.creator = 'SENAI-SP Farol de Parcerias';
   workbook.created = new Date(snapshot.generatedAt);
   const addTable = (name, headers, rows) => {
     const sheet = workbook.addWorksheet(name);

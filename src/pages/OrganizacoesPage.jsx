@@ -147,7 +147,7 @@ export default function OrganizacoesPage() {
                     onClick={() =>
                       setValue('tipo', active ? state.tipo.filter((entry) => entry !== value) : [...state.tipo, value])
                     }
-                    sx={active ? { bgcolor: T.ink.accent, color: '#fff' } : undefined}
+                    sx={active ? { bgcolor: T.tools.catalog.main, color: '#fff' } : undefined}
                   />
                 );
               })}

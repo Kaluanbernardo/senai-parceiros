@@ -6,19 +6,8 @@ import { DESIGN_TOKENS as T } from './tokens';
 /**
  * Assinatura do produto.
  *
- * Carrega o logotipo oficial de `public/senai-logo.png` (ver `LOGO_ASSET` em
- * `brand.js`). Enquanto esse arquivo não existir — e ele não acompanha o
- * repositório — cai para um lockup tipográfico com a barra vermelha
- * institucional, que ocupa o lugar certo na hierarquia sem fingir ser o
- * logotipo.
- *
- * A queda é em tempo de execução, pelo `onError` do `<img>`: não há como
- * verificar a existência do arquivo em tempo de build sem acoplar o componente
- * ao empacotador, e um import direto quebraria o build inteiro quando o arquivo
- * faltasse. Assim, colocar o PNG na pasta é a única coisa necessária.
- *
- * PARA USAR O LOGOTIPO OFICIAL: salve o arquivo como `public/senai-logo.png`.
- * Nada mais precisa mudar.
+ * Carrega o SVG oficial definido em `brand.js` e usa o lockup tipográfico
+ * existente somente se o navegador não conseguir carregar o arquivo.
  */
 export default function Wordmark({ tone = 'inverted', showProduct = true, size = 'md' }) {
   const inverted = tone === 'inverted';

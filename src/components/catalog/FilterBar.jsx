@@ -148,7 +148,7 @@ export default function FilterBar({
               // `deleteIcon` com rótulo próprio: sem ele o leitor de tela
               // anuncia três "excluir" idênticos numa fileira de fichas.
               deleteIcon={<CloseIcon aria-label={`Remover filtro ${chip.label}`} />}
-              sx={{ bgcolor: T.surface.accentSoft, color: T.ink.accent, fontWeight: 650, '& .MuiChip-deleteIcon': { color: T.ink.accent } }}
+              sx={{ bgcolor: T.surface.raised, color: T.tools.catalog.dark, border: `1px solid ${T.tools.catalog.main}`, fontWeight: 650, '& .MuiChip-deleteIcon': { color: T.tools.catalog.dark } }}
             />
           ))}
           <Button size="small" onClick={onClearAll} sx={{ ml: .5 }}>

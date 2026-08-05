@@ -90,7 +90,7 @@ export default function PesquisadoresPage() {
     <>
       <CatalogShell
         eyebrow="CATÁLOGO"
-        title="Especialistas em EPT"
+        title="Especialistas em educação profissional"
         description="Pessoas com produção e experiência ligadas à educação profissional, à formação técnica e ao desenvolvimento industrial."
         noun={{ singular: 'especialista', plural: 'especialistas' }}
         total={pesquisadores.length}
@@ -131,7 +131,7 @@ export default function PesquisadoresPage() {
                     // O estado selecionado não pode ser só a cor de fundo: quem
                     // não distingue as cores precisa do `aria-pressed`.
                     aria-pressed={active}
-                    sx={active ? { bgcolor: T.ink.accent, color: '#fff' } : undefined}
+                    sx={active ? { bgcolor: T.tools.catalog.main, color: '#fff' } : undefined}
                   />
                 );
               })}
