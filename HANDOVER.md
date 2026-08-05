@@ -107,7 +107,7 @@ const shortlist = support.length > 0 ? selectShortlist(supported) : [];
 
 ### 4. Comparison Table UX (`src/components/SelectionResults.jsx`)
 
-**Status:** Implemented but NOT browser-tested before cutoff
+**Status:** ✅ Verificada no navegador (05/08). Dois defeitos encontrados e corrigidos — ver abaixo.
 
 **What it does:**
 - Horizontal scanning pattern (attributes as rows, candidates as columns)
@@ -130,54 +130,59 @@ function ComparisonTable({ ranges, legend, entries, selectedId, onSelect }) {
 
 ---
 
-## Pending Tasks (CRITICAL)
+## Verificação no navegador — feita em 05/08
 
-### 1. Browser Verification of ComparisonTable Component
-**Status:** NOT TESTED IN BROWSER
+A entrevista foi percorrida de ponta a ponta contra o catálogo real (322 perfis),
+em dois cenários: um pedido concreto sobre formação profissional e um pedido
+composto só de ruído.
 
-The component is implemented and tests pass, but it uses `useState`, conditionals, and nested loops. Runtime integration needs verification.
+**Resultado do cenário real:** shortlist de 10, tabela renderizando, os quatro
+controles funcionando (seleção por chip com teto de 4, filtro de prioridade,
+toggle de critérios empatados, clique na coluna trocando o detalhe individual).
 
-**How to verify:**
-```bash
-npm run dev
-# Navigate to selection results with 3+ candidates
-# Check:
-# - Candidates render in 3–4 column layout
-# - Clicking chips toggles candidate selection
-# - "O que mais importa?" buttons sort the table
-# - "Mostrar dimensões que ninguém separa" toggles flat rows
-# - Score differences appear as "X leads by Y points"
-```
+**Resultado do cenário de ruído:** 88 registros avaliados, nenhuma shortlist,
+mensagem explicando a recusa. O gate segura em produção.
 
-**If issues found:** Check component state initialization, map indices, conditional rendering.
+### Defeito 1 — empate apresentado como liderança (corrigido)
 
-### 2. Merge PR #19 to Main
-```bash
-git checkout main
-git pull origin main
-git merge --no-ff claude/selection-generative-questions-criteria-ygz2ul
-git push origin main
-```
+Com dois candidatos em 36 e um em 30, a tabela marcava **os dois** com o selo
+"melhor" e a frase abaixo dizia *"Acacia Kuenzer lidera por 6 pontos"*. Em
+viabilidade eram três "melhor" simultâneos. A causa era `values.indexOf(best)`,
+que devolve o primeiro de vários empatados e o promove a vencedor único.
 
-Then draft PR → ready for merge in GitHub UI.
+É o mesmo defeito que o gate de relevância corrigiu na pontuação: a interface
+afirmando o que o dado não sustenta.
 
-### 3. Deploy to Production
-Vercel will auto-deploy on merge to `main`. Monitor:
-- Build succeeds (currently PENDING)
-- All tests pass
-- No runtime errors in production
+A lógica saiu do JSX para `describeRow()` em `shortlistComparison.js`, onde é
+testável. Agora "melhor" só aparece quando há vencedor único; havendo empate no
+topo, todos os empatados recebem "empate no topo" e a frase os nomeia
+(*"Piety, Acacia e Elly empatam no topo, 21 pontos à frente de Daniel"*).
+
+Seis testes cobrem os casos: líder único, empate no topo, empate total,
+singular/plural de "ponto" e lista sem colunas.
+
+### Defeito 2 — erro de console do React (corrigido)
+
+`<Box display="grid" placeItems="center">` vazava `placeItems` para o DOM
+(*"React does not recognize the placeItems prop"*). Passou para `sx`.
+
+### Polimento
+
+Os chips de prioridade saíam em minúscula ao lado dos rótulos capitalizados da
+tabela: a regra `::first-letter` estava no root do Chip, e o texto fica num span
+interno (`.MuiChip-label`).
 
 ---
 
-## Testing Checklist Before Merge
+## Ressalvas que continuam de pé
 
-- [ ] ComparisonTable component renders without errors
-- [ ] Candidate chips toggle correctly
-- [ ] Table sorts by priority dimension
-- [ ] Flat rows toggle works
-- [ ] All 275+ tests pass: `npm test`
-- [ ] Build succeeds: `npm run build`
-- [ ] No console errors in browser DevTools
+- **Importação de planilha do admin não foi exercitada.** As quatro rotas foram
+  corrigidas por inspeção no PR #19. Testar antes de confiar nessa parte.
+- **Ao adicionar um quinto candidato à comparação, o primeiro sai sem aviso**
+  (`current.slice(1)`). É deliberado — acima de quatro a comparação simultânea
+  para de funcionar — mas alguém desatento pode não notar quem saiu.
+- Se a shortlist tiver mais de 10, só os 3 primeiros entram na comparação
+  inicial. Não há paginação; a maioria dos pedidos produz de 5 a 8 resultados.
 
 ---
 
