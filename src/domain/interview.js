@@ -3,7 +3,7 @@ import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleRe
 export const CATEGORY_LABELS = {
   researcher: 'Especialista',
   school: 'Instituição de Educação',
-  organization: 'Instituição relacionada',
+  organization: 'Outras organizações',
 };
 
 export const OBJECTIVE_LABELS = {
