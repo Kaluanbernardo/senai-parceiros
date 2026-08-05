@@ -120,8 +120,27 @@ export const TYPE = Object.freeze({
  */
 export const BRAND_NAME = Object.freeze({
   institution: 'SENAI-SP',
+  /** Usado ao lado do logotipo, que já traz "SENAI" desenhado. */
+  region: 'São Paulo',
   product: 'Parceiros',
   full: 'SENAI-SP Parceiros',
   tagline: 'Inteligência em educação profissional e parcerias',
   owner: 'Gerência de Educação',
 });
+
+/**
+ * Caminho do logotipo oficial, servido da pasta `public/`.
+ *
+ * O arquivo NÃO acompanha o repositório. Enquanto ele faltar, `Wordmark`
+ * detecta a ausência pelo `onError` do `<img>` e desenha o lockup tipográfico
+ * de reserva — a interface não quebra, apenas fica sem a marca.
+ *
+ * PARA ATIVAR: salve o PNG (ou SVG, ajustando a extensão aqui) do logotipo
+ * institucional em `public/senai-logo.png`. Nenhuma outra alteração é
+ * necessária.
+ *
+ * Preferir SVG quando houver: o logotipo aparece em 26px de altura no
+ * cabeçalho e em 35px na tela de acesso, e um PNG de baixa resolução fica
+ * visivelmente serrilhado em tela retina.
+ */
+export const LOGO_ASSET = '/senai-logo.png';

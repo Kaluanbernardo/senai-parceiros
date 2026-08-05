@@ -1,23 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import { BRAND_NAME } from './brand';
+import { BRAND_NAME, LOGO_ASSET } from './brand';
 import { DESIGN_TOKENS as T } from './tokens';
 
 /**
  * Assinatura do produto.
  *
- * Não é o logotipo do SENAI-SP: o arquivo oficial não acompanha este
- * repositório, e desenhar uma aproximação dele seria pior do que não usá-lo.
- * O que existe aqui é um lockup tipográfico — barra vermelha institucional,
- * nome da instituição e nome do produto — que ocupa o lugar certo na hierarquia
- * e pode ser trocado pelo arquivo oficial sem mexer no cabeçalho.
+ * Carrega o logotipo oficial de `public/senai-logo.png` (ver `LOGO_ASSET` em
+ * `brand.js`). Enquanto esse arquivo não existir — e ele não acompanha o
+ * repositório — cai para um lockup tipográfico com a barra vermelha
+ * institucional, que ocupa o lugar certo na hierarquia sem fingir ser o
+ * logotipo.
  *
- * Substituir pelo logotipo oficial: troque o conteúdo por um `<img>` ou `<svg>`
- * mantendo a prop `tone` e a altura de 28px em `md`.
+ * A queda é em tempo de execução, pelo `onError` do `<img>`: não há como
+ * verificar a existência do arquivo em tempo de build sem acoplar o componente
+ * ao empacotador, e um import direto quebraria o build inteiro quando o arquivo
+ * faltasse. Assim, colocar o PNG na pasta é a única coisa necessária.
+ *
+ * PARA USAR O LOGOTIPO OFICIAL: salve o arquivo como `public/senai-logo.png`.
+ * Nada mais precisa mudar.
  */
 export default function Wordmark({ tone = 'inverted', showProduct = true, size = 'md' }) {
   const inverted = tone === 'inverted';
   const scale = size === 'lg' ? 1.35 : size === 'sm' ? 0.85 : 1;
+  const [assetFailed, setAssetFailed] = useState(false);
 
   return (
     <Box
@@ -27,19 +33,43 @@ export default function Wordmark({ tone = 'inverted', showProduct = true, size =
       aria-label={BRAND_NAME.full}
       role="img"
     >
-      {/* Barra vermelha: o único uso do vermelho da marca no cabeçalho, o que
-          o mantém como acento e não como decoração repetida. */}
-      <Box
-        aria-hidden
-        sx={{
-          width: `${4 * scale}px`,
-          height: `${26 * scale}px`,
-          borderRadius: T.radius.xs,
-          bgcolor: T.tools.radar.main,
-          flexShrink: 0,
-        }}
-      />
+      {assetFailed ? (
+        // Barra vermelha: o único uso do vermelho da marca no cabeçalho, o que
+        // o mantém como acento e não como decoração repetida.
+        <Box
+          aria-hidden
+          sx={{
+            width: `${4 * scale}px`,
+            height: `${26 * scale}px`,
+            borderRadius: T.radius.xs,
+            bgcolor: T.tools.radar.main,
+            flexShrink: 0,
+          }}
+        />
+      ) : (
+        <Box
+          component="img"
+          src={LOGO_ASSET}
+          alt=""
+          aria-hidden
+          onError={() => setAssetFailed(true)}
+          sx={{
+            // O logotipo do SENAI é um bloco vermelho com o texto vazado em
+            // branco: ele já se lê sobre fundo claro e sobre fundo escuro, e
+            // por isso não precisa de variante por tom. A altura fixa é o que
+            // o mantém alinhado com o nome do produto ao lado.
+            height: `${26 * scale}px`,
+            width: 'auto',
+            display: 'block',
+            flexShrink: 0,
+          }}
+        />
+      )}
+
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: `${7 * scale}px`, minWidth: 0 }}>
+        {/* Com o logotipo presente, "SENAI" já está na imagem: repetir a
+            palavra ao lado dela seria dizer o nome duas vezes. Sobra o
+            qualificador regional, que o logotipo nacional não carrega. */}
         <Box
           component="span"
           sx={{
@@ -52,7 +82,7 @@ export default function Wordmark({ tone = 'inverted', showProduct = true, size =
             color: inverted ? T.ink.onInverted : T.ink.strong,
           }}
         >
-          {BRAND_NAME.institution}
+          {assetFailed ? BRAND_NAME.institution : BRAND_NAME.region}
         </Box>
         {showProduct && (
           <Box
