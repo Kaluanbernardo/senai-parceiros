@@ -1,195 +1,129 @@
-import React, { useState, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import Collapse from '@mui/material/Collapse';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchBar from '../components/SearchBar';
-import OrgCard from '../components/OrgCard';
+import React, { useMemo, useState } from 'react';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import CatalogShell from '../components/catalog/CatalogShell';
+import EntityCard from '../components/catalog/EntityCard';
+import FilterBar from '../components/catalog/FilterBar';
 import DetailModal from '../components/DetailModal';
+import { useCatalogState } from '../app/useCatalogState';
 import { useData } from '../context/DataContext';
+import {
+  collectFacetValues,
+  collectTokenValues,
+  describeActiveFilters,
+  matchesFacet,
+  matchesQuery,
+  matchesTokenizedFacet,
+  sortItems,
+} from '../domain/catalogFilters';
+import { formatInstitutionName } from '../domain/institutionName';
 import { mergeSchoolSources } from '../domain/schoolCatalog';
 
-function extractUniqueAreas(items) {
-  const set = new Set();
-  items.forEach((item) => {
-    if (!item.areas) return;
-    item.areas.split(';').forEach((a) => {
-      const clean = a.trim().replace(/\(.*\)/, '').trim();
-      if (clean) set.add(clean);
-    });
-  });
-  return [...set].sort();
-}
+const SEARCH_FIELDS = ['nome', 'aliases', 'descricao', 'areas', 'pais'];
 
-const QUICK_AREAS = [
-  'Engenharia', 'TI', 'Saúde', 'Manufatura', 'Construção Civil',
-  'Mecânica', 'Automotivo', 'Energia', 'Agropecuária', 'Gestão', 'Multissetorial',
+const STATE_SCHEMA = Object.freeze({
+  q: { type: 'text', default: '' },
+  pais: { type: 'list' },
+  area: { type: 'list' },
+  ordem: { type: 'single', default: 'relevance' },
+  exibir: { type: 'single', default: 'grid' },
+});
+
+const FILTER_DEFINITIONS = [
+  { key: 'pais', label: 'País' },
+  { key: 'area', label: 'Área' },
 ];
 
+/** Fichas de área do cartão, sem o que vem entre parênteses. */
+function areaTags(areas) {
+  if (!areas) return [];
+  return areas
+    .split(';')
+    .map((entry) => entry.replace(/\(.*?\)/g, '').trim())
+    .filter(Boolean);
+}
+
 export default function EscolasUnificadaPage() {
-  const { stakeholders: stakeholdersData, escolas: escolasData } = useData();
-  const [search, setSearch] = useState('');
-  const [selectedCountries, setSelectedCountries] = useState([]);
-  const [selectedAreas, setSelectedAreas] = useState([]);
-  const [showFilters, setShowFilters] = useState(true);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const { stakeholders, escolas } = useData();
+  const { state, setValue, removeValue, clear } = useCatalogState(STATE_SCHEMA);
+  const [expanded, setExpanded] = useState(false);
+  const [selected, setSelected] = useState(null);
 
-  const allEscolas = useMemo(() => mergeSchoolSources({ schools: escolasData, stakeholders: stakeholdersData }), [stakeholdersData, escolasData]);
+  const allSchools = useMemo(
+    () => mergeSchoolSources({ schools: escolas, stakeholders }),
+    [escolas, stakeholders],
+  );
 
-  const allCountries = useMemo(() => {
-    const set = new Set(allEscolas.map((o) => o.pais).filter(Boolean));
-    return [...set].sort();
-  }, [allEscolas]);
-
-  const allAreas = useMemo(() => extractUniqueAreas(allEscolas), [allEscolas]);
+  const countries = useMemo(() => collectFacetValues(allSchools, 'pais'), [allSchools]);
+  // As opções de área saem dos dados, não de uma lista fixa escrita à mão. A
+  // anterior trazia onze rótulos decididos no código, e áreas que existiam na
+  // base — mas não na lista — eram infiltráveis.
+  const areas = useMemo(() => collectTokenValues(allSchools, 'areas'), [allSchools]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return allEscolas.filter((item) => {
-      const matchSearch =
-        !q ||
-        item.nome.toLowerCase().includes(q) ||
-        (item.aliases || []).some((alias) => alias.toLowerCase().includes(q)) ||
-        (item.descricao && item.descricao.toLowerCase().includes(q)) ||
-        (item.pais && item.pais.toLowerCase().includes(q)) ||
-        (item.areas && item.areas.toLowerCase().includes(q));
-      const matchCountry =
-        selectedCountries.length === 0 || selectedCountries.includes(item.pais);
-      const matchArea =
-        selectedAreas.length === 0 ||
-        selectedAreas.some((area) => item.areas && item.areas.toLowerCase().includes(area.toLowerCase()));
-      return matchSearch && matchCountry && matchArea;
-    });
-  }, [allEscolas, search, selectedCountries, selectedAreas]);
+    const matched = allSchools.filter(
+      (item) =>
+        matchesQuery(item, state.q, SEARCH_FIELDS) &&
+        matchesFacet(item.pais, state.pais) &&
+        matchesTokenizedFacet(item.areas, state.area),
+    );
+    return sortItems(matched, state.ordem);
+  }, [allSchools, state.q, state.pais, state.area, state.ordem]);
 
-  const hasActiveFilters = selectedCountries.length > 0 || selectedAreas.length > 0 || !!search;
-  const clearFilters = () => {
-    setSearch('');
-    setSelectedCountries([]);
-    setSelectedAreas([]);
-  };
+  const activeChips = describeActiveFilters(
+    { query: state.q, pais: state.pais, area: state.area },
+    FILTER_DEFINITIONS,
+  );
+
+  const removeChip = (chip) => (chip.group === 'query' ? setValue('q', '') : removeValue(chip.group, chip.value));
 
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" fontWeight={700} color="primary.main">
-          Instituições de Educação
-        </Typography>
-        <IconButton onClick={() => setShowFilters((v) => !v)} color="primary">
-          <FilterListIcon />
-        </IconButton>
-      </Box>
-
-      <Collapse in={showFilters}>
-        <Box
-          sx={{
-            p: 2,
-            mb: 2.5,
-            border: '1px solid',
-            borderColor: 'grey.200',
-            borderRadius: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 1.5 }}>
-            <Box sx={{ flex: 1, minWidth: 220 }}>
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Buscar por nome, área ou país..."
-              />
-            </Box>
-            <Box sx={{ minWidth: 200 }}>
-              <Autocomplete
-                multiple
-                size="small"
-                options={allCountries}
-                value={selectedCountries}
-                onChange={(_, v) => setSelectedCountries(v)}
-                renderInput={(params) => (
-                  <TextField {...params} label="País" variant="outlined" />
-                )}
-                limitTags={2}
-              />
-            </Box>
-            <Box sx={{ minWidth: 220 }}>
-              <Autocomplete
-                multiple
-                size="small"
-                options={allAreas}
-                value={selectedAreas}
-                onChange={(_, v) => setSelectedAreas(v)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Área de Atuação" variant="outlined" />
-                )}
-                limitTags={2}
-              />
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-            {QUICK_AREAS.map((area) => {
-              const active = selectedAreas.includes(area);
-              return (
-                <Chip
-                  key={area}
-                  label={area}
-                  size="small"
-                  variant={active ? 'filled' : 'outlined'}
-                  color={active ? 'primary' : 'default'}
-                  onClick={() =>
-                    setSelectedAreas((prev) =>
-                      active ? prev.filter((a) => a !== area) : [...prev, area]
-                    )
-                  }
-                  sx={{ cursor: 'pointer' }}
-                />
-              );
-            })}
-            {hasActiveFilters && (
-              <Button size="small" startIcon={<ClearIcon />} onClick={clearFilters} sx={{ ml: 1 }}>
-                Limpar
-              </Button>
-            )}
-          </Box>
-        </Box>
-      </Collapse>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {filtered.length} de {allEscolas.length} instituições de educação
-      </Typography>
-
-      <Grid container spacing={2}>
-        {filtered.map((item) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={item.id}>
-            <OrgCard item={item} onClick={() => setSelectedItem(item)} />
-          </Grid>
-        ))}
-      </Grid>
-
-      {filtered.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary">
-            Nenhuma instituição encontrada
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Tente ajustar os filtros ou a busca
-          </Typography>
-        </Box>
-      )}
-
-      <DetailModal
-        open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
-        item={selectedItem?._original}
-        type="escola"
+    <>
+      <CatalogShell
+        eyebrow="CATÁLOGO"
+        title="Instituições de Educação"
+        description="Escolas, centros de formação e redes de educação profissional, no Brasil e no exterior."
+        noun={{ singular: 'instituição', plural: 'instituições' }}
+        total={allSchools.length}
+        items={filtered}
+        sort={state.ordem}
+        onSortChange={(value) => setValue('ordem', value)}
+        view={state.exibir}
+        onViewChange={(value) => setValue('exibir', value)}
+        hasActiveFilters={activeChips.length > 0}
+        onClearFilters={clear}
+        emptyIcon={<SchoolOutlinedIcon />}
+        filterBar={
+          <FilterBar
+            query={state.q}
+            onQueryChange={(value) => setValue('q', value)}
+            placeholder="Buscar por nome, país ou área de formação"
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded((current) => !current)}
+            activeChips={activeChips}
+            onRemoveChip={removeChip}
+            onClearAll={clear}
+            facets={[
+              { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
+              { key: 'area', label: 'Área de formação', options: areas, value: state.area, onChange: (next) => setValue('area', next) },
+            ]}
+          />
+        }
+        renderItem={(item) => (
+          <EntityCard
+            item={item}
+            view={state.exibir}
+            accent="catalog"
+            eyebrow="Instituição de educação"
+            title={formatInstitutionName(item.nome)}
+            summary={item.descricao}
+            tags={areaTags(item.areas)}
+            flags={item.hasPartnership ? ['partnership'] : []}
+            link={item.website ? { href: item.website, label: 'Abrir site oficial' } : undefined}
+            onClick={() => setSelected(item)}
+          />
+        )}
       />
-    </Box>
+      <DetailModal open={Boolean(selected)} onClose={() => setSelected(null)} item={selected?._original} type="escola" />
+    </>
   );
 }

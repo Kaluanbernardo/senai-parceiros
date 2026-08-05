@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CheckIcon from '@mui/icons-material/Check';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -24,6 +27,9 @@ import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { InterviewPlanner, QUESTION_BANK, fieldLabel } from '../domain/interviewPlanner';
 import { buildLocalEvaluation, getCandidatePool } from '../domain/selectionEngine';
 import SelectionResults from '../components/SelectionResults';
+import PageContainer from '../design-system/primitives/PageContainer';
+import PageHeader from '../design-system/primitives/PageHeader';
+import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 const CATEGORY_OPTIONS = [
   { id: 'researcher', label: CATEGORY_LABELS.researcher, description: 'Pessoa com conhecimento especializado, produção ou experiência relevante.', icon: <ScienceIcon sx={{ fontSize: 34 }} /> },
@@ -38,6 +44,52 @@ const OBJECTIVE_OPTIONS = [
   { id: 'research_support', label: OBJECTIVE_LABELS.research_support },
   { id: 'guided', label: OBJECTIVE_LABELS.guided },
 ];
+
+/**
+ * Um passo do preparo, com o trilho numerado à esquerda.
+ *
+ * O trilho é o que transforma dois blocos soltos numa sequência: sem ele, "1."
+ * e "2." eram apenas texto em negrito, e nada ligava um ao outro.
+ */
+function SetupStep({ number, title, children, done, disabled, disabledHint, last }) {
+  return (
+    <Box sx={{ display: 'flex', gap: 2, opacity: disabled ? .55 : 1 }}>
+      <Stack alignItems="center" sx={{ display: { xs: 'none', md: 'flex' }, flexShrink: 0 }}>
+        <Box
+          aria-hidden
+          sx={{
+            width: 30,
+            height: 30,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            fontWeight: 800,
+            fontSize: T.fontSize.caption,
+            bgcolor: done ? T.ink.accent : T.surface.sunken,
+            color: done ? '#fff' : T.ink.muted,
+            border: `2px solid ${done ? T.ink.accent : T.border.base}`,
+          }}
+        >
+          {done ? <CheckIcon sx={{ fontSize: 17 }} /> : number}
+        </Box>
+        {!last && <Box aria-hidden sx={{ flex: 1, width: 2, bgcolor: T.border.subtle, my: .5 }} />}
+      </Stack>
+
+      <Box sx={{ flex: 1, minWidth: 0, pb: last ? 3 : 4 }}>
+        <Typography variant="h4" sx={{ color: T.ink.strong }}>
+          <Box component="span" sx={{ display: { md: 'none' }, color: T.ink.accent, mr: .75 }}>{number}.</Box>
+          {title}
+        </Typography>
+        {disabled && disabledHint && (
+          <Typography variant="body2" sx={{ mt: .5, color: T.ink.subtle }}>{disabledHint}</Typography>
+        )}
+        <Box sx={{ mt: 1.75, pointerEvents: disabled ? 'none' : 'auto' }} aria-disabled={disabled || undefined}>
+          {children}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
 
 export default function SelectionPage() {
   const data = useData();
@@ -250,65 +302,142 @@ export default function SelectionPage() {
   }
 
   if (phase === 'results') {
-    return <Box sx={{ maxWidth: 1240, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}><SelectionResults result={result} onReview={reviewAnswers} onRestart={restart} /></Box>;
+    return (
+      <PageContainer width="wide">
+        <SelectionResults result={result} onReview={reviewAnswers} onRestart={restart} />
+      </PageContainer>
+    );
   }
 
   if (phase === 'setup') {
     return (
-      <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>SELEÇÃO GUIADA</Typography>
-        <Typography variant="h3" sx={{ mt: 1, fontSize: { xs: '2rem', md: '3rem' } }}>Vamos descobrir quem você precisa encontrar.</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>Começaremos pela categoria. Depois é uma conversa: cada pergunta parte do que você acabou de responder e ela termina assim que houver informação suficiente.</Typography>
-        <Typography variant="h6" fontWeight={800} sx={{ mt: 4, mb: 1.5 }}>1. Que tipo de stakeholder você quer selecionar?</Typography>
-        <Grid container spacing={2}>
-          {CATEGORY_OPTIONS.map((option) => (
-            <Grid size={{ xs: 12, md: 4 }} key={option.id}>
-              <Card variant="outlined" sx={{ height: '100%', borderColor: category === option.id ? 'secondary.main' : 'divider', borderWidth: category === option.id ? 2 : 1 }}>
-                <CardActionArea onClick={() => chooseCategory(option.id)} sx={{ height: '100%' }}>
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Box sx={{ color: category === option.id ? 'secondary.main' : 'primary.main' }}>{option.icon}</Box>
-                    <Typography variant="h6" fontWeight={800} sx={{ mt: 1 }}>{option.label}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: .5 }}>{option.description}</Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+      <PageContainer width="page">
+        <PageHeader
+          eyebrow="SELEÇÃO GUIADA"
+          title="Vamos descobrir quem você precisa encontrar"
+          description="Duas escolhas rápidas e depois é uma conversa: cada pergunta parte do que você acabou de responder, e ela termina assim que houver informação suficiente."
+          accent="selection"
+        />
+
+        {/* Os dois passos ficam visíveis desde o começo. Antes, o passo 2 só
+            existia depois de escolher a categoria: a tela abria pela metade,
+            sem dizer quantas decisões ainda vinham, e a que aparecia empurrava
+            o conteúdo para baixo sem aviso. */}
+        <Box sx={{ mt: 4 }}>
+          <SetupStep
+            number={1}
+            title="Que tipo de stakeholder você quer selecionar?"
+            done={Boolean(category)}
+          >
+            <Grid container spacing={2}>
+              {CATEGORY_OPTIONS.map((option) => {
+                const selected = category === option.id;
+                return (
+                  <Grid size={{ xs: 12, md: 4 }} key={option.id}>
+                    <Card
+                      sx={{
+                        height: '100%',
+                        borderColor: selected ? T.ink.accent : T.border.subtle,
+                        // A seleção é dupla: borda mais grossa e fundo. Só a
+                        // cor da borda não sobrevive a quem não a distingue.
+                        borderWidth: selected ? 2 : 1,
+                        bgcolor: selected ? T.surface.accentSoft : T.surface.raised,
+                        transition: `border-color ${T.motion.fast}, background-color ${T.motion.fast}`,
+                      }}
+                    >
+                      <CardActionArea
+                        onClick={() => chooseCategory(option.id)}
+                        aria-pressed={selected}
+                        sx={{ height: '100%', p: 2.25 }}
+                      >
+                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                          <Box sx={{ color: selected ? T.ink.accent : T.ink.muted, display: 'flex' }}>{option.icon}</Box>
+                          {selected && <CheckCircleIcon sx={{ color: T.ink.accent, fontSize: 20 }} />}
+                        </Stack>
+                        <Typography variant="h5" sx={{ mt: 1.25, color: T.ink.strong }}>{option.label}</Typography>
+                        <Typography variant="body2" sx={{ mt: .5, color: T.ink.muted }}>{option.description}</Typography>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                );
+              })}
             </Grid>
-          ))}
-        </Grid>
-        {category && (
-          <>
-            <Typography variant="h6" fontWeight={800} sx={{ mt: 4, mb: 1.5 }}>2. Para que você quer esse stakeholder?</Typography>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Stack spacing={1}>
-                {OBJECTIVE_OPTIONS.map((option) => (
-                  <Button key={option.id} variant={objective === option.id ? 'contained' : 'text'} color={objective === option.id ? 'secondary' : 'inherit'} onClick={() => setObjective(option.id)} sx={{ justifyContent: 'flex-start', textAlign: 'left', py: 1.2 }}>
-                    {objective === option.id ? <CheckCircleOutlineIcon sx={{ mr: 1 }} /> : <Box sx={{ width: 28 }} />}
-                    {option.label}
-                  </Button>
-                ))}
-              </Stack>
-            </Paper>
-            <Button variant="contained" size="large" endIcon={<ArrowForwardIcon />} disabled={!objective} onClick={beginInterview} sx={{ mt: 3 }}>Continuar entrevista</Button>
-          </>
-        )}
-      </Box>
+          </SetupStep>
+
+          <SetupStep
+            number={2}
+            title="Para que você quer esse stakeholder?"
+            done={Boolean(objective)}
+            // Desabilitado em vez de ausente: o passo continua legível e diz o
+            // que falta para liberá-lo.
+            disabled={!category}
+            disabledHint="Escolha uma categoria acima para liberar este passo."
+            last
+          >
+            <Stack gap={1}>
+              {OBJECTIVE_OPTIONS.map((option) => {
+                const selected = objective === option.id;
+                return (
+                  <Card
+                    key={option.id}
+                    sx={{
+                      borderColor: selected ? T.ink.accent : T.border.subtle,
+                      borderWidth: selected ? 2 : 1,
+                      bgcolor: selected ? T.surface.accentSoft : T.surface.raised,
+                    }}
+                  >
+                    <CardActionArea onClick={() => setObjective(option.id)} aria-pressed={selected} sx={{ px: 2, py: 1.5 }}>
+                      <Stack direction="row" alignItems="center" gap={1.5}>
+                        {selected
+                          ? <CheckCircleIcon sx={{ fontSize: 20, color: T.ink.accent }} />
+                          : <RadioButtonUncheckedIcon sx={{ fontSize: 20, color: T.border.strong }} />}
+                        <Typography sx={{ fontWeight: selected ? 700 : 500, color: T.ink.strong }}>{option.label}</Typography>
+                      </Stack>
+                    </CardActionArea>
+                  </Card>
+                );
+              })}
+            </Stack>
+          </SetupStep>
+        </Box>
+
+        <Box sx={{ mt: 1, pl: { md: 5.5 } }}>
+          <Button
+            variant="contained"
+            size="large"
+            endIcon={<ArrowForwardIcon />}
+            disabled={!category || !objective}
+            onClick={beginInterview}
+          >
+            Começar a entrevista
+          </Button>
+          {(!category || !objective) && (
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: T.ink.subtle }}>
+              Responda aos dois passos acima para continuar.
+            </Typography>
+          )}
+        </Box>
+      </PageContainer>
     );
   }
 
   if (!question) {
     return (
-      <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 8, textAlign: 'center' }}>
-        <LinearProgress sx={{ maxWidth: 520, mx: 'auto', mb: 3, height: 8, borderRadius: 4 }} />
-        <Typography variant="h5" fontWeight={800}>Preparando sua shortlist...</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>Estamos organizando as respostas antes de mostrar os resultados.</Typography>
-      </Box>
+      <PageContainer width="form" sx={{ py: { xs: 8, md: 10 }, textAlign: 'center' }}>
+        <LinearProgress sx={{ maxWidth: 420, mx: 'auto', mb: 3 }} />
+        <Typography variant="h3">Preparando sua shortlist…</Typography>
+        <Typography sx={{ mt: 1, color: T.ink.muted }}>Estamos organizando as respostas antes de mostrar os resultados.</Typography>
+      </PageContainer>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
+    <PageContainer width="form">
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
-        <Box><Typography variant="overline" color="secondary.main" fontWeight={800}>ENTREVISTA GUIADA</Typography><Typography variant="h5" fontWeight={800}>{CATEGORY_LABELS[category]}</Typography></Box>
+        <Box>
+          <Typography variant="overline" sx={{ color: T.tools.selection.dark }}>ENTREVISTA GUIADA</Typography>
+          <Typography variant="h4" sx={{ color: T.ink.strong }}>{CATEGORY_LABELS[category]}</Typography>
+        </Box>
         <Chip label={reviewing ? 'Revisão ' + (questionIndex + 1) + ' de ' + reviewQuestions.length : remainingRequired.length ? 'Faltam ' + remainingRequired.length + ' informação(ões)' : 'Quase lá'} color="primary" variant="outlined" />
       </Stack>
       {/* O progresso acompanha o que já foi entendido, não uma cota de perguntas. */}
@@ -345,29 +474,67 @@ export default function SelectionPage() {
           )}
         </Paper>
       )}
-      <Paper variant="outlined" sx={{ mt: 3, p: { xs: 2.5, md: 5 } }}>
-        <Typography variant="h4" sx={{ fontSize: { xs: '1.65rem', md: '2.35rem' } }}>{question.label}</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>{question.helper}</Typography>
-        <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'rgba(0,51,102,.05)', display: 'flex', gap: 1 }}>
-          <LightbulbOutlinedIcon color="primary" /><Typography variant="body2">{question.example}</Typography>
-        </Box>
-        <TextField fullWidth multiline={question.kind === 'textarea'} minRows={question.kind === 'textarea' ? 5 : 2} value={currentAnswer} onChange={(event) => setAnswer(event.target.value)} placeholder="Digite sua resposta ou escreva “não sei ainda”." sx={{ mt: 3 }} autoFocus />
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>{question.answerHint}</Typography>
+      {/* A pergunta é o objeto principal da tela: fundo branco, respiro largo e
+          nada disputando com ela. O cartão da conversa acima fica em superfície
+          rebaixada justamente para não competir. */}
+      <Card sx={{ mt: 3, p: { xs: 2.5, md: 4 } }}>
+        <Typography variant="h2" sx={{ color: T.ink.strong }}>{question.label}</Typography>
+        {question.helper && <Typography sx={{ mt: 1, color: T.ink.muted }}>{question.helper}</Typography>}
+        <Stack direction="row" gap={1.25} sx={{ mt: 2, p: 1.5, borderRadius: `${T.radius.sm}px`, bgcolor: T.surface.accentSoft }}>
+          <LightbulbOutlinedIcon sx={{ color: T.ink.accent, fontSize: 20, flexShrink: 0 }} />
+          <Typography variant="body2" sx={{ color: T.ink.base }}>{question.example}</Typography>
+        </Stack>
+        <TextField
+          fullWidth
+          multiline={question.kind === 'textarea'}
+          minRows={question.kind === 'textarea' ? 5 : 2}
+          value={currentAnswer}
+          onChange={(event) => setAnswer(event.target.value)}
+          placeholder="Digite sua resposta ou escreva “não sei ainda”."
+          aria-label={question.label}
+          sx={{ mt: 3 }}
+          autoFocus
+        />
+        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: T.ink.subtle }}>{question.answerHint}</Typography>
         {error && <Alert severity="warning" sx={{ mt: 2 }}>{error}</Alert>}
-      </Paper>
-      <Box sx={{ minHeight: 24 }} />
+      </Card>
+
       {/* Barra fixa: as ações não mudam de lugar quando a pergunta, o exemplo
           ou a conversa acima crescem. A largura mínima dos botões impede que
           a troca de rótulo ("Calculando…") desloque a posição deles. */}
-      <Box sx={{ position: 'sticky', bottom: 0, zIndex: 3, mt: 3, pt: 1.75, mx: { xs: -2, md: -4 }, px: { xs: 2, md: 4 }, pb: 1.75, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
-        {/* Os dois botões têm o mesmo peso visual: mesma variante, mesma
-            altura e mesma largura mínima. A cor é o que distingue a ação
-            principal da de retorno. */}
+      <Box
+        sx={{
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 3,
+          mt: 3,
+          mx: { xs: -2, md: -3 },
+          px: { xs: 2, md: 3 },
+          py: 1.75,
+          bgcolor: T.surface.canvas,
+          borderTop: `1px solid ${T.border.subtle}`,
+        }}
+      >
+        {/* Os dois botões têm a mesma altura e a mesma largura mínima; o que os
+            distingue é o preenchimento — o de avançar é sólido, o de voltar é
+            contornado. Antes os dois eram sólidos e só a cor os separava. */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
-          <Button variant="contained" color="inherit" size="large" disableElevation startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: 232, bgcolor: 'action.selected', color: 'text.primary', '&:hover': { bgcolor: 'action.disabledBackground' } }}>Pergunta anterior</Button>
-          <Button variant="contained" size="large" endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />} onClick={nextQuestion} disabled={busy} sx={{ minWidth: 232 }}>{busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}</Button>
+          <Button variant="outlined" size="large" startIcon={<ArrowBackIcon />} onClick={previousQuestion} disabled={busy} sx={{ minWidth: { xs: 0, sm: 210 } }}>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Pergunta anterior</Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Voltar</Box>
+          </Button>
+          <Button
+            variant="contained"
+            size="large"
+            endIcon={reviewing && questionIndex === reviewQuestions.length - 1 ? <CheckCircleOutlineIcon /> : <ArrowForwardIcon />}
+            onClick={nextQuestion}
+            disabled={busy}
+            sx={{ minWidth: { xs: 0, sm: 210 } }}
+          >
+            {busy ? 'Calculando…' : reviewing && questionIndex === reviewQuestions.length - 1 ? 'Voltar aos resultados' : 'Próxima pergunta'}
+          </Button>
         </Stack>
       </Box>
-    </Box>
+    </PageContainer>
   );
 }
