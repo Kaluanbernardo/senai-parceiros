@@ -2,18 +2,47 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { TOOL_THEME } from '../tokens';
+import { DESIGN_TOKENS as T } from '../tokens';
 
-export default function PageHeader({ eyebrow, title, description, actions, accent = 'selection' }) {
-  const color = TOOL_THEME[accent]?.main || TOOL_THEME.selection.main;
+/**
+ * Cabeçalho de página.
+ *
+ * O eyebrow perdeu a barra vertical colorida à esquerda: com a trilha logo
+ * acima, eram dois indicadores de contexto disputando o mesmo canto. Ficou um
+ * ponto do acento da ferramenta, que orienta sem competir com o título.
+ */
+export default function PageHeader({ eyebrow, title, description, actions, accent = 'selection', dense = false }) {
+  const tone = T.tools[accent] || T.tools.selection;
+
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'flex-end' }} gap={3}>
-      <Box sx={{ borderLeft: `4px solid ${color}`, pl: 2 }}>
-        {eyebrow && <Typography variant="overline" sx={{ color, fontWeight: 800, letterSpacing: '.08em' }}>{eyebrow}</Typography>}
-        <Typography variant="h1" sx={{ mt: .5, fontSize: { xs: '2rem', md: '3rem' }, lineHeight: 1.08 }}>{title}</Typography>
-        {description && <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760, fontSize: { xs: '1rem', md: '1.1rem' } }}>{description}</Typography>}
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      justifyContent="space-between"
+      alignItems={{ xs: 'stretch', md: 'flex-end' }}
+      gap={{ xs: 2, md: 3 }}
+    >
+      <Box sx={{ minWidth: 0 }}>
+        {eyebrow && (
+          <Stack direction="row" alignItems="center" gap={1} sx={{ mb: .75 }}>
+            <Box aria-hidden sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: tone.main, flexShrink: 0 }} />
+            <Typography variant="overline" sx={{ color: tone.dark }}>{eyebrow}</Typography>
+          </Stack>
+        )}
+        <Typography variant={dense ? 'h2' : 'h1'} sx={{ color: T.ink.strong }}>{title}</Typography>
+        {description && (
+          // A medida de linha para em ~65 caracteres. Descrição correndo a
+          // largura inteira de uma tela de 1400px obriga o olho a saltos longos
+          // e é onde a leitura efetivamente falha.
+          <Typography sx={{ mt: 1, maxWidth: T.layout.prose, color: T.ink.muted, fontSize: dense ? T.fontSize.body : '1.05rem' }}>
+            {description}
+          </Typography>
+        )}
       </Box>
-      {actions && <Stack direction="row" gap={1} flexWrap="wrap">{actions}</Stack>}
+      {actions && (
+        <Stack direction="row" gap={1} flexWrap="wrap" sx={{ flexShrink: 0 }}>
+          {actions}
+        </Stack>
+      )}
     </Stack>
   );
 }

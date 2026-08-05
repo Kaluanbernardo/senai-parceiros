@@ -1,31 +1,88 @@
 import React from 'react';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Box from '@mui/material/Box';
-import ButtonBase from '@mui/material/ButtonBase';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
+import CardActionArea from '@mui/material/CardActionArea';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { TOOL_THEME } from '../tokens';
+import { DESIGN_TOKENS as T } from '../tokens';
 
+/**
+ * Cartão de entrada de uma ferramenta.
+ *
+ * A borda superior de 4px colorida saiu: com quatro cartões lado a lado, quatro
+ * faixas de cores diferentes fazem a fileira parecer um gráfico. O acento ficou
+ * no ícone, que é onde ele identifica a ferramenta, e reaparece na borda e na
+ * seta quando o cartão é apontado — sinal de "aqui se clica" no momento em que
+ * a pergunta é essa.
+ *
+ * O `ButtonBase` anterior virou `CardActionArea` para o cartão ganhar o realce
+ * de toque padrão do MUI, e a seta deixou de ser um enfeite estático: ela anda.
+ */
 export default function ToolCard({ icon, label, description, themeKey = 'selection', meta, onClick, actionLabel = 'Abrir ferramenta' }) {
-  const colors = TOOL_THEME[themeKey] || TOOL_THEME.selection;
+  const tone = T.tools[themeKey] || T.tools.selection;
+
   return (
-    <Card variant="outlined" sx={{ height: '100%', borderTop: `4px solid ${colors.main}`, transition: 'box-shadow .2s ease', '&:hover': { boxShadow: '0 12px 28px rgba(11,53,88,.12)' }, '&:focus-within': { outline: `3px solid ${colors.soft}`, outlineOffset: 2 }, '@media (prefers-reduced-motion: reduce)': { transition: 'none' } }}>
-      <ButtonBase onClick={onClick} sx={{ display: 'block', textAlign: 'left', width: '100%', height: '100%', borderRadius: 1.5 }} aria-label={`${actionLabel}: ${label}`}>
-        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
-            <Box sx={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 3, bgcolor: colors.soft, color: colors.dark }}>{icon}</Box>
-            {meta && <Chip size="small" label={meta} sx={{ bgcolor: colors.soft, color: colors.dark, fontWeight: 700 }} />}
-          </Stack>
-          <Typography variant="h5" sx={{ mt: 2, fontSize: { xs: '1.2rem', md: '1.35rem' } }}>{label}</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1, minHeight: { md: 52 } }}>{description}</Typography>
-          <Stack direction="row" alignItems="center" gap={.5} sx={{ mt: 2, color: colors.dark, fontWeight: 700, fontSize: '.9rem' }}>
-            {actionLabel}<ArrowForwardIcon sx={{ fontSize: 17 }} />
-          </Stack>
-        </CardContent>
-      </ButtonBase>
+    <Card
+      sx={{
+        height: '100%',
+        transition: `border-color ${T.motion.base}, box-shadow ${T.motion.base}, transform ${T.motion.base}`,
+        '&:hover': { borderColor: tone.main, boxShadow: T.shadow.raised, transform: 'translateY(-2px)' },
+        '&:focus-within': { borderColor: tone.main, boxShadow: T.focus.ring },
+        '@media (prefers-reduced-motion: reduce)': { '&:hover': { transform: 'none' } },
+      }}
+    >
+      <CardActionArea
+        onClick={onClick}
+        aria-label={`${actionLabel}: ${label}`}
+        sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', p: { xs: 2.25, md: 2.75 }, '&:focus-visible': { outline: 'none' } }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
+          <Box
+            sx={{
+              display: 'grid',
+              placeItems: 'center',
+              width: 44,
+              height: 44,
+              borderRadius: `${T.radius.sm}px`,
+              bgcolor: tone.soft,
+              color: tone.dark,
+            }}
+          >
+            {icon}
+          </Box>
+          {meta && (
+            // Tom do acento, não verde: a ficha carrega tanto "Disponível"
+            // quanto uma contagem, e verde num número o faz parecer um
+            // indicador de saúde do sistema.
+            <Chip
+              size="small"
+              label={meta}
+              sx={{ bgcolor: tone.soft, color: tone.dark, fontWeight: 700, height: 22, fontSize: T.fontSize.overline }}
+            />
+          )}
+        </Stack>
+
+        <Typography variant="h4" sx={{ mt: 2, color: T.ink.strong }}>{label}</Typography>
+        <Typography variant="body2" sx={{ mt: .75, color: T.ink.muted, flex: 1 }}>{description}</Typography>
+
+        <Stack
+          direction="row"
+          alignItems="center"
+          gap={.5}
+          sx={{
+            mt: 2,
+            color: tone.dark,
+            fontWeight: 750,
+            fontSize: T.fontSize.small,
+            '.MuiCardActionArea-root:hover &  svg': { transform: 'translateX(3px)' },
+          }}
+        >
+          {actionLabel}
+          <ArrowForwardIcon sx={{ fontSize: 16, transition: `transform ${T.motion.base}` }} />
+        </Stack>
+      </CardActionArea>
     </Card>
   );
 }

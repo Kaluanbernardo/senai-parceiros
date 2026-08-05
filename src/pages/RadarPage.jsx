@@ -26,8 +26,13 @@ import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import RadarIcon from '@mui/icons-material/Radar';
 import { countUndatedItems, filterRadarItems, RADAR_SECTION_LABELS, RADAR_SECTIONS } from '../domain/radar';
 import { useAuth } from '../context/AuthContext';
+import EmptyState from '../design-system/primitives/EmptyState';
+import PageContainer from '../design-system/primitives/PageContainer';
+import PageHeader from '../design-system/primitives/PageHeader';
+import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 const sections = RADAR_SECTIONS.map((value) => ({
   value,
@@ -251,48 +256,52 @@ export default function RadarPage() {
   const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 3, md: 5 } }}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ md: 'flex-start' }} gap={2}>
-        <Box>
-          <Typography variant="overline" color="secondary.main" fontWeight={800}>RADAR EPT · VET</Typography>
-          <Typography variant="h3" sx={{ mt: 0.5, fontSize: { xs: '2rem', md: '3rem' } }}>O que mudou na área?</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>{activeSection.description}</Typography>
-        </Box>
-        <Stack direction="row" gap={1} flexWrap="wrap">
-          {/* "Recarregar" only re-reads the stored snapshot; collecting from the
-              external sources is the admin-only action next to it. */}
-          {/* describeChild keeps the visible label as the accessible name; without
-              it the tooltip text replaces the button name for screen readers. */}
-          <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
-            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
-          </Tooltip>
-          {isAdmin && (
-            <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
-              <Button
-                variant="contained"
-                startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
-                onClick={collectNow}
-                disabled={collecting || loading}
-              >
-                {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
-              </Button>
+    <PageContainer width="wide">
+      <PageHeader
+        eyebrow="RADAR EPT · VET"
+        title="O que mudou na área?"
+        description={activeSection.description}
+        accent="radar"
+        dense
+        actions={
+          <>
+            {/* "Recarregar" only re-reads the stored snapshot; collecting from the
+                external sources is the admin-only action next to it. */}
+            {/* describeChild keeps the visible label as the accessible name; without
+                it the tooltip text replaces the button name for screen readers. */}
+            <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
+              <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
             </Tooltip>
-          )}
-        </Stack>
-      </Stack>
+            {isAdmin && (
+              <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
+                <Button
+                  variant="contained"
+                  startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
+                  onClick={collectNow}
+                  disabled={collecting || loading}
+                >
+                  {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
+                </Button>
+              </Tooltip>
+            )}
+          </>
+        }
+      />
 
-      <Card variant="outlined" sx={{ mt: 3, overflow: 'visible' }}>
+      {/* As seções viraram abas sobre uma linha, como as do catálogo. Envolvidas
+          num cartão elas pareciam um controle segregado do conteúdo abaixo. */}
+      <Box sx={{ mt: 2.5, borderBottom: `1px solid ${T.border.subtle}` }}>
         <Tabs value={section} onChange={(_, value) => { setSection(value); clearFilters(); }} variant="scrollable" scrollButtons="auto" aria-label="Seções do radar">
           {sections.map((entry) => <Tab key={entry.value} value={entry.value} label={entry.label} />)}
         </Tabs>
-      </Card>
+      </Box>
 
-      <Card variant="outlined" sx={{ mt: 2 }}>
+      <Card sx={{ mt: 2.5 }}>
         <CardContent>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }}>
-            <FilterListIcon color="primary" />
-            <Typography variant="subtitle1" fontWeight={800}>Filtros</Typography>
-            <Typography variant="caption" color="text.secondary">A busca considera título, resumo, fonte, localidade e temas.</Typography>
+          <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }} flexWrap="wrap">
+            <FilterListIcon sx={{ color: T.ink.muted, fontSize: 20 }} />
+            <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>Filtros</Typography>
+            <Typography variant="caption" sx={{ color: T.ink.subtle }}>A busca considera título, resumo, fonte, localidade e temas.</Typography>
           </Stack>
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -304,9 +313,12 @@ export default function RadarPage() {
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tema</InputLabel><Select value={filters.topic} label="Tema" onChange={setFilter('topic')}><MenuItem value="">Todos</MenuItem>{options.topics.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
           </Grid>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }}>
-            <Typography variant="caption" color="text.secondary">
-              {visibleItems.length} item(ns) visível(is)
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }} gap={1}>
+            {/* `aria-live` porque a contagem muda a cada tecla digitada na busca
+                e é a única confirmação de que o filtro surtiu efeito. */}
+            <Typography variant="caption" aria-live="polite" sx={{ color: T.ink.muted }}>
+              <Box component="strong" sx={{ color: T.ink.strong, fontWeight: 750 }}>{visibleItems.length}</Box>
+              {visibleItems.length === 1 ? ' item visível' : ' itens visíveis'}
               {undatedHidden && ` · ${undatedCount} sem data publicada, oculto(s) por este período`}
             </Typography>
             <Button size="small" onClick={clearFilters}>Limpar filtros</Button>
@@ -330,17 +342,20 @@ export default function RadarPage() {
       )}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
-      {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box> : (
+      {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }} role="status" aria-label="Carregando os itens do radar"><CircularProgress /></Box> : (
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
           {visibleItems.map((item) => (
             <Grid key={item.id} size={{ xs: 12, md: 6 }}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-                <Box sx={{ height: 4, bgcolor: item.official ? 'secondary.main' : 'primary.main' }} />
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', transition: `border-color ${T.motion.fast}, box-shadow ${T.motion.fast}`, '&:hover': { borderColor: T.border.base, boxShadow: T.shadow.soft } }}>
                 <CardContent sx={{ flex: 1, p: 2.5 }}>
                   <Stack direction="row" justifyContent="space-between" gap={1.5} alignItems="flex-start">
                     <Box>
-                      <Typography variant="overline" color={item.official ? 'secondary.main' : 'primary.main'} fontWeight={900}>{item.sourceName}</Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{item.contentType}</Typography>
+                      {/* Fonte oficial e fonte acadêmica se distinguem pelo tom
+                          do rótulo. A faixa colorida de 4px que ficava no topo
+                          de cada cartão saiu pelo mesmo motivo que a do
+                          catálogo: com tudo marcado, nada fica marcado. */}
+                      <Typography variant="overline" sx={{ color: item.official ? T.tools.radar.dark : T.ink.accent }}>{item.sourceName}</Typography>
+                      <Typography variant="caption" sx={{ display: 'block', color: T.ink.subtle }}>{item.contentType}</Typography>
                     </Box>
                     <Chip size="small" color={item.noveltyStatus === 'new' ? 'success' : 'info'} variant="outlined" label={item.noveltyLabel} />
                   </Stack>
@@ -371,8 +386,20 @@ export default function RadarPage() {
           ))}
         </Grid>
       )}
-      {!loading && !error && visibleItems.length === 0 && <Box sx={{ textAlign: 'center', py: 8 }}><Typography variant="h6" color="text.secondary">Nenhum item encontrado</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Tente remover um filtro ou ampliar o período.</Typography></Box>}
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4 }}>Rastreabilidade: títulos e resumos são reescritos em português claro a partir do documento original, que continua identificado no cartão. Cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
-    </Box>
+      {!loading && !error && visibleItems.length === 0 && (
+        <EmptyState
+          icon={<RadarIcon />}
+          title="Nenhum item nesta combinação de filtros"
+          description={
+            items.length > 0
+              ? `Esta seção tem ${items.length} item(ns) no snapshot atual, mas nenhum atende a todos os filtros ao mesmo tempo. Ampliar o período é o ajuste que mais costuma resolver.`
+              : 'O snapshot atual desta seção está vazio. Recarregar relê o snapshot; coletar consulta as fontes externas.'
+          }
+          action={items.length > 0 ? clearFilters : undefined}
+          actionLabel="Limpar os filtros"
+        />
+      )}
+      <Typography variant="caption" sx={{ display: 'block', mt: 4, color: T.ink.subtle }}>Rastreabilidade: títulos e resumos são reescritos em português claro a partir do documento original, que continua identificado no cartão. Cada item mantém título original, fonte, data, provedor de coleta, evidência temática e link público. Modo atual: {meta?.mode || 'não informado'} · atualização: {meta?.fetchedAt ? localDate(meta.fetchedAt.slice(0, 10)) : 'não informada'} · snapshot: {meta?.store?.driver || 'memória'}. A ferramenta não salva suas buscas nem seu filtro.</Typography>
+    </PageContainer>
   );
 }

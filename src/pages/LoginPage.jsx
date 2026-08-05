@@ -2,12 +2,24 @@ import React, { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Paper from '@mui/material/Paper';
+import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useAuth } from '../context/AuthContext';
+import { BRAND_NAME } from '../design-system/brand';
+import Wordmark from '../design-system/Wordmark';
+import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
+/**
+ * Tela de acesso.
+ *
+ * A anterior abria com um cadeado genérico centralizado sobre um azul escolhido
+ * à mão (`#001a33`, que não existia em lugar nenhum do produto) — a primeira
+ * tela do sistema não dizia de quem era, e o único símbolo era o de "trancado".
+ * Agora ela abre com a assinatura institucional e diz o que há do outro lado
+ * antes de pedir a senha.
+ */
 export default function LoginPage() {
   const { login, provider, refresh, error: authError } = useAuth();
   const [username, setUsername] = useState('');
@@ -30,34 +42,101 @@ export default function LoginPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: '#001a33', p: 2 }}>
-      <Paper component="form" onSubmit={handleSubmit} elevation={8} sx={{ p: { xs: 3, sm: 5 }, maxWidth: 430, width: '100%', borderRadius: 3 }}>
-        <Box sx={{ display: 'grid', placeItems: 'center', mb: 2 }}>
-          <LockOutlinedIcon sx={{ fontSize: 44, color: 'primary.main' }} />
-        </Box>
-        <Typography variant="h5" fontWeight={800} textAlign="center">SENAI-SP Parceiros</Typography>
-        <Typography color="text.secondary" textAlign="center" sx={{ mt: 1, mb: 3 }}>
-          Acesso restrito à ferramenta de seleção e pesquisa.
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
+      {/* Painel institucional. No celular ele vira uma faixa curta no topo:
+          a tela pequena precisa do formulário acima da dobra. */}
+      <Box
+        sx={{
+          bgcolor: T.surface.inverted,
+          color: T.ink.onInverted,
+          // `0 0` em vez de `1 1`: o painel institucional tem largura fixa e o
+          // formulário fica com o resto. Com os dois flexíveis, o texto longo
+          // da esquerda ganhava a disputa e espremia o formulário.
+          flex: { md: '0 0 48%' },
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          px: { xs: 3, md: 6 },
+          py: { xs: 4, md: 8 },
+        }}
+      >
+        <Wordmark tone="inverted" size="lg" />
+        <Typography
+          sx={{
+            mt: { xs: 2.5, md: 4 },
+            maxWidth: 460,
+            fontFamily: T.fontFamily.display,
+            fontSize: { xs: '1.5rem', md: '2.35rem' },
+            fontWeight: 800,
+            letterSpacing: '-.03em',
+            lineHeight: 1.1,
+          }}
+        >
+          {BRAND_NAME.tagline}
         </Typography>
-        {provider === 'entra' ? (
-          <>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              O acesso corporativo é gerenciado pelo ambiente do SENAI-SP. Abra esta aplicação pelo Azure Easy Auth ou pela integração corporativa configurada pelo TI.
-            </Alert>
-            <Button type="button" fullWidth size="large" variant="contained" onClick={refresh}>Verificar autenticação corporativa</Button>
-          </>
-        ) : (
-          <>
-            {(error || authError) && <Alert severity="error" sx={{ mb: 2 }}>{error || authError}</Alert>}
-            <TextField fullWidth label="Usuário" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" autoFocus sx={{ mb: 2 }} />
-            <TextField fullWidth label="Senha" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" sx={{ mb: 2.5 }} />
-            <Button type="submit" fullWidth size="large" variant="contained" disabled={busy || !username || !password}>{busy ? 'Entrando…' : 'Entrar'}</Button>
-          </>
-        )}
-        <Typography variant="caption" color="text.secondary" display="block" textAlign="center" sx={{ mt: 2 }}>
-          As avaliações não ficam salvas na ferramenta.
+        <Typography sx={{ mt: 2, maxWidth: 440, color: T.ink.onInvertedMuted, display: { xs: 'none', md: 'block' } }}>
+          Seleção de parceiros com critérios explicáveis, catálogo de referências públicas
+          e acompanhamento do que muda na educação profissional.
         </Typography>
-      </Paper>
+      </Box>
+
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: { xs: 2, md: 5 },
+          py: { xs: 5, md: 8 },
+          bgcolor: T.surface.canvas,
+        }}
+      >
+        <Card component="form" onSubmit={handleSubmit} sx={{ width: '100%', maxWidth: 400, p: { xs: 3, sm: 4 } }}>
+          <Typography variant="h3" sx={{ color: T.ink.strong }}>Entrar</Typography>
+          <Typography variant="body2" sx={{ mt: .75, mb: 3, color: T.ink.muted }}>
+            O acesso é restrito à equipe autorizada do {BRAND_NAME.institution}.
+          </Typography>
+
+          {provider === 'entra' ? (
+            <Stack gap={2}>
+              <Alert severity="info">
+                O acesso corporativo é gerenciado pelo ambiente do {BRAND_NAME.institution}. Abra esta
+                aplicação pelo Azure Easy Auth ou pela integração corporativa configurada pelo TI.
+              </Alert>
+              <Button type="button" fullWidth size="large" variant="contained" onClick={refresh}>
+                Verificar autenticação corporativa
+              </Button>
+            </Stack>
+          ) : (
+            <Stack gap={2}>
+              {(error || authError) && <Alert severity="error">{error || authError}</Alert>}
+              <TextField
+                fullWidth
+                label="Usuário"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                autoFocus
+              />
+              <TextField
+                fullWidth
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+              <Button type="submit" fullWidth size="large" variant="contained" disabled={busy || !username || !password}>
+                {busy ? 'Entrando…' : 'Entrar'}
+              </Button>
+            </Stack>
+          )}
+
+          <Typography variant="caption" sx={{ display: 'block', mt: 3, color: T.ink.subtle }}>
+            As avaliações não ficam salvas na ferramenta.
+          </Typography>
+        </Card>
+      </Box>
     </Box>
   );
 }
