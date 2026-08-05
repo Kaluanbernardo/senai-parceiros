@@ -1,9 +1,9 @@
 # Handover Documentation — Selection Engine & Comparison UX
 
-**Date:** August 5, 2026  
-**Branch:** `claude/selection-generative-questions-criteria-ygz2ul`  
-**PR:** #19 (Draft)  
-**Status:** Ready for merge to `main`
+**Data:** 5 de agosto de 2026  
+**Branch base:** `master` em `759d34c`  
+**PRs:** #19, #20, #22, #23 — todos mesclados e publicados  
+**Status:** em produção; 308 testes passando, build limpo
 
 ---
 
@@ -174,10 +174,39 @@ interno (`.MuiChip-label`).
 
 ---
 
+### 5. Colunas sob demanda no gerador de prompt (PR #22)
+
+O prompt pedia sempre as 27 colunas da categoria. Cada coluna é uma pergunta que
+o modelo tenta responder mesmo sem fonte, então pedir tudo alonga a pesquisa e
+amplia o espaço de invenção.
+
+`ColumnPicker` em `PromptGeneratorPage.jsx` permite escolher o recorte; as
+obrigatórias ficam travadas. `resolveCatalogColumns()` acrescenta as
+obrigatórias de volta em silêncio se faltarem — deixar o usuário gerar uma
+pesquisa inteira que será recusada na importação seria pior.
+
+Isso exigiu afrouxar `validateCatalogHeaders()`, que exigia cabeçalho completo
+na ordem exata. Agora aceita subconjunto: obrigatórias presentes, nenhuma coluna
+desconhecida, nenhuma repetida, ordem livre (a linha é lida pelo nome).
+
+Dois efeitos colaterais tratados:
+
+- coluna ausente virava valor inválido (`confianca` fora do recorte caía em
+  `Number(undefined)` e reprovava a linha);
+- a detecção de categoria ficou ambígua — um arquivo só com colunas comuns serve
+  às três, e o desempate passou a ser o `tipo_registro` da primeira linha.
+
+`catalogRoundTrip.test.js` fecha o ciclo recorte → template XLSX → importação nas
+três categorias, que é onde as duas pontas poderiam divergir sem ninguém notar.
+
+---
+
 ## Ressalvas que continuam de pé
 
-- **Importação de planilha do admin não foi exercitada.** As quatro rotas foram
-  corrigidas por inspeção no PR #19. Testar antes de confiar nessa parte.
+- **A tela de importação XLSX do admin nunca foi exercitada no navegador**
+  (upload → prévia → decisões → commit → rollback). O caminho de dados tem
+  cobertura automatizada desde o PR #22, e as quatro rotas foram corrigidas por
+  inspeção no PR #19, mas a interface em si não. É o maior risco em aberto.
 - **Ao adicionar um quinto candidato à comparação, o primeiro sai sem aviso**
   (`current.slice(1)`). É deliberado — acima de quatro a comparação simultânea
   para de funcionar — mas alguém desatento pode não notar quem saiu.
@@ -186,14 +215,27 @@ interno (`.MuiChip-label`).
 
 ---
 
-## Git Details
+## Histórico
 
-**Branch:** `claude/selection-generative-questions-criteria-ygz2ul`  
-**Latest commit:** `ebce22d` - Add ComparisonTable component to SelectionResults
+| PR | O quê |
+|---|---|
+| #19 | entrevista conversacional, critérios calculados, rotas alinhadas à Vercel |
+| #20 | tabela de comparação deixa de apresentar empate como liderança |
+| #22 | renomeação das categorias; colunas sob demanda no gerador de prompt |
+| #23 | rótulo "Outras organizações", rotas do catálogo renomeadas, chips da home removidos |
 
-**Recent commits (last 8):**
-1. `ebce22d` - ComparisonTable implementation
-2. `[previous 7 commits in PR #19]` - Full refactor details in PR body
+**Nomenclatura atual** (rótulo visível / id interno / rota):
+
+| Rótulo | Id | Rota |
+|---|---|---|
+| Especialistas | `researcher` | `/catalogo/especialistas` |
+| Instituições de Educação | `school` | `/catalogo/instituicoes-de-educacao` |
+| Outras organizações | `organization` | `/catalogo/outras-organizacoes` |
+
+Os caminhos antigos redirecionam (`LEGACY_CATALOG_ROUTES` em `src/App.jsx`).
+O campo `categoria` dos registros continua com os valores antigos
+(`'Pesquisador'`, `'Escola'`, `'Organização'`) porque alimenta filtros do
+catálogo — renomeá-lo esvaziaria listas sem erro nenhum.
 
 ---
 
@@ -209,11 +251,13 @@ interno (`.MuiChip-label`).
 - If next developer needs to adjust: search `SUPPORT_MIN_SPECIFICITY` in codebase
 - Changing threshold requires re-running nonsense test to verify gate behavior
 
-### Admin Catalog Import Routes
-PR notes that four admin routes were corrected by inspection:
-- `/api/admin/catalog/import-*` → `/api/admin/[action].js`
-- **Spreadsheet import flow was NOT exercised during refactor**
-- Recommend testing admin panel before deploying if import is used
+### Importação de catálogo
+- `SUPPORT_MIN_SPECIFICITY` não tem relação com a importação; o limiar de
+  colunas é estrutural (obrigatórias presentes), não numérico.
+- As colunas marcadas `essential: true` em `catalogImportSchema.js` definem o
+  preset "Essenciais" do gerador. Mudar lá muda o preset, o prompt e o template
+  de uma vez — é a fonte única.
+- **A tela do admin continua sem verificação em navegador.**
 
 ---
 
@@ -241,7 +285,13 @@ PR notes that four admin routes were corrected by inspection:
 
 2. **If relevance gate is too strict/loose:** Adjust `SUPPORT_MIN_SPECIFICITY` constant (line ~27 in selectionEngine.js), then run full test suite to verify no regressions.
 
-3. **If admin import breaks:** The four routes were patched by inspection (see PR #19 notes). Exercise the admin spreadsheet import workflow end-to-end.
+3. **Se a importação do admin falhar:** o caminho de dados é coberto por
+   `catalogRoundTrip.test.js` e `catalogImport.test.js`; comece pela tela, que
+   nunca foi exercitada. As rotas foram corrigidas por inspeção no PR #19.
+
+4. **Se um rótulo parecer fora do lugar:** rótulo visível, id interno, rota e o
+   campo `categoria` dos registros são quatro coisas distintas — ver a tabela em
+   *Histórico*. Só o rótulo e a rota foram renomeados.
 
 ---
 
@@ -253,4 +303,6 @@ PR notes that four admin routes were corrected by inspection:
 
 ---
 
-**This handover is complete. The system is ready for production after merge and browser verification of ComparisonTable.**
+**Estado final:** tudo mesclado em `master` (`759d34c`) e publicado. 308 testes
+em 50 arquivos, build limpo. A única parte do sistema que nunca foi vista
+funcionando num navegador é a tela de importação XLSX do admin.
