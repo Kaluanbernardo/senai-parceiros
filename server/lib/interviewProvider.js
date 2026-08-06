@@ -221,10 +221,10 @@ function interviewPrompt(state) {
     'Objetivo da entrevista: obter o mínimo necessário para diferenciar stakeholders do catálogo — contexto, resultado esperado, temas, público, geografia e restrições. Assim que isso estiver coberto, responda shouldStop=true. Perguntar além disso é desperdiçar o tempo da pessoa.',
     '',
     'PENSE ANTES DE PERGUNTAR, nesta ordem, e é isso que os primeiros campos do schema registram:',
-    '1) situationRead: em uma frase, o que a última resposta realmente disse e o que ela deixou em aberto.',
+    '1) situationRead: em uma frase curta, o que a última resposta realmente disse e o que ela deixou em aberto.',
     '2) fieldsSatisfied: todo campo que a última resposta já respondeu, mesmo sem ter sido perguntado, com o valor em texto e a confiança de 0 a 1. Um campo em fieldsSatisfied ou em coveredFields NÃO pode ser perguntado de novo, nem com outras palavras.',
     '3) assumptionsAvoided: o que você precisaria supor para pular uma pergunta — local, público, formato, quem paga, quem organiza. Cada suposição dessas é candidata a virar pergunta em vez de virar palpite.',
-    '4) candidateQuestions: de duas a quatro perguntas possíveis, cada uma com um targetField DIFERENTE, e o que cada uma decide no ranking.',
+    '4) candidateQuestions: duas ou três perguntas possíveis, cada uma com um targetField DIFERENTE, e o que cada uma decide no ranking. Rascunhos curtos: uma frase cada.',
     '5) chosenBecause: por que a pergunta escolhida muda mais a recomendação do que as outras candidatas. Escolha pelo que ainda está indefinido e pesa na decisão, não pela ordem de uma lista.',
     '',
     'PRESSUPOSTOS QUE VOCÊ NÃO PODE FAZER:',
@@ -240,6 +240,7 @@ function interviewPrompt(state) {
     '- Se a resposta anterior foi vaga ou "não sei", faça uma pergunta de descoberta concreta e fácil, com um exemplo tirado do próprio contexto dela — não repita a mesma pergunta em outras palavras.',
     '',
     'Escolha somente um targetField do enum, igual ao de uma das candidateQuestions. Não invente fatos e não recomende stakeholders.',
+    'A pessoa está esperando na tela: os campos de raciocínio são notas curtas para você escolher bem, não um texto para ninguém ler. Seja breve neles.',
     'prompt, helper e example são o único texto que a pessoa lê: use uma frase simples em cada um e não deixe o raciocínio dos campos anteriores vazar para eles. Responda somente no JSON schema.',
     `Não encerre antes de ${payload.limits.minQuestions} perguntas ou com campo obrigatório ausente em remainingRequiredFields; nunca ultrapasse ${payload.limits.maxQuestions}.`,
     JSON.stringify(payload),
@@ -256,18 +257,21 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
     ],
     // O raciocínio (leitura, suposições e candidatas) ocupa espaço antes da
     // pergunta, e num modelo de raciocínio os tokens de pensamento contam
-    // contra o mesmo teto. Com 1200 a resposta chegava cortada no meio, o que
-    // aparecia como JSON inválido — o custo de um teto folgado é zero quando a
-    // resposta cabe, e a chamada inteira quando não cabe.
-    maxOutputTokens: Number(process.env.INTERVIEW_MAX_OUTPUT_TOKENS) || 3000,
+    // contra o mesmo teto. Com 1200 a resposta chegava cortada no meio. Folga
+    // suficiente para caber, sem convidar o modelo a escrever um ensaio: cada
+    // token gerado é tempo que alguém passa olhando para uma tela parada.
+    maxOutputTokens: Number(process.env.INTERVIEW_MAX_OUTPUT_TOKENS) || 2000,
     // Redigir pergunta não é extração: com temperatura de extração as perguntas
     // saíam parecidas entre si e entre sessões.
     temperature: Number(process.env.INTERVIEW_TEMPERATURE || 0.7),
-    // A entrevista é a chamada sensível a qualidade: uma pergunta ruim custa a
-    // conversa inteira, e o roteador não conhece a barra desta tarefa. Ela
-    // pede o máximo de qualidade por padrão, enquanto o resto do sistema segue
-    // o equilíbrio geral. Só vale para openrouter/auto.
-    costQualityTradeoff: process.env.INTERVIEW_COST_QUALITY_TRADEOFF ?? 10,
+    // A entrevista pesa mais para qualidade que o resto do sistema, mas não ao
+    // máximo: pedir 10 fazia o roteador escolher os modelos de raciocínio mais
+    // pesados, que passavam de 45s e nunca chegavam a responder. Numa chamada
+    // interativa, um modelo excelente que não responde a tempo vale menos do
+    // que um bom que responde — a pessoa está esperando entre uma pergunta e a
+    // seguinte. Só vale para openrouter/auto; com modelo fixo, quem escolhe o
+    // equilíbrio é você, ao escolher o modelo.
+    costQualityTradeoff: process.env.INTERVIEW_COST_QUALITY_TRADEOFF ?? 4,
     signal,
   });
   const result = normalizeQuestion(generated.data);

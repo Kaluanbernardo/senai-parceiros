@@ -114,7 +114,7 @@ describe('adaptive interview provider', () => {
     expect(bodies[0].temperature).toBeGreaterThan(0.3);
   });
 
-  it('asks the auto-router for maximum quality, because a bad question costs the whole conversation', async () => {
+  it('pede qualidade acima da média ao roteador, mas não o máximo, porque alguém está esperando', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'test-key';
     process.env.OPENROUTER_MODEL = 'openrouter/auto';
@@ -127,8 +127,11 @@ describe('adaptive interview provider', () => {
 
     const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
-    expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(10);
-    expect(result.trace.costQualityTradeoff).toBe(10);
+    // Em 10 o roteador escolhia modelos de raciocínio que passavam de 45s e
+    // nunca respondiam: numa chamada interativa, um modelo excelente que não
+    // chega a tempo vale menos que um bom que chega.
+    expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(4);
+    expect(result.trace.costQualityTradeoff).toBe(4);
   });
 
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {
