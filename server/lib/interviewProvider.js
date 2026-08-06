@@ -22,7 +22,7 @@ export const nextQuestionSchema = Object.freeze({
   type: 'object',
   additionalProperties: false,
   required: [
-    'situationRead', 'fieldsSatisfied', 'factsExtracted', 'remainingGaps', 'assumptionsAvoided',
+    'situationRead', 'lastAnswerQuality', 'fieldsSatisfied', 'factsExtracted', 'remainingGaps', 'assumptionsAvoided',
     'consideredFields', 'chosenBecause', 'shouldStop', 'stopReason', 'targetField',
     'prompt', 'helper', 'example', 'answerKind', 'reasonTag', 'dimensionsCovered', 'adaptationExplanation',
   ],
@@ -31,6 +31,10 @@ export const nextQuestionSchema = Object.freeze({
     // ela deixou em aberto. É o que impede a pergunta seguinte de ser escolhida
     // por posição numa lista.
     situationRead: { type: 'string' },
+    // Classificar a resposta antes de decidir o que perguntar. Sem isto o
+    // modelo tratava "comer batata" como contexto válido e seguia para o campo
+    // seguinte do roteiro, como se tivesse entendido.
+    lastAnswerQuality: { type: 'string', enum: ['usable', 'vague', 'off_topic', 'contradictory'] },
     // Pressupostos que a situação NÃO autoriza (por exemplo: local do evento,
     // perfil do público). Declarar o pressuposto é o que transforma um palpite
     // em pergunta.
@@ -95,7 +99,14 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
   const dimensionsCovered = Array.isArray(value.dimensionsCovered)
     ? value.dimensionsCovered.filter((item) => INTERVIEW_DIMENSIONS.includes(item)) : [];
   const factsExtracted = Array.isArray(value.factsExtracted) ? value.factsExtracted.map((item) => text(item, 180)).filter(Boolean) : [];
-  const fieldsSatisfied = Array.isArray(value.fieldsSatisfied)
+  const lastAnswerQuality = ['usable', 'vague', 'off_topic', 'contradictory'].includes(value.lastAnswerQuality)
+    ? value.lastAnswerQuality : 'usable';
+  // Uma resposta que não serve não cobre campo nenhum. O modelo pode
+  // classificar certo e ainda assim registrar o que leu; aqui a regra é
+  // aplicada, não pedida — registrar "comer batata" como contexto
+  // contaminaria o briefing e, com ele, a recomendação inteira.
+  const usableAnswer = lastAnswerQuality !== 'off_topic' && lastAnswerQuality !== 'contradictory';
+  const fieldsSatisfied = usableAnswer && Array.isArray(value.fieldsSatisfied)
     ? value.fieldsSatisfied
       .map((item) => ({ field: text(item?.field, 80), value: text(item?.value, 500), confidence: Number(item?.confidence) }))
       .filter((item) => INTERVIEW_TARGET_FIELDS.includes(item.field) && item.value && Number.isFinite(item.confidence))
@@ -131,6 +142,7 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
     fieldsSatisfied,
     remainingGaps,
     situationRead: text(value.situationRead, 300),
+    lastAnswerQuality,
     assumptionsAvoided,
     consideredFields,
     chosenBecause: text(value.chosenBecause, 300),
@@ -205,10 +217,11 @@ function interviewPrompt(state) {
     '',
     'PENSE ANTES DE PERGUNTAR, nesta ordem, e é isso que os primeiros campos do schema registram:',
     '1) situationRead: em uma frase curta, o que a última resposta realmente disse e o que ela deixou em aberto.',
-    '2) fieldsSatisfied: todo campo que a última resposta já respondeu, mesmo sem ter sido perguntado, com o valor em texto e a confiança de 0 a 1. Um campo em fieldsSatisfied ou em coveredFields NÃO pode ser perguntado de novo, nem com outras palavras.',
-    '3) assumptionsAvoided: o que você precisaria supor para pular uma pergunta — local, público, formato, quem paga, quem organiza. Cada suposição dessas é candidata a virar pergunta em vez de virar palpite.',
-    '4) consideredFields: dois ou três targetFields diferentes que valeria a pena perguntar agora — as alternativas reais, não a lista inteira.',
-    '5) chosenBecause: por que o campo escolhido muda mais a recomendação do que os outros que você considerou. Escolha pelo que ainda está indefinido e pesa na decisão, não pela ordem de uma lista.',
+    '2) lastAnswerQuality: classifique a última resposta antes de decidir qualquer coisa. usable = dá para trabalhar com ela; vague = na direção certa mas genérica demais; off_topic = não descreve uma situação em que um stakeholder ajudaria, ou não responde ao que foi perguntado; contradictory = conflita com algo que a pessoa já disse.',
+    '3) fieldsSatisfied: todo campo que a última resposta já respondeu, mesmo sem ter sido perguntado, com o valor em texto e a confiança de 0 a 1. Um campo em fieldsSatisfied ou em coveredFields NÃO pode ser perguntado de novo, nem com outras palavras.',
+    '4) assumptionsAvoided: o que você precisaria supor para pular uma pergunta — local, público, formato, quem paga, quem organiza. Cada suposição dessas é candidata a virar pergunta em vez de virar palpite.',
+    '5) consideredFields: dois ou três targetFields diferentes que valeria a pena perguntar agora — as alternativas reais, não a lista inteira.',
+    '6) chosenBecause: por que o campo escolhido muda mais a recomendação do que os outros que você considerou. Escolha pelo que ainda está indefinido e pesa na decisão, não pela ordem de uma lista.',
     '',
     'PRESSUPOSTOS QUE VOCÊ NÃO PODE FAZER:',
     '- Local: um evento, visita, oficina ou reunião pode acontecer em qualquer lugar — numa unidade do SENAI-SP, na sede do parceiro, em outra cidade, em outro país, num espaço neutro ou totalmente online. Nunca escreva a pergunta, o helper ou o exemplo como se fosse "aqui na escola", "na nossa unidade" ou "na sua escola". Se o local muda a viabilidade da escolha, PERGUNTE onde acontece.',
@@ -221,6 +234,12 @@ function interviewPrompt(state) {
     '- Alterne o tipo de pergunta entre turnos: pedir um exemplo concreto, pedir uma escolha entre dois cenários plausíveis, perguntar o que não pode acontecer, pedir o que mudaria depois, pedir a condição que faria a pessoa dizer não.',
     '- Retome a situação, o vocabulário e os detalhes que a pessoa deu. Nunca reutilize uma frase genérica nem cole um prefixo pronto na frente de uma pergunta de formulário.',
     '- Se a resposta anterior foi vaga ou "não sei", faça uma pergunta de descoberta concreta e fácil, com um exemplo tirado do próprio contexto dela — não repita a mesma pergunta em outras palavras.',
+    '',
+    'QUANDO A RESPOSTA NÃO SERVE (off_topic ou contradictory), a próxima pergunta é SOBRE ELA, não sobre o próximo campo:',
+    '- Não finja que entendeu. Seguir para outro campo depois de uma resposta que não faz sentido é o erro mais visível que existe aqui: a pessoa percebe na hora que ninguém leu o que ela escreveu.',
+    '- Cite o que ela escreveu, diga em uma frase simples por que aquilo não descreve uma situação em que um stakeholder ajudaria, e peça a situação real. Sem sermão e sem culpar a pessoa: pode ter sido engano, teste ou brincadeira.',
+    '- Mantenha o targetField no mesmo campo que a resposta deveria ter coberto, e fieldsSatisfied VAZIO — uma resposta que não serve não cobre campo nenhum, e registrá-la contaminaria a recomendação.',
+    '- Se a pessoa insistir no mesmo tipo de resposta, ofereça dois exemplos concretos de situação e peça que escolha o mais próximo.',
     '',
     'Escolha somente um targetField do enum, e ele precisa estar em consideredFields. Não invente fatos e não recomende stakeholders.',
     'A pessoa está esperando na tela: os campos de raciocínio são notas curtas para você escolher bem, não um texto para ninguém ler. Seja breve neles.',

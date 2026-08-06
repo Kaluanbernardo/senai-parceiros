@@ -84,6 +84,46 @@ describe('adaptive interview provider', () => {
     expect(value.consideredFields).toEqual(['audience', 'geography']);
   });
 
+  it('não deixa uma resposta fora de propósito cobrir campo nenhum', () => {
+    // "Comer batata" como situação para envolver um especialista: o modelo pode
+    // classificar certo e ainda assim registrar o que leu. Registrar isso
+    // contaminaria o briefing e, com ele, a recomendação inteira.
+    const value = normalizeQuestion({
+      ...validResponse,
+      lastAnswerQuality: 'off_topic',
+      fieldsSatisfied: [{ field: 'context', value: 'comer batata', confidence: 0.9 }],
+    });
+
+    expect(value.lastAnswerQuality).toBe('off_topic');
+    expect(value.fieldsSatisfied).toEqual([]);
+  });
+
+  it('classifica a resposta antes de escolher o que perguntar', () => {
+    const order = nextQuestionSchema.required;
+    expect(order.indexOf('lastAnswerQuality')).toBeLessThan(order.indexOf('consideredFields'));
+    expect(nextQuestionSchema.properties.lastAnswerQuality.enum).toEqual(['usable', 'vague', 'off_topic', 'contradictory']);
+    // Sem classificação declarada, tratar como aproveitável é o padrão seguro:
+    // é o comportamento de antes, e não descarta silenciosamente uma resposta.
+    expect(normalizeQuestion(validResponse).lastAnswerQuality).toBe('usable');
+  });
+
+  it('manda conversar sobre a resposta que não serve, em vez de seguir o roteiro', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
+    }));
+
+    await generateNextQuestionWithProvider({ category: 'researcher', objective: 'speaker', answers: { context: 'comer batata' }, history: [], askedIds: ['context'] });
+
+    const prompt = bodies[0].messages.at(-1).content;
+    expect(prompt).toMatch(/QUANDO A RESPOSTA NÃO SERVE/);
+    expect(prompt).toMatch(/a próxima pergunta é SOBRE ELA, não sobre o próximo campo/i);
+    expect(prompt).toMatch(/fieldsSatisfied VAZIO/);
+  });
+
   it('does not presume a SENAI-SP venue or an industry audience, and asks for varied wording', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'test-key';

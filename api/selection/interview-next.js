@@ -79,6 +79,15 @@ function providerUnavailable(res, reason) {
   return res.status(status).json({ error: 'ai_unavailable', reason, retryable: reason !== 'ai_not_configured' && reason !== 'ai_budget_exceeded' });
 }
 
+/**
+ * Campo que a última resposta deveria ter coberto. Quando ela não serve, é
+ * exatamente esse campo que precisa ser perguntado de novo.
+ */
+function lastTargetField(state) {
+  const last = (state.history || []).at(-1);
+  return String(last?.targetField || last?.questionId || '').trim();
+}
+
 function asQuestion(value, state) {
   if (!value || value.shouldStop) return null;
   const question = value.question || value;
@@ -88,9 +97,15 @@ function asQuestion(value, state) {
   const answerEntry = Object.entries(state.answers || {}).find(([id]) => id === targetField || targetFieldFor(state.questionDefinitions?.[id]) === targetField);
   const answerText = String(answerEntry?.[1] || '').trim();
   const alreadyAnswered = Boolean(answerText) && !/^(?:n[aã]o sei|ainda n[aã]o sei|desconhe[cç]o|\?|-)$/i.test(answerText);
+  // Uma resposta fora de propósito deixa o campo formalmente respondido e
+  // materialmente vazio. Sem esta exceção, o modelo fazia a coisa certa —
+  // voltar a perguntar o que "comer batata" não respondeu — e o servidor
+  // recusava a pergunta por já haver texto ali.
+  const retryingRejectedAnswer = ['off_topic', 'contradictory'].includes(value.lastAnswerQuality)
+    && targetField === lastTargetField(state);
   // Um campo já coberto — perguntado antes ou entregue de passagem numa
   // resposta anterior — nunca volta como próxima pergunta, mesmo reescrito.
-  if (alreadyAnswered || state.derived?.[targetField]) return null;
+  if (!retryingRejectedAnswer && (alreadyAnswered || state.derived?.[targetField])) return null;
   const id = `adaptive_${(state.askedIds || []).length + 1}_${targetField}`;
   if ((state.askedIds || []).includes(id)) return null;
   if (question.prompt.length > 600 || String(question.helper || '').length > 500 || String(question.example || '').length > 500) return null;
@@ -224,7 +239,7 @@ export default async function handler(req, res) {
       // partir das respostas (factsExtracted, fieldsSatisfied): é a mesma sessão
       // e o mesmo usuário autenticado, e é o que torna auditável *por que* esta
       // pergunta veio agora. Nada disso é exibido como texto da pergunta.
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: ai.consideredFields || [], remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', lastAnswerQuality: ai.lastAnswerQuality || 'usable', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: ai.consideredFields || [], remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return providerUnavailable(res, reason);
