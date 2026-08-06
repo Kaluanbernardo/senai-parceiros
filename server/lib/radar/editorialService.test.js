@@ -110,7 +110,9 @@ describe('reescrita editorial do Radar', () => {
     expect(item.displaySummary).toBe(EDITORIAL_SUMMARY);
   });
 
-  it('descarta um texto gerado que continua em inglês', async () => {
+  it('derruba o run ao recusar um texto gerado que continua em inglês', async () => {
+    // Recusar o texto e seguir deixaria o item com a redação da fonte, que na
+    // interface é idêntica a um item que não precisava de reescrita.
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
       title: 'Federal institutes are allowed to open new technical courses',
@@ -118,11 +120,7 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    const { items: [item] } = await editorializeRadarItems([gazetteItem('77')]);
-
-    expect(item.editorialTitle).toBeNull();
-    expect(item.editorialSummary).toBeNull();
-    expect(item.rawSourceText).toBe(true);
+    await expect(editorializeRadarItems([gazetteItem('77')])).rejects.toThrow('radar_editorial_rejected');
   });
 
   it('processa os itens em lotes de no máximo seis', async () => {
@@ -173,17 +171,26 @@ describe('reescrita editorial do Radar', () => {
     expect(item.displayTitle).toBe(EDITORIAL_TITLE);
   });
 
-  it('não chama o provedor quando a reescrita não está habilitada', async () => {
+  it('falha sem chamar o provedor quando há fila e a reescrita não está habilitada', async () => {
     delete process.env.RADAR_EDITORIAL_PROVIDER;
     process.env.RADAR_SUMMARY_PROVIDER = 'false';
     vi.stubGlobal('fetch', vi.fn());
 
-    const { items: [item] } = await editorializeRadarItems([gazetteItem('off')]);
-
+    await expect(editorializeRadarItems([gazetteItem('off')])).rejects.toThrow('radar_editorial_provider_disabled');
     expect(fetch).not.toHaveBeenCalled();
-    // The deterministic layer still applies, so the card never shows the shout.
-    expect(item.displayTitle).toBe('Portaria nº off, de 15 de julho de 2026');
     delete process.env.RADAR_SUMMARY_PROVIDER;
+  });
+
+  it('não exige provedor quando não há nada para reescrever', async () => {
+    // Um run sem fila não expõe ninguém ao texto cru da fonte, então não é
+    // falha: exigir provedor aqui quebraria coletas legítimas sem IA pendente.
+    delete process.env.RADAR_EDITORIAL_PROVIDER;
+    vi.stubGlobal('fetch', vi.fn());
+
+    const { stats } = await editorializeRadarItems([]);
+
+    expect(stats).toMatchObject({ enabled: false, pending: 0, candidates: 0 });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('respeita o teto de itens reescritos por coleta e ainda relata a fila inteira', async () => {
@@ -427,7 +434,7 @@ describe('reescrita editorial do Radar', () => {
     expect(rewritten.rawSourceText).toBe(false);
   });
 
-  it('conta o que reescreveu e o que recusou, para distinguir modelo ruim de coleta vazia', async () => {
+  it('derruba o run quando o modelo devolve JSON válido que o Radar recusa', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
       // Valid JSON that the Radar refuses: a headline still in English.
@@ -436,21 +443,15 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    const { stats } = await editorializeRadarItems([gazetteItem('a'), gazetteItem('b')]);
-
-    expect(stats).toMatchObject({ enabled: true, candidates: 2, rewritten: 0, rejected: 2, failedBatches: 0 });
-    expect(stats.model).toBe('openrouter:test/model');
+    await expect(editorializeRadarItems([gazetteItem('a'), gazetteItem('b')])).rejects.toThrow('radar_editorial_rejected');
   });
 
-  it('registra o lote perdido quando o modelo ignora o schema estrito', async () => {
-    // A model answering prose is what `invalid_output` means; the run must say
-    // so instead of looking like a collection with nothing to rewrite.
+  it('derruba o run quando o modelo ignora o schema estrito', async () => {
+    // A model answering prose is what `invalid_output` means; the run must fail
+    // instead of looking like a collection with nothing to rewrite.
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ model: 'test/model', choices: [{ message: { content: 'Claro! Aqui vai o resumo…' } }] }) })));
 
-    const { stats } = await editorializeRadarItems([gazetteItem('z')]);
-
-    expect(stats).toMatchObject({ enabled: true, candidates: 1, rewritten: 0, failedBatches: 1 });
-    expect(stats.errors).toContain('invalid_output');
+    await expect(editorializeRadarItems([gazetteItem('z')])).rejects.toThrow('invalid_output');
   });
 
   it('para de reescrever ao esgotar o prazo, para não custar o snapshot da coleta', async () => {

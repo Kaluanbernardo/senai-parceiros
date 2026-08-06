@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { normalizeRadarItem } from '../../../src/domain/radar.js';
 import { EDITORIAL_RULES_VERSION, hasPortugueseMarkers, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
 import { generateStructured } from '../structuredGeneration.js';
+import { sanitizeProviderError } from './contracts.js';
 import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
 
 /**
@@ -13,9 +14,10 @@ import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
  * This pass produces a plain-language headline and a two-to-three sentence
  * explanation, and translates whatever the source published in English.
  *
- * It is an enrichment, like the research summaries: budgeted, cached across
- * runs, and always degrading to the deterministic presentation layer in
- * src/domain/radarEditorial.js rather than to the raw source text.
+ * It is not an enrichment: an item that reaches a reader in the source's own
+ * wording is indistinguishable from an item that needed no rewrite, so the
+ * degradation is invisible. Any failure here fails the run instead, and items
+ * this run did not reach are held back from the snapshot by the caller.
  */
 
 const EDITORIAL_BATCH_SIZE = 6;
@@ -290,7 +292,6 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   const result = reuseStoredEditorials(Array.isArray(items) ? items : [], previousItems);
   const stats = emptyStats();
   stats.reused = result.filter((item) => item.editorialStatus === 'ai').length;
-  if (!providerEnabled()) return { items: result, stats: { ...stats, enabled: false } };
   const maxItems = Math.max(0, Number(process.env.RADAR_EDITORIAL_MAX_ITEMS || DEFAULT_MAX_ITEMS_PER_RUN));
   // The whole backlog, before the per-run cap. Reporting only the capped slice
   // made a run that filled its quota look like a run that finished the queue:
@@ -310,6 +311,11 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   const candidates = pending.slice(0, maxItems);
   stats.pending = pending.length;
   stats.candidates = candidates.length;
+  // Um run sem nada a reescrever e um run bem-sucedido: nenhum item chegaria ao
+  // leitor com o texto cru da fonte. Só quando ha fila e que a ausencia de
+  // provedor deixa de ser irrelevante e passa a ser falha.
+  if (!pending.length) return { items: result, stats: { ...stats, enabled: providerEnabled(), pendingBeyondRun: 0 } };
+  if (!providerEnabled()) throw new Error('radar_editorial_provider_disabled');
   const byId = new Map(result.map((item, index) => [itemId(item), index]));
   // This pass runs after every collector and before the snapshot is written, so
   // time spent here is time the write may not get. A serverless function killed
@@ -349,15 +355,15 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       }
       stats.model = `${generated.trace.provider}:${generated.trace.model}`;
     } catch (error) {
-      // The deterministic presentation layer already applies to every item, so
-      // a failed batch costs readability, never an item.
-      stats.failedBatches += 1;
-      stats.rejected += batch.length;
-      const code = String(error?.message || 'provider_error').slice(0, 60);
-      if (!stats.errors.includes(code)) stats.errors.push(code);
+      // Um lote que falha deixaria os itens dele com o texto da fonte, e um
+      // item com texto de fonte e indistinguivel de um item que nao precisava
+      // de reescrita. A falha sobe para que o run inteiro falhe visivelmente.
+      throw new Error(sanitizeProviderError(error, 'radar_editorial_unavailable'));
     }
   }
-  return { items: result, stats: { ...stats, enabled: true } };
+  // Item recusado pelo validador tambem ficaria com o texto da fonte.
+  if (stats.rejected) throw new Error('radar_editorial_rejected');
+  return { items: result, stats: { ...stats, enabled: true, pendingBeyondRun: stats.pending - stats.rewritten } };
 }
 
 export { EDITORIAL_BATCH_SIZE };

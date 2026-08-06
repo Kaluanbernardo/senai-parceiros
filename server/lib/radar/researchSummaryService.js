@@ -1,6 +1,7 @@
 import { generateStructured } from '../structuredGeneration.js';
 import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
 import { buildSummaryMetadata, normalizeAbstractText, validateResearchSummary } from './summaries.js';
+import { sanitizeProviderError } from './contracts.js';
 
 const SUMMARY_BATCH_SIZE = 8;
 
@@ -86,11 +87,20 @@ function reuseCachedSummaries(items, previousItems) {
   });
 }
 
+/**
+ * Resumo por IA e obrigatorio: um item que chega ao leitor com o texto da
+ * fonte e uma degradacao invisivel — parece igual a um item que nao tinha o
+ * que resumir. Por isso a falha sobe e derruba o run inteiro, em vez de virar
+ * um resumo extractive silencioso.
+ */
 export async function summarizeResearchItems(items = [], { previousItems = [] } = {}) {
   const result = reuseCachedSummaries(Array.isArray(items) ? items : [], previousItems);
-  const enabled = String(process.env.RADAR_SUMMARY_PROVIDER || '').trim().toLowerCase();
-  if (!enabled || enabled === 'false' || enabled === 'off') return result;
   const candidates = result.filter((item) => item.summaryStatus !== 'ai' && normalizeAbstractText(item.abstractText));
+  // Nada a resumir e run valido; havendo fila, a ausencia de provedor deixaria
+  // itens com o texto da fonte e por isso derruba o run.
+  if (!candidates.length) return result;
+  const enabled = String(process.env.RADAR_SUMMARY_PROVIDER || '').trim().toLowerCase();
+  if (!enabled || enabled === 'false' || enabled === 'off') throw new Error('radar_summary_provider_disabled');
 
   for (let index = 0; index < candidates.length && canUseAi('radar-summary'); index += SUMMARY_BATCH_SIZE) {
     const batch = candidates.slice(index, index + SUMMARY_BATCH_SIZE);
@@ -106,10 +116,14 @@ export async function summarizeResearchItems(items = [], { previousItems = [] } 
       for (let itemIndex = 0; itemIndex < result.length; itemIndex += 1) {
         result[itemIndex] = summarized.get(itemId(result[itemIndex])) || result[itemIndex];
       }
-    } catch {
-      // Keep the explicit extractive fallback already attached to each item.
+    } catch (error) {
+      throw new Error(sanitizeProviderError(error, 'radar_summary_unavailable'));
     }
   }
+  // Orcamento esgotado no meio da fila deixa item sem resumo de IA, e item sem
+  // resumo de IA nao pode ser exibido: e falha de run, nao entrega parcial.
+  const missing = result.filter((item) => item.summaryStatus !== 'ai' && normalizeAbstractText(item.abstractText));
+  if (missing.length) throw new Error('radar_summary_incomplete');
   return result;
 }
 

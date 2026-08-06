@@ -4,6 +4,8 @@ import { getCatalog } from './catalog.js';
 import { hydrateCatalogStore } from './catalogImport.js';
 import { radarStore } from './radarStore.js';
 import { editorializeRadarItems } from './radar/editorialService.js';
+import { sanitizeProviderError } from './radar/contracts.js';
+import { needsEditorialTreatment } from '../../src/domain/radarEditorial.js';
 import { summarizeResearchItems } from './radar/researchSummaryService.js';
 import { buildEvidenceFallback, buildSummaryMetadata, extractCrossrefAbstract, mergeResearchItems, reconstructOpenAlexAbstract } from './radar/summaries.js';
 import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
@@ -774,6 +776,20 @@ function providerStatus(name, status, extra = {}) {
  * an opaque `radar_refresh_failed` with no source and no cause attached, which
  * is indistinguishable from every collector failing at once.
  */
+/**
+ * Um run que nao conseguiu tratar todos os itens nao pode virar snapshot: o
+ * leitor veria texto cru da fonte sem nenhum sinal disso. A falha e registrada
+ * como run falho — para aparecer no status operacional — e sobe para o
+ * chamador, que responde erro em vez de conteudo degradado.
+ */
+async function failRun({ reason, sourceStatus, fetchedAt, persist }) {
+  if (persist) {
+    radarStore.recordRun({ status: 'failed', fetchedAt, itemCount: 0, sourceStatus, durationMs: null });
+    await safeStoreCall(() => radarStore.flush());
+  }
+  throw new Error(reason);
+}
+
 async function safeStoreCall(operation) {
   try {
     await operation();
@@ -950,17 +966,18 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const mergedResearch = mergeResearchItems(items.filter((item) => item.section === 'research'));
   const shouldSummarizeResearch = live && (!filters.section || filters.section === 'research');
-  // Summaries are an optional enrichment with their own budget and extractive
-  // fallback, so a failure there must not cost the run every item it collected.
+  // Resumo por IA nao e enriquecimento: um item exibido com o texto da fonte e
+  // indistinguivel de um item que nao precisava de resumo, entao a degradacao
+  // seria invisivel. A falha e registrada e derruba o run.
   const [summaryResult] = shouldSummarizeResearch
     ? await Promise.allSettled([summarizeResearchItems(mergedResearch, { previousItems: stored?.items?.filter((item) => item.section === 'research') || [] })])
     : [{ status: 'fulfilled', value: mergedResearch }];
   if (summaryResult.status === 'rejected') {
-    sourceStatus['Resumos por IA'] = providerStatus('Resumos por IA', 'error', {
-      error: String(summaryResult.reason?.message || 'summary_unavailable').slice(0, 160),
-    });
+    const reason = sanitizeProviderError(summaryResult.reason, 'radar_summary_unavailable');
+    sourceStatus['Resumos por IA'] = providerStatus('Resumos por IA', 'error', { error: reason });
+    await failRun({ reason, sourceStatus, fetchedAt: stored?.fetchedAt || new Date().toISOString(), persist });
   }
-  const summarizedResearch = summaryResult.status === 'fulfilled' ? summaryResult.value : mergedResearch;
+  const summarizedResearch = summaryResult.value;
   const nonResearch = items.filter((item) => item.section !== 'research');
   // Editorial rewriting runs after the eligibility filter so that no rewrite is
   // ever spent on an item the snapshot would discard anyway.
@@ -969,9 +986,9 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [], deadlineAt: runStartedAt + runBudgetMs() })])
     : [{ status: 'fulfilled', value: null }];
   if (editorialResult.status === 'rejected') {
-    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', {
-      error: String(editorialResult.reason?.message || 'editorial_unavailable').slice(0, 160),
-    });
+    const reason = sanitizeProviderError(editorialResult.reason, 'radar_editorial_unavailable');
+    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', { error: reason });
+    await failRun({ reason, sourceStatus, fetchedAt, persist });
   } else if (editorialResult.value) {
     // Reported even when nothing was rewritten. A model that silently ignores
     // the strict schema and a run with no candidate look identical in the
@@ -981,7 +998,12 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
       !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
       { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors });
   }
-  const snapshotItems = editorialResult.status === 'fulfilled' && editorialResult.value ? editorialResult.value.items : collected;
+  // O que este run nao alcancou (teto por run ou deadline) fica de fora do
+  // snapshot: e melhor um Radar incompleto do que um item com o texto cru da
+  // fonte se passando por item tratado.
+  const snapshotItems = editorialResult.value
+    ? editorialResult.value.items.filter((item) => !needsEditorialTreatment(item) || item.editorialStatus === 'ai')
+    : collected;
   const stale = live ? !liveProvider && Boolean(stored) : Boolean(stored?.stale);
   if (hydrateError) sourceStatus['Snapshot (armazenamento)'] = providerStatus('Snapshot (armazenamento)', 'error', { error: hydrateError });
   if (persist && liveProvider) {

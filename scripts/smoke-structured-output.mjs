@@ -15,6 +15,11 @@
  *   npm run ai:smoke                      # the configured OPENROUTER_MODEL
  *   npm run ai:smoke -- --model=<id>      # a candidate
  *   npm run ai:smoke -- --runs=5          # more samples (default 3)
+ *   npm run ai:smoke -- --task=interview  # the adaptive interview instead
+ *
+ * The interview task is the stricter one: besides the schema, it checks that
+ * the model read the situation, weighed alternative questions and asked about
+ * the venue and the audience instead of presuming them.
  *
  * It never prints a credential, and it exits non-zero when a run failed, so it
  * can gate a handoff the same way `handoff:preflight` does.
@@ -35,6 +40,7 @@ function argValue(name, fallback) {
 const runs = Math.max(1, Math.min(10, Number(argValue('runs', 3)) || 3));
 const model = argValue('model', '');
 if (model) process.env.OPENROUTER_MODEL = model;
+const task = argValue('task', 'radar');
 
 // The same shape the editorial pass sends, so a pass here means the Radar's own
 // call works — not that some simpler schema happened to succeed.
@@ -121,13 +127,75 @@ function inspect(data) {
   return problems.length ? { ok: false, reason: problems.join('; ') } : { ok: true, sample: items[0] };
 }
 
+/**
+ * Estado de entrevista com um buraco evidente: a pessoa descreveu um evento sem
+ * dizer onde acontece nem para quem. Um modelo que presume "na escola" ou
+ * "para a indústria" — em vez de perguntar — falha aqui, e é exatamente o
+ * pressuposto que a entrevista não pode fazer.
+ */
+const INTERVIEW_STATE = {
+  category: 'organization',
+  objective: 'speaker',
+  answers: { context: 'Queremos um encontro sobre economia circular com uma organização convidada.' },
+  transcript: [{
+    turn: 1,
+    displayedQuestion: 'Em que conversa ou evento essa organização entraria, e por quê?',
+    answer: 'Queremos um encontro sobre economia circular com uma organização convidada.',
+    targetField: 'context',
+    dimensions: ['impact', 'alignment'],
+  }],
+  askedIds: ['context'],
+  coveredFields: ['context'],
+  remainingRequiredFields: ['desired_outcome', 'themes', 'audience', 'geography', 'constraints'],
+  lastAnswer: 'Queremos um encontro sobre economia circular com uma organização convidada.',
+  minQuestions: 4,
+  maxQuestions: 12,
+};
+
+const PRESUMED = /\b(na (nossa|sua) (escola|unidade)|aqui na escola|industri[áa]rios)\b/i;
+
+/**
+ * A entrevista só melhora se o modelo pensar antes de perguntar: ler a
+ * situação, pesar alternativas de ângulos diferentes e escolher uma. Um modelo
+ * que devolve a pergunta sem esse trabalho passa no schema e continua soando
+ * como formulário — por isso o smoke checa o raciocínio, não só o JSON.
+ */
+function inspectInterview(result) {
+  const problems = [];
+  const fields = (result.candidateQuestions || []).map((item) => item.targetField);
+  if (!result.situationRead) problems.push('não leu a situação (situationRead vazio)');
+  if (fields.length < 2) problems.push(`considerou ${fields.length} pergunta(s) antes de escolher`);
+  if (new Set(fields).size !== fields.length) problems.push('candidatas repetem o mesmo campo');
+  if (!result.chosenBecause) problems.push('não justificou a escolha (chosenBecause vazio)');
+  if (!result.shouldStop && !result.question.prompt) problems.push('sem pergunta');
+  const shown = `${result.question.prompt} ${result.question.helper} ${result.question.example}`;
+  if (PRESUMED.test(shown)) problems.push('presume local ou público em vez de perguntar');
+  if (result.question.prompt === INTERVIEW_STATE.transcript[0].displayedQuestion) problems.push('repetiu a pergunta anterior');
+  return problems.length
+    ? { ok: false, reason: problems.join('; ') }
+    : { ok: true, sample: { prompt: result.question.prompt, considered: fields, because: result.chosenBecause } };
+}
+
 const configured = process.env.OPENROUTER_MODEL || '(padrão do provedor)';
-console.log(`Modelo: ${configured} · execuções: ${runs}\n`);
+console.log(`Tarefa: ${task === 'interview' ? 'entrevista adaptativa' : 'editorial do Radar'} · modelo: ${configured} · execuções: ${runs}\n`);
 
 let passed = 0;
 let firstSample = null;
 for (let run = 1; run <= runs; run += 1) {
   try {
+    if (task === 'interview') {
+      const { generateNextQuestionWithProvider } = await import('../server/lib/interviewProvider.js');
+      const result = await generateNextQuestionWithProvider(INTERVIEW_STATE);
+      const verdict = inspectInterview(result);
+      if (verdict.ok) {
+        passed += 1;
+        firstSample = firstSample || verdict.sample;
+        console.log(`  ${run}/${runs} ok · ${result.trace.provider}:${result.trace.model}`);
+      } else {
+        console.log(`  ${run}/${runs} FALHOU · ${verdict.reason}`);
+      }
+      continue;
+    }
     const generated = await generateStructured({
       task: 'radar_editorial_items',
       schema: SCHEMA,
@@ -151,13 +219,20 @@ for (let run = 1; run <= runs; run += 1) {
 }
 
 console.log(`\n${passed}/${runs} execuções válidas.`);
-if (firstSample) {
+if (firstSample && task === 'interview') {
+  console.log('\nExemplo do que a entrevista perguntaria:');
+  console.log(`  pergunta   : ${firstSample.prompt}`);
+  console.log(`  considerou : ${firstSample.considered.join(' | ')}`);
+  console.log(`  porque     : ${firstSample.because}`);
+} else if (firstSample) {
   console.log('\nExemplo do que o Radar mostraria:');
   console.log(`  título: ${firstSample.title}`);
   console.log(`  resumo: ${firstSample.summary}`);
   console.log(`  temas : ${(firstSample.topics || []).join(' | ')}`);
 }
-if (passed < runs) {
+if (passed < runs && task === 'interview') {
+  console.log('\nUm modelo que falha aqui degrada em silêncio na seleção: a entrevista cai no roteiro local e volta a soar como formulário.');
+} else if (passed < runs) {
   console.log('\nUm modelo que falha aqui degrada em silêncio no Radar: o lote é descartado e o item mantém o texto da fonte.');
   console.log('Escolha outro candidato entre os que anunciam structured_outputs:');
   console.log("  curl -s https://openrouter.ai/api/v1/models | jq -r '.data[] | select((.supported_parameters//[])|index(\"structured_outputs\")) | .id'");

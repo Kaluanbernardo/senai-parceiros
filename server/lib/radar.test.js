@@ -8,6 +8,29 @@ const baseItems = [
   normalizeRadarItem({ id: 'b', section: 'government', title: 'Política de EPT', summaryPt: 'MEC', publishedAt: '2026-06-10', sourceName: 'MEC / SETEC', contentType: 'notícia oficial', topics: ['EPT'], relevanceScore: 80, externalId: 'gov:b' }),
 ];
 
+/**
+ * Modo estrito: nenhum item chega ao leitor com o texto cru da fonte, entao uma
+ * coleta ao vivo com fila de reescrita exige provedor. Estes testes sao sobre
+ * coleta e armazenamento, nao sobre o modelo, entao o provedor responde uma
+ * reescrita valida e sai da frente.
+ */
+function enableRadarProvider() {
+  process.env.AI_PROVIDER = 'openrouter';
+  process.env.OPENROUTER_API_KEY = 'test-key';
+  process.env.OPENROUTER_MODEL = 'test/model';
+  process.env.RADAR_EDITORIAL_PROVIDER = 'openrouter';
+  process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
+}
+
+function providerReply(request) {
+  const payload = JSON.parse(request.body);
+  const requested = JSON.parse(payload.messages.at(-1).content);
+  const body = payload.response_format?.json_schema?.name === 'radar_research_summaries'
+    ? { summaries: requested.map((item) => ({ id: item.id, summaryPt: 'O estudo compara percursos de educação profissional para manufatura avançada e apresenta evidências sobre participação empresarial, currículo e oportunidades de aprendizagem.' })) }
+    : { items: requested.map((item) => ({ id: item.id, title: 'Institutos federais podem abrir cursos técnicos em mecatrônica', summary: 'A portaria autoriza três institutos federais a oferecer cursos técnicos em mecatrônica já no próximo semestre letivo. A medida vale para a rede federal e amplia as vagas disponíveis.', topics: item.temas })) };
+  return new Response(JSON.stringify({ model: 'test/model', usage: { total_tokens: 120 }, choices: [{ message: { content: JSON.stringify(body) } }] }), { status: 200 });
+}
+
 describe('radar domain', () => {
   afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); radarStore.configure({ driver: 'memory' }); catalogStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; });
 
@@ -61,8 +84,10 @@ describe('radar domain', () => {
     // source was collected, no snapshot was written and the failure reported no
     // source at all, so it could not be attributed to anything.
     radarStore.configure({ driver: 'memory' });
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+    enableRadarProvider();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, request) => {
       const href = String(url);
+      if (href.includes('openrouter.ai')) return providerReply(request);
       if (href.includes('in.gov.br')) throw new Error('dou_connection_reset');
       if (href.includes('cps.sp.gov.br/wp-json/')) {
         return new Response(
@@ -83,10 +108,14 @@ describe('radar domain', () => {
     // flush() used to be called from inside the catch block, so a failing store
     // threw a second time and the original cause escaped with no lastRun.
     radarStore.configure({ driver: 'memory' });
+    enableRadarProvider();
     vi.spyOn(radarStore, 'flush').mockRejectedValue(new Error('blob_write_forbidden'));
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br')
-      ? new Response('<article><a href="/n/1">Centro Paula Souza amplia vagas em educacao profissional</a><p>Formacao tecnica.</p></article>', { status: 200, headers: { 'content-type': 'text/html' } })
-      : new Response('', { status: 403 })));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, request) => {
+      if (String(url).includes('openrouter.ai')) return providerReply(request);
+      return String(url).includes('cps.sp.gov.br')
+        ? new Response('<article><a href="/n/1">Centro Paula Souza amplia vagas em educacao profissional</a><p>Formacao tecnica.</p></article>', { status: 200, headers: { 'content-type': 'text/html' } })
+        : new Response('', { status: 403 });
+    });
 
     const result = await refreshRadarSnapshot();
     expect(result.lastRun).toBeTruthy();
@@ -209,7 +238,10 @@ describe('radar domain', () => {
     // "Funções e Competências" is a permanent page label, not news; it reached
     // the radar because an undated item has no recency signal to contradict it.
     radarStore.configure({ driver: 'memory' });
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => (String(url).includes('cps.sp.gov.br/wp-json/')
+    enableRadarProvider();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, request) => (String(url).includes('openrouter.ai')
+      ? providerReply(request)
+      : String(url).includes('cps.sp.gov.br/wp-json/')
       ? new Response(
         JSON.stringify([
           { id: 2, date: '2026-07-20T12:00:00', link: 'https://www.cps.sp.gov.br/n/2', title: { rendered: 'Centro Paula Souza abre inscricoes para cursos tecnicos de educacao profissional' }, excerpt: { rendered: '<p>Vagas abertas.</p>' } },
@@ -532,29 +564,11 @@ describe('radar domain', () => {
   });
 
   it('enriches live research items with optional AI summaries before returning the snapshot', async () => {
-    process.env.AI_PROVIDER = 'openrouter';
-    process.env.OPENROUTER_API_KEY = 'test-key';
-    process.env.OPENROUTER_MODEL = 'test/model';
-    process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
+    enableRadarProvider();
     vi.stubGlobal('fetch', vi.fn(async (url, request) => {
-      if (String(url).includes('openrouter.ai')) {
-        const payload = JSON.parse(request.body);
-        const requested = JSON.parse(payload.messages.at(-1).content);
-        return new Response(JSON.stringify({
-          model: 'test/model',
-          usage: { total_tokens: 120 },
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                summaries: requested.map((item) => ({
-                  id: item.id,
-                  summaryPt: 'O estudo compara percursos de educação profissional para manufatura avançada e apresenta evidências sobre participação empresarial, currículo e oportunidades de aprendizagem.',
-                })),
-              }),
-            },
-          }],
-        }), { status: 200 });
-      }
+      // Resumo acadêmico e reescrita editorial usam schemas diferentes na mesma
+      // rota; responder o schema errado é o que o modo estrito trata como falha.
+      if (String(url).includes('openrouter.ai')) return providerReply(request);
       if (String(url).includes('api.openalex.org')) {
         return new Response(JSON.stringify({ results: [{
           id: 'https://openalex.org/W-ai',
@@ -624,7 +638,9 @@ describe('radar domain', () => {
   });
 
   it('refreshes and exposes a last valid snapshot with source observability', async () => {
-    vi.stubGlobal('fetch', vi.fn((url) => {
+    enableRadarProvider();
+    vi.stubGlobal('fetch', vi.fn((url, request) => {
+      if (String(url).includes('openrouter.ai')) return Promise.resolve(providerReply(request));
       if (String(url).includes('api.openalex.org')) return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
       if (String(url).includes('api.crossref.org')) return Promise.resolve(new Response(JSON.stringify({ message: { items: [] } }), { status: 200 }));
       return Promise.resolve(new Response('<rss><channel><item><title>Atualização VET</title><link>https://example.org/vet</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Educação profissional.</description><guid>vet-1</guid></item></channel></rss>', { status: 200 }));
@@ -637,7 +653,10 @@ describe('radar domain', () => {
   });
 
   it('records a reachable DOU window without eligible acts as no_edition', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><body></body></html>', { status: 200 })));
+    enableRadarProvider();
+    vi.stubGlobal('fetch', vi.fn(async (url, request) => (String(url).includes('openrouter.ai')
+      ? providerReply(request)
+      : new Response('<html><body></body></html>', { status: 200 }))));
 
     const result = await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
 
@@ -650,10 +669,10 @@ describe('radar domain', () => {
   });
 
   it('does not spend the academic-summary budget on a government-only refresh', async () => {
-    process.env.AI_PROVIDER = 'openrouter';
-    process.env.OPENROUTER_API_KEY = 'test-key';
-    process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
-    const fetchMock = vi.fn(async () => new Response('<html><body></body></html>', { status: 200 }));
+    enableRadarProvider();
+    const fetchMock = vi.fn(async (url, request) => (String(url).includes('openrouter.ai')
+      ? providerReply(request)
+      : new Response('<html><body></body></html>', { status: 200 })));
     vi.stubGlobal('fetch', fetchMock);
 
     await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
@@ -720,19 +739,20 @@ describe('radar domain', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('relata a reescrita editorial mesmo quando ela está desligada', async () => {
-    // Without this entry a disabled pass and a model silently ignoring the
-    // strict schema are indistinguishable in the interface: in both cases every
-    // item keeps the source's own wording.
+  it('derruba o run quando há fila de reescrita e a IA não está configurada', async () => {
+    // Antes isto era um run bem-sucedido com todo item exibindo o texto cru da
+    // fonte — indistinguível de um run que não tinha o que reescrever. Agora a
+    // coleta falha e diz por quê, em vez de entregar conteúdo degradado.
     vi.stubGlobal('fetch', vi.fn(async () => new Response('<html><body></body></html>', { status: 200 })));
 
-    const result = await getRadarItems({ filters: { section: 'government' }, live: true, persist: false });
-
-    expect(result.sourceStatus['Títulos e resumos editoriais']).toMatchObject({ status: 'disabled', count: 0 });
+    await expect(getRadarItems({ filters: { section: 'government' }, live: true, persist: false }))
+      .rejects.toThrow('radar_editorial_provider_disabled');
   });
 
   it('serves the last snapshot when every live source fails', async () => {
-    vi.stubGlobal('fetch', vi.fn((url) => {
+    enableRadarProvider();
+    vi.stubGlobal('fetch', vi.fn((url, request) => {
+      if (String(url).includes('openrouter.ai')) return Promise.resolve(providerReply(request));
       if (String(url).includes('api.openalex.org')) return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
       if (String(url).includes('api.crossref.org')) return Promise.resolve(new Response(JSON.stringify({ message: { items: [] } }), { status: 200 }));
       return Promise.resolve(new Response('<rss><channel><item><title>Snapshot de VET</title><link>https://example.org/snapshot</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate></item></channel></rss>', { status: 200 }));

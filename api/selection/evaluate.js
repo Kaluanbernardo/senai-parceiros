@@ -40,11 +40,13 @@ export default async function handler(req, res) {
     const candidates = getCatalog(payload.category);
     const evaluationInput = { ...payload, brief, candidates };
     const local = await buildLocalEvaluation(evaluationInput);
+    // O motor determinístico continua sendo a base da chamada: ele monta o pool
+    // e os pesos que a IA recebe e sobre os quais o merge acontece. O que deixou
+    // de existir é entregar esse cálculo sozinho como se fosse a recomendação.
     if (!canUseAi('selection')) {
-      return res.status(200).json({ ...local, trace: { ...local.trace, provider: 'local-fallback', model: 'budget-fallback', fallback: true, budget: getUsageBudget('selection') } });
+      return res.status(429).json({ error: 'ai_unavailable', reason: 'ai_budget_exceeded', retryable: false, budget: getUsageBudget('selection') });
     }
     let ai = null;
-    let fallback = false;
     try {
       const providerPool = rankProviderCandidates(local.candidatePool, 30);
       // O provider recebe a mesma rubrica e os mesmos pesos derivados que o
@@ -60,17 +62,23 @@ export default async function handler(req, res) {
           : [],
       }));
     } catch (error) {
-      fallback = true;
-      ai = { model: 'local-fallback', provider: 'local-fallback', evaluations: [] };
+      const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
+      const status = reason === 'ai_not_configured' ? 503 : 502;
+      return res.status(status).json({ error: 'ai_unavailable', reason, retryable: reason !== 'ai_not_configured' });
     }
-    const result = ai.evaluations.length ? await mergeEvaluation(local, ai) : local;
+    // Provider que responde sem nenhuma avaliação entregaria o cálculo local
+    // com a etiqueta da IA — é falha, não resultado.
+    if (!ai.evaluations.length) {
+      return res.status(502).json({ error: 'ai_unavailable', reason: 'provider_empty_evaluation', retryable: true });
+    }
+    const result = await mergeEvaluation(local, ai);
     return res.status(200).json({
       ...result,
       trace: {
         ...(result.trace || {}),
         provider: ai.provider,
         model: ai.model,
-        fallback,
+        fallback: false,
         costQualityTradeoff: ai.costQualityTradeoff ?? null,
         routing: ai.routing || null,
         usage: ai.usage || null,

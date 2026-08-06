@@ -51,26 +51,31 @@ function eligibleTargetFields(state) {
 }
 
 /**
- * Classifica o motivo do roteiro local para que a interface não trate tudo
- * como falha. "A IA não está configurada" pede uma ação de configuração;
- * um timeout pede nova tentativa; ter recusado a pergunta da IA, ou simplesmente
- * ter concluído a entrevista, não é problema nenhum e não deve alarmar.
+ * Encerrar a entrevista não é gerar pergunta: quando a cobertura já está
+ * completa — ou quando o teto de perguntas chegou — não há o que pedir ao
+ * modelo, e responder o estado final não é caminho local nenhum.
  */
-function fallbackKind(reason) {
-  if (reason === 'ai_not_configured' || /_not_configured$/.test(String(reason))) return 'not_configured';
-  if (reason === 'ai_budget_exceeded' || reason === 'budget_exceeded') return 'budget';
-  if (reason === 'provider_question_rejected' || reason === 'question_budget_reached' || reason === 'coverage_complete') return 'none';
-  return 'error';
+function readyResponse(state, stopReason, trace = {}) {
+  const coverage = InterviewPlanner.coverage(state);
+  const ready = {
+    ...state,
+    currentQuestion: null,
+    status: 'ready',
+    validation: { ...(state.validation || {}), valid: !coverage.missing.length },
+    progress: { asked: state.askedIds.length, max: MAX_QUESTIONS },
+  };
+  return { state: ready, question: null, trace: { ...trace, fallback: false, degraded: false, stopReason, coverage } };
 }
 
-function localFallback(answeredState, reason = 'provider_unavailable') {
-  const nextState = InterviewPlanner.next(answeredState);
-  const kind = fallbackKind(reason);
-  return {
-    state: nextState,
-    question: nextState.currentQuestion,
-    trace: { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackKind: kind, degraded: kind !== 'none', fallbackReason: reason },
-  };
+/**
+ * A entrevista não tem roteiro local: sem IA não há próxima pergunta, e a
+ * resposta é um erro visível. Uma pergunta escrita localmente seria
+ * indistinguível de uma pergunta adaptada, e a degradação passaria despercebida
+ * justamente na parte da ferramenta que depende de adaptação.
+ */
+function providerUnavailable(res, reason) {
+  const status = reason === 'ai_budget_exceeded' ? 429 : reason === 'ai_not_configured' ? 503 : 502;
+  return res.status(status).json({ error: 'ai_unavailable', reason, retryable: reason !== 'ai_not_configured' && reason !== 'ai_budget_exceeded' });
 }
 
 function asQuestion(value, state) {
@@ -148,12 +153,13 @@ export default async function handler(req, res) {
     }
     await hydrateUsageBudget({ force: true });
     const answeredState = InterviewPlanner.answer(state, answer || 'não informado', questionId);
+    const localCoverage = InterviewPlanner.coverage(answeredState);
     // A entrevista já cobriu o necessário: não há próxima pergunta para a IA
     // escrever, então não chamá-la aqui é economia, não indisponibilidade.
-    const local = localFallback(answeredState, 'provider_unavailable');
-    if (local.state.status === 'ready') return res.status(200).json(localFallback(answeredState, 'coverage_complete'));
-    if (!canUseAi('interview')) return res.status(200).json(localFallback(answeredState, 'ai_budget_exceeded'));
-    const localCoverage = InterviewPlanner.coverage(answeredState);
+    if (localCoverage.canStop && !localCoverage.missing.length) {
+      return res.status(200).json(readyResponse(answeredState, 'coverage_complete', { provider: 'none', model: 'coverage-complete' }));
+    }
+    if (!canUseAi('interview')) return providerUnavailable(res, 'ai_budget_exceeded');
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 18000);
@@ -190,16 +196,31 @@ export default async function handler(req, res) {
         return res.status(200).json({ state: ready, question: null, trace: { ...ai.trace, fallback: false, degraded: false, stopReason: ai.stopReason || 'coverage_complete', coverage, budget } });
       }
       const question = asQuestion(ai, enrichedState);
-      if (!question || askedCount >= MAX_QUESTIONS - 1) return res.status(200).json(localFallback(enrichedState, question ? 'question_budget_reached' : 'provider_question_rejected'));
+      // Teto de perguntas atingido: encerra com o que tem, registrando as
+      // lacunas na validação, em vez de escrever a última pergunta localmente.
+      if (question && askedCount >= MAX_QUESTIONS - 1) {
+        return res.status(200).json(readyResponse(enrichedState, 'question_budget_reached', { ...ai.trace, budget }));
+      }
+      // A IA respondeu, mas a pergunta não passou na validação (campo já
+      // coberto, tamanho, campo inelegível). Se a cobertura permite encerrar,
+      // encerra; caso contrário é falha do provedor, não caso de roteiro local.
+      if (!question) {
+        if (coverage.canStop) return res.status(200).json(readyResponse(enrichedState, 'provider_question_rejected', { ...ai.trace, budget }));
+        return providerUnavailable(res, 'provider_question_rejected');
+      }
       const next = withAdaptiveQuestion({
         ...enrichedState,
         semanticFacts: [...new Set([...(enrichedState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
         remainingGaps: ai.remainingGaps || [],
       }, question);
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
+      // O raciocínio da escolha volta na trace, junto do que já era devolvido a
+      // partir das respostas (factsExtracted, fieldsSatisfied): é a mesma sessão
+      // e o mesmo usuário autenticado, e é o que torna auditável *por que* esta
+      // pergunta veio agora. Nada disso é exibido como texto da pergunta.
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: (ai.candidateQuestions || []).map((item) => item.targetField), remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
-      return res.status(200).json(localFallback(answeredState, reason));
+      return providerUnavailable(res, reason);
     } finally {
       clearTimeout(timeout);
     }
