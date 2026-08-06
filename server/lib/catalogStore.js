@@ -181,14 +181,34 @@ class CatalogStore {
     return this.status();
   }
 
-  async flush() {
+  async refreshRemoteEtag() {
+    try {
+      const { head } = await import('@vercel/blob');
+      const info = await head(this.blobPath);
+      this.remoteEtag = info?.etag || null;
+    } catch {
+      this.remoteEtag = null;
+    }
+  }
+
+  async flush({ attempts = 3 } = {}) {
     if (this.driver !== 'vercel_blob') return this.status();
-    const { put } = await import('@vercel/blob');
-    const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
-    if (this.remoteEtag) options.ifMatch = this.remoteEtag;
-    const result = await put(this.blobPath, JSON.stringify(this.state), options);
-    this.remoteEtag = result.etag || this.remoteEtag;
-    this.remoteHydrated = true;
+    const { put, BlobPreconditionFailedError } = await import('@vercel/blob');
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
+      if (this.remoteEtag && attempt < attempts) options.ifMatch = this.remoteEtag;
+      try {
+        const result = await put(this.blobPath, JSON.stringify(this.state), options);
+        this.remoteEtag = result.etag || null;
+        this.remoteHydrated = true;
+        return this.status();
+      } catch (error) {
+        const precondition = error instanceof BlobPreconditionFailedError
+          || /precondition failed|etag mismatch/i.test(String(error?.message || ''));
+        if (!precondition || attempt === attempts) throw error;
+        await this.refreshRemoteEtag();
+      }
+    }
     return this.status();
   }
 }
