@@ -1,7 +1,7 @@
 import { requireSession } from '../../lib/cookies.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../lib/http.js';
 import { getCatalog } from '../../lib/catalog.js';
-import { hydrateCatalogStore, parseCatalogWorkbook, previewCatalogImport } from '../../lib/catalogImport.js';
+import { flushCatalogStore, hydrateCatalogStore, parseCatalogWorkbook, previewCatalogImport } from '../../lib/catalogImport.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
     const payload = await readJson(req, 8 * 1024 * 1024);
     const parsed = await parseCatalogWorkbook(payload);
     const preview = previewCatalogImport(parsed, getCatalog(parsed.category));
+    await flushCatalogStore();
     return res.status(200).json({
       batchId: preview.batchId,
       category: preview.category,
