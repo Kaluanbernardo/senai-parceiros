@@ -224,7 +224,7 @@ export default async function handler(req, res) {
       // partir das respostas (factsExtracted, fieldsSatisfied): é a mesma sessão
       // e o mesmo usuário autenticado, e é o que torna auditável *por que* esta
       // pergunta veio agora. Nada disso é exibido como texto da pergunta.
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: (ai.candidateQuestions || []).map((item) => item.targetField), remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: ai.consideredFields || [], remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return providerUnavailable(res, reason);

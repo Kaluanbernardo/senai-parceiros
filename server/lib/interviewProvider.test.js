@@ -65,25 +65,23 @@ describe('adaptive interview provider', () => {
     // A geração é sequencial: a leitura da situação e as candidatas precisam
     // vir antes do texto da pergunta, senão o raciocínio vira justificativa.
     expect(order.indexOf('situationRead')).toBeLessThan(order.indexOf('prompt'));
-    expect(order.indexOf('candidateQuestions')).toBeLessThan(order.indexOf('prompt'));
-    expect(order.indexOf('assumptionsAvoided')).toBeLessThan(order.indexOf('candidateQuestions'));
-    expect(nextQuestionSchema.properties.candidateQuestions.items.required).toEqual(['targetField', 'draft', 'whatItDecides']);
+    expect(order.indexOf('consideredFields')).toBeLessThan(order.indexOf('prompt'));
+    expect(order.indexOf('assumptionsAvoided')).toBeLessThan(order.indexOf('consideredFields'));
+    // Lista de campos, não objetos aninhados: o schema aninhado custava caro na
+    // decodificação restrita e dois modelos diferentes estouraram 45s com ele.
+    expect(nextQuestionSchema.properties.consideredFields.items.enum).toContain('geography');
 
     const value = normalizeQuestion({
       ...validResponse,
       situationRead: 'A pessoa descreveu um evento aberto, sem dizer onde acontece.',
       assumptionsAvoided: ['o local do evento', 'que o público seja da indústria'],
       chosenBecause: 'o público define a profundidade técnica esperada',
-      candidateQuestions: [
-        { targetField: 'audience', draft: 'Quem estará na plateia?', whatItDecides: 'profundidade técnica' },
-        { targetField: 'geography', draft: 'Onde isso acontece?', whatItDecides: 'viabilidade de deslocamento' },
-        { targetField: 'campo_inventado', draft: 'x', whatItDecides: 'nada' },
-      ],
+      consideredFields: ['audience', 'geography', 'campo_inventado', 'audience'],
     });
 
     expect(value.situationRead).toBe('A pessoa descreveu um evento aberto, sem dizer onde acontece.');
     expect(value.assumptionsAvoided).toHaveLength(2);
-    expect(value.candidateQuestions.map((item) => item.targetField)).toEqual(['audience', 'geography']);
+    expect(value.consideredFields).toEqual(['audience', 'geography']);
   });
 
   it('does not presume a SENAI-SP venue or an industry audience, and asks for varied wording', async () => {

@@ -23,7 +23,7 @@ export const nextQuestionSchema = Object.freeze({
   additionalProperties: false,
   required: [
     'situationRead', 'fieldsSatisfied', 'factsExtracted', 'remainingGaps', 'assumptionsAvoided',
-    'candidateQuestions', 'chosenBecause', 'shouldStop', 'stopReason', 'targetField',
+    'consideredFields', 'chosenBecause', 'shouldStop', 'stopReason', 'targetField',
     'prompt', 'helper', 'example', 'answerKind', 'reasonTag', 'dimensionsCovered', 'adaptationExplanation',
   ],
   properties: {
@@ -35,22 +35,12 @@ export const nextQuestionSchema = Object.freeze({
     // perfil do público). Declarar o pressuposto é o que transforma um palpite
     // em pergunta.
     assumptionsAvoided: { type: 'array', items: { type: 'string' } },
-    // Duas a quatro perguntas possíveis, de ângulos diferentes, antes de
-    // escolher uma. Sem alternativas escritas, o modelo tende a repetir a
-    // mesma fórmula de pergunta a cada turno.
-    candidateQuestions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['targetField', 'draft', 'whatItDecides'],
-        properties: {
-          targetField: { type: 'string', enum: INTERVIEW_TARGET_FIELDS },
-          draft: { type: 'string' },
-          whatItDecides: { type: 'string' },
-        },
-      },
-    },
+    // Os campos que o modelo pesou antes de escolher um. Já foram rascunhos de
+    // pergunta com justificativa por item; virou uma lista de campos porque o
+    // schema aninhado custava caro na decodificação restrita — dois modelos
+    // diferentes estouraram 45s com ele. Pesar alternativas continua sendo
+    // exigido; escrevê-las por extenso não era o que produzia a escolha.
+    consideredFields: { type: 'array', items: { type: 'string', enum: INTERVIEW_TARGET_FIELDS } },
     chosenBecause: { type: 'string' },
     shouldStop: { type: 'boolean' },
     stopReason: { type: 'string' },
@@ -117,15 +107,8 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
     ? value.assumptionsAvoided.map((item) => text(item, 180)).filter(Boolean).slice(0, 6) : [];
   // O raciocínio serve para escolher a pergunta e para explicar a escolha no
   // trace; ele nunca vira texto exibido ao usuário.
-  const candidateQuestions = Array.isArray(value.candidateQuestions)
-    ? value.candidateQuestions
-      .map((item) => ({
-        targetField: text(item?.targetField, 80),
-        draft: text(item?.draft, 600),
-        whatItDecides: text(item?.whatItDecides, 180),
-      }))
-      .filter((item) => INTERVIEW_TARGET_FIELDS.includes(item.targetField) && item.draft)
-      .slice(0, 4)
+  const consideredFields = Array.isArray(value.consideredFields)
+    ? [...new Set(value.consideredFields.filter((item) => INTERVIEW_TARGET_FIELDS.includes(item)))].slice(0, 4)
     : [];
   const answerKind = ['text', 'textarea', 'multiline'].includes(nested.answerKind) ? nested.answerKind : 'textarea';
   const normalized = {
@@ -149,7 +132,7 @@ export function normalizeQuestion(value, allowedTargetFields = INTERVIEW_TARGET_
     remainingGaps,
     situationRead: text(value.situationRead, 300),
     assumptionsAvoided,
-    candidateQuestions,
+    consideredFields,
     chosenBecause: text(value.chosenBecause, 300),
     adaptationExplanation: text(value.adaptationExplanation, 300),
   };
@@ -163,7 +146,7 @@ function transcriptFor(state) {
   const source = Array.isArray(state.transcript) ? state.transcript : Array.isArray(state.history) ? state.history : [];
   let total = 0;
   const output = [];
-  for (const entry of source.slice(-20)) {
+  for (const entry of source.slice(-12)) {
     const item = {
       turn: Number(entry.turn || output.length + 1),
       displayedQuestion: text(entry.displayedQuestion || entry.prompt || entry.question || '', 600),
@@ -172,7 +155,7 @@ function transcriptFor(state) {
       dimensions: Array.isArray(entry.dimensions) ? entry.dimensions.filter((d) => INTERVIEW_DIMENSIONS.includes(d)) : [],
     };
     const length = JSON.stringify(item).length;
-    if (total + length > 24000) break;
+    if (total + length > 8000) break;
     output.push(item);
     total += length;
   }
@@ -213,7 +196,7 @@ function interviewPrompt(state) {
     limits: {
       minQuestions: Number(state.minQuestions) || 4,
       maxQuestions: Number(state.maxQuestions) || 12,
-      aggregateCharacters: 24000,
+      aggregateCharacters: 8000,
     },
   };
   return [
@@ -224,8 +207,8 @@ function interviewPrompt(state) {
     '1) situationRead: em uma frase curta, o que a última resposta realmente disse e o que ela deixou em aberto.',
     '2) fieldsSatisfied: todo campo que a última resposta já respondeu, mesmo sem ter sido perguntado, com o valor em texto e a confiança de 0 a 1. Um campo em fieldsSatisfied ou em coveredFields NÃO pode ser perguntado de novo, nem com outras palavras.',
     '3) assumptionsAvoided: o que você precisaria supor para pular uma pergunta — local, público, formato, quem paga, quem organiza. Cada suposição dessas é candidata a virar pergunta em vez de virar palpite.',
-    '4) candidateQuestions: duas ou três perguntas possíveis, cada uma com um targetField DIFERENTE, e o que cada uma decide no ranking. Rascunhos curtos: uma frase cada.',
-    '5) chosenBecause: por que a pergunta escolhida muda mais a recomendação do que as outras candidatas. Escolha pelo que ainda está indefinido e pesa na decisão, não pela ordem de uma lista.',
+    '4) consideredFields: dois ou três targetFields diferentes que valeria a pena perguntar agora — as alternativas reais, não a lista inteira.',
+    '5) chosenBecause: por que o campo escolhido muda mais a recomendação do que os outros que você considerou. Escolha pelo que ainda está indefinido e pesa na decisão, não pela ordem de uma lista.',
     '',
     'PRESSUPOSTOS QUE VOCÊ NÃO PODE FAZER:',
     '- Local: um evento, visita, oficina ou reunião pode acontecer em qualquer lugar — numa unidade do SENAI-SP, na sede do parceiro, em outra cidade, em outro país, num espaço neutro ou totalmente online. Nunca escreva a pergunta, o helper ou o exemplo como se fosse "aqui na escola", "na nossa unidade" ou "na sua escola". Se o local muda a viabilidade da escolha, PERGUNTE onde acontece.',
@@ -239,7 +222,7 @@ function interviewPrompt(state) {
     '- Retome a situação, o vocabulário e os detalhes que a pessoa deu. Nunca reutilize uma frase genérica nem cole um prefixo pronto na frente de uma pergunta de formulário.',
     '- Se a resposta anterior foi vaga ou "não sei", faça uma pergunta de descoberta concreta e fácil, com um exemplo tirado do próprio contexto dela — não repita a mesma pergunta em outras palavras.',
     '',
-    'Escolha somente um targetField do enum, igual ao de uma das candidateQuestions. Não invente fatos e não recomende stakeholders.',
+    'Escolha somente um targetField do enum, e ele precisa estar em consideredFields. Não invente fatos e não recomende stakeholders.',
     'A pessoa está esperando na tela: os campos de raciocínio são notas curtas para você escolher bem, não um texto para ninguém ler. Seja breve neles.',
     'prompt, helper e example são o único texto que a pessoa lê: use uma frase simples em cada um e não deixe o raciocínio dos campos anteriores vazar para eles. Responda somente no JSON schema.',
     `Não encerre antes de ${payload.limits.minQuestions} perguntas ou com campo obrigatório ausente em remainingRequiredFields; nunca ultrapasse ${payload.limits.maxQuestions}.`,
@@ -260,7 +243,7 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
     // contra o mesmo teto. Com 1200 a resposta chegava cortada no meio. Folga
     // suficiente para caber, sem convidar o modelo a escrever um ensaio: cada
     // token gerado é tempo que alguém passa olhando para uma tela parada.
-    maxOutputTokens: Number(process.env.INTERVIEW_MAX_OUTPUT_TOKENS) || 2000,
+    maxOutputTokens: Number(process.env.INTERVIEW_MAX_OUTPUT_TOKENS) || 1400,
     // Redigir pergunta não é extração: com temperatura de extração as perguntas
     // saíam parecidas entre si e entre sessões.
     temperature: Number(process.env.INTERVIEW_TEMPERATURE || 0.7),
