@@ -26,29 +26,29 @@ const CONTEXT_SIGNALS = Object.freeze([
 
 const CATEGORY_EXAMPLES = Object.freeze({
   researcher: Object.freeze({
-    context: 'Ex.: uma iniciativa do SENAI-SP que precisa de conhecimento especializado e evidências públicas.',
+    context: 'Ex.: uma iniciativa que precisa de conhecimento especializado e evidências públicas; diga onde ela acontece e para quem.',
     themes: 'Ex.: educação profissional, competências técnicas, inovação e relação entre formação e trabalho.',
-    audience: 'Ex.: gestores de educação, docentes, pesquisadores e representantes da indústria paulista.',
+    audience: 'Ex.: gestores, docentes, estudantes, pesquisadores, empresas ou público externo — de qualquer setor.',
     desired_contribution: 'Ex.: trazer evidências, indicar caminhos de pesquisa e traduzir achados para a prática.',
-    geography: 'Ex.: Brasil e exterior, desde que haja possibilidade de interação remota em português ou inglês.',
+    geography: 'Ex.: acontece em São Paulo, mas participação remota do Brasil ou do exterior serve, em português ou inglês.',
     timeframe: 'Ex.: precisamos identificar contatos nas próximas seis semanas.',
     constraints: 'Ex.: orçamento limitado e necessidade de trabalhar somente com informações públicas.',
   }),
   school: Object.freeze({
     context: 'Ex.: uma comparação entre instituições de educação profissional para orientar uma decisão do SENAI-SP.',
     themes: 'Ex.: currículo, aprendizagem prática, empregabilidade, parceria com empresas e qualidade da formação.',
-    audience: 'Ex.: equipe de gestão, coordenação pedagógica, docentes e empresas parceiras.',
+    audience: 'Ex.: equipe de gestão, coordenação pedagógica, docentes, estudantes ou parceiros externos.',
     desired_contribution: 'Ex.: compartilhar práticas verificáveis, indicadores e possibilidades de cooperação institucional.',
-    geography: 'Ex.: São Paulo, Brasil ou uma referência internacional comparável.',
+    geography: 'Ex.: em uma unidade do SENAI-SP, na sede da instituição parceira, em outra cidade ou de forma remota.',
     timeframe: 'Ex.: precisamos preparar a análise para uma reunião no próximo mês.',
     constraints: 'Ex.: priorizar fontes institucionais e organizações com informações públicas suficientes.',
   }),
   organization: Object.freeze({
     context: 'Ex.: uma possível articulação com empresa, órgão público, associação, fundação ou rede ligada à indústria.',
     themes: 'Ex.: desenvolvimento industrial, qualificação profissional, inovação, sustentabilidade e inclusão produtiva.',
-    audience: 'Ex.: lideranças institucionais, equipes técnicas e áreas de educação ou desenvolvimento econômico.',
+    audience: 'Ex.: lideranças institucionais, equipes técnicas, gestão pública, comunidade ou áreas de educação.',
     desired_contribution: 'Ex.: oferecer rede, dados, infraestrutura, expertise ou capacidade de executar uma iniciativa.',
-    geography: 'Ex.: preferência por São Paulo, mas parcerias remotas também podem ser consideradas.',
+    geography: 'Ex.: preferência por São Paulo, mas o encontro pode ser na sede do parceiro, em outro espaço ou remoto.',
     timeframe: 'Ex.: precisamos chegar a uma lista inicial antes do próximo ciclo de planejamento.',
     constraints: 'Ex.: não há orçamento definido e toda a triagem deve usar informações públicas.',
   }),
@@ -57,17 +57,17 @@ const CATEGORY_EXAMPLES = Object.freeze({
 const OBJECTIVE_EXAMPLES = Object.freeze({
   speaker: Object.freeze({
     researcher: Object.freeze({
-      context: 'Ex.: uma palestra, mesa-redonda ou aula aberta sobre um desafio atual da indústria e da educação profissional.',
+      context: 'Ex.: uma palestra, mesa-redonda ou aula aberta sobre um desafio atual; indique o público e onde acontece.',
       communication_style: 'Ex.: palestra prática ou mesa-redonda; indique duração, profundidade e o que o público deve levar.',
-      audience: 'Ex.: gestores, docentes, estudantes e representantes da indústria que precisam de exemplos aplicáveis.',
+      audience: 'Ex.: gestores, docentes, estudantes ou convidados externos que precisam de exemplos aplicáveis.',
     }),
     school: Object.freeze({
-      context: 'Ex.: uma participação institucional para compartilhar práticas de formação profissional com a rede do SENAI-SP.',
+      context: 'Ex.: uma participação institucional para compartilhar práticas de formação profissional, presencial ou online.',
       communication_style: 'Ex.: apresentação de caso, visita técnica ou conversa com gestores; indique o formato e o público.',
-      audience: 'Ex.: direção, coordenação pedagógica, docentes e parceiros empresariais.',
+      audience: 'Ex.: direção, coordenação pedagógica, docentes, estudantes e parceiros convidados.',
     }),
     organization: Object.freeze({
-      context: 'Ex.: um painel ou conversa técnica para aproximar a organização de uma agenda da indústria paulista.',
+      context: 'Ex.: um painel ou conversa técnica para aproximar a organização de uma agenda setorial, pública ou educacional.',
       communication_style: 'Ex.: painel executivo, fala técnica ou conversa de trabalho; indique o formato e o público.',
       audience: 'Ex.: lideranças, equipes técnicas e convidados que podem transformar a conversa em colaboração.',
     }),
@@ -82,7 +82,7 @@ const OBJECTIVE_EXAMPLES = Object.freeze({
       partnership_model: 'Ex.: intercâmbio de docentes, currículo conjunto, laboratório compartilhado ou projeto-piloto.',
     }),
     organization: Object.freeze({
-      context: 'Ex.: uma iniciativa conjunta para desenvolver competências ligadas à competitividade industrial.',
+      context: 'Ex.: uma iniciativa conjunta para desenvolver competências ligadas a um setor produtivo ou a um território.',
       partnership_model: 'Ex.: financiamento, infraestrutura, dados, tecnologia, rede de parceiros ou execução conjunta.',
     }),
   }),
@@ -149,10 +149,10 @@ function contextAwareExample({ questionId, category, objective, context }) {
     return `Ex.: para ${signal.label}, escolha entre palestra, mesa-redonda ou oficina; informe duração, profundidade e público esperado.`;
   }
   if (questionId === 'context' && objective === 'speaker') {
-    return `Ex.: uma participação sobre ${signal.label}, com formato e público definidos para a necessidade do SENAI-SP.`;
+    return `Ex.: uma participação sobre ${signal.label}; diga o formato, para quem é e em que lugar acontece.`;
   }
   if (questionId === 'themes') {
-    return `Ex.: ${signal.label}, competências profissionais e aplicações que façam sentido para a indústria paulista.`;
+    return `Ex.: ${signal.label}, competências profissionais e aplicações que façam sentido para o público que você vai reunir.`;
   }
   return null;
 }

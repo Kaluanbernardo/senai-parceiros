@@ -82,6 +82,49 @@ describe('InterviewPlanner', () => {
     expect(rich.askedIds.length).toBeGreaterThanOrEqual(MIN_QUESTIONS);
   });
 
+  it('asks where the activity happens instead of assuming a SENAI-SP unit', () => {
+    let state = start({ category: 'organization', objective: 'speaker' });
+    const prompts = [];
+    while (state.currentQuestion && prompts.length < MAX_QUESTIONS) {
+      prompts.push(`${state.currentQuestion.prompt} ${state.currentQuestion.helper}`);
+      state = answerAndNext(state, 'Resposta suficiente');
+    }
+    const geography = prompts.find((prompt) => /idioma/i.test(prompt));
+
+    expect(geography).toMatch(/onde/i);
+    // O local é uma pergunta, não um pressuposto: pode ser a sede do parceiro,
+    // outro espaço, outra cidade ou online.
+    expect(geography).toMatch(/sede do parceiro|outro espaço|online/i);
+  });
+
+  it('does not presume that the audience is made of industry workers', () => {
+    let state = start({ category: 'researcher', objective: 'speaker' });
+    const texts = [];
+    while (state.currentQuestion && texts.length < MAX_QUESTIONS) {
+      texts.push(`${state.currentQuestion.prompt} ${state.currentQuestion.helper} ${state.currentQuestion.example}`);
+      state = answerAndNext(state, 'Resposta suficiente');
+    }
+    const audience = texts.find((text) => /público ou beneficiário/i.test(text));
+
+    expect(audience).toMatch(/estudantes|gestão pública|comunidade|convidados externos/i);
+    expect(audience).not.toMatch(/representantes da indústria/i);
+  });
+
+  it('varies the wording between consecutive questions instead of cycling prefixes', () => {
+    let state = start({ category: 'organization', objective: 'project_partner' });
+    const openings = [];
+    state = answerAndNext(state, 'Queremos um projeto piloto de economia circular com um parceiro.');
+    while (state.currentQuestion && openings.length < 6) {
+      openings.push(state.currentQuestion.prompt.slice(0, 18));
+      state = answerAndNext(state, 'Ainda estamos definindo, mas o foco é reaproveitamento de resíduos.');
+    }
+
+    for (let index = 1; index < openings.length; index += 1) {
+      expect(openings[index]).not.toBe(openings[index - 1]);
+    }
+    expect(new Set(openings).size).toBeGreaterThan(2);
+  });
+
   it('reopens the previous question with its answer and recomputes coverage', () => {
     let state = start({ category: 'researcher', objective: 'speaker' });
     const firstPrompt = state.currentQuestion.prompt;

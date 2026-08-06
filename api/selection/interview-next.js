@@ -196,7 +196,11 @@ export default async function handler(req, res) {
         semanticFacts: [...new Set([...(enrichedState.semanticFacts || []), ...(ai.factsExtracted || [])])].slice(-30),
         remainingGaps: ai.remainingGaps || [],
       }, question);
-      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
+      // O raciocínio da escolha volta na trace, junto do que já era devolvido a
+      // partir das respostas (factsExtracted, fieldsSatisfied): é a mesma sessão
+      // e o mesmo usuário autenticado, e é o que torna auditável *por que* esta
+      // pergunta veio agora. Nada disso é exibido como texto da pergunta.
+      return res.status(200).json({ state: next, question, trace: { ...ai.trace, fallback: false, degraded: false, targetField: question.targetField, dimensions: question.dimensions, reasonTag: question.reasonTag, adaptationExplanation: ai.adaptationExplanation || '', situationRead: ai.situationRead || '', assumptionsAvoided: ai.assumptionsAvoided || [], chosenBecause: ai.chosenBecause || '', consideredFields: (ai.candidateQuestions || []).map((item) => item.targetField), remainingGaps: ai.remainingGaps, factsExtracted: ai.factsExtracted, fieldsSatisfied: (ai.fieldsSatisfied || []).map((item) => item.field), coverage, budget } });
     } catch (error) {
       const reason = error?.name === 'AbortError' ? 'provider_timeout' : String(error?.message || 'provider_error').slice(0, 80);
       return res.status(200).json(localFallback(answeredState, reason));

@@ -35,8 +35,8 @@ const commonQuestions = [
   {
     id: 'audience',
     label: 'Quem é o público ou beneficiário principal?',
-    helper: 'Isso ajuda a diferenciar um especialista técnico de uma instituição com alcance amplo.',
-    example: 'Ex.: gestores de educação, docentes do SENAI-SP e representantes da indústria.',
+    helper: 'Pode ser qualquer público: estudantes, docentes, empresas de qualquer setor, gestão pública, comunidade ou convidados externos.',
+    example: 'Ex.: gestores de educação, docentes, estudantes e convidados externos.',
     kind: 'textarea',
   },
   {
@@ -48,9 +48,9 @@ const commonQuestions = [
   },
   {
     id: 'geography',
-    label: 'Há alguma preferência geográfica ou de idioma?',
-    helper: 'A resposta pode ser Brasil, estado de São Paulo, exterior, remoto ou sem preferência.',
-    example: 'Ex.: preferência por São Paulo, mas participação remota internacional é possível.',
+    label: 'Onde isso deve acontecer, e há preferência de lugar ou idioma?',
+    helper: 'Pode ser uma unidade do SENAI-SP, a sede do parceiro, outro espaço, outra cidade ou país, remoto — ou sem preferência.',
+    example: 'Ex.: encontro em São Paulo, mas participação remota internacional é possível.',
     kind: 'text',
   },
   {

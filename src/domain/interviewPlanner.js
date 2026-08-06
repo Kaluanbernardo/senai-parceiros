@@ -42,12 +42,12 @@ const QUESTION_BANK = Object.freeze([
   },
   {
     id: 'audience', stage: 'format', dimensions: ['impact', 'collaboration'], kind: 'textarea', required: true,
-    prompt: 'Quem é o público ou beneficiário principal?', helper: 'Isso ajuda a diferenciar profundidade técnica, linguagem e alcance.',
+    prompt: 'Quem é o público ou beneficiário principal?', helper: 'Pode ser qualquer público: estudantes, docentes, empresas de qualquer setor, gestão pública, comunidade ou convidados externos.',
     reasonTag: 'identificar_publico',
   },
   {
     id: 'communication_style', stage: 'format', dimensions: ['collaboration', 'feasibility'], objectives: ['speaker'], kind: 'textarea',
-    prompt: 'Que formato e estilo de participação seriam mais úteis?', helper: 'Considere palestra, mesa-redonda, oficina, conversa técnica e duração.',
+    prompt: 'Que formato e estilo de participação seriam mais úteis?', helper: 'Considere palestra, mesa-redonda, oficina ou conversa técnica, a duração e se é presencial, remota ou híbrida.',
     reasonTag: 'definir_formato',
   },
   {
@@ -72,7 +72,9 @@ const QUESTION_BANK = Object.freeze([
   },
   {
     id: 'geography', stage: 'feasibility', dimensions: ['feasibility', 'collaboration'], required: true, kind: 'text',
-    prompt: 'Há alguma preferência geográfica ou de idioma?', helper: 'Pode ser São Paulo, Brasil, exterior, remoto ou sem preferência.',
+    // O local não é dado: a atividade pode acontecer numa unidade do SENAI-SP,
+    // na sede do parceiro, em outra cidade ou país, num espaço neutro ou online.
+    prompt: 'Onde isso deve acontecer, e há preferência de lugar ou idioma?', helper: 'Pode ser uma unidade do SENAI-SP, a sede do parceiro, outro espaço, outra cidade ou país, online — ou sem preferência.',
     reasonTag: 'definir_geografia',
   },
   {
@@ -112,12 +114,12 @@ const QUESTION_BANK = Object.freeze([
   },
   {
     id: 'themes_discovery', stage: 'strategic_fit', dimensions: ['alignment'], kind: 'textarea', followUpFor: ['themes'],
-    prompt: 'Qual problema da indústria ou da formação profissional motivou essa busca?', helper: 'Não precisa nomear um tema técnico; descreva o desafio em suas palavras.',
+    prompt: 'Qual problema concreto motivou essa busca?', helper: 'Não precisa nomear um tema técnico nem um setor; descreva o desafio em suas palavras.',
     reasonTag: 'descobrir_tema',
   },
   {
     id: 'audience_discovery', stage: 'format', dimensions: ['impact', 'collaboration'], kind: 'textarea', followUpFor: ['audience'],
-    prompt: 'Quem seria mais afetado ou beneficiado por esse trabalho?', helper: 'Pense em pessoas, equipes, estudantes, empresas ou territórios.',
+    prompt: 'Quem seria mais afetado ou beneficiado por esse trabalho?', helper: 'Pense em pessoas, equipes, estudantes, empresas, órgãos públicos ou territórios — dentro ou fora do SENAI-SP.',
     reasonTag: 'descobrir_publico',
   },
   {
@@ -173,13 +175,19 @@ const CATEGORY_REQUIRED = Object.freeze({
  * todo mundo.
  */
 const OPENERS = Object.freeze({
-  'researcher:speaker': { prompt: 'Conte o que vai acontecer: que encontro ou conversa você quer que essa pessoa ajude a construir?', helper: 'Descreva o evento, o momento e o que precisa sair dali.' },
+  'researcher:speaker': { prompt: 'Conte o que vai acontecer: que encontro ou conversa você quer que essa pessoa ajude a construir?', helper: 'Descreva o evento, onde ele acontece, para quem e o que precisa sair dali.' },
   'researcher:research_support': { prompt: 'Que pergunta ou decisão de pesquisa está travada e precisa de alguém de fora?', helper: 'Explique o estudo ou a dúvida com suas palavras.' },
   'researcher:benchmark': { prompt: 'O que você quer entender comparando com o trabalho de outra pessoa?', helper: 'Descreva a prática ou abordagem que está tentando avaliar.' },
+  'researcher:project_partner': { prompt: 'Que trabalho você quer desenvolver junto com um especialista?', helper: 'Descreva o projeto e o que hoje falta para ele sair do papel.' },
+  'researcher:guided': { prompt: 'Que decisão ou impasse fez você procurar um especialista?', helper: 'Descreva a situação; não precisa saber ainda que tipo de pessoa procura.' },
   'school:benchmark': { prompt: 'Que decisão do SENAI-SP você quer informar comparando com outras instituições?', helper: 'Descreva o que está em jogo, não só o que quer comparar.' },
   'school:project_partner': { prompt: 'O que você quer construir junto com outra instituição de formação?', helper: 'Fale do projeto ou da mudança pretendida.' },
+  'school:speaker': { prompt: 'Que participação você quer de outra instituição de ensino, e em que momento?', helper: 'Descreva a atividade, onde ela acontece e quem estará presente.' },
+  'school:research_support': { prompt: 'Que informação ou prática de outra instituição ajudaria a sustentar esse estudo?', helper: 'Descreva a pesquisa e o que hoje falta comprovar.' },
   'organization:project_partner': { prompt: 'Que iniciativa você quer tirar do papel com apoio de outra organização?', helper: 'Descreva a iniciativa e o que falta hoje para ela avançar.' },
-  'organization:speaker': { prompt: 'Em que conversa ou evento essa organização entraria, e por quê?', helper: 'Descreva o momento e o que você espera que mude depois.' },
+  'organization:speaker': { prompt: 'Em que conversa ou evento essa organização entraria, e por quê?', helper: 'Descreva o momento, o lugar e o que você espera que mude depois.' },
+  'organization:benchmark': { prompt: 'Que prática de outra organização você quer entender antes de decidir?', helper: 'Descreva a decisão que está por trás da comparação.' },
+  'organization:research_support': { prompt: 'Que apoio de uma organização faria essa pesquisa avançar?', helper: 'Pode ser dado, acesso, experiência de setor ou validação; descreva o que falta.' },
   researcher: { prompt: 'Em que situação você pretende envolver um pesquisador ou especialista?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
   school: { prompt: 'Em que situação você pretende envolver outra escola ou instituição de EPT?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
   organization: { prompt: 'Em que situação você pretende envolver uma organização parceira?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
@@ -195,7 +203,29 @@ const PROMPT_VARIANTS = Object.freeze([
   (focus, prompt) => `Partindo de “${focus}”, ${lowerFirst(prompt)}`,
   (focus, prompt) => `Ainda sobre “${focus}”: ${lowerFirst(prompt)}`,
   (focus, prompt) => `Com “${focus}” em vista, ${lowerFirst(prompt)}`,
+  (focus, prompt) => `“${focus}” muda o que faz sentido aqui. ${prompt}`,
+  (focus, prompt) => `Antes de seguir com “${focus}”, ${lowerFirst(prompt)}`,
+  (focus, prompt) => `Para não supor nada a partir de “${focus}”: ${lowerFirst(prompt)}`,
+  (focus, prompt) => `Você mencionou “${focus}”. Nesse caso, ${lowerFirst(prompt)}`,
 ]);
+
+/** Hash estável do id, só para espalhar as variações entre campos diferentes. */
+function variantSeed(value) {
+  let seed = 0;
+  for (const char of String(value || '')) seed = (seed * 31 + char.codePointAt(0)) % 9973;
+  return seed;
+}
+
+/**
+ * A variação depende do campo e do turno, e nunca repete a construção usada na
+ * pergunta anterior — era isso que fazia a entrevista soar como um formulário
+ * com quatro prefixos girando em ciclo.
+ */
+function variantFor(state, question) {
+  const index = (variantSeed(question.id) + (state.askedIds?.length || 0) * 3) % PROMPT_VARIANTS.length;
+  const last = Number.isInteger(state.lastVariantIndex) ? state.lastVariantIndex : -1;
+  return index === last ? (index + 1) % PROMPT_VARIANTS.length : index;
+}
 
 function lowerFirst(text) {
   const value = String(text || '');
@@ -358,10 +388,11 @@ function questionForState(question, state) {
   const helper = opener?.helper || question.helper;
   const previousAnswer = answerText(state.answers?.[state.lastAnswered]);
   const focus = focusTermFor(previousAnswer);
-  const variant = PROMPT_VARIANTS[(state.askedIds?.length || 0) % PROMPT_VARIANTS.length];
-  const contextualPrompt = focus && !opener ? variant(focus, basePrompt) : basePrompt;
+  const variantIndex = variantFor(state, question);
+  const contextualPrompt = focus && !opener ? PROMPT_VARIANTS[variantIndex](focus, basePrompt) : basePrompt;
   return {
     ...question,
+    variantIndex: focus && !opener ? variantIndex : null,
     targetField: question.targetField || question.id,
     category: state.category,
     objective: state.objective,
@@ -422,7 +453,8 @@ function withNext(state) {
   if (!nextQuestion) return { ...state, currentQuestion: null, status: 'ready', validation: validationFor(state), progress: { asked: state.askedIds.length, max: MAX_QUESTIONS } };
   const askedIds = addUnique(state.askedIds, nextQuestion.id);
   const questionDefinitions = { ...(state.questionDefinitions || {}), [nextQuestion.id]: questionForState(nextQuestion, state) };
-  return { ...state, askedIds, questionDefinitions, currentQuestion: questionDefinitions[nextQuestion.id], lastStage: nextQuestion.stage, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
+  const definition = questionDefinitions[nextQuestion.id];
+  return { ...state, askedIds, questionDefinitions, currentQuestion: definition, lastStage: nextQuestion.stage, lastVariantIndex: Number.isInteger(definition.variantIndex) ? definition.variantIndex : state.lastVariantIndex, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
 }
 
 export function start({ category, objective, context = '', gaps = [] } = {}) {
@@ -520,6 +552,9 @@ export function back(state) {
     context: (definition.targetField || definition.id) === 'context' ? '' : state.context,
     lastAnswered: history.at(-1)?.questionId,
     lastStage: definition.stage,
+    // A pergunta descartada deixa de contar como construção anterior; sem isso
+    // a próxima redação evitaria uma variação que ninguém chegou a ver.
+    lastVariantIndex: Number.isInteger(definition.variantIndex) ? definition.variantIndex : null,
     currentQuestion: definition,
     status: 'active',
   };

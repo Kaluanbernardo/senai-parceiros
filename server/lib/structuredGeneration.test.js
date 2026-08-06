@@ -74,6 +74,22 @@ describe('structured generation boundary', () => {
     expect(bodies[0].response_format.json_schema.strict).toBe(true);
   });
 
+  it('lets the caller choose the temperature and keeps extraction deterministic by default', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    const fetchMock = vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], temperature: 0.7 });
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], temperature: 9 });
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], temperature: 'quente' });
+    expect(bodies.map((body) => body.temperature)).toEqual([0.15, 0.7, 1.2, 0.15]);
+  });
+
   it('normalizes provider failures without leaking response content', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';

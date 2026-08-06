@@ -10,6 +10,18 @@
 const DEFAULT_OPENAI_MODEL = 'gpt-5-mini';
 const DEFAULT_OPENROUTER_MODEL = 'openrouter/auto';
 const DEFAULT_TRADEOFF = 7;
+/**
+ * Extração e avaliação pedem determinismo. Redação, não: uma entrevista escrita
+ * sempre com a mesma temperatura baixa produz perguntas que se parecem entre si
+ * a cada sessão. Quem escreve pergunta passa a própria temperatura.
+ */
+const DEFAULT_TEMPERATURE = 0.15;
+
+function safeTemperature(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return DEFAULT_TEMPERATURE;
+  return Math.max(0, Math.min(1.2, number));
+}
 
 function providerConfig() {
   const preferred = String(process.env.AI_PROVIDER || '').trim().toLowerCase();
@@ -99,7 +111,7 @@ function providerOptions(provider, model) {
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const providers = providerConfig();
   if (!providers.length) throw new Error('ai_not_configured');
@@ -118,7 +130,7 @@ export async function generateStructured({ task = 'structured_generation', schem
         body: JSON.stringify({
           model: provider.model,
           messages,
-          temperature: 0.15,
+          temperature: safeTemperature(temperature),
           max_tokens: Math.max(200, Math.min(1200, Number(maxOutputTokens) || 700)),
           ...options,
           response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } },

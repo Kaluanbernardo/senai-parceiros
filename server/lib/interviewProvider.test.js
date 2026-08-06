@@ -58,6 +58,60 @@ describe('adaptive interview provider', () => {
     expect(nextQuestionSchema.properties.fieldsSatisfied.items.properties.field.enum).toContain('audience');
   });
 
+  it('makes the model read the situation and weigh alternatives before writing the question', () => {
+    const order = nextQuestionSchema.required;
+    // A geração é sequencial: a leitura da situação e as candidatas precisam
+    // vir antes do texto da pergunta, senão o raciocínio vira justificativa.
+    expect(order.indexOf('situationRead')).toBeLessThan(order.indexOf('prompt'));
+    expect(order.indexOf('candidateQuestions')).toBeLessThan(order.indexOf('prompt'));
+    expect(order.indexOf('assumptionsAvoided')).toBeLessThan(order.indexOf('candidateQuestions'));
+    expect(nextQuestionSchema.properties.candidateQuestions.items.required).toEqual(['targetField', 'draft', 'whatItDecides']);
+
+    const value = normalizeQuestion({
+      ...validResponse,
+      situationRead: 'A pessoa descreveu um evento aberto, sem dizer onde acontece.',
+      assumptionsAvoided: ['o local do evento', 'que o público seja da indústria'],
+      chosenBecause: 'o público define a profundidade técnica esperada',
+      candidateQuestions: [
+        { targetField: 'audience', draft: 'Quem estará na plateia?', whatItDecides: 'profundidade técnica' },
+        { targetField: 'geography', draft: 'Onde isso acontece?', whatItDecides: 'viabilidade de deslocamento' },
+        { targetField: 'campo_inventado', draft: 'x', whatItDecides: 'nada' },
+      ],
+    });
+
+    expect(value.situationRead).toBe('A pessoa descreveu um evento aberto, sem dizer onde acontece.');
+    expect(value.assumptionsAvoided).toHaveLength(2);
+    expect(value.candidateQuestions.map((item) => item.targetField)).toEqual(['audience', 'geography']);
+  });
+
+  it('does not presume a SENAI-SP venue or an industry audience, and asks for varied wording', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const bodies = [];
+    const fetchMock = vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await generateNextQuestionWithProvider({
+      category: 'organization',
+      objective: 'speaker',
+      answers: { context: 'um evento aberto' },
+      transcript: [{ turn: 1, displayedQuestion: 'Em que conversa ou evento essa organização entraria?', answer: 'um evento aberto', targetField: 'context' }],
+      askedIds: ['context'],
+    });
+
+    const prompt = bodies[0].messages.at(-1).content;
+    expect(prompt).toMatch(/pode acontecer em qualquer lugar/i);
+    expect(prompt).toMatch(/n[ãa]o [ée] necessariamente industri[áa]rio/i);
+    expect(prompt).toMatch(/askedPrompts/);
+    expect(prompt).toContain('Em que conversa ou evento essa organização entraria?');
+    // Redigir pergunta com temperatura de extração é o que fazia as perguntas
+    // saírem parecidas entre si.
+    expect(bodies[0].temperature).toBeGreaterThan(0.3);
+  });
+
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'test-key';
