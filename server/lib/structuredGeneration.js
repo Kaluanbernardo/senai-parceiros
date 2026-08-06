@@ -82,6 +82,26 @@ function providerConfig() {
   return order.map((id) => all[id]).filter((item) => item.key && item.endpoint);
 }
 
+/**
+ * Extrai a explicacao do provedor sem carregar corpo arbitrario adiante.
+ *
+ * Só o campo de mensagem de erro, truncado. Se a resposta não for o JSON de
+ * erro esperado, nada é aproveitado: um corpo desconhecido não vira
+ * diagnóstico, vira ruído — e pode carregar o que não deveria sair daqui.
+ */
+async function providerFailureMessage(response) {
+  try {
+    const raw = await response.text();
+    if (!raw || raw.length > 8000) return '';
+    const parsed = JSON.parse(raw);
+    const message = parsed?.error?.message || parsed?.message || '';
+    const reason = parsed?.error?.code || parsed?.error?.type || '';
+    return String([reason, message].filter(Boolean).join(': ') || '').slice(0, 300);
+  } catch {
+    return '';
+  }
+}
+
 function parseJson(content) {
   if (content && typeof content === 'object') return content;
   const text = String(content || '').trim()
@@ -194,7 +214,15 @@ export async function generateStructured({ task = 'structured_generation', schem
           : response.status === 429
             ? 'budget_exceeded'
             : response.status >= 500 ? 'provider_5xx' : 'provider_4xx';
-        throw new Error(code);
+        const failure = new Error(code);
+        failure.status = response.status;
+        // O provedor explica a recusa em texto — schema invalido, nenhum
+        // endpoint compativel, politica de dados — e sem isso o diagnostico
+        // vira tentativa e erro. Fica numa propriedade separada, nunca em
+        // `message`: so a superficie administrativa a le, e o codigo continua
+        // sendo a unica coisa que chega ao usuario e a trace.
+        failure.providerMessage = await providerFailureMessage(response);
+        throw failure;
       }
       const payload = await response.json();
       const choice = payload.choices?.[0];

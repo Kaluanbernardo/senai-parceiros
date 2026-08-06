@@ -15,9 +15,9 @@ function response() {
   };
 }
 
-function request(role = 'admin') {
+function request(role = 'admin', url = '/api/admin?action=ai-check') {
   const token = createSessionToken({ username: 'user', role });
-  return { method: 'GET', headers: { cookie: `senai_session=${encodeURIComponent(token)}` }, socket: { remoteAddress: 'ai-check-test' } };
+  return { method: 'GET', url, headers: { cookie: `senai_session=${encodeURIComponent(token)}` }, socket: { remoteAddress: 'ai-check-test' } };
 }
 
 afterEach(() => {
@@ -58,6 +58,27 @@ describe('GET /api/admin/ai-check', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toMatchObject({ ok: false, reason: 'provider_4xx' });
     expect(JSON.stringify(res.body)).not.toContain('segredo');
+  });
+
+  it('reproduz o contrato da entrevista quando pedido, e conta o que o provedor recusou', async () => {
+    // O schema mínimo prova que a rota funciona; só o schema real prova que o
+    // modelo aceita o contrato da entrevista. Quando os dois divergem, a causa
+    // está no schema — e descobrir isso custava um ciclo inteiro de deploy.
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: false, status: 400, text: async () => JSON.stringify({ error: { code: 'invalid_request', message: 'schema recusado pelo provedor' } }) };
+    }));
+    const res = response();
+
+    await handler(request('admin', '/api/admin?action=ai-check&task=interview'), res);
+
+    expect(bodies[0].response_format.json_schema.name).toBe('adaptive_interview_question');
+    expect(bodies[0].response_format.json_schema.schema.required).toContain('lastAnswerQuality');
+    expect(res.body).toMatchObject({ ok: false, task: 'interview', reason: 'provider_4xx', status: 400 });
+    expect(res.body.providerMessage).toBe('invalid_request: schema recusado pelo provedor');
   });
 
   it('não responde a quem não é admin', async () => {
