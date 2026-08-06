@@ -16,6 +16,14 @@ const DEFAULT_TRADEOFF = 7;
  * a cada sessão. Quem escreve pergunta passa a própria temperatura.
  */
 const DEFAULT_TEMPERATURE = 0.15;
+/**
+ * Teto de saida. Os 1200 anteriores foram dimensionados para um schema bem
+ * menor; com um schema maior — e sobretudo com um modelo de raciocinio, cujos
+ * tokens de pensamento contam contra este mesmo teto — a resposta era cortada
+ * no meio e chegava aqui como JSON invalido. Cortar por engano custa a chamada
+ * inteira, entao o teto e alto e quem chama pede o que precisa.
+ */
+const MAX_OUTPUT_TOKENS = 4000;
 
 /**
  * Nem toda chamada tem o mesmo valor por acerto. Escrever a pergunta da
@@ -80,10 +88,25 @@ function parseJson(content) {
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/```$/i, '')
     .trim();
-  if (!text) throw new Error('invalid_output');
+  // Um modelo de raciocinio pode devolver o pensamento noutro campo e deixar
+  // `content` vazio. Isso nao e o mesmo problema que responder prosa, e a
+  // correcao e outra — o codigo do erro precisa dizer qual dos dois foi.
+  if (!text) throw new Error('empty_output');
   try {
     return JSON.parse(text);
   } catch {
+    // Alguns modelos cercam o JSON de uma frase de cortesia. O objeto ainda
+    // esta inteiro ali; recusar por causa da moldura seria desperdicar uma
+    // resposta boa. Um JSON truncado continua falhando, como deve.
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(text.slice(start, end + 1));
+      } catch {
+        throw new Error('invalid_output');
+      }
+    }
     throw new Error('invalid_output');
   }
 }
@@ -142,7 +165,7 @@ export async function generateStructured({ task = 'structured_generation', schem
           model: provider.model,
           messages,
           temperature: safeTemperature(temperature),
-          max_tokens: Math.max(200, Math.min(1200, Number(maxOutputTokens) || 700)),
+          max_tokens: Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700)),
           ...options,
           response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } },
         }),
@@ -156,8 +179,13 @@ export async function generateStructured({ task = 'structured_generation', schem
         throw new Error(code);
       }
       const payload = await response.json();
-      const content = payload.choices?.[0]?.message?.content;
-      const data = parseJson(content);
+      const choice = payload.choices?.[0];
+      // `length` significa que a resposta bateu no teto de tokens e parou no
+      // meio. Sem distinguir isso de um modelo que ignora o schema, a mesma
+      // mensagem levava a dois diagnosticos opostos: "troque o modelo" quando
+      // bastava dar mais espaco.
+      if (choice?.finish_reason === 'length') throw new Error('output_truncated');
+      const data = parseJson(choice?.message?.content);
       return {
         data,
         trace: {

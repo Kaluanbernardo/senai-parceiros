@@ -255,8 +255,11 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
       { role: 'user', content: interviewPrompt(state) },
     ],
     // O raciocínio (leitura, suposições e candidatas) ocupa espaço antes da
-    // pergunta; com o teto antigo a pergunta podia ser truncada.
-    maxOutputTokens: 1200,
+    // pergunta, e num modelo de raciocínio os tokens de pensamento contam
+    // contra o mesmo teto. Com 1200 a resposta chegava cortada no meio, o que
+    // aparecia como JSON inválido — o custo de um teto folgado é zero quando a
+    // resposta cabe, e a chamada inteira quando não cabe.
+    maxOutputTokens: Number(process.env.INTERVIEW_MAX_OUTPUT_TOKENS) || 3000,
     // Redigir pergunta não é extração: com temperatura de extração as perguntas
     // saíam parecidas entre si e entre sessões.
     temperature: Number(process.env.INTERVIEW_TEMPERATURE || 0.7),
