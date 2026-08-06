@@ -17,6 +17,18 @@ const DEFAULT_TRADEOFF = 7;
  */
 const DEFAULT_TEMPERATURE = 0.15;
 
+/**
+ * Nem toda chamada tem o mesmo valor por acerto. Escrever a pergunta da
+ * entrevista uma vez errado custa a conversa inteira; reescrever um item do
+ * Radar em lote, não. Por isso o equilíbrio custo/qualidade é por chamada, e
+ * não uma constante do sistema.
+ */
+function safeTradeoff(value) {
+  const number = Number(value ?? process.env.OPENROUTER_COST_QUALITY_TRADEOFF ?? DEFAULT_TRADEOFF);
+  if (!Number.isFinite(number)) return DEFAULT_TRADEOFF;
+  return Math.max(0, Math.min(10, Math.round(number)));
+}
+
 function safeTemperature(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return DEFAULT_TEMPERATURE;
@@ -94,14 +106,13 @@ function providerHeaders(provider) {
  * alongside a pinned model lets OpenRouter route somewhere else, which would
  * silently defeat a deliberate choice of model — including a free-only setup.
  */
-function providerOptions(provider, model) {
+function providerOptions(provider, model, costQualityTradeoff) {
   if (provider !== 'openrouter') return {};
   const base = { provider: { require_parameters: true } };
   if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
-  const tradeoff = Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF))));
   return {
     ...base,
-    plugins: [{ id: 'auto-router', cost_quality_tradeoff: tradeoff }],
+    plugins: [{ id: 'auto-router', cost_quality_tradeoff: safeTradeoff(costQualityTradeoff) }],
   };
 }
 
@@ -111,14 +122,14 @@ function providerOptions(provider, model) {
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const providers = providerConfig();
   if (!providers.length) throw new Error('ai_not_configured');
   let lastError = null;
   for (const provider of providers) {
     try {
-      const options = providerOptions(provider.id, provider.model);
+      const options = providerOptions(provider.id, provider.model, costQualityTradeoff);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,
@@ -155,7 +166,7 @@ export async function generateStructured({ task = 'structured_generation', schem
           usage: payload.usage || null,
           task,
           fallback: false,
-          costQualityTradeoff: provider.id === 'openrouter' ? Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) : null,
+          costQualityTradeoff: provider.id === 'openrouter' ? safeTradeoff(costQualityTradeoff) : null,
         },
       };
     } catch (error) {

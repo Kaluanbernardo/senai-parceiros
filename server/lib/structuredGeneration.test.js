@@ -13,6 +13,7 @@ afterEach(() => {
   delete process.env.AI_PROVIDER;
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENROUTER_MODEL;
+  delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
   delete process.env.OPENAI_API_KEY;
 });
 
@@ -88,6 +89,44 @@ describe('structured generation boundary', () => {
     await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], temperature: 9 });
     await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], temperature: 'quente' });
     expect(bodies.map((body) => body.temperature)).toEqual([0.15, 0.7, 1.2, 0.15]);
+  });
+
+  it('lets a quality-sensitive call ask the router for more quality than the rest of the system', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    process.env.OPENROUTER_COST_QUALITY_TRADEOFF = '7';
+    const bodies = [];
+    const fetchMock = vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const traces = [];
+    traces.push((await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).trace);
+    traces.push((await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], costQualityTradeoff: 10 })).trace);
+    traces.push((await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], costQualityTradeoff: 99 })).trace);
+
+    expect(bodies.map((body) => body.plugins[0].cost_quality_tradeoff)).toEqual([7, 10, 10]);
+    // O valor realmente enviado fica auditável na trace, não só na env.
+    expect(traces.map((trace) => trace.costQualityTradeoff)).toEqual([7, 10, 10]);
+  });
+
+  it('never sends the router preference alongside a pinned model', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'deepseek/pinned-model';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], costQualityTradeoff: 10 });
+
+    // Com modelo fixo não há roteador a instruir: pedir qualidade aqui seria
+    // autorizar a troca do modelo escolhido de propósito.
+    expect(bodies[0].plugins).toBeUndefined();
+    expect(bodies[0].model).toBe('deepseek/pinned-model');
   });
 
   it('normalizes provider failures without leaking response content', async () => {

@@ -260,6 +260,11 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
     // Redigir pergunta não é extração: com temperatura de extração as perguntas
     // saíam parecidas entre si e entre sessões.
     temperature: Number(process.env.INTERVIEW_TEMPERATURE || 0.7),
+    // A entrevista é a chamada sensível a qualidade: uma pergunta ruim custa a
+    // conversa inteira, e o roteador não conhece a barra desta tarefa. Ela
+    // pede o máximo de qualidade por padrão, enquanto o resto do sistema segue
+    // o equilíbrio geral. Só vale para openrouter/auto.
+    costQualityTradeoff: process.env.INTERVIEW_COST_QUALITY_TRADEOFF ?? 10,
     signal,
   });
   const result = normalizeQuestion(generated.data);

@@ -25,6 +25,8 @@ afterEach(() => {
   delete process.env.AZURE_OPENAI_ENDPOINT;
   delete process.env.AZURE_OPENAI_API_KEY;
   delete process.env.AZURE_OPENAI_DEPLOYMENT;
+  delete process.env.OPENROUTER_MODEL;
+  delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
 });
 
 describe('adaptive interview provider', () => {
@@ -110,6 +112,23 @@ describe('adaptive interview provider', () => {
     // Redigir pergunta com temperatura de extração é o que fazia as perguntas
     // saírem parecidas entre si.
     expect(bodies[0].temperature).toBeGreaterThan(0.3);
+  });
+
+  it('asks the auto-router for maximum quality, because a bad question costs the whole conversation', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    process.env.OPENROUTER_COST_QUALITY_TRADEOFF = '7';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
+    }));
+
+    const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+
+    expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(10);
+    expect(result.trace.costQualityTradeoff).toBe(10);
   });
 
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {
