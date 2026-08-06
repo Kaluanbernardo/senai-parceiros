@@ -14,6 +14,7 @@ afterEach(() => {
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENROUTER_MODEL;
   delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
+  delete process.env.OPENROUTER_REASONING;
   delete process.env.OPENAI_API_KEY;
 });
 
@@ -127,6 +128,80 @@ describe('structured generation boundary', () => {
     // autorizar a troca do modelo escolhido de propósito.
     expect(bodies[0].plugins).toBeUndefined();
     expect(bodies[0].model).toBe('deepseek/pinned-model');
+  });
+
+  it('separa resposta truncada de modelo que ignora o schema', async () => {
+    // Os dois chegavam como invalid_output e levavam a diagnósticos opostos:
+    // "troque o modelo" quando bastava dar mais espaço de saída.
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ finish_reason: 'length', message: { content: '{"value":"ok' } }] }),
+    })));
+
+    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('output_truncated');
+  });
+
+  it('separa conteúdo vazio de conteúdo malformado', async () => {
+    // Um modelo de raciocínio pode devolver o pensamento noutro campo e deixar
+    // `content` vazio; a correção disso não é a mesma de uma resposta em prosa.
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ finish_reason: 'stop', message: { content: '' } }] }),
+    })));
+
+    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('empty_output');
+  });
+
+  it('aproveita o JSON quando o modelo o cerca de uma frase de cortesia', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ finish_reason: 'stop', message: { content: 'Claro! Aqui está:\n{"value":"ok"}\nEspero ter ajudado.' } }] }),
+    })));
+
+    const result = await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+
+    expect(result.data).toEqual({ value: 'ok' });
+  });
+
+  it('deixa a entrevista pedir mais espaço de saída do que o padrão antigo', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 3000 });
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 99999 });
+
+    expect(bodies.map((body) => body.max_tokens)).toEqual([3000, 4000]);
+  });
+
+  it('desliga o raciocínio interno, que o schema já exige de forma explícita', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    process.env.OPENROUTER_REASONING = 'low';
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    process.env.OPENROUTER_REASONING = 'talvez';
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+
+    // Pensar duas vezes custa o dobro do tempo e só metade fica registrada.
+    expect(bodies.map((body) => body.reasoning)).toEqual([{ enabled: false }, { effort: 'low' }, { enabled: false }]);
+    delete process.env.OPENROUTER_REASONING;
   });
 
   it('normalizes provider failures without leaking response content', async () => {

@@ -3,6 +3,7 @@ import catalogImportCommit from '../server/routes/admin/catalog-import-commit.js
 import catalogImportPreview from '../server/routes/admin/catalog-import-preview.js';
 import catalogImportRollback from '../server/routes/admin/catalog-import-rollback.js';
 import adminStatus from '../server/routes/admin/status.js';
+import adminAiCheck from '../server/routes/admin/ai-check.js';
 
 const handlers = {
   'catalog-import-batches': catalogImportBatches,
@@ -10,6 +11,7 @@ const handlers = {
   'catalog-import-preview': catalogImportPreview,
   'catalog-import-rollback': catalogImportRollback,
   status: adminStatus,
+  'ai-check': adminAiCheck,
 };
 
 export default async function handler(req, res) {

@@ -119,6 +119,28 @@ describe('POST /api/selection/interview/next', () => {
     expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'provider_question_rejected', retryable: true });
   });
 
+  it('deixa reperguntar o campo que uma resposta fora de propósito não respondeu', async () => {
+    // Sem isto o modelo fazia a coisa certa — voltar ao que "comer batata" não
+    // respondeu — e o servidor recusava a pergunta por já haver texto no campo.
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = InterviewPlanner.start({ category: 'researcher', objective: 'speaker' });
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      lastAnswerQuality: 'off_topic',
+      targetField: 'context',
+      question: { ...providerAnswer.question, targetField: 'context', prompt: 'Você escreveu “comer batata”. Que situação de trabalho você tem em mente?' },
+      fieldsSatisfied: [],
+    });
+
+    const res = response();
+    await handler(request(state, 'Comer batata'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.question.targetField).toBe('context');
+    expect(res.body.question.prompt).toMatch(/comer batata/i);
+    expect(res.body.trace.lastAnswerQuality).toBe('off_topic');
+  });
+
   it('stops when the fields the provider extracted complete the required coverage', async () => {
     process.env.OPENROUTER_API_KEY = 'test-key';
     const state = await advance(

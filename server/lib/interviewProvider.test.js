@@ -65,25 +65,63 @@ describe('adaptive interview provider', () => {
     // A geração é sequencial: a leitura da situação e as candidatas precisam
     // vir antes do texto da pergunta, senão o raciocínio vira justificativa.
     expect(order.indexOf('situationRead')).toBeLessThan(order.indexOf('prompt'));
-    expect(order.indexOf('candidateQuestions')).toBeLessThan(order.indexOf('prompt'));
-    expect(order.indexOf('assumptionsAvoided')).toBeLessThan(order.indexOf('candidateQuestions'));
-    expect(nextQuestionSchema.properties.candidateQuestions.items.required).toEqual(['targetField', 'draft', 'whatItDecides']);
+    expect(order.indexOf('consideredFields')).toBeLessThan(order.indexOf('prompt'));
+    expect(order.indexOf('assumptionsAvoided')).toBeLessThan(order.indexOf('consideredFields'));
+    // Lista de campos, não objetos aninhados: o schema aninhado custava caro na
+    // decodificação restrita e dois modelos diferentes estouraram 45s com ele.
+    expect(nextQuestionSchema.properties.consideredFields.items.enum).toContain('geography');
 
     const value = normalizeQuestion({
       ...validResponse,
       situationRead: 'A pessoa descreveu um evento aberto, sem dizer onde acontece.',
       assumptionsAvoided: ['o local do evento', 'que o público seja da indústria'],
       chosenBecause: 'o público define a profundidade técnica esperada',
-      candidateQuestions: [
-        { targetField: 'audience', draft: 'Quem estará na plateia?', whatItDecides: 'profundidade técnica' },
-        { targetField: 'geography', draft: 'Onde isso acontece?', whatItDecides: 'viabilidade de deslocamento' },
-        { targetField: 'campo_inventado', draft: 'x', whatItDecides: 'nada' },
-      ],
+      consideredFields: ['audience', 'geography', 'campo_inventado', 'audience'],
     });
 
     expect(value.situationRead).toBe('A pessoa descreveu um evento aberto, sem dizer onde acontece.');
     expect(value.assumptionsAvoided).toHaveLength(2);
-    expect(value.candidateQuestions.map((item) => item.targetField)).toEqual(['audience', 'geography']);
+    expect(value.consideredFields).toEqual(['audience', 'geography']);
+  });
+
+  it('não deixa uma resposta fora de propósito cobrir campo nenhum', () => {
+    // "Comer batata" como situação para envolver um especialista: o modelo pode
+    // classificar certo e ainda assim registrar o que leu. Registrar isso
+    // contaminaria o briefing e, com ele, a recomendação inteira.
+    const value = normalizeQuestion({
+      ...validResponse,
+      lastAnswerQuality: 'off_topic',
+      fieldsSatisfied: [{ field: 'context', value: 'comer batata', confidence: 0.9 }],
+    });
+
+    expect(value.lastAnswerQuality).toBe('off_topic');
+    expect(value.fieldsSatisfied).toEqual([]);
+  });
+
+  it('classifica a resposta antes de escolher o que perguntar', () => {
+    const order = nextQuestionSchema.required;
+    expect(order.indexOf('lastAnswerQuality')).toBeLessThan(order.indexOf('consideredFields'));
+    expect(nextQuestionSchema.properties.lastAnswerQuality.enum).toEqual(['usable', 'vague', 'off_topic', 'contradictory']);
+    // Sem classificação declarada, tratar como aproveitável é o padrão seguro:
+    // é o comportamento de antes, e não descarta silenciosamente uma resposta.
+    expect(normalizeQuestion(validResponse).lastAnswerQuality).toBe('usable');
+  });
+
+  it('manda conversar sobre a resposta que não serve, em vez de seguir o roteiro', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
+    }));
+
+    await generateNextQuestionWithProvider({ category: 'researcher', objective: 'speaker', answers: { context: 'comer batata' }, history: [], askedIds: ['context'] });
+
+    const prompt = bodies[0].messages.at(-1).content;
+    expect(prompt).toMatch(/QUANDO A RESPOSTA NÃO SERVE/);
+    expect(prompt).toMatch(/a próxima pergunta é SOBRE ELA, não sobre o próximo campo/i);
+    expect(prompt).toMatch(/fieldsSatisfied VAZIO/);
   });
 
   it('does not presume a SENAI-SP venue or an industry audience, and asks for varied wording', async () => {
@@ -114,7 +152,7 @@ describe('adaptive interview provider', () => {
     expect(bodies[0].temperature).toBeGreaterThan(0.3);
   });
 
-  it('asks the auto-router for maximum quality, because a bad question costs the whole conversation', async () => {
+  it('pede qualidade acima da média ao roteador, mas não o máximo, porque alguém está esperando', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'test-key';
     process.env.OPENROUTER_MODEL = 'openrouter/auto';
@@ -127,8 +165,11 @@ describe('adaptive interview provider', () => {
 
     const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
-    expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(10);
-    expect(result.trace.costQualityTradeoff).toBe(10);
+    // Em 10 o roteador escolhia modelos de raciocínio que passavam de 45s e
+    // nunca respondiam: numa chamada interativa, um modelo excelente que não
+    // chega a tempo vale menos que um bom que chega.
+    expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(4);
+    expect(result.trace.costQualityTradeoff).toBe(4);
   });
 
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {

@@ -127,7 +127,22 @@ export default function SelectionPage() {
     if (reason === 'ai_budget_exceeded') {
       return { severity: 'error', retryable: false, message: 'O limite de uso da IA foi atingido. A entrevista continua de onde parou assim que o limite for renovado.' };
     }
-    return { severity: 'error', retryable: true, message: 'A IA não respondeu, e a entrevista não segue sem ela. Sua resposta foi guardada — tente novamente.' };
+    // O código técnico fica visível de propósito. Sem ele, diagnosticar uma
+    // falha exigia abrir o DevTools e achar a resposta da requisição certa —
+    // e cada um destes motivos tem uma correção diferente, então esconder qual
+    // foi transformava cada incidente numa sequência de idas e vindas.
+    const explained = {
+      output_truncated: 'A resposta da IA passou do limite de tamanho e chegou cortada.',
+      empty_output: 'A IA respondeu sem conteúdo utilizável.',
+      invalid_output: 'A IA respondeu fora do formato esperado.',
+      provider_timeout: 'A IA demorou mais do que o limite para responder.',
+      provider_question_rejected: 'A pergunta escrita pela IA não passou na validação.',
+      provider_4xx: 'O provedor de IA recusou a chamada (chave, permissão ou crédito).',
+      provider_5xx: 'O provedor de IA está com problema.',
+    }[reason];
+    const detail = explained ? ` ${explained}` : '';
+    const code = reason ? ` (motivo: ${reason})` : '';
+    return { severity: 'error', retryable: true, message: `A IA não respondeu, e a entrevista não segue sem ela.${detail} Sua resposta foi guardada — tente novamente.${code}` };
   }, [adaptiveStatus]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
