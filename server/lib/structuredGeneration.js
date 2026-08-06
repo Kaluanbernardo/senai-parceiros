@@ -129,9 +129,27 @@ function providerHeaders(provider) {
  * alongside a pinned model lets OpenRouter route somewhere else, which would
  * silently defeat a deliberate choice of model — including a free-only setup.
  */
+/**
+ * Raciocinio interno desligado por padrao.
+ *
+ * Um modelo de raciocinio gastou 54 tokens pensando para responder sete de
+ * conteudo — e o tempo desse pensamento e tempo de tela parada. Aqui ele e
+ * redundante por construcao: o schema ja exige o raciocinio em campos
+ * proprios (leitura da situacao, pressupostos recusados, alternativas
+ * consideradas, justificativa da escolha), que sao auditaveis. Pensar duas
+ * vezes custa o dobro e so a metade fica registrada.
+ *
+ * `OPENROUTER_REASONING` reativa quando for desejado: low, medium ou high.
+ */
+function reasoningOption() {
+  const configured = String(process.env.OPENROUTER_REASONING || '').trim().toLowerCase();
+  if (['low', 'medium', 'high'].includes(configured)) return { reasoning: { effort: configured } };
+  return { reasoning: { enabled: false } };
+}
+
 function providerOptions(provider, model, costQualityTradeoff) {
   if (provider !== 'openrouter') return {};
-  const base = { provider: { require_parameters: true } };
+  const base = { provider: { require_parameters: true }, ...reasoningOption() };
   if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
   return {
     ...base,

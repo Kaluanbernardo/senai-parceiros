@@ -14,6 +14,7 @@ afterEach(() => {
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENROUTER_MODEL;
   delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
+  delete process.env.OPENROUTER_REASONING;
   delete process.env.OPENAI_API_KEY;
 });
 
@@ -181,6 +182,26 @@ describe('structured generation boundary', () => {
     await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 99999 });
 
     expect(bodies.map((body) => body.max_tokens)).toEqual([3000, 4000]);
+  });
+
+  it('desliga o raciocínio interno, que o schema já exige de forma explícita', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    process.env.OPENROUTER_REASONING = 'low';
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+    process.env.OPENROUTER_REASONING = 'talvez';
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] });
+
+    // Pensar duas vezes custa o dobro do tempo e só metade fica registrada.
+    expect(bodies.map((body) => body.reasoning)).toEqual([{ enabled: false }, { effort: 'low' }, { enabled: false }]);
+    delete process.env.OPENROUTER_REASONING;
   });
 
   it('normalizes provider failures without leaking response content', async () => {

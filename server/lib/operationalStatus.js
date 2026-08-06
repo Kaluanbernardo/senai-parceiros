@@ -37,6 +37,10 @@ export function getOperationalStatus() {
       // quando toda chamada falha: um modelo fixado sem suporte a JSON Schema
       // estrito derruba tudo, e sem isto aqui só dava para adivinhar.
       openrouterModel: process.env.OPENROUTER_MODEL || 'openrouter/auto',
+      // Modelo de raciocínio gasta tempo pensando antes de escrever, e o schema
+      // daqui já exige o raciocínio em campos próprios. Visível porque foi a
+      // causa de três timeouts seguidos em produção.
+      reasoning: String(process.env.OPENROUTER_REASONING || '').trim().toLowerCase() || 'disabled',
       interviewTimeoutMs: Math.max(5000, Math.min(50000, Number(process.env.INTERVIEW_TIMEOUT_MS) || 45000)),
       openaiConfigured: configured('OPENAI_API_KEY'),
       openrouterConfigured: configured('OPENROUTER_API_KEY'),
