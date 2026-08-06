@@ -115,16 +115,19 @@ export default function SelectionPage() {
   const conversation = useMemo(() => (plannerState?.history || []).filter((turn) => turn.answer), [plannerState]);
   const capturedFields = useMemo(() => Object.entries(plannerState?.derived || {}).map(([field, detail]) => ({ field, label: fieldLabel(field), evidence: detail.evidence || [] })), [plannerState]);
   const remainingRequired = plannerState?.validation?.missing || [];
-  // O aviso descreve o que de fato aconteceu. Antes, qualquer turno resolvido
-  // localmente — inclusive a entrevista simplesmente ter terminado — aparecia
-  // como "IA indisponível", o que não era verdade.
+  // O aviso descreve o que de fato aconteceu, e agora a entrevista realmente
+  // para: sem IA não há próxima pergunta. Sua resposta continua guardada, então
+  // o aviso é sobre tentar de novo, não sobre recomeçar.
   const adaptiveNotice = useMemo(() => {
-    if (!adaptiveStatus) return null;
-    if (!adaptiveStatus.fallback) return null;
-    const kind = adaptiveStatus.fallbackKind || (adaptiveStatus.degraded === false ? 'none' : 'error');
-    if (kind === 'none') return null;
-    if (kind === 'not_configured' || kind === 'budget') return null;
-    return { severity: 'warning', retryable: true, message: 'Não foi possível adaptar a próxima pergunta. Você pode tentar novamente ou seguir com uma pergunta padrão.' };
+    if (!adaptiveStatus || !adaptiveStatus.degraded) return null;
+    const reason = String(adaptiveStatus.fallbackReason || '');
+    if (reason === 'ai_not_configured') {
+      return { severity: 'error', retryable: false, message: 'A IA não está configurada neste ambiente, e a entrevista depende dela para continuar. Avise quem administra a ferramenta.' };
+    }
+    if (reason === 'ai_budget_exceeded') {
+      return { severity: 'error', retryable: false, message: 'O limite de uso da IA foi atingido. A entrevista continua de onde parou assim que o limite for renovado.' };
+    }
+    return { severity: 'error', retryable: true, message: 'A IA não respondeu, e a entrevista não segue sem ela. Sua resposta foi guardada — tente novamente.' };
   }, [adaptiveStatus]);
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
@@ -187,8 +190,8 @@ export default function SelectionPage() {
     const requestState = { ...state, questionDefinitions: { ...(state.questionDefinitions || {}), [state.currentQuestion?.id]: state.currentQuestion } };
     setAdaptiveRetry({ state: requestState, answer: answerValue });
     const answeredState = InterviewPlanner.answer(requestState, answerValue, requestState.currentQuestion?.id);
-    let nextState = InterviewPlanner.next(answeredState);
-    let providerTrace = { provider: 'local-fallback', model: 'semantic-planner-v2', fallback: true, fallbackReason: 'request_failed' };
+    let nextState = null;
+    let providerTrace = null;
     try {
       const response = await fetch('/api/selection/interview-next', {
         method: 'POST',
@@ -196,13 +199,18 @@ export default function SelectionPage() {
         credentials: 'include',
         body: JSON.stringify({ state: requestState, questionId: requestState.currentQuestion?.id, answer: answerValue }),
       });
-      if (!response.ok) throw new Error('adaptive_interview_unavailable');
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.reason || 'adaptive_interview_unavailable');
       if (!payload?.state) throw new Error('adaptive_interview_invalid_response');
       nextState = payload.state;
-      providerTrace = payload.trace || providerTrace;
-    } catch {
-      // O planejador local mantém o fluxo quando a IA não está configurada ou está indisponível.
+      providerTrace = payload.trace || null;
+    } catch (requestError) {
+      // Não existe pergunta escrita localmente: a resposta da pessoa fica
+      // guardada em adaptiveRetry e a falha aparece, para ela tentar de novo
+      // em vez de seguir uma entrevista que a IA não conduziu.
+      setAdaptiveStatus({ provider: 'none', fallback: false, degraded: true, fallbackReason: String(requestError?.message || 'adaptive_interview_unavailable') });
+      setBusy(false);
+      return;
     }
     const traceEntry = {
       questionId: answeredState.lastAnswered,
@@ -440,10 +448,11 @@ export default function SelectionPage() {
         <Alert severity={adaptiveNotice.severity} sx={{ mt: 2 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1}>
             <Typography variant="body2" sx={{ flex: 1 }}>{adaptiveNotice.message}</Typography>
-            {adaptiveNotice.retryable && adaptiveRetry && <>
+            {/* Não há mais "seguir com uma pergunta padrão": sem IA a entrevista
+                não avança, e oferecer isso prometeria algo que não existe. */}
+            {adaptiveNotice.retryable && adaptiveRetry && (
               <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
-              <Button size="small" onClick={() => setAdaptiveStatus(null)} disabled={busy}>Seguir</Button>
-            </>}
+            )}
           </Stack>
         </Alert>
       )}

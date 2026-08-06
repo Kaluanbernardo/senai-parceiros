@@ -58,15 +58,27 @@ async function advance(state, answers) {
 }
 
 describe('POST /api/selection/interview/next', () => {
-  it('returns a transient local fallback when no AI provider is configured', async () => {
+  it('falha visivelmente quando não há provedor de IA, em vez de escrever a pergunta localmente', async () => {
+    // Uma pergunta escrita localmente é indistinguível de uma pergunta adaptada:
+    // a entrevista continuaria parecendo funcionar sem nunca ter sido adaptada.
+    vi.mocked(generateNextQuestionWithProvider).mockRejectedValue(new Error('ai_not_configured'));
     const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
     const res = response();
     await handler(request(state), res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.trace.provider).toBe('local-fallback');
-    expect(res.body.state.currentQuestion).toBeTruthy();
-    expect(res.body.state).not.toHaveProperty('storageKey');
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'ai_not_configured', retryable: false });
+    expect(res.body.state).toBeUndefined();
+  });
+
+  it('marca o timeout do provedor como tentável de novo', async () => {
+    vi.mocked(generateNextQuestionWithProvider).mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    const res = response();
+    await handler(request(state), res);
+
+    expect(res.statusCode).toBe(502);
+    expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'provider_timeout', retryable: true });
   });
 
   it('serves the question written by the provider and keeps what it extracted', async () => {
@@ -101,10 +113,10 @@ describe('POST /api/selection/interview/next', () => {
     const res = response();
     await handler(request(state, 'Um piloto com instrutores da rede'), res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.trace.fallbackReason).toBe('provider_question_rejected');
-    expect(res.body.state.derived).toHaveProperty('audience');
-    expect(res.body.state.currentQuestion.targetField).not.toBe('audience');
+    // A cobertura ainda não permite encerrar e não há pergunta local: recusar a
+    // pergunta do modelo é falha do provedor, não motivo para roteiro.
+    expect(res.statusCode).toBe(502);
+    expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'provider_question_rejected', retryable: true });
   });
 
   it('stops when the fields the provider extracted complete the required coverage', async () => {
