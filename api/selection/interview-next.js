@@ -8,6 +8,7 @@ import { getExampleCoverage } from '../../src/domain/exampleResolver.js';
 import { canUseAi, getUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../server/lib/usageBudget.js';
 
 const MAX_ANSWER_LENGTH = 4000;
+const INTERVIEW_TIMEOUT_MS = Math.max(5000, Math.min(50000, Number(process.env.INTERVIEW_TIMEOUT_MS) || 45000));
 
 function validAnswers(answers) {
   return answers && typeof answers === 'object' && !Array.isArray(answers)
@@ -162,7 +163,13 @@ export default async function handler(req, res) {
     if (!canUseAi('interview')) return providerUnavailable(res, 'ai_budget_exceeded');
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 18000);
+    // O modelo agora lê a situação, declara pressupostos e rascunha candidatas
+    // antes de escrever a pergunta, e o roteador é instruído a priorizar
+    // qualidade — as duas coisas custam segundos. O teto de 18s foi herdado de
+    // um contrato bem mais leve e passou a abortar chamadas que teriam dado
+    // certo. Continua abaixo do maxDuration da função, para o erro sair como
+    // JSON nosso e não como um 504 da plataforma.
+    const timeout = setTimeout(() => controller.abort(), INTERVIEW_TIMEOUT_MS);
     try {
       const ai = await generateNextQuestionWithProvider({
         category: answeredState.category,

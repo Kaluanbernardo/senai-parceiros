@@ -31,4 +31,21 @@ describe('operational status', () => {
     expect(status.handoff.mvp.durableStores).toBe(false);
     expect(status.handoff.mvp.radarCronConfigured).toBe(false);
   });
+
+  it('reporta as variáveis que hoje decidem se a IA e o Radar rodam', () => {
+    // Sem elas no status, diagnosticar uma falha de produção vira adivinhação:
+    // um modelo fixado sem suporte a schema estrito derruba toda chamada, e as
+    // duas variáveis do Radar derrubam toda coleta com fila de reescrita.
+    delete process.env.OPENROUTER_MODEL;
+    delete process.env.RADAR_EDITORIAL_PROVIDER;
+    process.env.RADAR_SUMMARY_PROVIDER = 'openrouter';
+
+    const status = getOperationalStatus();
+
+    expect(status.ai.openrouterModel).toBe('openrouter/auto');
+    expect(status.ai.interviewTimeoutMs).toBe(45000);
+    expect(status.radar.editorialProviderConfigured).toBe(false);
+    expect(status.radar.summaryProviderConfigured).toBe(true);
+    delete process.env.RADAR_SUMMARY_PROVIDER;
+  });
 });
