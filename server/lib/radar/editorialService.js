@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { normalizeRadarItem } from '../../../src/domain/radar.js';
-import { EDITORIAL_RULES_VERSION, hasPortugueseMarkers, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
+import { EDITORIAL_RULES_VERSION, editorialIsGrounded, hasPortugueseMarkers, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
 import { generateStructured } from '../structuredGeneration.js';
 import { sanitizeProviderError } from './contracts.js';
 import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
@@ -30,7 +30,7 @@ const DEFAULT_MAX_ITEMS_PER_RUN = 48;
  * input hash on purpose, so relaxing a rule retries only what was refused
  * instead of re-running the hundreds of items that already came out whole.
  */
-const EDITORIAL_VALIDATION_VERSION = 2;
+const EDITORIAL_VALIDATION_VERSION = 3;
 const DEFAULT_DEADLINE_MS = 25_000;
 const MAX_SOURCE_TEXT = 900;
 
@@ -139,12 +139,13 @@ function editorialMessages(items) {
     {
       role: 'system',
       content: [
-        'Você escreve o Radar EPT do SENAI-SP para gestores que não são especialistas em legislação nem em pesquisa acadêmica.',
+        'Você reescreve itens do Radar de educação profissional para leitores que não são especialistas em legislação nem em pesquisa acadêmica.',
         'Responda sempre em português do Brasil, mesmo quando o texto recebido estiver em inglês.',
         'Para modo "editorial": escreva um título de até 110 caracteres dizendo o que o documento faz e para quem, sem começar por número de ato, e um resumo de duas a três frases explicando em linguagem simples o que muda na prática.',
         'Para modo "traducao": traduza o título fielmente, sem reescrevê-lo, e escreva um resumo de duas a três frases em linguagem simples sobre o que o trabalho investiga e o que encontrou.',
         'Não use jargão jurídico ou acadêmico; se um termo técnico for indispensável, explique-o na mesma frase.',
         'Use somente as informações recebidas. Nunca invente prazos, valores, números, vagas ou efeitos.',
+        'O SENAI-SP é o público do produto, não uma informação da fonte: nunca diga que um ato é do, para, voltado a, conveniado com ou recomendado ao SENAI-SP ou ao SESI sem que isso esteja explicitamente no texto recebido.',
         'Se o texto recebido não permitir dizer o que muda, diga o que o documento é e sobre o que trata, sem especular.',
         'Em "topics", devolva os temas recebidos traduzidos para o português, na mesma ordem e na mesma quantidade, sem acrescentar nem remover temas.',
       ].join(' '),
@@ -221,8 +222,8 @@ function applyGenerated(items, generated) {
   return items.map((item) => {
     const entry = byId.get(itemId(item));
     if (!entry) return item;
-    const title = validateEditorialTitle(entry.title, item) ? cleanText(entry.title, editorialTitleLimit(item)) : null;
-    const summary = validateEditorialSummary(entry.summary, item) ? cleanText(entry.summary, 1000) : null;
+    const title = validateEditorialTitle(entry.title, item) && editorialIsGrounded(item, entry.title, '') ? cleanText(entry.title, editorialTitleLimit(item)) : null;
+    const summary = validateEditorialSummary(entry.summary, item) && editorialIsGrounded(item, '', entry.summary) ? cleanText(entry.summary, 1000) : null;
     if (!title && !summary) return item;
     // Topics are replaced only when the model returned exactly the list it was
     // given, translated. A different length means it added or dropped a theme,
@@ -250,7 +251,7 @@ function applyGenerated(items, generated) {
  */
 function reuseStoredEditorials(items, previousItems) {
   const stored = new Map((Array.isArray(previousItems) ? previousItems : [])
-    .filter((item) => item.editorialStatus === 'ai' && item.editorialInputHash)
+    .filter((item) => item.editorialStatus === 'ai' && item.editorialInputHash && editorialIsGrounded(item))
     .map((item) => [itemId(item), item]));
   // Every item leaves this pass normalized, rewritten or not: the display
   // fields the interface reads are derived there, and a caller must never have

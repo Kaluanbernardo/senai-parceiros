@@ -13,7 +13,7 @@
  * baseline; it never replaces it.
  */
 
-export const EDITORIAL_RULES_VERSION = 1;
+export const EDITORIAL_RULES_VERSION = 2;
 
 function safeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -236,6 +236,23 @@ export function readableTitleCase(value) {
 
 const THEME_PREFIX = /^rela[çc][ãa]o com (?:a )?(?:educa[çc][ãa]o profissional|vet|ept)\s*:\s*/i;
 
+const SENAI_CONTEXT = /\bsenai(?:\s*[-/]?\s*sp)?\b|\bsesi(?:\s*[-/]?\s*sp)?\b/i;
+
+function editorialSourceText(item) {
+  return [item?.title, item?.originalTitle, stripEvidencePrefix(item?.summaryPt), item?.sourceName]
+    .filter(Boolean).join(' ');
+}
+
+/**
+ * The product audience is not evidence about an official act. Keep generated
+ * SENAI/SESI claims only when the source itself names that institution.
+ */
+export function editorialIsGrounded(item, title = item?.editorialTitle, summary = item?.editorialSummary) {
+  if (!isOfficialAct(item)) return true;
+  const generated = `${title || ''} ${summary || ''}`;
+  return !SENAI_CONTEXT.test(generated) || SENAI_CONTEXT.test(editorialSourceText(item));
+}
+
 /**
  * The excerpt that justified an item's inclusion is evidence, not an
  * explanation. Keeping the prefix out of the model input stops the generated
@@ -246,11 +263,15 @@ export function stripEvidencePrefix(value) {
 }
 
 export function displayTitleFor(item) {
-  return safeText(item?.editorialTitle) || readableTitleCase(safeText(item?.title));
+  return editorialIsGrounded(item) && safeText(item?.editorialTitle)
+    ? item.editorialTitle
+    : readableTitleCase(safeText(item?.title));
 }
 
 export function displaySummaryFor(item) {
-  return safeText(item?.editorialSummary) || safeText(item?.summaryPt);
+  return editorialIsGrounded(item) && safeText(item?.editorialSummary)
+    ? item.editorialSummary
+    : safeText(item?.summaryPt);
 }
 
 /**
@@ -261,7 +282,7 @@ export function displaySummaryFor(item) {
  */
 export function needsEditorialTreatment(item) {
   if (!item) return false;
-  if (safeText(item.editorialTitle) && safeText(item.editorialSummary)) return false;
+  if (safeText(item.editorialTitle) && safeText(item.editorialSummary) && editorialIsGrounded(item)) return false;
   if (isOfficialAct(item)) return true;
   // The abstract counts as visible text. A paper whose source published no
   // usable summary falls back to a Portuguese sentence saying so, and that
