@@ -4,7 +4,7 @@ import { CATEGORY_SCHEMAS, generateResearchPrompt } from './promptGenerator';
 
 describe('generateResearchPrompt', () => {
   it.each([
-    ['researcher', 'especialistas (pesquisadores)'],
+    ['person', 'pessoas especialistas'],
     ['organization', 'organizações'],
     ['school', 'instituições de educação'],
   ])('declares that the selected category is exclusive: %s', (category, label) => {
@@ -14,9 +14,11 @@ describe('generateResearchPrompt', () => {
     expect(prompt).toContain('Não misture categorias no mesmo CSV');
   });
 
-  it('requires the exact researcher schema and a portable spreadsheet output', () => {
+  it('requires the exact person schema and a portable CSV output', () => {
     const prompt = generateResearchPrompt({
-      category: 'researcher',
+      category: 'person',
+      personProfiles: 'indústria; imprensa',
+      sourcePreferences: 'LinkedIn; imprensa',
       context: 'Especialistas em IA aplicada à indústria',
       purpose: 'Convidados para evento',
       geography: 'Brasil e exterior',
@@ -24,16 +26,15 @@ describe('generateResearchPrompt', () => {
       extraCriteria: 'Experiência com educação profissional',
     });
 
-    for (const column of CATEGORY_SCHEMAS.researcher) {
+    for (const column of CATEGORY_SCHEMAS.person) {
       expect(prompt).toContain(column.name);
     }
     expect(prompt).toContain('CSV UTF-8');
     expect(prompt).toContain('somente um CSV UTF-8');
     expect(prompt).toContain('pelo menos 400 caracteres');
-    expect(prompt).toContain('pelo menos 5 publicações relevantes');
-    expect(prompt).toContain('5 artigos com mais citações no Google Scholar');
-    expect(prompt).toContain('contagem de citações');
-    expect(prompt).toContain('URL direta');
+    expect(prompt).toContain('producoes_relevantes');
+    expect(prompt).toContain('LinkedIn');
+    expect(prompt).toContain('Aplique exigências acadêmicas somente');
     expect(prompt).toContain('Não entregue XLSX');
     expect(prompt).toContain('h_index');
     expect(prompt).toContain('não localizado');
@@ -41,13 +42,13 @@ describe('generateResearchPrompt', () => {
   });
 
   describe('contrato completo', () => {
-    const base = { category: 'researcher', context: 'IA na indústria', purpose: 'Evento' };
+    const base = { category: 'person', context: 'IA na indústria', purpose: 'Evento' };
 
     it('always asks for every researcher column', () => {
       const prompt = generateResearchPrompt({ ...base, columns: ['resumo'] });
       const headerLine = prompt.split('\n').find((line) => line.startsWith('schema_version |'));
 
-      expect(headerLine).toBe(CATEGORY_SCHEMAS.researcher.map((column) => column.name).join(' | '));
+      expect(headerLine).toBe(CATEGORY_SCHEMAS.person.map((column) => column.name).join(' | '));
       expect(prompt).toContain('Use todas as colunas acima');
     });
 
@@ -55,12 +56,12 @@ describe('generateResearchPrompt', () => {
       const prompt = generateResearchPrompt(base);
       const headerLine = prompt.split('\n').find((line) => line.startsWith('schema_version |'));
 
-      expect(validateCatalogHeaders(headerLine.split(' | '), 'researcher').valid).toBe(true);
+      expect(validateCatalogHeaders(headerLine.split(' | '), 'person').valid).toBe(true);
     });
 
     it('falls back to the full schema when no cut is given', () => {
       const prompt = generateResearchPrompt(base);
-      for (const column of CATEGORY_SCHEMAS.researcher) expect(prompt).toContain(column.name);
+      for (const column of CATEGORY_SCHEMAS.person) expect(prompt).toContain(column.name);
       expect(prompt).not.toContain('colunas das');
     });
   });

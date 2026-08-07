@@ -21,7 +21,7 @@ import {
 import { CATEGORIAS, getCategoriasFromAreas } from '../utils/areaCategories';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
-const SEARCH_FIELDS = ['nome', 'aliases', 'instituicao', 'areas', 'pais', 'pesquisa', 'miniBio'];
+const SEARCH_FIELDS = ['nome', 'aliases', 'instituicao', 'cargo', 'areas', 'perfis_atuacao', 'pais', 'pesquisa', 'miniBio', 'producoes_relevantes'];
 
 /** Estado que vive na URL, para uma lista filtrada poder ser compartilhada. */
 const STATE_SCHEMA = Object.freeze({
@@ -29,6 +29,7 @@ const STATE_SCHEMA = Object.freeze({
   pais: { type: 'list' },
   area: { type: 'list' },
   tema: { type: 'list' },
+  atuacao: { type: 'list' },
   genero: { type: 'single', default: 'todos' },
   ordem: { type: 'single', default: 'relevance' },
   exibir: { type: 'single', default: 'grid' },
@@ -38,6 +39,7 @@ const FILTER_DEFINITIONS = [
   { key: 'pais', label: 'País' },
   { key: 'area', label: 'Área' },
   { key: 'tema', label: 'Tema' },
+  { key: 'atuacao', label: 'Atuação' },
   { key: 'genero', label: 'Gênero', emptyValue: 'todos', format: (value) => (value === 'F' ? 'Feminino' : 'Masculino') },
 ];
 
@@ -65,6 +67,12 @@ function isHttpUrl(value) {
   try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; }
 }
 
+function profileLink(item) {
+  const href = item.perfil_principal_url || item.linkedin_url || item.scholar;
+  if (!isHttpUrl(href)) return undefined;
+  return { href, label: href === item.linkedin_url ? 'LinkedIn' : PROFILE_LABELS[item.profileType] || 'Perfil público' };
+}
+
 export default function PesquisadoresPage() {
   const { pesquisadores } = useData();
   const { state, setValue, removeValue, clear } = useCatalogState(STATE_SCHEMA);
@@ -73,6 +81,7 @@ export default function PesquisadoresPage() {
 
   const countries = useMemo(() => collectFacetValues(pesquisadores, 'pais'), [pesquisadores]);
   const themes = useMemo(() => collectTokenValues(pesquisadores, 'areas'), [pesquisadores]);
+  const profiles = useMemo(() => collectTokenValues(pesquisadores, 'perfis_atuacao'), [pesquisadores]);
 
   const filtered = useMemo(() => {
     const matched = pesquisadores.filter(
@@ -84,13 +93,14 @@ export default function PesquisadoresPage() {
         // cartão. Comparar contra o texto cru deixava as duas coisas diferentes.
         matchesFacet(getCategoriasFromAreas(item.areas), state.area) &&
         matchesTokenizedFacet(item.areas, state.tema) &&
+        matchesTokenizedFacet(item.perfis_atuacao, state.atuacao) &&
         (state.genero === 'todos' || item.genero === state.genero),
     );
     return sortItems(matched, state.ordem);
-  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.genero, state.ordem]);
+  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.atuacao, state.genero, state.ordem]);
 
   const activeChips = describeActiveFilters(
-    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, genero: state.genero },
+    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, atuacao: state.atuacao, genero: state.genero },
     FILTER_DEFINITIONS,
   );
 
@@ -100,8 +110,8 @@ export default function PesquisadoresPage() {
     <>
       <CatalogShell
         eyebrow="CATÁLOGO"
-        title="Especialistas em educação profissional"
-        description="Pessoas com produção e experiência ligadas à educação profissional, à formação técnica e ao desenvolvimento industrial."
+        title="Pessoas especialistas"
+        description="Profissionais da pesquisa, indústria, educação, imprensa e gestão pública com experiência relevante para o SENAI-SP."
         noun={{ singular: 'especialista', plural: 'especialistas' }}
         total={pesquisadores.length}
         items={filtered}
@@ -116,7 +126,7 @@ export default function PesquisadoresPage() {
           <FilterBar
             query={state.q}
             onQueryChange={(value) => setValue('q', value)}
-            placeholder="Buscar por nome, instituição, área ou tema de pesquisa"
+            placeholder="Buscar por nome, cargo, instituição, atuação ou tema"
             expanded={expanded}
             onToggleExpanded={() => setExpanded((current) => !current)}
             activeChips={activeChips}
@@ -126,6 +136,7 @@ export default function PesquisadoresPage() {
               { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
               { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
               { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
+              { key: 'atuacao', label: 'Atuação', options: profiles, value: state.atuacao, onChange: (next) => setValue('atuacao', next) },
             ]}
           >
             <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
@@ -154,18 +165,18 @@ export default function PesquisadoresPage() {
             item={item}
             view={state.exibir}
             accent="catalog"
-            eyebrow="Especialista"
+            eyebrow={(item.perfis_atuacao || [])[0] || 'Especialista'}
             title={item.nome}
-            subtitle={item.instituicao}
+            subtitle={[item.cargo, item.instituicao].filter(Boolean).join(' · ')}
             summary={item.miniBio || summarize(item.pesquisa)}
             tags={getCategoriasFromAreas(item.areas)}
             badge={item.h_index ? `h-index ${item.h_index}` : undefined}
-            link={isHttpUrl(item.scholar) ? { href: item.scholar, label: PROFILE_LABELS[item.profileType] || 'Perfil acadêmico' } : undefined}
+            link={profileLink(item)}
             onClick={() => setSelected(item)}
           />
         )}
       />
-      <DetailModal open={Boolean(selected)} onClose={() => setSelected(null)} item={selected} type="pesquisador" />
+      <DetailModal open={Boolean(selected)} onClose={() => setSelected(null)} item={selected} type="person" />
     </>
   );
 }

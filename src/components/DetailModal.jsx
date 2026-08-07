@@ -57,15 +57,16 @@ const profileLabels = {
 
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
   if (!item) return null;
+  const isPerson = type === 'person' || type === 'pesquisador';
 
   const rawTitle =
     type === 'stakeholder' ? item.nome :
-    type === 'pesquisador' ? item.nome :
+    isPerson ? item.nome :
     item.instituicao;
-  const title = type === 'pesquisador' ? rawTitle : formatInstitutionName(rawTitle);
+  const title = isPerson ? rawTitle : formatInstitutionName(rawTitle);
 
   const subtitle =
-    type === 'pesquisador' ? item.instituicao : null;
+    isPerson ? [item.cargo, item.instituicao].filter(Boolean).join(' · ') : null;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
@@ -100,7 +101,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
       <DialogContent sx={{ pt: 2 }}>
         {/* Links */}
-        {(isHttpUrl(item.website) || isHttpUrl(item.scholar)) && (
+        {(isHttpUrl(item.website) || isHttpUrl(item.perfil_principal_url) || isHttpUrl(item.linkedin_url) || isHttpUrl(item.scholar)) && (
           <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
             {isHttpUrl(item.website) && (
               <Button
@@ -116,18 +117,18 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 Website
               </Button>
             )}
-            {isHttpUrl(item.scholar) && type === 'pesquisador' && (
+            {isPerson && isHttpUrl(item.perfil_principal_url || item.linkedin_url || item.scholar) && (
               <Button
                 variant="outlined"
                 size="small"
                 startIcon={<SchoolIcon />}
                 component="a"
-                href={item.scholar}
+                href={item.perfil_principal_url || item.linkedin_url || item.scholar}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={catalogActionSx}
               >
-                {profileLabels[item.profileType] || 'Perfil Acadêmico'}
+                {item.linkedin_url ? 'LinkedIn' : profileLabels[item.profileType] || 'Perfil público'}
               </Button>
             )}
           </Box>
@@ -251,8 +252,15 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
           </>
         )}
 
-        {type === 'pesquisador' && (
+        {isPerson && (
           <>
+            {listValues(item.perfis_atuacao).length > 0 && (
+              <InfoRow label="Atuação profissional">
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {listValues(item.perfis_atuacao).map((profile) => <Chip key={profile} label={profile} size="small" variant="outlined" />)}
+                </Box>
+              </InfoRow>
+            )}
             {item.h_index && (
               <InfoRow label="h-index">
                 <Typography variant="h6" color="secondary.main" fontWeight={700}>
@@ -261,7 +269,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
               </InfoRow>
             )}
 
-            <InfoRow label="Áreas de Pesquisa">
+            <InfoRow label="Áreas de especialidade">
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {listValues(item.areas).map((area, i) => (
                   <Chip
@@ -275,7 +283,7 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
               </Box>
             </InfoRow>
 
-            <InfoRow label="Pesquisa">
+            {(item.pesquisa || item.miniBio || item.descricao) && <InfoRow label="Perfil">
               <Typography
                 variant="body2"
                 sx={{
@@ -287,9 +295,9 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                   lineHeight: 1.7,
                 }}
               >
-                {item.pesquisa || 'Sem informação detalhada'}
+                {item.pesquisa || item.miniBio || item.descricao}
               </Typography>
-            </InfoRow>
+            </InfoRow>}
 
             {item.artigos && item.artigos.length > 0 && (
               <InfoRow label="Artigos Relevantes">
@@ -323,6 +331,17 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                       </Typography>
                       <OpenInNewIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0, mt: 0.3 }} />
                     </Box>
+                  ))}
+                </Box>
+              </InfoRow>
+            )}
+            {item.producoes_relevantes && item.producoes_relevantes.length > 0 && (
+              <InfoRow label="Produções relevantes">
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {item.producoes_relevantes.map((producao, i) => (
+                    <Button key={i} href={producao.url} target="_blank" rel="noopener noreferrer" variant="text" sx={{ justifyContent: 'flex-start' }}>
+                      {[producao.titulo, producao.tipo, producao.ano].filter(Boolean).join(' · ')}
+                    </Button>
                   ))}
                 </Box>
               </InfoRow>

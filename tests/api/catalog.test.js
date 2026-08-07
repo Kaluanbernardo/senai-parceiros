@@ -30,7 +30,7 @@ describe('GET /api/catalog', () => {
     await handler(request(), res);
     expect(res.statusCode).toBe(200);
     expect(res.body.records.organization).toEqual([{ id: 'o-import-1', nome: 'Importada' }]);
-    expect(res.body.records.researcher).toEqual([]);
+    expect(res.body.records.person).toEqual([]);
     expect(res.body).not.toHaveProperty('pendingBatches');
   });
 

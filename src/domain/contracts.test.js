@@ -4,6 +4,7 @@ import { createSelectionBrief, validateInterviewQuestion, validateInterviewState
 describe('domain contracts', () => {
   it('normalizes a transient selection brief and validates its required context', () => {
     const brief = createSelectionBrief({ category: 'researcher', objective: 'speaker', answers: { context: 'IA na indústria' } });
+    expect(brief.category).toBe('person');
     expect(brief.context).toBe('IA na indústria');
     expect(validateSelectionBrief(brief)).toEqual({ valid: true, errors: [] });
     expect(validateSelectionBrief({ ...brief, context: '' }).valid).toBe(false);

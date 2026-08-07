@@ -391,7 +391,8 @@ export async function fetchTrackedResearcherItems({ limitResearchers, previousCo
 
 export async function getTrackedResearcherCatalog() {
   await hydrateCatalogStore({ force: true });
-  return getCatalog('researcher');
+  return getCatalog('person').filter((person) => person.scholar || person.orcid || person.openalex_id
+    || (person.perfis_atuacao || []).some((profile) => String(profile).trim().toLowerCase() === 'pesquisa'));
 }
 
 export async function fetchCrossrefItems({ query = 'vocational education training', limit = 12 } = {}) {

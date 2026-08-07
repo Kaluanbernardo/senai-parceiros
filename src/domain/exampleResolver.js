@@ -126,6 +126,7 @@ const OBJECTIVE_EXAMPLES = Object.freeze({
 });
 
 function categoryKey(category) {
+  if (category === 'person') return 'researcher';
   return CATEGORY_EXAMPLES[category] ? category : 'organization';
 }
 
@@ -145,7 +146,7 @@ function contextAwareExample({ questionId, category, objective, context }) {
   // parte da decisão. Benchmarking continua descrevendo comparação, nunca
   // transforma a pergunta em convite para evento.
   if (!signal || objective === 'benchmark') return null;
-  if (questionId === 'communication_style' && objective === 'speaker' && category === 'researcher') {
+  if (questionId === 'communication_style' && objective === 'speaker' && ['person', 'researcher'].includes(category)) {
     return `Ex.: para ${signal.label}, escolha entre palestra, mesa-redonda ou oficina; informe duração, profundidade e público esperado.`;
   }
   if (questionId === 'context' && objective === 'speaker') {
