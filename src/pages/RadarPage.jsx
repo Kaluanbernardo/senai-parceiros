@@ -38,8 +38,8 @@ const sections = RADAR_SECTIONS.map((value) => ({
   value,
   label: {
     research: 'Pesquisas e estudos',
-    government: 'Brasil',
-    international: 'Outros países',
+    government: 'Publicações oficiais de São Paulo e Brasil',
+    international: 'Publicações oficiais internacionais',
   }[value],
   description: {
     research: 'Estudos recentes sobre educação profissional, tecnologia e indústria.',
@@ -267,6 +267,25 @@ export default function RadarPage() {
         description={activeSection.description}
         accent="radar"
         dense
+        actions={
+          <>
+            <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
+              <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
+            </Tooltip>
+            {isAdmin && (
+              <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
+                <Button
+                  variant="contained"
+                  startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
+                  onClick={collectNow}
+                  disabled={collecting || loading || rewriting}
+                >
+                  {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
+                </Button>
+              </Tooltip>
+            )}
+          </>
+        }
       />
 
       {/* As seções viraram abas sobre uma linha, como as do catálogo. Envolvidas
@@ -304,6 +323,17 @@ export default function RadarPage() {
       </Card>
 
       {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Algumas fontes estão temporariamente indisponíveis. Mostramos as informações públicas que já foram conferidas.</Alert>}
+      {collectResult && (
+        <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>
+          {collectResult.message}
+          {collectDiagnostics && (
+            <Box component="details" sx={{ mt: 1 }}>
+              <Box component="summary" sx={{ cursor: 'pointer', fontSize: '.82rem' }}>Detalhes técnicos da coleta</Box>
+              <Box component="pre" sx={{ mt: 1, p: 1, maxHeight: 320, overflow: 'auto', bgcolor: 'rgba(0,0,0,.06)', borderRadius: 1, fontSize: '.72rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{collectDiagnostics}</Box>
+            </Box>
+          )}
+        </Alert>
+      )}
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
       {loading ? <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }} role="status" aria-label="Carregando os itens do radar"><CircularProgress /></Box> : (
