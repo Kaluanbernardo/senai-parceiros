@@ -4,9 +4,16 @@ import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION } from './catalogImportSchema';
 // import schema is the single source of truth for both sides of the flow.
 export const CATEGORY_SCHEMAS = CATALOG_COLUMNS;
 
+const CATEGORY_PROMPT_LABELS = Object.freeze({
+  researcher: 'especialistas (pesquisadores)',
+  school: 'instituições de educação',
+  organization: 'organizações',
+});
+
 export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria }) {
   const selectedCategory = CATALOG_COLUMNS[category] ? category : 'organization';
   const schema = CATALOG_COLUMNS[selectedCategory];
+  const selectedLabel = CATEGORY_PROMPT_LABELS[selectedCategory];
   const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}): ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
   const headers = schema.map((column) => column.name).join(' | ');
   const sections = [
@@ -16,6 +23,11 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     `- Geografia: ${geography || 'sem preferência'}`,
     `- Quantidade máxima desejada: ${quantity || 'a definir'}`,
     `- Critérios adicionais: ${extraCriteria || 'nenhum além do contexto'}`,
+    '',
+    'TIPO DE STAKEHOLDER SELECIONADO',
+    `PESQUISE SOMENTE ${selectedLabel.toUpperCase()}.`,
+    'Não inclua pessoas, organizações ou instituições de educação de outra categoria, mesmo que sejam relevantes. Não misture categorias no mesmo CSV.',
+    `Toda linha deve ter tipo_registro exatamente igual a ${selectedCategory}.`,
     '',
     'ESCOPO E CRITÉRIO INSTITUCIONAL',
     'Considere sempre a contribuição potencial para educação profissional de qualidade, desenvolvimento da indústria paulista, inovação, tecnologia, sustentabilidade, desenvolvimento regional e parcerias aplicáveis. Explique quando a conexão for apenas contextual e não direta.',

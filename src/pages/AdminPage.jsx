@@ -205,7 +205,14 @@ export default function AdminPage() {
         body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'Falha ao importar CSV.');
+      if (!response.ok) {
+        if (body.error === 'catalog_mixed_categories') {
+          const categoryLabels = { researcher: 'pesquisadores', organization: 'organizações', school: 'instituições de educação' };
+          const categories = (body.categories || []).map((category) => categoryLabels[category] || category).join(', ');
+          throw new Error(`CSV misto (${categories}). Separe pesquisadores, organizações e instituições de educação em arquivos diferentes.`);
+        }
+        throw new Error(body.error || 'Falha ao importar CSV.');
+      }
       const decisions = Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing']));
       await commitCsv(body, decisions);
     } catch (error) {
@@ -230,8 +237,14 @@ export default function AdminPage() {
       });
       radarUpdated = radarResponse.ok;
     }
+    const appliedCount = body.applied?.length || 0;
+    const ignoredCount = body.ignored?.length || 0;
+    if (!appliedCount) {
+      showSnack(`Importação concluída: nenhum registro novo foi aplicado (${ignoredCount} mantido(s) ou já importado(s)).`, 'info');
+      return;
+    }
     showSnack(
-      `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
+      `Importação confirmada: ${appliedCount} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
       radarUpdated ? 'success' : 'warning',
     );
   };

@@ -24,6 +24,9 @@ export default async function handler(req, res) {
       rows: preview.rows.map(({ rowNumber, status, match, errors, record, hash }) => ({ rowNumber, status, match, errors, record, hash })),
     });
   } catch (error) {
+    if (error?.code === 'catalog_mixed_categories') {
+      return res.status(400).json({ error: error.code, categories: error.categories });
+    }
     const message = String(error?.message || 'invalid_import').slice(0, 500);
     return res.status(400).json({ error: message });
   }

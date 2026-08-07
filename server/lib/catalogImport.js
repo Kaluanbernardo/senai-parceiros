@@ -8,6 +8,7 @@ import { catalogStore } from './catalogStore.js';
 // JSON transport adds about 33% in base64; 3 MiB stays below Vercel's request limit.
 const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const MAX_ROWS = 1000;
+const CATALOG_CATEGORIES = ['researcher', 'school', 'organization'];
 
 function fold(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -97,6 +98,21 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
   const sourceHeaders = rowValues(sheet.getRow(1));
   const category = reportSheet ? (requestedCategory || 'organization') : null;
   const headers = reportSheet ? getCatalogHeaders(category) : sourceHeaders;
+  const typeColumnIndex = headers.indexOf('tipo_registro');
+  const declaredCategories = new Set();
+  if (!reportSheet && typeColumnIndex >= 0) {
+    for (let index = 2; index <= sheet.rowCount; index += 1) {
+      const values = rowValues(sheet.getRow(index));
+      const declared = String(values[typeColumnIndex] || '').trim().toLowerCase();
+      if (CATALOG_CATEGORIES.includes(declared)) declaredCategories.add(declared);
+    }
+  }
+  if (declaredCategories.size > 1) {
+    const error = new Error('catalog_mixed_categories');
+    error.code = 'catalog_mixed_categories';
+    error.categories = [...declaredCategories];
+    throw error;
+  }
   // O tipo declarado na primeira linha de dados desempata quando o cabeçalho
   // traz só colunas comuns às três categorias.
   const declaredType = headers.includes('tipo_registro')

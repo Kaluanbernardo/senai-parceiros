@@ -3,6 +3,17 @@ import { validateCatalogHeaders } from './catalogImportSchema';
 import { CATEGORY_SCHEMAS, generateResearchPrompt } from './promptGenerator';
 
 describe('generateResearchPrompt', () => {
+  it.each([
+    ['researcher', 'especialistas (pesquisadores)'],
+    ['organization', 'organizações'],
+    ['school', 'instituições de educação'],
+  ])('declares that the selected category is exclusive: %s', (category, label) => {
+    const prompt = generateResearchPrompt({ category, context: 'Economia circular', purpose: 'Parceria' });
+
+    expect(prompt).toContain(`PESQUISE SOMENTE ${label.toUpperCase()}.`);
+    expect(prompt).toContain('Não misture categorias no mesmo CSV');
+  });
+
   it('requires the exact researcher schema and a portable spreadsheet output', () => {
     const prompt = generateResearchPrompt({
       category: 'researcher',
