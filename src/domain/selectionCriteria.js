@@ -55,6 +55,7 @@ export const WEIGHT_BOUNDS = Object.freeze({
 
 /** Ajustes por categoria: um pesquisador é julgado por evidência pública. */
 export const CATEGORY_WEIGHT_HINTS = Object.freeze({
+  person: Object.freeze({ credibility: 0.03, impact: -0.01 }),
   researcher: Object.freeze({ credibility: 0.03, impact: -0.01 }),
   school: Object.freeze({ alignment: 0.02, collaboration: 0.01 }),
   organization: Object.freeze({ collaboration: 0.02, feasibility: 0.01 }),

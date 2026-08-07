@@ -73,7 +73,7 @@ export function DataProvider({ children }) {
     // imported records in the current browser session.
     setStakeholders(upsertRecords([...stakeholdersRaw], payload.records.organization));
     setEscolas(upsertRecords([...escolasRaw], payload.records.school));
-    setPesquisadores(canonicalizeResearchers(upsertRecords(researcherCatalog.records, payload.records.researcher)).records);
+    setPesquisadores(canonicalizeResearchers(upsertRecords(researcherCatalog.records, payload.records.person)).records);
   }, [ensureSeeds]);
 
   useEffect(() => {
@@ -167,7 +167,7 @@ export function DataProvider({ children }) {
 
   const mergeImportedRecords = useCallback((category, records = []) => {
     if (!Array.isArray(records) || !records.length) return;
-    if (category === 'researcher') setPesquisadores((previous) => canonicalizeResearchers(upsertRecords(previous, records)).records);
+    if (category === 'person' || category === 'researcher') setPesquisadores((previous) => canonicalizeResearchers(upsertRecords(previous, records)).records);
     else if (category === 'school') setEscolas((previous) => upsertRecords(previous, records));
     else if (category === 'organization') setStakeholders((previous) => upsertRecords(previous, records));
   }, []);

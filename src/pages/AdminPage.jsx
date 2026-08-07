@@ -207,9 +207,9 @@ export default function AdminPage() {
       const body = await response.json();
       if (!response.ok) {
         if (body.error === 'catalog_mixed_categories') {
-          const categoryLabels = { researcher: 'pesquisadores', organization: 'organizações', school: 'instituições de educação' };
+          const categoryLabels = { person: 'pessoas', researcher: 'pessoas', organization: 'organizações', school: 'instituições de educação' };
           const categories = (body.categories || []).map((category) => categoryLabels[category] || category).join(', ');
-          throw new Error(`CSV misto (${categories}). Separe pesquisadores, organizações e instituições de educação em arquivos diferentes.`);
+          throw new Error(`CSV misto (${categories}). Separe pessoas, organizações e instituições de educação em arquivos diferentes.`);
         }
         throw new Error(body.error || 'Falha ao importar CSV.');
       }
@@ -231,7 +231,7 @@ export default function AdminPage() {
     if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
     data.mergeImportedRecords(body.category, body.records || []);
     let radarUpdated = true;
-    if (body.category === 'researcher' && body.applied?.length) {
+    if (body.category === 'person' && body.applied?.length) {
       const radarResponse = await fetch('/api/radar/refresh', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
@@ -244,7 +244,7 @@ export default function AdminPage() {
       return;
     }
     showSnack(
-      `Importação confirmada: ${appliedCount} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
+      `Importação confirmada: ${appliedCount} registro(s) aplicado(s).${body.category === 'person' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo; o Radar acompanha apenas perfis acadêmicos.') : ''}`,
       radarUpdated ? 'success' : 'warning',
     );
   };

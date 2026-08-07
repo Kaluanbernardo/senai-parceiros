@@ -6,17 +6,18 @@ import { mergeSchoolSources } from '../../src/domain/schoolCatalog.js';
 import { getImportedRecords } from './catalogImport.js';
 
 export function getResearcherAliases() {
-  return canonicalizeResearchers(getCatalog('researcher')).aliases;
+  return canonicalizeResearchers(getCatalog('person')).aliases;
 }
 
 export function resolveCatalogResearcher(id) {
-  return resolveResearcherId(getCatalog('researcher'), id);
+  return resolveResearcherId(getCatalog('person'), id);
 }
 
 export function getCatalog(category) {
-  const imported = getImportedRecords(category);
-  if (category === 'researcher') return canonicalizeResearchers([...pesquisadores, ...imported]).records;
-  if (category === 'school') return mergeSchoolSources({ schools: [...escolas, ...imported], stakeholders });
-  if (category === 'organization') return [...stakeholders, ...imported];
+  const normalizedCategory = category === 'researcher' ? 'person' : category;
+  const imported = getImportedRecords(normalizedCategory);
+  if (normalizedCategory === 'person') return canonicalizeResearchers([...pesquisadores.map((person) => ({ ...person, perfis_atuacao: person.perfis_atuacao || ['pesquisa'] })), ...imported]).records;
+  if (normalizedCategory === 'school') return mergeSchoolSources({ schools: [...escolas, ...imported], stakeholders });
+  if (normalizedCategory === 'organization') return [...stakeholders, ...imported];
   return [];
 }

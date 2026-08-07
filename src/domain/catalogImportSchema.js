@@ -1,10 +1,11 @@
-export const CATALOG_SCHEMA_VERSION = 'senai_catalog_v1';
+export const CATALOG_SCHEMA_VERSION = 'senai_catalog_v2';
+export const LEGACY_CATALOG_SCHEMA_VERSION = 'senai_catalog_v1';
 export const CATALOG_SHEET_NAME = 'Stakeholders';
 export const CATALOG_METADATA_SHEET_NAME = 'Metadados';
 
 const COMMON_COLUMNS = [
-  { name: 'schema_version', type: 'texto', required: true, description: 'Valor fixo: senai_catalog_v1.' },
-  { name: 'tipo_registro', type: 'texto', required: true, description: 'researcher, school ou organization.' },
+  { name: 'schema_version', type: 'texto', required: true, description: 'Valor fixo: senai_catalog_v2.' },
+  { name: 'tipo_registro', type: 'texto', required: true, description: 'person, school ou organization.' },
   { name: 'nome', type: 'texto', required: true, description: 'Nome oficial ou nome completo.' },
   { name: 'pais', type: 'texto', required: true, description: 'País de atuação principal.' },
   { name: 'cidade_estado', type: 'texto', required: false, description: 'Cidade e estado/província, quando públicos.' },
@@ -24,10 +25,15 @@ const COMMON_COLUMNS = [
 ];
 
 const CATEGORY_COLUMNS = {
-  researcher: [
+  person: [
+    { name: 'perfis_atuacao', type: 'lista', essential: true, description: 'Atuações profissionais, como pesquisa, indústria, educação, imprensa ou gestão pública.' },
     { name: 'instituicao_atual', type: 'texto', essential: true, description: 'Instituição e vínculo atual.' },
     { name: 'cargo', type: 'texto', description: 'Cargo ou função pública atual.' },
     { name: 'areas_especialidade', type: 'lista', essential: true, description: 'Áreas de especialidade.' },
+    { name: 'perfil_principal_url', type: 'url', essential: true, description: 'Melhor perfil profissional público localizado.' },
+    { name: 'linkedin_url', type: 'url', description: 'Perfil público no LinkedIn, quando localizado.' },
+    { name: 'producoes_relevantes', type: 'lista', description: 'Título | URL | ano | tipo; ...' },
+    { name: 'credenciais_relevantes', type: 'lista', description: 'Credenciais profissionais públicas relevantes.' },
     { name: 'linhas_pesquisa', type: 'texto', description: 'Linhas de pesquisa relacionadas.' },
     { name: 'publicacoes_relevantes', type: 'lista', description: 'Título | URL | ano; ...' },
     { name: 'citacoes', type: 'numero', description: 'Citações públicas, quando localizadas.' },
@@ -65,8 +71,12 @@ export const CATALOG_COLUMNS = Object.freeze(Object.fromEntries(
 
 export const CATALOG_CATEGORIES = Object.freeze(Object.keys(CATALOG_COLUMNS));
 
+export function normalizeCatalogCategory(category) {
+  return category === 'researcher' ? 'person' : category;
+}
+
 export function getCatalogColumns(category) {
-  return CATALOG_COLUMNS[category] || CATALOG_COLUMNS.organization;
+  return CATALOG_COLUMNS[normalizeCatalogCategory(category)] || CATALOG_COLUMNS.organization;
 }
 
 export function getCatalogHeaders(category) {
@@ -147,14 +157,16 @@ export function validateCatalogHeaders(headers, category) {
 }
 
 export function validateCatalogRow(row, category, rowNumber = 2) {
-  const columns = getCatalogColumns(category);
+  const normalizedCategory = normalizeCatalogCategory(category);
+  const columns = getCatalogColumns(normalizedCategory);
   const errors = [];
-  if (row.schema_version !== CATALOG_SCHEMA_VERSION) errors.push(`Linha ${rowNumber}: schema_version deve ser ${CATALOG_SCHEMA_VERSION}.`);
-  if (row.tipo_registro !== category) errors.push(`Linha ${rowNumber}: tipo_registro deve ser ${category}.`);
+  const legacyPerson = row.schema_version === LEGACY_CATALOG_SCHEMA_VERSION && row.tipo_registro === 'researcher';
+  if (row.schema_version !== CATALOG_SCHEMA_VERSION && !legacyPerson) errors.push(`Linha ${rowNumber}: schema_version deve ser ${CATALOG_SCHEMA_VERSION}.`);
+  if (normalizeCatalogCategory(row.tipo_registro) !== normalizedCategory) errors.push(`Linha ${rowNumber}: tipo_registro deve ser ${normalizedCategory}.`);
   for (const column of columns.filter((column) => column.required)) {
     if (!String(row[column.name] || '').trim()) errors.push(`Linha ${rowNumber}: ${column.name} é obrigatório.`);
   }
-  for (const field of ['website_oficial', 'google_scholar_url']) {
+  for (const field of ['website_oficial', 'perfil_principal_url', 'linkedin_url', 'google_scholar_url']) {
     if (!row[field] || isUnavailableValue(row[field])) continue;
     try {
       const url = new URL(row[field]);
@@ -180,7 +192,7 @@ function isUnavailableValue(value) {
 }
 
 export function rowToCanonical(row) {
-  const category = row.tipo_registro;
+  const category = normalizeCatalogCategory(row.tipo_registro);
   const list = parseListCell;
   const base = {
     nome: row.nome,
@@ -203,13 +215,22 @@ export function rowToCanonical(row) {
     riscos_sinais: list(row.riscos_sinais),
     relevancia: row.aderencia_contexto || row.resumo,
     contato_publico: row.contato_publico,
-    categoria: category === 'researcher' ? 'Pesquisador' : category === 'school' ? 'Escola' : 'Organização',
+    categoria: category === 'person' ? 'Pessoa' : category === 'school' ? 'Escola' : 'Organização',
     importSchemaVersion: CATALOG_SCHEMA_VERSION,
   };
-  if (category === 'researcher') return {
+  if (category === 'person') return {
     ...base,
     areas: [...new Set([...base.areas, ...list(row.areas_especialidade)])],
+    perfis_atuacao: list(row.perfis_atuacao || (row.tipo_registro === 'researcher' ? 'pesquisa' : '')),
     instituicao: row.instituicao_atual,
+    cargo: row.cargo,
+    perfil_principal_url: isUnavailableValue(row.perfil_principal_url) ? '' : row.perfil_principal_url,
+    linkedin_url: isUnavailableValue(row.linkedin_url) ? '' : row.linkedin_url,
+    producoes_relevantes: list(row.producoes_relevantes).map((value) => {
+      const [titulo, url, ano, tipo] = value.split('|').map((part) => part.trim());
+      return { titulo, url, ano, tipo };
+    }).filter((item) => item.titulo || item.url),
+    credenciais_relevantes: list(row.credenciais_relevantes),
     pesquisa: row.linhas_pesquisa,
     miniBio: row.descricao || row.resumo,
     citacoes: row.citacoes,

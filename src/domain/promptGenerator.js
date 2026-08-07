@@ -1,17 +1,18 @@
-import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION } from './catalogImportSchema';
+import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION, normalizeCatalogCategory } from './catalogImportSchema';
 
 // Backwards-compatible export for the existing prompt UI and tests. The
 // import schema is the single source of truth for both sides of the flow.
 export const CATEGORY_SCHEMAS = CATALOG_COLUMNS;
 
 const CATEGORY_PROMPT_LABELS = Object.freeze({
-  researcher: 'especialistas (pesquisadores)',
+  person: 'pessoas especialistas',
   school: 'instituições de educação',
   organization: 'organizações',
 });
 
-export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria }) {
-  const selectedCategory = CATALOG_COLUMNS[category] ? category : 'organization';
+export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria, personProfiles, sourcePreferences }) {
+  const requestedCategory = normalizeCatalogCategory(category);
+  const selectedCategory = CATALOG_COLUMNS[requestedCategory] ? requestedCategory : 'organization';
   const schema = CATALOG_COLUMNS[selectedCategory];
   const selectedLabel = CATEGORY_PROMPT_LABELS[selectedCategory];
   const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}): ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
@@ -23,6 +24,10 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     `- Geografia: ${geography || 'sem preferência'}`,
     `- Quantidade máxima desejada: ${quantity || 'a definir'}`,
     `- Critérios adicionais: ${extraCriteria || 'nenhum além do contexto'}`,
+    ...(selectedCategory === 'person' ? [
+      `- Atuações profissionais desejadas: ${personProfiles || 'qualquer atuação coerente com o contexto'}`,
+      `- Fontes preferidas para descoberta ou verificação: ${sourcePreferences || 'fontes públicas adequadas ao perfil'}`,
+    ] : []),
     '',
     'TIPO DE STAKEHOLDER SELECIONADO',
     `PESQUISE SOMENTE ${selectedLabel.toUpperCase()}.`,
@@ -44,17 +49,17 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     '3. Quando um dado não for localizado, escreva exatamente “não localizado” no campo correspondente.',
     '4. Separe fatos encontrados de inferências e sinalize conflitos entre fontes.',
     '5. Informe a data de consulta e uma confiança de 0 a 100 acompanhada de justificativa.',
-    '6. Listas usam ponto e vírgula. Publicações usam Título | URL | ano; ...',
+    '6. Listas usam ponto e vírgula. Produções usam Título | URL | ano | tipo; ...',
     '7. Não crie colunas de foto, avatar, imagem, credencial ou dado privado.',
     '',
     'PADRÃO MÍNIMO DE QUALIDADE — NÃO NEGOCIÁVEL',
     '1. Cada perfil precisa ter descrição factual e detalhada com pelo menos 400 caracteres; não use texto genérico, repetido ou apenas uma frase biográfica.',
     '2. Cada perfil precisa ter resumo factual, pelo menos 3 áreas/temas específicos e pelo menos 3 URLs públicas distintas em fontes.',
-    selectedCategory === 'researcher'
-      ? '3. Cada pesquisador precisa ter pelo menos 5 publicações relevantes verificadas; selecione entre elas os 5 artigos com mais citações no Google Scholar, no formato Título | URL direta | ano. Informe a contagem de citações no título ou em evidencias_publicas quando ela estiver pública. A URL deve apontar para DOI, periódico, editora, repositório ou página institucional da publicação; perfil de Google Scholar, página de busca ou lista genérica não conta como publicação. Se o perfil não permitir verificar cinco artigos, não inclua a pessoa.'
+    selectedCategory === 'person'
+      ? '3. Para cada pessoa, confirme cargo, organização, áreas de especialidade, atuação profissional e ao menos um perfil público direto. Registre trabalhos relevantes em producoes_relevantes, sejam artigos, projetos, reportagens, entrevistas, palestras ou relatórios.'
       : '3. Para cada registro, preencha os campos específicos da categoria com fatos verificáveis: não deixe o perfil depender apenas de nome, site e uma descrição curta.',
-    selectedCategory === 'researcher'
-      ? '4. Para pesquisadores, preencha instituição atual, cargo, áreas de especialidade e linhas de pesquisa quando públicos; localize também ORCID, OpenAlex e Google Scholar quando existirem.'
+    selectedCategory === 'person'
+      ? '4. Aplique exigências acadêmicas somente a perfis de pesquisa: localize publicações, ORCID, OpenAlex, Google Scholar, citações e h-index quando existirem. Para imprensa, registre veículo, área de cobertura e trabalhos recentes. Para LinkedIn, use a URL pública e confirme o vínculo atual em outra fonte quando possível.'
       : '4. Para escolas e organizações, preencha os campos específicos de oferta, atuação, setor, relação com a indústria e programas/parcerias quando públicos.',
     '5. Se uma entidade não atingir esses mínimos com fontes reais, não a inclua: pesquise outra entidade. Nunca complete a quantidade com perfil raso, link genérico ou dado inventado.',
     '',
@@ -65,5 +70,5 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     'DEFINIÇÃO DAS COLUNAS',
     schemaLines,
   ];
-  return `Você é um pesquisador responsável por uma pesquisa pública e rastreável de stakeholders para o SENAI-SP.\n\n${sections.join('\n')}`;
+  return `Você é responsável por uma pesquisa pública e rastreável de stakeholders para o SENAI-SP.\n\n${sections.join('\n')}`;
 }

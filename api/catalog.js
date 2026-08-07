@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   await hydrateCatalogStore({ force: true });
   return res.status(200).json({
     records: {
-      researcher: getImportedRecords('researcher'),
+      person: getImportedRecords('person'),
       school: getImportedRecords('school'),
       organization: getImportedRecords('organization'),
     },

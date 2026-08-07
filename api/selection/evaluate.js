@@ -19,13 +19,14 @@ export default async function handler(req, res) {
   await hydrateRateLimitStore({ force: true });
   try {
     const payload = await readJson(req);
+    if (payload?.category === 'researcher') payload.category = 'person';
     // O briefing traz um campo por informação coberta, não por pergunta feita:
     // uma resposta rica cobre vários campos de uma vez, então o teto acompanha
     // o número de campos canônicos, e não o número de perguntas.
     const validAnswers = payload?.answers && typeof payload.answers === 'object' && !Array.isArray(payload.answers)
       && Object.keys(payload.answers).length <= 32
       && Object.values(payload.answers).every((value) => typeof value === 'string' && value.length <= 4000);
-    if (!payload || !payload.category || !payload.objective || !['researcher', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
+    if (!payload || !payload.category || !payload.objective || !['person', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
     try {

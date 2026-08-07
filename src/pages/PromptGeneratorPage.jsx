@@ -22,7 +22,7 @@ import PageContainer from '../design-system/primitives/PageContainer';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 export default function PromptGeneratorPage() {
-  const [form, setForm] = useState({ category: 'researcher', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '' });
+  const [form, setForm] = useState({ category: 'person', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '', personProfiles: '', sourcePreferences: '' });
   const [prompt, setPrompt] = useState('');
   const [snack, setSnack] = useState('');
 
@@ -78,6 +78,10 @@ export default function PromptGeneratorPage() {
                   {Object.entries(CATEGORY_LABELS).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
                 </Select>
               </FormControl>
+              {form.category === 'person' && <>
+                <TextField fullWidth label="Que experiência profissional procura?" value={form.personProfiles} onChange={(event) => change('personProfiles', event.target.value)} sx={{ mb: 2 }} placeholder="Ex.: indústria, pesquisa, imprensa ou gestão pública." />
+                <TextField fullWidth label="Onde prefere localizar ou verificar?" value={form.sourcePreferences} onChange={(event) => change('sourcePreferences', event.target.value)} sx={{ mb: 2 }} placeholder="Ex.: LinkedIn, imprensa e páginas institucionais." />
+              </>}
               <TextField fullWidth multiline minRows={2} label="O que você procura?" value={form.context} onChange={(event) => change('context', event.target.value)} sx={{ mb: 2 }} placeholder="Ex.: organizações que formam profissionais para IA na indústria." />
               <TextField fullWidth label="Como pretende usar o resultado?" value={form.purpose} onChange={(event) => change('purpose', event.target.value)} sx={{ mb: 2 }} placeholder="Ex.: convidar parceiros para um novo programa." />
               <TextField fullWidth label="País ou idioma (opcional)" value={form.geography} onChange={(event) => change('geography', event.target.value)} sx={{ mb: 2 }} placeholder="Ex.: Brasil, em português." />

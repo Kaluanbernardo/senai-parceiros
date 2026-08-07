@@ -28,7 +28,7 @@ function profileIdentity(record) {
   const orcid = orcidIdentity(record.orcid || record.identificadores);
   if (orcid) return `orcid:${orcid}`;
   try {
-    const parsed = new URL(record.scholar || record.profileUrl || record.url);
+    const parsed = new URL(record.linkedin_url || record.perfil_principal_url || record.scholar || record.profileUrl || record.url);
     if (!parsed.hostname) return '';
     return `profile:${parsed.hostname.toLowerCase()}${parsed.pathname.replace(/\/$/, '')}`;
   } catch {
@@ -73,12 +73,14 @@ function mergeGroup(records) {
   const articleKeysByRecord = ordered.map((record) => new Set((record.artigos || []).map((article) => String(article.url || article.titulo || '').trim().toLowerCase()).filter(Boolean)));
   const overlappingArticles = [...new Set(articleKeysByRecord.flatMap((keys) => [...keys]))]
     .filter((key) => articleKeysByRecord.filter((keys) => keys.has(key)).length > 1);
-  for (const field of ['nome', 'instituicao', 'pais', 'areas', 'citacoes', 'scholar', 'profileType', 'genero']) {
+  for (const field of ['nome', 'instituicao', 'cargo', 'pais', 'areas', 'citacoes', 'scholar', 'perfil_principal_url', 'linkedin_url', 'profileType', 'genero']) {
     if (!merged[field]) merged[field] = ordered.find((record) => record[field])?.[field] || merged[field];
   }
   merged.pesquisa = longest(ordered, 'pesquisa') || merged.pesquisa || '';
   merged.miniBio = longest(ordered, 'miniBio') || merged.miniBio || '';
   merged.areas = mergeAreas(ordered);
+  merged.perfis_atuacao = [...new Set(ordered.flatMap((record) => record.perfis_atuacao || ['pesquisa']))];
+  merged.producoes_relevantes = uniqueArticles(ordered.map((record) => ({ artigos: record.producoes_relevantes || [] })));
   merged.artigos = uniqueArticles(ordered);
   merged.aliases = [...new Set(ordered.flatMap((record) => [record.nome, ...(record.aliases || [])]).filter(Boolean))];
   merged.legacyIds = ordered.map((record) => record.id).filter((id) => id !== merged.id);

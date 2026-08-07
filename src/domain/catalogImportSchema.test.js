@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATALOG_SCHEMA_VERSION, getCatalogHeaders, getRequiredHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
+import { CATALOG_SCHEMA_VERSION, LEGACY_CATALOG_SCHEMA_VERSION, getCatalogHeaders, getRequiredHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
 
 describe('catalog import schema', () => {
   it('keeps category headers deterministic and validates the version/type', () => {
@@ -87,5 +87,32 @@ describe('catalog import schema', () => {
     expect(record.risco).toBe('Não localizado');
     expect(record.foto).toBeUndefined();
     expect(record.image).toBeUndefined();
+  });
+
+  it('imports a non-academic professional without requiring academic fields', () => {
+    const row = {
+      schema_version: CATALOG_SCHEMA_VERSION,
+      tipo_registro: 'person',
+      nome: 'Profissional de teste',
+      pais: 'Brasil',
+      perfis_atuacao: 'indústria; imprensa',
+      instituicao_atual: 'Veículo Teste',
+      cargo: 'Jornalista',
+      linkedin_url: 'https://www.linkedin.com/in/profissional-teste',
+      producoes_relevantes: 'Reportagem | https://example.org/reportagem | 2026 | matéria',
+    };
+    expect(validateCatalogRow(row, 'person').valid).toBe(true);
+    expect(rowToCanonical(row)).toMatchObject({
+      perfis_atuacao: ['indústria', 'imprensa'],
+      cargo: 'Jornalista',
+      linkedin_url: row.linkedin_url,
+      producoes_relevantes: [{ titulo: 'Reportagem', url: 'https://example.org/reportagem', ano: '2026', tipo: 'matéria' }],
+    });
+  });
+
+  it('maps a legacy researcher row to a research person', () => {
+    const row = { schema_version: LEGACY_CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Pesquisadora legada', pais: 'Brasil' };
+    expect(validateCatalogRow(row, 'person').valid).toBe(true);
+    expect(rowToCanonical(row).perfis_atuacao).toEqual(['pesquisa']);
   });
 });

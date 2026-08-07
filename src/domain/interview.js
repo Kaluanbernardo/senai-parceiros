@@ -1,7 +1,7 @@
 import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver.js';
 
 export const CATEGORY_LABELS = {
-  researcher: 'Especialista',
+  person: 'Pessoa especialista',
   school: 'Instituição de Educação',
   organization: 'Organização',
 };

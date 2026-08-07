@@ -190,7 +190,7 @@ describe('InterviewPlanner', () => {
     }
 
     const brief = finalize(state);
-    expect(brief.category).toBe('researcher');
+    expect(brief.category).toBe('person');
     expect(brief.objective).toBe('speaker');
     expect(brief.context).toBe('IA aplicada à indústria');
     expect(brief.uncertainties).toContain('themes');

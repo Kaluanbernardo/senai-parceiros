@@ -93,7 +93,7 @@ describe('catalog XLSX import', () => {
       contentBase64: Buffer.from(csv).toString('base64'),
     });
 
-    expect(parsed.category).toBe('researcher');
+    expect(parsed.category).toBe('person');
     expect(parsed.rows[0].record).toMatchObject({ nome: 'Nancy Bocken', pais: 'Países Baixos' });
     expect(parsed.errors).toEqual([]);
   });
@@ -111,7 +111,7 @@ describe('catalog XLSX import', () => {
     await expect(parseCatalogWorkbook({
       filename: 'misto.csv',
       contentBase64: Buffer.from(csv).toString('base64'),
-    })).rejects.toMatchObject({ code: 'catalog_mixed_categories', categories: ['researcher', 'organization'] });
+    })).rejects.toMatchObject({ code: 'catalog_mixed_categories', categories: ['person', 'organization'] });
   });
 
   it('imports the Catálogo considerado sheet from an evaluation workbook', async () => {
