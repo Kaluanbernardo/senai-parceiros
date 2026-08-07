@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -45,6 +45,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const data = useData();
+  const importRequested = searchParams.get('import') === '1';
   const [tab, setTab] = useState(0);
   const [editItem, setEditItem] = useState(null);
   const [editType, setEditType] = useState(null);
@@ -54,13 +55,11 @@ export default function AdminPage() {
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const fileInputRef = useRef(null);
-  const xlsxInputRef = useRef(null);
+  const csvInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
-  const [catalogImportOpen, setCatalogImportOpen] = useState(searchParams.get('import') === '1');
-  const [catalogImportCategory, setCatalogImportCategory] = useState('');
-  const [xlsxPreview, setXlsxPreview] = useState(null);
-  const [xlsxDecisions, setXlsxDecisions] = useState({});
-  const [xlsxBusy, setXlsxBusy] = useState(false);
+  const [csvPreview, setCsvPreview] = useState(null);
+  const [csvDecisions, setCsvDecisions] = useState({});
+  const [csvBusy, setCsvBusy] = useState(false);
   const [batchesOpen, setBatchesOpen] = useState(false);
   const [batches, setBatches] = useState([]);
   const [batchesBusy, setBatchesBusy] = useState(false);
@@ -77,6 +76,12 @@ export default function AdminPage() {
   ];
 
   const currentTab = tabConfig[tab];
+
+  useEffect(() => {
+    if (!importRequested) return undefined;
+    const timer = setTimeout(() => csvInputRef.current?.click(), 100);
+    return () => clearTimeout(timer);
+  }, [importRequested]);
 
   // Edit handlers
   const handleEdit = (item) => {
@@ -139,15 +144,9 @@ export default function AdminPage() {
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
-  const handleXlsxClick = () => {
+  const handleCsvClick = () => {
     setMenuAnchor(null);
-    setCatalogImportOpen(true);
-  };
-
-  const chooseCatalogFile = () => {
-    if (!catalogImportCategory) return;
-    setCatalogImportOpen(false);
-    setTimeout(() => xlsxInputRef.current?.click(), 100);
+    setTimeout(() => csvInputRef.current?.click(), 100);
   };
 
   const loadImportBatches = async () => {
@@ -193,11 +192,11 @@ export default function AdminPage() {
     }
   };
 
-  const handleXlsxFileChange = async (event) => {
+  const handleCsvFileChange = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    setXlsxBusy(true);
+    setCsvBusy(true);
     try {
       const buffer = await file.arrayBuffer();
       let binary = '';
@@ -207,26 +206,26 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ filename: file.name, category: catalogImportCategory, contentBase64: btoa(binary) }),
+        body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
-      setXlsxPreview(body);
-      setXlsxDecisions(Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing'])));
+      setCsvPreview(body);
+      setCsvDecisions(Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing'])));
     } catch (error) {
       showSnack(error.message || 'Falha na prévia da importação.', 'error');
     } finally {
-      setXlsxBusy(false);
+      setCsvBusy(false);
     }
   };
 
-  const commitXlsx = async () => {
-    if (!xlsxPreview) return;
-    setXlsxBusy(true);
+  const commitCsv = async () => {
+    if (!csvPreview) return;
+    setCsvBusy(true);
     try {
       const response = await fetch('/api/admin/catalog-import-commit', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ batchId: xlsxPreview.batchId, decisions: xlsxDecisions }),
+        body: JSON.stringify({ batchId: csvPreview.batchId, decisions: csvDecisions }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
@@ -242,12 +241,12 @@ export default function AdminPage() {
         `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
         radarUpdated ? 'success' : 'warning',
       );
-      setXlsxPreview(null);
-      setXlsxDecisions({});
+      setCsvPreview(null);
+      setCsvDecisions({});
     } catch (error) {
       showSnack(error.message || 'Falha ao confirmar a importação.', 'error');
     } finally {
-      setXlsxBusy(false);
+      setCsvBusy(false);
     }
   };
 
@@ -313,9 +312,9 @@ export default function AdminPage() {
             <MenuItem disabled>
               <Typography variant="caption" fontWeight={700}>IMPORTAR</Typography>
             </MenuItem>
-            <MenuItem onClick={handleXlsxClick}>
+            <MenuItem onClick={handleCsvClick}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Importar XLSX ou CSV" secondary="Escolha o tipo, revise e confirme" />
+              <ListItemText primary="Importar CSV em massa" secondary="A categoria é lida do arquivo; revise e confirme" />
             </MenuItem>
             <MenuItem onClick={handleBatchesClick}>
               <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
@@ -381,37 +380,19 @@ export default function AdminPage() {
         accept=".json"
         onChange={handleFileChange}
       />
-      <input type="file" ref={xlsxInputRef} style={{ display: 'none' }} accept=".xlsx,.csv" onChange={handleXlsxFileChange} />
+      <input type="file" ref={csvInputRef} style={{ display: 'none' }} accept=".csv,text/csv" onChange={handleCsvFileChange} />
 
-      <Dialog open={catalogImportOpen} onClose={() => setCatalogImportOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>O que você está importando?</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 1 }}>
-            <InputLabel>Tipo de conteúdo</InputLabel>
-            <Select label="Tipo de conteúdo" value={catalogImportCategory} onChange={(event) => setCatalogImportCategory(event.target.value)}>
-              <MenuItem value="researcher">Especialistas e pesquisadores</MenuItem>
-              <MenuItem value="school">Instituições de educação</MenuItem>
-              <MenuItem value="organization">Outras organizações</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCatalogImportOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={chooseCatalogFile} disabled={!catalogImportCategory}>Escolher arquivo</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={Boolean(xlsxPreview)} onClose={() => !xlsxBusy && setXlsxPreview(null)} fullWidth maxWidth="md">
+      <Dialog open={Boolean(csvPreview)} onClose={() => !csvBusy && setCsvPreview(null)} fullWidth maxWidth="md">
         <DialogTitle>Prévia da importação</DialogTitle>
         <DialogContent dividers>
-          {xlsxPreview && <>
-            <Alert severity="info" sx={{ mb: 2 }}>Categoria: {xlsxPreview.category} · {xlsxPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
-            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {xlsxPreview.counts.new} · Possíveis duplicatas: {xlsxPreview.counts.possibleDuplicate} · Já importados: {xlsxPreview.counts.alreadyImported || 0} · Inválidos: {xlsxPreview.counts.invalid}</Typography>
-            <List dense>{xlsxPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider secondaryAction={<FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id={`decision-${row.rowNumber}`}>Decisão</InputLabel><Select labelId={`decision-${row.rowNumber}`} label="Decisão" value={xlsxDecisions[String(row.rowNumber)] || 'keep_existing'} disabled={row.status === 'invalid' || row.status === 'already_imported'} onChange={(event) => setXlsxDecisions((current) => ({ ...current, [String(row.rowNumber)]: event.target.value }))}><MenuItem value="keep_existing">Manter existente</MenuItem><MenuItem value="use_imported">Usar importado</MenuItem><MenuItem value="merge">Mesclar campos</MenuItem><MenuItem value="ignore">Ignorar linha</MenuItem></Select></FormControl>}><ListItemText sx={{ pr: 2 }} primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
-            {xlsxPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
+          {csvPreview && <>
+            <Alert severity="info" sx={{ mb: 2 }}>Categoria detectada: {csvPreview.category} · {csvPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
+            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {csvPreview.counts.new} · Possíveis duplicatas: {csvPreview.counts.possibleDuplicate} · Já importados: {csvPreview.counts.alreadyImported || 0} · Inválidos: {csvPreview.counts.invalid}</Typography>
+            <List dense>{csvPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider secondaryAction={<FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id={`decision-${row.rowNumber}`}>Decisão</InputLabel><Select labelId={`decision-${row.rowNumber}`} label="Decisão" value={csvDecisions[String(row.rowNumber)] || 'keep_existing'} disabled={row.status === 'invalid' || row.status === 'already_imported'} onChange={(event) => setCsvDecisions((current) => ({ ...current, [String(row.rowNumber)]: event.target.value }))}><MenuItem value="keep_existing">Manter existente</MenuItem><MenuItem value="use_imported">Usar importado</MenuItem><MenuItem value="merge">Mesclar campos</MenuItem><MenuItem value="ignore">Ignorar linha</MenuItem></Select></FormControl>}><ListItemText sx={{ pr: 2 }} primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
+            {csvPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
           </>}
         </DialogContent>
-        <DialogActions><Button onClick={() => setXlsxPreview(null)} disabled={xlsxBusy}>Cancelar</Button><Button variant="contained" onClick={commitXlsx} disabled={xlsxBusy || !xlsxPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
+        <DialogActions><Button onClick={() => setCsvPreview(null)} disabled={csvBusy}>Cancelar</Button><Button variant="contained" onClick={commitCsv} disabled={csvBusy || !csvPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
       </Dialog>
 
       <Dialog open={batchesOpen} onClose={() => !batchesBusy && setBatchesOpen(false)} fullWidth maxWidth="md">

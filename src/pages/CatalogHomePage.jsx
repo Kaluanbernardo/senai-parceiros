@@ -56,7 +56,7 @@ export default function CatalogHomePage() {
           onClick={() => navigate('/admin?import=1')}
           sx={{ mt: 3 }}
         >
-          Importar planilha
+          Importar CSV em massa
         </Button>
       )}
 
