@@ -787,7 +787,10 @@ async function failRun({ reason, sourceStatus, fetchedAt, persist }) {
     radarStore.recordRun({ status: 'failed', fetchedAt, itemCount: 0, sourceStatus, durationMs: null });
     await safeStoreCall(() => radarStore.flush());
   }
-  throw new Error(reason);
+  const error = new Error(reason);
+  error.sourceStatus = sourceStatus;
+  error.fetchedAt = fetchedAt;
+  throw error;
 }
 
 async function safeStoreCall(operation) {
@@ -839,7 +842,7 @@ function runBudgetMs() {
   return Math.max(5_000, Number(process.env.RADAR_RUN_BUDGET_MS || DEFAULT_RUN_BUDGET_MS));
 }
 
-export async function getRadarItems({ filters = {}, live = false, persist = true } = {}) {
+export async function getRadarItems({ filters = {}, live = false, persist = true, includeAi = true } = {}) {
   const runStartedAt = Date.now();
   // A warm serverless reader can outlive the instance that writes a new Blob
   // snapshot. Always reload the durable snapshot so GETs do not serve the
@@ -965,7 +968,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   }
   const fetchedAt = liveProvider ? new Date().toISOString() : stored?.fetchedAt || new Date().toISOString();
   const mergedResearch = mergeResearchItems(items.filter((item) => item.section === 'research'));
-  const shouldSummarizeResearch = live && (!filters.section || filters.section === 'research');
+  const shouldSummarizeResearch = includeAi && live && (!filters.section || filters.section === 'research');
   // Resumo por IA nao e enriquecimento: um item exibido com o texto da fonte e
   // indistinguivel de um item que nao precisava de resumo, entao a degradacao
   // seria invisivel. A falha e registrada e derruba o run.
@@ -982,7 +985,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   // Editorial rewriting runs after the eligibility filter so that no rewrite is
   // ever spent on an item the snapshot would discard anyway.
   const collected = dedupeRadarItems([...summarizedResearch, ...nonResearch]).filter(isEligibleRadarItem);
-  const [editorialResult] = live
+  const [editorialResult] = includeAi && live
     ? await Promise.allSettled([editorializeRadarItems(collected, { previousItems: stored?.items || [], deadlineAt: runStartedAt + runBudgetMs() })])
     : [{ status: 'fulfilled', value: null }];
   if (editorialResult.status === 'rejected') {
@@ -1023,10 +1026,10 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   return { items: filterRadarItems(snapshotItems, filters), liveProvider, snapshotLive: Boolean(stored?.liveProvider), stale, fetchedAt, sourceStatus, lastRun: radarStore.getLastRun(), store: radarStore.status() };
 }
 
-export async function refreshRadarSnapshot({ filters = {} } = {}) {
+export async function refreshRadarSnapshot({ filters = {}, includeAi = true } = {}) {
   const startedAt = Date.now();
   try {
-    const result = await getRadarItems({ filters, live: true, persist: false });
+    const result = await getRadarItems({ filters, live: true, persist: false, includeAi });
     const previous = radarStore.getSnapshot();
     const snapshot = { items: dedupeRadarItems(result.items), fetchedAt: result.fetchedAt, sourceStatus: result.sourceStatus, liveProvider: result.liveProvider, stale: false };
     if (result.liveProvider) radarStore.writeSnapshot(snapshot);
@@ -1041,9 +1044,10 @@ export async function refreshRadarSnapshot({ filters = {} } = {}) {
     // store threw a second time and the original cause escaped as an opaque
     // error with no lastRun attached — the run became unattributable.
     const cause = String(error?.message || 'radar_refresh_failed').slice(0, 160);
-    const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus: {}, error: cause, durationMs: Date.now() - startedAt });
+    const sourceStatus = error?.sourceStatus || {};
+    const lastRun = radarStore.recordRun({ status: 'failed', fetchedAt: error?.fetchedAt || new Date().toISOString(), itemCount: radarStore.getSnapshot()?.items?.length || 0, sourceStatus, error: cause, durationMs: Date.now() - startedAt });
     await safeStoreCall(() => radarStore.flush());
-    return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), lastRun, error: cause };
+    return { items: radarStore.getSnapshot()?.items || [], refreshed: false, stale: Boolean(radarStore.getSnapshot()), sourceStatus, lastRun, error: cause };
   }
 }
 

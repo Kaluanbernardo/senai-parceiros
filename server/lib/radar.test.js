@@ -599,6 +599,53 @@ describe('radar domain', () => {
     });
   });
 
+  it('permite concluir a coleta sem chamar a IA para a etapa editorial separada', async () => {
+    enableRadarProvider();
+    const fetchMock = vi.fn(async (url) => {
+      if (String(url).includes('openrouter.ai')) throw new Error('ai_should_not_run');
+      if (String(url).includes('api.openalex.org')) return new Response(JSON.stringify({ results: [] }), { status: 200 });
+      if (String(url).includes('api.crossref.org')) return new Response(JSON.stringify({ message: { items: [] } }), { status: 200 });
+      return new Response('<rss><channel><item><title>Atualização VET</title><link>https://example.org/vet</link><pubDate>Thu, 16 Jul 2026 12:00:00 GMT</pubDate><description>Educação profissional.</description><guid>vet-collection-only</guid></item></channel></rss>', { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await refreshRadarSnapshot({ includeAi: false });
+
+    expect(result.refreshed).toBe(true);
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('openrouter.ai'))).toBe(false);
+  });
+
+  it('preserva a fonte do erro quando o resumo acadêmico é truncado', async () => {
+    enableRadarProvider();
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'stored-research',
+        section: 'research',
+        title: 'Vocational pathways in manufacturing',
+        summaryPt: 'Resumo anterior da fonte.',
+        abstractText: 'Este estudo compara percursos de educação profissional e participação empresarial na indústria.',
+        publishedAt: '2026-07-01',
+        sourceName: 'OpenAlex',
+        externalId: 'stored-research',
+      })],
+      fetchedAt: '2026-07-02T12:00:00.000Z',
+    });
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      if (String(url).includes('openrouter.ai')) {
+        return new Response(JSON.stringify({ choices: [{ finish_reason: 'length' }] }), { status: 200 });
+      }
+      if (String(url).includes('api.openalex.org')) return new Response(JSON.stringify({ results: [] }), { status: 200 });
+      if (String(url).includes('api.crossref.org')) return new Response(JSON.stringify({ message: { items: [] } }), { status: 200 });
+      return new Response('<rss><channel></channel></rss>', { status: 200 });
+    }));
+
+    const result = await refreshRadarSnapshot({ filters: { section: 'research' } });
+
+    expect(result.refreshed).toBe(false);
+    expect(result.error).toBe('output_truncated');
+    expect(result.lastRun.sourceStatus['Resumos por IA']).toMatchObject({ status: 'error', error: 'output_truncated' });
+  });
+
   it('retrieves OECD VET publications through public DOI metadata', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: { items: [{
       DOI: '10.1787/example',

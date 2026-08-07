@@ -192,7 +192,7 @@ export default function RadarPage() {
     setCollecting(true);
     setCollectResult(null);
     try {
-      const response = await fetch('/api/radar/refresh', { method: 'POST', credentials: 'include' });
+      const response = await fetch('/api/radar/refresh?mode=collection', { method: 'POST', credentials: 'include' });
       const body = await response.json().catch(() => ({}));
       if (response.status === 401) {
         setCollectResult({ severity: 'error', message: 'Sua sessão expirou. Entre novamente como administrador para coletar.' });

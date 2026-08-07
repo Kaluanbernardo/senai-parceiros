@@ -28,14 +28,15 @@ export default async function handler(req, res) {
   // before the editorial pass gets a turn, so rewriting has to be runnable on
   // its own. It touches no source: it reads the stored snapshot, rewrites what
   // is still showing the source's wording and writes it back.
-  if (new URL(req.url || '/api/radar/refresh', 'http://localhost').searchParams.get('mode') === 'editorial') {
+  const mode = new URL(req.url || '/api/radar/refresh', 'http://localhost').searchParams.get('mode');
+  if (mode === 'editorial') {
     const editorial = await refreshRadarEditorials();
     return res.status(editorial.refreshed ? 200 : 503).json(editorial);
   }
   const startedAt = Date.now();
   let result;
   try {
-    result = await refreshRadarSnapshot();
+    result = await refreshRadarSnapshot({ includeAi: mode !== 'collection' });
   } catch (error) {
     await emitOperationalAlert('radar_refresh_failed', { severity: 'critical', details: { status: 'error', driver: getRadarStoreStatus().driver } });
     // Returning the run and its cause is what makes this branch diagnosable:
