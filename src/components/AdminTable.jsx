@@ -24,6 +24,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
 import { getDisplayLogoUrl } from '../utils/media';
+import { formatEntityAddedAt } from '../utils/entityDate';
 
 const COLUMNS = {
   stakeholder: [
@@ -32,6 +33,7 @@ const COLUMNS = {
     { id: 'nome', label: 'Nome', flex: true },
     { id: 'pais', label: 'Pais', width: 130 },
     { id: 'natureza', label: 'Natureza', width: 100 },
+    { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
     { id: 'relacao_status', label: 'Parceria', width: 100, sortable: false },
     { id: 'website', label: 'Site', width: 60, sortable: false },
     { id: 'actions', label: 'Acoes', width: 100, sortable: false },
@@ -42,6 +44,7 @@ const COLUMNS = {
     { id: 'instituicao', label: 'Instituicao', flex: true },
     { id: 'pais', label: 'Pais', width: 130 },
     { id: 'areas', label: 'Areas', width: 200 },
+    { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
     { id: 'website', label: 'Site', width: 60, sortable: false },
     { id: 'actions', label: 'Acoes', width: 100, sortable: false },
   ],
@@ -51,6 +54,7 @@ const COLUMNS = {
     { id: 'instituicao', label: 'Instituicao', width: 180 },
     { id: 'pais', label: 'Pais', width: 130 },
     { id: 'h_index', label: 'h-index', width: 80 },
+    { id: 'adicionadoEm', label: 'Adicionado em', width: 145 },
     { id: 'scholar', label: 'Scholar', width: 60, sortable: false },
     { id: 'actions', label: 'Acoes', width: 100, sortable: false },
   ],
@@ -184,6 +188,8 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
       }
       case 'h_index':
         return <Typography variant="body2" noWrap>{item.h_index || '-'}</Typography>;
+      case 'adicionadoEm':
+        return <Typography variant="body2" color="text.secondary" noWrap>{formatEntityAddedAt(item)}</Typography>;
       case 'website':
         return item.website ? (
           <Tooltip title={item.website}>

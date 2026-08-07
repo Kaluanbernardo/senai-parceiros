@@ -17,9 +17,6 @@ import DialogActions from '@mui/material/DialogActions';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import Select from '@mui/material/Select';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -57,8 +54,6 @@ export default function AdminPage() {
   const fileInputRef = useRef(null);
   const csvInputRef = useRef(null);
   const [importType, setImportType] = useState(null);
-  const [csvPreview, setCsvPreview] = useState(null);
-  const [csvDecisions, setCsvDecisions] = useState({});
   const [csvBusy, setCsvBusy] = useState(false);
   const [batchesOpen, setBatchesOpen] = useState(false);
   const [batches, setBatches] = useState([]);
@@ -195,8 +190,9 @@ export default function AdminPage() {
   const handleCsvFileChange = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
+    if (!file || csvBusy) return;
     setCsvBusy(true);
+    showSnack('Importando CSV; registros existentes serão mantidos automaticamente.', 'info');
     try {
       const buffer = await file.arrayBuffer();
       let binary = '';
@@ -209,45 +205,35 @@ export default function AdminPage() {
         body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'Falha na prévia da importação.');
-      setCsvPreview(body);
-      setCsvDecisions(Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing'])));
+      if (!response.ok) throw new Error(body.error || 'Falha ao importar CSV.');
+      const decisions = Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing']));
+      await commitCsv(body, decisions);
     } catch (error) {
-      showSnack(error.message || 'Falha na prévia da importação.', 'error');
+      showSnack(error.message || 'Falha ao importar CSV.', 'error');
     } finally {
       setCsvBusy(false);
     }
   };
 
-  const commitCsv = async () => {
-    if (!csvPreview) return;
-    setCsvBusy(true);
-    try {
-      const response = await fetch('/api/admin/catalog-import-commit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ batchId: csvPreview.batchId, decisions: csvDecisions }),
+  const commitCsv = async (preview, decisions) => {
+    const response = await fetch('/api/admin/catalog-import-commit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ batchId: preview.batchId, decisions }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
+    data.mergeImportedRecords(body.category, body.records || []);
+    let radarUpdated = true;
+    if (body.category === 'researcher' && body.applied?.length) {
+      const radarResponse = await fetch('/api/radar/refresh', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
-      data.mergeImportedRecords(body.category, body.records || []);
-      let radarUpdated = true;
-      if (body.category === 'researcher' && body.applied?.length) {
-        const radarResponse = await fetch('/api/radar/refresh', {
-          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
-        });
-        radarUpdated = radarResponse.ok;
-      }
-      showSnack(
-        `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
-        radarUpdated ? 'success' : 'warning',
-      );
-      setCsvPreview(null);
-      setCsvDecisions({});
-    } catch (error) {
-      showSnack(error.message || 'Falha ao confirmar a importação.', 'error');
-    } finally {
-      setCsvBusy(false);
+      radarUpdated = radarResponse.ok;
     }
+    showSnack(
+      `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
+      radarUpdated ? 'success' : 'warning',
+    );
   };
 
   const handleFileChange = (e) => {
@@ -312,9 +298,9 @@ export default function AdminPage() {
             <MenuItem disabled>
               <Typography variant="caption" fontWeight={700}>IMPORTAR</Typography>
             </MenuItem>
-            <MenuItem onClick={handleCsvClick}>
+            <MenuItem onClick={handleCsvClick} disabled={csvBusy}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Importar CSV em massa" secondary="A categoria é lida do arquivo; revise e confirme" />
+              <ListItemText primary="Importar CSV em massa" secondary="A categoria é lida do arquivo; existentes são mantidos" />
             </MenuItem>
             <MenuItem onClick={handleBatchesClick}>
               <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
@@ -360,7 +346,7 @@ export default function AdminPage() {
       <Box sx={{ flex: 1, bgcolor: '#f5f5f7', p: { xs: 2, md: 3 } }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
           <Alert severity="info" sx={{ mb: 2 }}>
-            O lote é confirmado no servidor após a prévia. Para persistência entre instâncias, configure o adapter durável do catálogo antes do handoff Azure.
+            Importações CSV adicionam registros novos e mantêm automaticamente tudo que já existe. Para persistência entre instâncias, configure o adapter durável do catálogo antes do handoff Azure.
           </Alert>
           <AdminTable
             data={currentTab.data}
@@ -381,19 +367,6 @@ export default function AdminPage() {
         onChange={handleFileChange}
       />
       <input type="file" ref={csvInputRef} style={{ display: 'none' }} accept=".csv,text/csv" onChange={handleCsvFileChange} />
-
-      <Dialog open={Boolean(csvPreview)} onClose={() => !csvBusy && setCsvPreview(null)} fullWidth maxWidth="md">
-        <DialogTitle>Prévia da importação</DialogTitle>
-        <DialogContent dividers>
-          {csvPreview && <>
-            <Alert severity="info" sx={{ mb: 2 }}>Categoria detectada: {csvPreview.category} · {csvPreview.filename}. Nada foi gravado ainda; duplicatas ficam como “manter existente” por padrão.</Alert>
-            <Typography variant="body2" sx={{ mb: 1 }}>Novos: {csvPreview.counts.new} · Possíveis duplicatas: {csvPreview.counts.possibleDuplicate} · Já importados: {csvPreview.counts.alreadyImported || 0} · Inválidos: {csvPreview.counts.invalid}</Typography>
-            <List dense>{csvPreview.rows.slice(0, 40).map((row) => <ListItem key={row.rowNumber} divider secondaryAction={<FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id={`decision-${row.rowNumber}`}>Decisão</InputLabel><Select labelId={`decision-${row.rowNumber}`} label="Decisão" value={csvDecisions[String(row.rowNumber)] || 'keep_existing'} disabled={row.status === 'invalid' || row.status === 'already_imported'} onChange={(event) => setCsvDecisions((current) => ({ ...current, [String(row.rowNumber)]: event.target.value }))}><MenuItem value="keep_existing">Manter existente</MenuItem><MenuItem value="use_imported">Usar importado</MenuItem><MenuItem value="merge">Mesclar campos</MenuItem><MenuItem value="ignore">Ignorar linha</MenuItem></Select></FormControl>}><ListItemText sx={{ pr: 2 }} primary={`Linha ${row.rowNumber}: ${row.record?.nome || '(sem nome)'}`} secondary={`${row.status}${row.match ? ` · corresponde a ${row.match.name}` : ''}${row.errors?.length ? ` · ${row.errors.join(' ')}` : ''}`} /></ListItem>)}</List>
-            {csvPreview.rows.length > 40 && <Typography variant="caption" color="text.secondary">Exibindo as primeiras 40 linhas da prévia.</Typography>}
-          </>}
-        </DialogContent>
-        <DialogActions><Button onClick={() => setCsvPreview(null)} disabled={csvBusy}>Cancelar</Button><Button variant="contained" onClick={commitCsv} disabled={csvBusy || !csvPreview?.rows?.length}>Confirmar decisões</Button></DialogActions>
-      </Dialog>
 
       <Dialog open={batchesOpen} onClose={() => !batchesBusy && setBatchesOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>Histórico de importações</DialogTitle>

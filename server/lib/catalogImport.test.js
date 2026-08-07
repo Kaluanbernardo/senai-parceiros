@@ -137,7 +137,8 @@ describe('catalog XLSX import', () => {
     const contentBase64 = await workbookBase64(category, headers.map((header) => values[header]));
     const parsed = await parseCatalogWorkbook({ filename: 'idempotente.xlsx', contentBase64 });
     const first = previewCatalogImport(parsed, []);
-    commitCatalogImport(first.batchId);
+    const committed = commitCatalogImport(first.batchId);
+    expect(committed.appliedRecords[0].adicionadoEm).toBe(committed.committedAt);
     const second = previewCatalogImport(parsed, [{ id: 'o-imported', ...parsed.rows[0].record }]);
     expect(second.counts.alreadyImported).toBe(1);
     expect(commitCatalogImport(second.batchId).ignored[0].reason).toBe('idempotent_replay');

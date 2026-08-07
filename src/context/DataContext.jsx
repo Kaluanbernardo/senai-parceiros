@@ -120,7 +120,7 @@ export function DataProvider({ children }) {
       const numeric = Number(item.id);
       return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
     }, 0);
-    setCollection(prev => [...prev, { ...newItem, id: maxId + 1 }]);
+    setCollection(prev => [...prev, { ...newItem, id: maxId + 1, adicionadoEm: new Date().toISOString() }]);
     return maxId + 1;
   }, []);
 

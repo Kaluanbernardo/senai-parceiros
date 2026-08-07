@@ -201,6 +201,7 @@ export function commitCatalogImport(batchId, decisions = {}) {
   if (!preview) throw new Error('import_preview_not_found');
   const before = catalogStore.snapshot(preview.category);
   const records = catalogStore.getRecords(preview.category);
+  const committedAt = new Date().toISOString();
   const applied = [];
   const appliedRecords = [];
   const ignored = [];
@@ -218,7 +219,7 @@ export function commitCatalogImport(batchId, decisions = {}) {
       continue;
     }
     const existing = existingIndex >= 0 ? records[existingIndex] : null;
-    const base = { ...row.record, id: existing?.id || (decision === 'use_imported' && row.match?.id) || makeId(preview.category, row.record, records), importBatchId: batchId, importRowHash: row.hash, catalogKey: key };
+    const base = { ...row.record, id: existing?.id || (decision === 'use_imported' && row.match?.id) || makeId(preview.category, row.record, records), importBatchId: batchId, importRowHash: row.hash, catalogKey: key, adicionadoEm: existing?.adicionadoEm || committedAt };
     const record = decision === 'merge' && existing ? mergeRecord(existing, base) : base;
     if (existingIndex >= 0) records[existingIndex] = record;
     else records.push(record);
@@ -227,7 +228,7 @@ export function commitCatalogImport(batchId, decisions = {}) {
     appliedRecords.push(record);
   }
   catalogStore.replaceCategory(preview.category, records, [...before.rowHashes, ...applied.map((item) => preview.rows.find((row) => row.rowNumber === item.rowNumber)?.hash).filter(Boolean)]);
-  const batch = { ...preview, decisions, applied, appliedRecords, ignored, conflicts, before, committedAt: new Date().toISOString() };
+  const batch = { ...preview, decisions, applied, appliedRecords, ignored, conflicts, before, committedAt };
   catalogStore.setCommitted(batch);
   catalogStore.deletePending(batchId);
   return batch;
@@ -270,7 +271,12 @@ export function rollbackCatalogImport(batchId) {
 }
 
 export function getImportedRecords(category) {
-  return catalogStore.getRecords(category);
+  const batchDates = new Map(catalogStore.listBatches().map((batch) => [batch.batchId, batch.committedAt || batch.createdAt]));
+  return catalogStore.getRecords(category).map((record) => {
+    if (record.adicionadoEm) return record;
+    const adicionadoEm = batchDates.get(record.importBatchId);
+    return adicionadoEm ? { ...record, adicionadoEm } : record;
+  });
 }
 
 export function getImportBatch(batchId) {

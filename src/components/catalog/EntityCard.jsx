@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CountryFlag } from '../../utils/countryCode';
+import { formatEntityAddedAt } from '../../utils/entityDate';
 import { DESIGN_TOKENS as T } from '../../design-system/tokens';
 
 /**
@@ -156,6 +157,9 @@ export default function EntityCard({
                 {[subtitle, item?.pais].filter(Boolean).join(' · ')}
               </Typography>
             </Stack>
+            <Typography variant="caption" sx={{ display: 'block', mt: .25, color: T.ink.subtle }}>
+              Adicionada em {formatEntityAddedAt(item)}
+            </Typography>
           </Box>
 
           {compact && (
