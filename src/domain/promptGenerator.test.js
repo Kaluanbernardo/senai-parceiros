@@ -20,6 +20,8 @@ describe('generateResearchPrompt', () => {
     expect(prompt).toContain('somente um CSV UTF-8');
     expect(prompt).toContain('pelo menos 400 caracteres');
     expect(prompt).toContain('pelo menos 5 publicações relevantes');
+    expect(prompt).toContain('5 artigos com mais citações no Google Scholar');
+    expect(prompt).toContain('contagem de citações');
     expect(prompt).toContain('URL direta');
     expect(prompt).toContain('Não entregue XLSX');
     expect(prompt).toContain('h_index');

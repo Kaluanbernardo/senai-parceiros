@@ -39,7 +39,7 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     '1. Cada perfil precisa ter descrição factual e detalhada com pelo menos 400 caracteres; não use texto genérico, repetido ou apenas uma frase biográfica.',
     '2. Cada perfil precisa ter resumo factual, pelo menos 3 áreas/temas específicos e pelo menos 3 URLs públicas distintas em fontes.',
     selectedCategory === 'researcher'
-      ? '3. Cada pesquisador precisa ter pelo menos 5 publicações relevantes verificadas, no formato Título | URL direta | ano. A URL deve apontar para DOI, periódico, editora, repositório ou página institucional da publicação; perfil de Google Scholar, página de busca ou lista genérica não conta como publicação.'
+      ? '3. Cada pesquisador precisa ter pelo menos 5 publicações relevantes verificadas; selecione entre elas os 5 artigos com mais citações no Google Scholar, no formato Título | URL direta | ano. Informe a contagem de citações no título ou em evidencias_publicas quando ela estiver pública. A URL deve apontar para DOI, periódico, editora, repositório ou página institucional da publicação; perfil de Google Scholar, página de busca ou lista genérica não conta como publicação. Se o perfil não permitir verificar cinco artigos, não inclua a pessoa.'
       : '3. Para cada registro, preencha os campos específicos da categoria com fatos verificáveis: não deixe o perfil depender apenas de nome, site e uma descrição curta.',
     selectedCategory === 'researcher'
       ? '4. Para pesquisadores, preencha instituição atual, cargo, áreas de especialidade e linhas de pesquisa quando públicos; localize também ORCID, OpenAlex e Google Scholar quando existirem.'
