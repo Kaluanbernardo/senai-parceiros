@@ -94,6 +94,20 @@ describe('display fields', () => {
     expect(displaySummaryFor({ summaryPt: 'texto da fonte', editorialSummary: 'A portaria cria vagas em cursos técnicos.' }))
       .toBe('A portaria cria vagas em cursos técnicos.');
   });
+
+  it('ignora editorial antigo que atribui ao SENAI-SP um ato alheio', () => {
+    const act = {
+      sourceName: 'Diário Oficial da União',
+      contentType: 'ato oficial',
+      title: 'EXTRATO DE CONVÊNIO',
+      summaryPt: 'Relação com educação profissional: cooperação entre a Procuradoria da República no Pará e uma faculdade.',
+      editorialTitle: 'Convênio de estágio voltado para gestores do SENAI-SP',
+      editorialSummary: 'O acordo prepara estudantes para o trabalho e a cidadania no SENAI-SP.',
+    };
+    expect(displayTitleFor(act)).toBe('Extrato de convênio');
+    expect(displaySummaryFor(act)).toBe(act.summaryPt);
+    expect(needsEditorialTreatment(act)).toBe(true);
+  });
 });
 
 describe('stripEvidencePrefix', () => {

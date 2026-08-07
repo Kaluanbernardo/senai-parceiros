@@ -66,6 +66,17 @@ describe('reescrita editorial do Radar', () => {
     expect(getUsageBudget('radar-editorial')).toMatchObject({ requests: 1, tokens: 300 });
   });
 
+  it('recusa atribuir ao SENAI-SP um ato que não o menciona', async () => {
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: 'Conheça o convênio de estágio voltado para gestores do SENAI-SP',
+      summary: 'O documento trata de uma cooperação entre instituições para preparar estudantes para o trabalho e a cidadania, voltada para gestores do SENAI-SP.',
+      topics: item.temas,
+    })));
+
+    await expect(editorializeRadarItems([gazetteItem('convênio')])).rejects.toThrow('radar_editorial_rejected');
+  });
+
   it('traduz o item internacional e devolve os temas em português', async () => {
     const english = {
       id: 'cedefop-1',
