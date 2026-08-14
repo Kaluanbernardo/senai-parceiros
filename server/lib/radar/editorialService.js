@@ -417,8 +417,10 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       clearTimeout(timer);
     }
   }
-  // Item recusado pelo validador tambem ficaria com o texto da fonte.
-  if (stats.rejected) throw new Error('radar_editorial_rejected');
+  // A rejected item stays visibly pending, but it must not erase valid work
+  // from the same request. The caller persists the accepted items and reports
+  // this partial result; the rejected item naturally returns on the next pass.
+  if (stats.rejected && !stats.errors.includes('radar_editorial_rejected')) stats.errors.push('radar_editorial_rejected');
   return { items: result, stats: { ...stats, enabled: true, pendingBeyondRun: stats.pending - stats.rewritten, budget: getUsageBudget('radar-editorial') } };
 }
 

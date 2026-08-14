@@ -1027,7 +1027,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     // interface; only these counts tell them apart.
     const { stats } = editorialResult.value;
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
-      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.rejected || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
       { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, budgetExceeded: stats.budgetExceeded, budget: stats.budget, model: stats.model || null, errors: stats.errors });
   }
   // O que este run nao alcancou (teto por run ou deadline) fica de fora do
@@ -1126,7 +1126,7 @@ export async function refreshRadarEditorials() {
   const sourceStatus = {
     ...(stored.sourceStatus || {}),
     'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais',
-      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.rejected || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
       { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, budgetExceeded: stats.budgetExceeded, budget: stats.budget, model: stats.model || null, errors: stats.errors }),
   };
   // `fetchedAt` dates the collection, not the rewrite. Advancing it here would
