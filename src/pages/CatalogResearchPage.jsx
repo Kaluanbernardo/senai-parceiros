@@ -29,6 +29,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORY_LABELS } from '../domain/interview';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 import { useData } from '../context/DataContext';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
@@ -37,6 +38,7 @@ import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 const EMPTY_FORM = Object.freeze({
   category: 'person',
+  subtype: '',
   context: '',
   purpose: '',
   geography: '',
@@ -52,6 +54,8 @@ const SOURCE_OPTIONS = Object.freeze([
   ['industry', 'Entidades setoriais e imprensa especializada'],
   ['professional', 'Perfis profissionais e institucionais'],
 ]);
+
+const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
 
 const DECISION_LABELS = Object.freeze({
   use_imported: 'Adicionar',
@@ -97,7 +101,7 @@ function ResearchCandidateCard({ row, decision, onDecision }) {
       <CardContent sx={{ p: { xs: 2, md: 2.5 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1.5}>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: T.tools.research.dark }}>{CATEGORY_LABELS[row.record?.categoria === 'Pessoa' ? 'person' : row.record?.categoria === 'Escola' ? 'school' : 'organization']}</Typography>
+            <Typography variant="overline" sx={{ color: T.tools.research.dark }}>{record.subtipo || CATEGORY_LABELS[record.categoria === 'Pessoa Física' ? 'person' : 'organization']}</Typography>
             <Typography variant="h5" sx={{ mt: .25 }}>{record.nome || record.instituicao}</Typography>
             <Typography variant="body2" sx={{ mt: .35, color: T.ink.muted }}>{[subtitle, record.pais].filter(Boolean).join(' · ')}</Typography>
           </Box>
@@ -247,15 +251,27 @@ export default function CatalogResearchPage() {
                 exclusive
                 fullWidth
                 value={form.category}
-                onChange={(_, value) => value && change('category', value)}
+                onChange={(_, value) => value && setForm((previous) => ({ ...previous, category: value, subtype: '' }))}
                 disabled={busy}
                 aria-label="Tipo de parceiro"
-                sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' } }}
+                sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' } }}
               >
                 {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                   <ToggleButton key={value} value={value} sx={{ py: 1.35, textTransform: 'none', fontWeight: 700 }}>{label}</ToggleButton>
                 ))}
               </ToggleButtonGroup>
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Subtipo (opcional)</InputLabel>
+                <Select
+                  label="Subtipo (opcional)"
+                  value={form.subtype}
+                  onChange={(event) => change('subtype', event.target.value)}
+                  disabled={busy}
+                >
+                  <MenuItem value="">Todos os subtipos</MenuItem>
+                  {SUBTYPES[form.category].map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
+                </Select>
+              </FormControl>
             </Box>
 
             <Box>

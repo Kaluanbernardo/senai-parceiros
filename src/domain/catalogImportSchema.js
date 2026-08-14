@@ -1,11 +1,22 @@
-export const CATALOG_SCHEMA_VERSION = 'senai_catalog_v2';
+import {
+  CATALOG_CATEGORY_LABELS,
+  inferOrganizationSubtype,
+  inferPersonSubtype,
+  isCatalogSubtype,
+  normalizeCatalogCategory as normalizeCategory,
+  normalizeCatalogRequest,
+} from './catalogTaxonomy.js';
+
+export const CATALOG_SCHEMA_VERSION = 'senai_catalog_v3';
 export const LEGACY_CATALOG_SCHEMA_VERSION = 'senai_catalog_v1';
+export const LEGACY_CATALOG_SCHEMA_VERSION_V2 = 'senai_catalog_v2';
 export const CATALOG_SHEET_NAME = 'Stakeholders';
 export const CATALOG_METADATA_SHEET_NAME = 'Metadados';
 
 const COMMON_COLUMNS = [
-  { name: 'schema_version', type: 'texto', required: true, description: 'Valor fixo: senai_catalog_v2.' },
-  { name: 'tipo_registro', type: 'texto', required: true, description: 'person, school ou organization.' },
+  { name: 'schema_version', type: 'texto', required: true, description: 'Valor fixo: senai_catalog_v3.' },
+  { name: 'tipo_registro', type: 'texto', required: true, description: 'person para Pessoa Física ou organization para Pessoa Jurídica.' },
+  { name: 'subtipo', type: 'texto', required: false, essential: true, description: 'Subtipo principal da pessoa física ou jurídica, conforme a taxonomia do catálogo.' },
   { name: 'nome', type: 'texto', required: true, description: 'Nome oficial ou nome completo.' },
   { name: 'pais', type: 'texto', required: true, description: 'País de atuação principal.' },
   { name: 'cidade_estado', type: 'texto', required: false, description: 'Cidade e estado/província, quando públicos.' },
@@ -42,17 +53,6 @@ const CATEGORY_COLUMNS = {
     { name: 'google_scholar_url', type: 'url', description: 'Perfil público no Google Scholar.' },
     { name: 'openalex_id', type: 'texto', description: 'Identificador OpenAlex.' },
   ],
-  school: [
-    { name: 'tipo_instituicao', type: 'texto', essential: true, description: 'Tipo e natureza da instituição.' },
-    { name: 'nivel_rede', type: 'texto', description: 'national, regional ou local.' },
-    { name: 'areas_formacao', type: 'lista', essential: true, description: 'Áreas de formação.' },
-    { name: 'niveis_oferta', type: 'lista', description: 'Níveis e modalidades de EPT.' },
-    { name: 'relacao_industria', type: 'texto', description: 'Evidências da relação com indústria e trabalho.' },
-    { name: 'escala', type: 'texto', description: 'Alcance, unidades ou público atendido.' },
-    { name: 'acreditacoes', type: 'lista', description: 'Acreditações e reconhecimentos.' },
-    { name: 'dominio_oficial', type: 'texto', description: 'Domínio institucional normalizado.' },
-    { name: 'identificador_publico', type: 'texto', description: 'Identificador público, quando existir.' },
-  ],
   organization: [
     { name: 'natureza_juridica', type: 'texto', description: 'Pública, privada, terceiro setor ou outra.' },
     { name: 'setor', type: 'texto', essential: true, description: 'Setor de atividade.' },
@@ -62,6 +62,13 @@ const CATEGORY_COLUMNS = {
     { name: 'alcance_geografico', type: 'texto', description: 'Alcance territorial.' },
     { name: 'dominio_oficial', type: 'texto', description: 'Domínio institucional normalizado.' },
     { name: 'identificador_publico', type: 'texto', description: 'Identificador público, quando existir.' },
+    { name: 'tipo_instituicao', type: 'texto', description: 'Tipo da instituição, quando o subtipo for Instituição de ensino.' },
+    { name: 'nivel_rede', type: 'texto', description: 'national, regional ou local, quando aplicável.' },
+    { name: 'areas_formacao', type: 'lista', description: 'Áreas de formação, quando aplicável.' },
+    { name: 'niveis_oferta', type: 'lista', description: 'Níveis e modalidades de EPT, quando aplicável.' },
+    { name: 'relacao_industria', type: 'texto', description: 'Evidências da relação com indústria e trabalho, quando aplicável.' },
+    { name: 'escala', type: 'texto', description: 'Alcance, unidades ou público atendido.' },
+    { name: 'acreditacoes', type: 'lista', description: 'Acreditações e reconhecimentos.' },
   ],
 };
 
@@ -72,7 +79,7 @@ export const CATALOG_COLUMNS = Object.freeze(Object.fromEntries(
 export const CATALOG_CATEGORIES = Object.freeze(Object.keys(CATALOG_COLUMNS));
 
 export function normalizeCatalogCategory(category) {
-  return category === 'researcher' ? 'person' : category;
+  return normalizeCategory(category);
 }
 
 export function getCatalogColumns(category) {
@@ -160,8 +167,15 @@ export function validateCatalogRow(row, category, rowNumber = 2) {
   const normalizedCategory = normalizeCatalogCategory(category);
   const columns = getCatalogColumns(normalizedCategory);
   const errors = [];
-  const legacyPerson = row.schema_version === LEGACY_CATALOG_SCHEMA_VERSION && row.tipo_registro === 'researcher';
-  if (row.schema_version !== CATALOG_SCHEMA_VERSION && !legacyPerson) errors.push(`Linha ${rowNumber}: schema_version deve ser ${CATALOG_SCHEMA_VERSION}.`);
+  const legacyVersion = [LEGACY_CATALOG_SCHEMA_VERSION, LEGACY_CATALOG_SCHEMA_VERSION_V2].includes(row.schema_version);
+  if (row.schema_version !== CATALOG_SCHEMA_VERSION && !legacyVersion) errors.push(`Linha ${rowNumber}: schema_version deve ser ${CATALOG_SCHEMA_VERSION}.`);
+  if (row.schema_version === CATALOG_SCHEMA_VERSION && !CATALOG_CATEGORIES.includes(row.tipo_registro)) {
+    errors.push(`Linha ${rowNumber}: tipo_registro deve ser person ou organization.`);
+  }
+  if (row.schema_version === CATALOG_SCHEMA_VERSION && String(row.subtipo || '').trim()
+      && !isCatalogSubtype(normalizedCategory, row.subtipo)) {
+    errors.push(`Linha ${rowNumber}: subtipo não pertence à taxonomia de ${normalizedCategory}.`);
+  }
   if (normalizeCatalogCategory(row.tipo_registro) !== normalizedCategory) errors.push(`Linha ${rowNumber}: tipo_registro deve ser ${normalizedCategory}.`);
   for (const column of columns.filter((column) => column.required)) {
     if (!String(row[column.name] || '').trim()) errors.push(`Linha ${rowNumber}: ${column.name} é obrigatório.`);
@@ -192,7 +206,8 @@ function isUnavailableValue(value) {
 }
 
 export function rowToCanonical(row) {
-  const category = normalizeCatalogCategory(row.tipo_registro);
+  const request = normalizeCatalogRequest(row.tipo_registro, row.subtipo);
+  const category = request.category;
   const list = parseListCell;
   const base = {
     nome: row.nome,
@@ -215,11 +230,12 @@ export function rowToCanonical(row) {
     riscos_sinais: list(row.riscos_sinais),
     relevancia: row.aderencia_contexto || row.resumo,
     contato_publico: row.contato_publico,
-    categoria: category === 'person' ? 'Pessoa' : category === 'school' ? 'Escola' : 'Organização',
+    categoria: category === 'person' ? CATALOG_CATEGORY_LABELS.person : CATALOG_CATEGORY_LABELS.organization,
     importSchemaVersion: CATALOG_SCHEMA_VERSION,
   };
   if (category === 'person') return {
     ...base,
+    subtipo: inferPersonSubtype({ ...row, subtipo: request.subtype || row.subtipo, perfis_atuacao: list(row.perfis_atuacao), pesquisa: row.linhas_pesquisa }),
     areas: [...new Set([...base.areas, ...list(row.areas_especialidade)])],
     perfis_atuacao: list(row.perfis_atuacao || (row.tipo_registro === 'researcher' ? 'pesquisa' : '')),
     instituicao: row.instituicao_atual,
@@ -243,21 +259,9 @@ export function rowToCanonical(row) {
       return { titulo, url, ano };
     }).filter((article) => article.titulo || article.url),
   };
-  if (category === 'school') return {
-    ...base,
-    instituicao: row.nome,
-    areas_formacao: list(row.areas_formacao),
-    niveis_oferta: list(row.niveis_oferta),
-    tipo_instituicao: row.tipo_instituicao,
-    nivel_rede: row.nivel_rede,
-    relacao_industria: row.relacao_industria,
-    escala: row.escala,
-    acreditacoes: list(row.acreditacoes),
-    dominio_oficial: row.dominio_oficial,
-    identificador_publico: row.identificador_publico,
-  };
   return {
     ...base,
+    subtipo: inferOrganizationSubtype({ ...row, subtipo: request.subtype || row.subtipo, categoria: row.tipo_registro }),
     atuacao: row.atuacao,
     natureza_juridica: row.natureza_juridica,
     setor: row.setor,
@@ -266,5 +270,13 @@ export function rowToCanonical(row) {
     alcance_geografico: row.alcance_geografico,
     dominio_oficial: row.dominio_oficial,
     identificador_publico: row.identificador_publico,
+    instituicao: row.nome,
+    areas_formacao: list(row.areas_formacao),
+    niveis_oferta: list(row.niveis_oferta),
+    tipo_instituicao: row.tipo_instituicao,
+    nivel_rede: row.nivel_rede,
+    relacao_industria: row.relacao_industria,
+    escala: row.escala,
+    acreditacoes: list(row.acreditacoes),
   };
 }

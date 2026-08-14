@@ -27,6 +27,25 @@ import { getDisplayLogoUrl } from '../utils/media';
 import { formatEntityAddedAt } from '../utils/entityDate';
 
 const COLUMNS = {
+  legalEntity: [
+    { id: 'id', label: '#', width: 50 },
+    { id: 'logo', label: '', width: 50, sortable: false },
+    { id: 'nome', label: 'Nome', flex: true },
+    { id: 'subtipo', label: 'Subtipo', width: 220 },
+    { id: 'pais', label: 'País', width: 130 },
+    { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
+    { id: 'website', label: 'Site', width: 60, sortable: false },
+    { id: 'actions', label: 'Ações', width: 100, sortable: false },
+  ],
+  person: [
+    { id: 'id', label: '#', width: 50 },
+    { id: 'nome', label: 'Nome', flex: true },
+    { id: 'subtipo', label: 'Subtipo', width: 240 },
+    { id: 'instituicao', label: 'Instituição', width: 180 },
+    { id: 'pais', label: 'País', width: 130 },
+    { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
+    { id: 'actions', label: 'Ações', width: 100, sortable: false },
+  ],
   stakeholder: [
     { id: 'id', label: '#', width: 50 },
     { id: 'logo', label: '', width: 50, sortable: false },
@@ -163,6 +182,8 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
             color={naturezaColors[item.natureza] || 'default'}
           />
         );
+      case 'subtipo':
+        return <Chip label={item.subtipo || 'Outro'} size="small" variant="outlined" />;
       case 'relacao_status': {
         const has = item.relacao && !item.relacao.includes('Sem registro');
         return (
@@ -307,7 +328,7 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
           <TableBody>
             {paged.map(item => (
               <TableRow
-                key={item.id}
+                key={item._adminKey || item.id}
                 hover
                 sx={{ '&:last-child td': { borderBottom: 0 }, cursor: 'pointer' }}
                 onDoubleClick={() => onEdit(item)}

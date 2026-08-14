@@ -3,8 +3,7 @@ import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -25,21 +24,15 @@ export default function CatalogHomePage() {
   const [enrichmentOpen, setEnrichmentOpen] = useState(false);
   const categories = [
     {
-      path: '/catalogo/especialistas',
-      label: 'Especialistas',
-      description: 'Pessoas com experiência em educação profissional, tecnologia e desenvolvimento industrial.',
-      icon: <ScienceOutlinedIcon />,
+      path: '/catalogo/pessoas-fisicas',
+      label: 'Pessoas Físicas',
+      description: 'Profissionais, pesquisadores, personalidades públicas, agentes públicos e outras pessoas.',
+      icon: <PersonOutlineIcon />,
     },
     {
-      path: '/catalogo/instituicoes-de-educacao',
-      label: 'Instituições de Educação',
-      description: 'Escolas, centros de formação e redes de educação profissional.',
-      icon: <SchoolOutlinedIcon />,
-    },
-    {
-      path: '/catalogo/outras-organizacoes',
-      label: 'Outras organizações',
-      description: 'Empresas, órgãos públicos, associações, fundações e redes.',
+      path: '/catalogo/pessoas-juridicas',
+      label: 'Pessoas Jurídicas',
+      description: 'Empresas, órgãos públicos, instituições de ensino, associações, fundações e redes.',
       icon: <BusinessOutlinedIcon />,
     },
   ];
@@ -48,8 +41,8 @@ export default function CatalogHomePage() {
     <PageContainer width="page" tool="catalog">
       <PageHeader
         eyebrow="CATÁLOGO"
-        title="Encontre pessoas e instituições"
-        description="Escolha uma categoria. Depois pesquise por nome, tema, país ou instituição."
+        title="Encontre pessoas físicas e jurídicas"
+        description="Escolha uma categoria. Depois filtre pelo subtipo mais adequado à sua necessidade."
         accent="catalog"
         dense
       />
@@ -75,7 +68,7 @@ export default function CatalogHomePage() {
 
       <Grid container spacing={2} sx={{ mt: 3 }}>
         {categories.map((item) => (
-          <Grid size={{ xs: 12, md: 4 }} key={item.path}>
+          <Grid size={{ xs: 12, md: 6 }} key={item.path}>
             <ToolCard
               icon={item.icon}
               label={item.label}

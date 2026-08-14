@@ -6,6 +6,11 @@ import { getCatalog } from '../../server/lib/catalog.js';
 import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
 import { consumeSelectionAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
+import {
+  normalizeCatalogRequest,
+  ORGANIZATION_SUBTYPES,
+  PERSON_SUBTYPES,
+} from '../../src/domain/catalogTaxonomy.js';
 import { createSelectionBrief, validateSelectionBrief } from '../../src/domain/contracts.js';
 import { hydrateCatalogStore } from '../../server/lib/catalogImport.js';
 import { canUseAi, getUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../server/lib/usageBudget.js';
@@ -19,14 +24,24 @@ export default async function handler(req, res) {
   await hydrateRateLimitStore({ force: true });
   try {
     const payload = await readJson(req);
-    if (payload?.category === 'researcher') payload.category = 'person';
+    const requestedSubtype = String(payload?.subtype || '').trim();
+    let invalidRequestedSubtype = false;
+    if (payload?.category) {
+      const request = normalizeCatalogRequest(payload.category, payload.subtype);
+      const requestedSubtypes = request.category === 'person' ? PERSON_SUBTYPES : ORGANIZATION_SUBTYPES;
+      invalidRequestedSubtype = Boolean(requestedSubtype && !requestedSubtypes.includes(requestedSubtype));
+      payload.category = request.category;
+      payload.subtype = request.subtype;
+    }
     // O briefing traz um campo por informação coberta, não por pergunta feita:
     // uma resposta rica cobre vários campos de uma vez, então o teto acompanha
     // o número de campos canônicos, e não o número de perguntas.
     const validAnswers = payload?.answers && typeof payload.answers === 'object' && !Array.isArray(payload.answers)
       && Object.keys(payload.answers).length <= 32
       && Object.values(payload.answers).every((value) => typeof value === 'string' && value.length <= 4000);
-    if (!payload || !payload.category || !payload.objective || !['person', 'school', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers) {
+    const allowedSubtypes = payload?.category === 'person' ? PERSON_SUBTYPES : ORGANIZATION_SUBTYPES;
+    const validSubtype = !payload?.subtype || allowedSubtypes.includes(payload.subtype);
+    if (!payload || !payload.category || !payload.objective || !['person', 'organization'].includes(payload.category) || !Object.prototype.hasOwnProperty.call(OBJECTIVE_LABELS, payload.objective) || !validAnswers || !validSubtype || invalidRequestedSubtype) {
       return res.status(400).json({ error: 'invalid_selection_payload' });
     }
     try {
@@ -36,9 +51,9 @@ export default async function handler(req, res) {
     }
     await hydrateCatalogStore({ force: true });
     await hydrateUsageBudget({ force: true });
-    const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, objective: payload.objective, answers: payload.answers });
+    const brief = createSelectionBrief({ ...(payload.brief || {}), category: payload.category, subtype: payload.subtype, objective: payload.objective, answers: payload.answers });
     if (!validateSelectionBrief(brief).valid) return res.status(400).json({ error: 'invalid_selection_brief' });
-    const candidates = getCatalog(payload.category);
+    const candidates = getCatalog(payload.category).filter((candidate) => !payload.subtype || candidate.subtipo === payload.subtype);
     const evaluationInput = { ...payload, brief, candidates };
     const local = await buildLocalEvaluation(evaluationInput);
     // O motor determinístico continua sendo a base da chamada: ele monta o pool

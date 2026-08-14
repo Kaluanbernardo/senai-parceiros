@@ -9,6 +9,7 @@ import {
 function candidate(overrides = {}) {
   return {
     nome: 'Instituto Técnico Exemplo',
+    subtipo: 'Instituição de ensino',
     pais: 'Brasil',
     cidade_estado: 'São Paulo, SP',
     resumo: 'Instituição de educação profissional com atuação pública documentada em formação técnica industrial e aprendizagem.',
@@ -38,8 +39,8 @@ function candidate(overrides = {}) {
 
 describe('catalog research module', () => {
   it('keeps the MVP request bounded and category-aware', () => {
-    expect(normalizeCatalogResearchRequest({ category: 'school', context: 'Formação dual', quantity: 2 })).toMatchObject({
-      category: 'school', context: 'Formação dual', quantity: 2, sourcePreferences: 'auto',
+    expect(normalizeCatalogResearchRequest({ category: 'school', context: 'Formação dual', quantity: 2, subtype: 'Instituição de ensino' })).toMatchObject({
+      category: 'organization', subtype: 'Instituição de ensino', context: 'Formação dual', quantity: 2, sourcePreferences: 'auto',
     });
     expect(normalizeCatalogResearchRequest({ category: 'person', context: 'IA industrial', quantity: 1, sourcePreferences: 'academic' })).toMatchObject({
       sourcePreferences: 'academic',
@@ -64,12 +65,12 @@ describe('catalog research module', () => {
       trace: { provider: 'openrouter', model: 'test/model', usage: { total_tokens: 90 }, webSearchRequests: 2 },
     }));
     const result = await researchCatalogCandidates(
-      { category: 'school', context: 'Comparar aprendizagem industrial', quantity: 1, sourcePreferences: 'official' },
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 1, sourcePreferences: 'official' },
       { generate, now: () => new Date('2026-08-14T12:00:00Z') },
     );
 
     expect(generate).toHaveBeenCalledWith(expect.objectContaining({
-      task: 'catalog_research_school',
+      task: 'catalog_research_organization',
       model: 'x-ai/grok-4.3',
       includeReasoning: false,
       strictOutput: true,
@@ -77,6 +78,7 @@ describe('catalog research module', () => {
     }));
     expect(generate.mock.calls[0][0].messages[1].content).toContain('Não produza CSV');
     expect(generate.mock.calls[0][0].messages[1].content).toContain('sites oficiais e fontes governamentais');
+    expect(generate.mock.calls[0][0].messages[1].content).toContain('Subtipo desejado: Instituição de ensino');
     expect(result.parsed.metadata).toMatchObject({ origin: 'catalog_research', provider: 'openrouter', webSearchRequests: 2 });
     expect(result.parsed.rows[0]).toMatchObject({ valid: true, rowNumber: 1 });
     expect(result.parsed.rows[0].record.areas_formacao).toEqual(['mecatrônica', 'automação']);
@@ -86,7 +88,7 @@ describe('catalog research module', () => {
 
   it('keeps weakly sourced output visible but invalid for approval', async () => {
     const result = await researchCatalogCandidates(
-      { category: 'school', context: 'Comparar aprendizagem industrial', quantity: 1 },
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 1 },
       {
         generate: async () => ({ data: { candidates: [candidate({ fontes: ['https://example.edu/'] })] }, trace: { provider: 'openrouter', model: 'test/model' } }),
         now: () => new Date('2026-08-14T12:00:00Z'),

@@ -14,7 +14,6 @@ export default async function handler(req, res) {
   return res.status(200).json({
     records: {
       person: getImportedRecords('person'),
-      school: getImportedRecords('school'),
       organization: getImportedRecords('organization'),
     },
     store: getCatalogStoreStatus(),

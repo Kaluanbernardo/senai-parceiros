@@ -2,6 +2,7 @@ import { CATEGORY_IDS, OBJECTIVE_IDS } from './interview.js';
 import { getExampleCoverage, resolveExample } from './exampleResolver.js';
 import { COVERAGE_CONFIDENCE_THRESHOLD, deriveFieldCoverage, focusTermFor } from './answerSignals.js';
 import { deriveDimensionWeights } from './selectionCriteria.js';
+import { ORGANIZATION_SUBTYPES, normalizeCatalogRequest } from './catalogTaxonomy.js';
 
 export const INTERVIEW_PLANNER_VERSION = 'conversational-planner-v3';
 /**
@@ -166,7 +167,6 @@ const OBJECTIVE_REQUIRED = Object.freeze({
 const CATEGORY_REQUIRED = Object.freeze({
   person: ['evidence_preferences'],
   researcher: ['evidence_preferences'],
-  school: ['evidence_preferences'],
   organization: ['evidence_preferences'],
 });
 
@@ -176,7 +176,7 @@ const CATEGORY_REQUIRED = Object.freeze({
  * todo mundo.
  */
 const OPENERS = Object.freeze({
-  person: { prompt: 'Em que situação você pretende envolver uma pessoa especialista?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
+  person: { prompt: 'Em que situação você pretende envolver uma pessoa física?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
   'researcher:speaker': { prompt: 'Conte o que vai acontecer: que encontro ou conversa você quer que essa pessoa ajude a construir?', helper: 'Descreva o evento, onde ele acontece, para quem e o que precisa sair dali.' },
   'researcher:research_support': { prompt: 'Que pergunta ou decisão de pesquisa está travada e precisa de alguém de fora?', helper: 'Explique o estudo ou a dúvida com suas palavras.' },
   'researcher:benchmark': { prompt: 'O que você quer entender comparando com o trabalho de outra pessoa?', helper: 'Descreva a prática ou abordagem que está tentando avaliar.' },
@@ -186,13 +186,13 @@ const OPENERS = Object.freeze({
   'school:project_partner': { prompt: 'O que você quer construir junto com outra instituição de formação?', helper: 'Fale do projeto ou da mudança pretendida.' },
   'school:speaker': { prompt: 'Que participação você quer de outra instituição de ensino, e em que momento?', helper: 'Descreva a atividade, onde ela acontece e quem estará presente.' },
   'school:research_support': { prompt: 'Que informação ou prática de outra instituição ajudaria a sustentar esse estudo?', helper: 'Descreva a pesquisa e o que hoje falta comprovar.' },
-  'organization:project_partner': { prompt: 'Que iniciativa você quer tirar do papel com apoio de outra organização?', helper: 'Descreva a iniciativa e o que falta hoje para ela avançar.' },
-  'organization:speaker': { prompt: 'Em que conversa ou evento essa organização entraria, e por quê?', helper: 'Descreva o momento, o lugar e o que você espera que mude depois.' },
-  'organization:benchmark': { prompt: 'Que prática de outra organização você quer entender antes de decidir?', helper: 'Descreva a decisão que está por trás da comparação.' },
-  'organization:research_support': { prompt: 'Que apoio de uma organização faria essa pesquisa avançar?', helper: 'Pode ser dado, acesso, experiência de setor ou validação; descreva o que falta.' },
+  'organization:project_partner': { prompt: 'Que iniciativa você quer tirar do papel com apoio de uma pessoa jurídica?', helper: 'Pode ser uma empresa, instituição de ensino, órgão público ou outra organização.' },
+  'organization:speaker': { prompt: 'Em que conversa ou evento essa pessoa jurídica entraria, e por quê?', helper: 'Descreva o momento, o lugar e o que você espera que mude depois.' },
+  'organization:benchmark': { prompt: 'Que prática de uma pessoa jurídica você quer entender antes de decidir?', helper: 'Pode ser uma instituição de ensino, empresa, órgão público ou outro tipo de organização.' },
+  'organization:research_support': { prompt: 'Que apoio de uma pessoa jurídica faria essa pesquisa avançar?', helper: 'Pode ser dado, acesso, experiência de setor ou validação; descreva o que falta.' },
   researcher: { prompt: 'Em que situação você pretende envolver um pesquisador ou especialista?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
   school: { prompt: 'Em que situação você pretende envolver outra escola ou instituição de EPT?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
-  organization: { prompt: 'Em que situação você pretende envolver uma organização parceira?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
+  organization: { prompt: 'Em que situação você pretende envolver uma pessoa jurídica?', helper: 'Pode ser uma instituição de ensino, empresa, órgão público ou outra organização.' },
 });
 
 /**
@@ -236,7 +236,7 @@ function lowerFirst(text) {
 }
 
 function safeCategory(category) {
-  const normalized = category === 'researcher' ? 'person' : category;
+  const normalized = normalizeCatalogRequest(category).category;
   return CATEGORY_IDS.includes(normalized) ? normalized : 'organization';
 }
 function safeObjective(objective) { return OBJECTIVE_IDS.includes(objective) ? objective : 'guided'; }
@@ -386,7 +386,9 @@ function nextQuestionFor(state) {
 
 function questionForState(question, state) {
   const coverage = getExampleCoverage({ category: state.category, objective: state.objective, context: state.answers?.context || state.context });
-  const openerCategory = state.category === 'person' ? 'researcher' : state.category;
+  const openerCategory = state.category === 'person'
+    ? 'researcher'
+    : state.subtype === ORGANIZATION_SUBTYPES[0] ? 'school' : state.category;
   const opener = question.id === 'context'
     ? (OPENERS[`${openerCategory}:${state.objective}`] || OPENERS[state.category] || null)
     : null;
@@ -401,6 +403,7 @@ function questionForState(question, state) {
     variantIndex: focus && !opener ? variantIndex : null,
     targetField: question.targetField || question.id,
     category: state.category,
+    subtype: state.subtype || '',
     objective: state.objective,
     context: state.answers?.context || state.context || '',
     prompt: contextualPrompt,
@@ -463,11 +466,13 @@ function withNext(state) {
   return { ...state, askedIds, questionDefinitions, currentQuestion: definition, lastStage: nextQuestion.stage, lastVariantIndex: Number.isInteger(definition.variantIndex) ? definition.variantIndex : state.lastVariantIndex, status: 'active', validation: validationFor({ ...state, askedIds }), progress: { asked: askedIds.length, max: MAX_QUESTIONS } };
 }
 
-export function start({ category, objective, context = '', gaps = [] } = {}) {
-  const safe = { category: safeCategory(category), objective: safeObjective(objective) };
+export function start({ category, subtype = '', objective, context = '', gaps = [] } = {}) {
+  const request = normalizeCatalogRequest(category, subtype);
+  const safe = { category: safeCategory(request.category), subtype: request.subtype, objective: safeObjective(objective) };
   const state = {
     version: INTERVIEW_PLANNER_VERSION,
     category: safe.category,
+    subtype: safe.subtype,
     objective: safe.objective,
     context: answerText(context),
     answers: context ? { context: answerText(context) } : {},
@@ -613,6 +618,7 @@ export function finalize(state) {
   ])].filter((id) => !derived[id]);
   const brief = {
     category: state.category,
+    subtype: state.subtype || '',
     objective: state.objective,
     context: answerText(answers.context || state.context),
     desiredOutcomes: toList(answers.desired_outcome),

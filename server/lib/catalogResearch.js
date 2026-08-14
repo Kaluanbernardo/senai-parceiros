@@ -9,11 +9,12 @@ import {
   validateCatalogRow,
 } from '../../src/domain/catalogImportSchema.js';
 import { generateStructured } from './structuredGeneration.js';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES, normalizeCatalogRequest } from '../../src/domain/catalogTaxonomy.js';
 
 export const CATALOG_RESEARCH_MAX_CANDIDATES = 3;
 
 const COMMON_FIELDS = [
-  'nome', 'pais', 'cidade_estado', 'resumo', 'descricao', 'areas_temas',
+  'nome', 'subtipo', 'pais', 'cidade_estado', 'resumo', 'descricao', 'areas_temas',
   'aderencia_contexto', 'relacao_publica', 'evidencias_publicas',
   'riscos_sinais', 'website_oficial', 'contato_publico', 'fontes',
   'confianca', 'dados_nao_localizados',
@@ -26,23 +27,20 @@ const CATEGORY_FIELDS = Object.freeze({
     'credenciais_relevantes', 'linhas_pesquisa', 'publicacoes_relevantes',
     'citacoes', 'h_index', 'orcid', 'google_scholar_url', 'openalex_id',
   ],
-  school: [
-    'tipo_instituicao', 'nivel_rede', 'areas_formacao', 'niveis_oferta',
-    'relacao_industria', 'escala', 'acreditacoes', 'dominio_oficial',
-    'identificador_publico',
-  ],
   organization: [
     'natureza_juridica', 'setor', 'atuacao', 'programas_relevantes',
     'parcerias_industriais', 'alcance_geografico', 'dominio_oficial',
-    'identificador_publico',
+    'identificador_publico', 'tipo_instituicao', 'nivel_rede', 'areas_formacao',
+    'niveis_oferta', 'relacao_industria', 'escala', 'acreditacoes',
   ],
 });
 
 const CATEGORY_LABELS = Object.freeze({
-  person: 'pessoas especialistas',
-  school: 'instituições de educação',
-  organization: 'organizações',
+  person: 'pessoas físicas',
+  organization: 'pessoas jurídicas',
 });
+
+const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
 
 const SOURCE_PREFERENCE_LABELS = Object.freeze({
   auto: 'as melhores fontes públicas disponíveis para cada fato',
@@ -60,14 +58,20 @@ function limitedText(value, field, maximum, { required = false } = {}) {
 }
 
 export function normalizeCatalogResearchRequest(input = {}) {
-  const category = normalizeCatalogCategory(String(input.category || '').trim().toLowerCase());
+  const requestedSubtype = limitedText(input.subtype, 'research_subtype', 120);
+  const request = normalizeCatalogRequest(input.category, requestedSubtype);
+  const category = request.category;
   if (!CATEGORY_FIELDS[category]) throw new Error('invalid_research_category');
+  if (requestedSubtype && !SUBTYPES[category].includes(requestedSubtype)) throw new Error('invalid_research_subtype');
   const quantity = Number(input.quantity || CATALOG_RESEARCH_MAX_CANDIDATES);
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > CATALOG_RESEARCH_MAX_CANDIDATES) {
     throw new Error('invalid_research_quantity');
   }
   return {
     category,
+    subtype: (() => {
+      return request.subtype;
+    })(),
     quantity,
     context: limitedText(input.context, 'research_context', 1600, { required: true }),
     purpose: limitedText(input.purpose, 'research_purpose', 800),
@@ -81,7 +85,10 @@ export function normalizeCatalogResearchRequest(input = {}) {
   };
 }
 
-function propertySchema(column) {
+function propertySchema(column, category) {
+  if (column.name === 'subtipo') {
+    return { type: 'string', enum: SUBTYPES[category], description: column.description };
+  }
   if (column.name === 'confianca') {
     return { type: 'integer', minimum: 0, maximum: 100, description: column.description };
   }
@@ -94,7 +101,7 @@ function propertySchema(column) {
 export function catalogResearchOutputSchema(category, quantity) {
   const wanted = new Set([...COMMON_FIELDS, ...CATEGORY_FIELDS[category]]);
   const columns = getCatalogColumns(category).filter((column) => wanted.has(column.name));
-  const properties = Object.fromEntries(columns.map((column) => [column.name, propertySchema(column)]));
+  const properties = Object.fromEntries(columns.map((column) => [column.name, propertySchema(column, category)]));
   return {
     type: 'object',
     additionalProperties: false,
@@ -125,6 +132,7 @@ function promptFor(request) {
     : ['Priorize o site oficial e fontes públicas independentes que confirmem atuação, escala, programas e relação com indústria ou educação profissional.'];
   return [
     `Pesquise somente ${CATEGORY_LABELS[request.category]}.`,
+    `Subtipo desejado: ${request.subtype || 'qualquer subtipo coerente com o contexto'}.`,
     `Entregue no máximo ${request.quantity} sugestões.`,
     `Contexto: ${request.context}`,
     `Finalidade: ${request.purpose || 'não informada'}`,
@@ -135,6 +143,7 @@ function promptFor(request) {
     'Regras obrigatórias:',
     '- Pesquise a web e use somente informações públicas e verificáveis.',
     '- Não invente entidades, vínculos, cargos, números, contatos, publicações ou URLs.',
+    '- Classifique cada sugestão em exatamente um subtipo permitido pelo schema.',
     '- Cada sugestão precisa de descrição factual detalhada, pelo menos três temas específicos e três URLs públicas distintas em fontes.',
     '- fontes deve conter apenas URLs http(s) exatas. evidencias_publicas deve ligar fatos importantes às respectivas URLs.',
     '- Separe fatos de inferências; registre conflitos em riscos_sinais e ausências em dados_nao_localizados.',

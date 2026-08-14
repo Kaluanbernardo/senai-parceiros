@@ -2,7 +2,8 @@ import pesquisadores from '../../src/data/pesquisadores.json' with { type: 'json
 import escolas from '../../src/data/escolas.json' with { type: 'json' };
 import stakeholders from '../../src/data/stakeholders.json' with { type: 'json' };
 import { canonicalizeResearchers, resolveResearcherId } from '../../src/domain/researcherCatalog.js';
-import { mergeSchoolSources } from '../../src/domain/schoolCatalog.js';
+import { buildLegalEntityCatalog } from '../../src/domain/legalEntityCatalog.js';
+import { normalizeCatalogRequest, withCatalogClassification } from '../../src/domain/catalogTaxonomy.js';
 import { getImportedRecords } from './catalogImport.js';
 
 function overlayKey(record) {
@@ -35,10 +36,15 @@ export function resolveCatalogResearcher(id) {
 }
 
 export function getCatalog(category) {
-  const normalizedCategory = category === 'researcher' ? 'person' : category;
+  const { category: normalizedCategory, subtype } = normalizeCatalogRequest(category);
   const imported = getImportedRecords(normalizedCategory);
-  if (normalizedCategory === 'person') return canonicalizeResearchers([...pesquisadores.map((person) => ({ ...person, perfis_atuacao: person.perfis_atuacao || ['pesquisa'] })), ...imported]).records;
-  if (normalizedCategory === 'school') return mergeSchoolSources({ schools: [...escolas, ...imported], stakeholders });
-  if (normalizedCategory === 'organization') return applyOverlays([...stakeholders, ...imported]);
+  if (normalizedCategory === 'person') return canonicalizeResearchers([
+    ...pesquisadores.map((person) => withCatalogClassification({ ...person, perfis_atuacao: person.perfis_atuacao || ['pesquisa'] }, 'person')),
+    ...imported.map((person) => withCatalogClassification(person, 'person')),
+  ]).records;
+  if (normalizedCategory === 'organization') {
+    const records = applyOverlays(buildLegalEntityCatalog({ schools: escolas, stakeholders: [...stakeholders, ...imported] }));
+    return subtype ? records.filter((record) => record.subtipo === subtype) : records;
+  }
   return [];
 }

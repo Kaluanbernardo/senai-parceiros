@@ -62,7 +62,7 @@ describe('POST /api/selection/interview/next', () => {
     // Uma pergunta escrita localmente é indistinguível de uma pergunta adaptada:
     // a entrevista continuaria parecendo funcionar sem nunca ter sido adaptada.
     vi.mocked(generateNextQuestionWithProvider).mockRejectedValue(new Error('ai_not_configured'));
-    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    const state = InterviewPlanner.start({ category: 'organization', objective: 'benchmark' });
     const res = response();
     await handler(request(state), res);
 
@@ -73,7 +73,7 @@ describe('POST /api/selection/interview/next', () => {
 
   it('marca o timeout do provedor como tentável de novo', async () => {
     vi.mocked(generateNextQuestionWithProvider).mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' }));
-    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    const state = InterviewPlanner.start({ category: 'organization', objective: 'benchmark' });
     const res = response();
     await handler(request(state), res);
 
@@ -94,10 +94,12 @@ describe('POST /api/selection/interview/next', () => {
 
     expect(res.statusCode).toBe(200);
     expect(generateNextQuestionWithProvider).toHaveBeenCalledOnce();
+    expect(generateNextQuestionWithProvider).toHaveBeenCalledWith(expect.objectContaining({ subtype: 'Instituição de ensino' }), expect.anything());
     expect(res.body.trace.provider).toBe('openrouter');
     expect(res.body.question.prompt).toBe(providerAnswer.question.prompt);
     expect(res.body.state.derived.audience).toMatchObject({ value: 'coordenação pedagógica', source: 'provider' });
     expect(res.body.state.validation.missing).not.toContain('audience');
+    expect(res.body.state.subtype).toBe('Instituição de ensino');
   });
 
   it('refuses a question about a field the answer already covered', async () => {
@@ -144,7 +146,7 @@ describe('POST /api/selection/interview/next', () => {
   it('stops when the fields the provider extracted complete the required coverage', async () => {
     process.env.OPENROUTER_API_KEY = 'test-key';
     const state = await advance(
-      InterviewPlanner.start({ category: 'school', objective: 'benchmark' }),
+      InterviewPlanner.start({ category: 'organization', objective: 'benchmark' }),
       ['Resposta de contexto', 'Resposta seguinte', 'Mais uma resposta'],
     );
     const missing = InterviewPlanner.coverage(state).missing;
@@ -169,7 +171,7 @@ describe('POST /api/selection/interview/next', () => {
 
   it('ignores a low-confidence or unknown field claimed by the provider', async () => {
     process.env.OPENROUTER_API_KEY = 'test-key';
-    const state = InterviewPlanner.start({ category: 'school', objective: 'benchmark' });
+    const state = InterviewPlanner.start({ category: 'organization', objective: 'benchmark' });
     vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
       ...providerAnswer,
       fieldsSatisfied: [

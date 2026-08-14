@@ -64,7 +64,7 @@ describe('catalog quality contract', () => {
       nome: 'Organização', pais: 'Brasil', descricao: longDescription, natureza: 'Pública',
       diferencial: 'Atuação técnica', relacao: 'Relação pública', website: 'https://example.org',
     };
-    const summary = auditCatalogQuality({ organization: [organization, { nome: 'Rasa' }], school: [], person: [] });
+    const summary = auditCatalogQuality({ organization: [organization, { nome: 'Rasa' }], person: [] });
 
     expect(summary).toMatchObject({ total: 2, conforming: 1, needsEnrichment: 1 });
     expect(summary.categories.find((entry) => entry.category === 'organization')).toMatchObject({ total: 2, conforming: 1 });

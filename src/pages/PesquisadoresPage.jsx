@@ -20,8 +20,9 @@ import {
 } from '../domain/catalogFilters';
 import { CATEGORIAS, getCategoriasFromAreas } from '../utils/areaCategories';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
+import { PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 
-const SEARCH_FIELDS = ['nome', 'aliases', 'instituicao', 'cargo', 'areas', 'perfis_atuacao', 'pais', 'pesquisa', 'miniBio', 'producoes_relevantes'];
+const SEARCH_FIELDS = ['nome', 'aliases', 'subtipo', 'instituicao', 'cargo', 'areas', 'perfis_atuacao', 'pais', 'pesquisa', 'miniBio', 'producoes_relevantes'];
 
 /** Estado que vive na URL, para uma lista filtrada poder ser compartilhada. */
 const STATE_SCHEMA = Object.freeze({
@@ -30,6 +31,7 @@ const STATE_SCHEMA = Object.freeze({
   area: { type: 'list' },
   tema: { type: 'list' },
   atuacao: { type: 'list' },
+  subtipo: { type: 'list' },
   genero: { type: 'single', default: 'todos' },
   ordem: { type: 'single', default: 'relevance' },
   exibir: { type: 'single', default: 'grid' },
@@ -40,6 +42,7 @@ const FILTER_DEFINITIONS = [
   { key: 'area', label: 'Área' },
   { key: 'tema', label: 'Tema' },
   { key: 'atuacao', label: 'Atuação' },
+  { key: 'subtipo', label: 'Subtipo' },
   { key: 'genero', label: 'Gênero', emptyValue: 'todos', format: (value) => (value === 'F' ? 'Feminino' : 'Masculino') },
 ];
 
@@ -94,13 +97,14 @@ export default function PesquisadoresPage() {
         matchesFacet(getCategoriasFromAreas(item.areas), state.area) &&
         matchesTokenizedFacet(item.areas, state.tema) &&
         matchesTokenizedFacet(item.perfis_atuacao, state.atuacao) &&
+        matchesFacet(item.subtipo, state.subtipo) &&
         (state.genero === 'todos' || item.genero === state.genero),
     );
     return sortItems(matched, state.ordem);
-  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.atuacao, state.genero, state.ordem]);
+  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.atuacao, state.subtipo, state.genero, state.ordem]);
 
   const activeChips = describeActiveFilters(
-    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, atuacao: state.atuacao, genero: state.genero },
+    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, atuacao: state.atuacao, subtipo: state.subtipo, genero: state.genero },
     FILTER_DEFINITIONS,
   );
 
@@ -110,9 +114,9 @@ export default function PesquisadoresPage() {
     <>
       <CatalogShell
         eyebrow="CATÁLOGO"
-        title="Pessoas especialistas"
-        description="Profissionais da pesquisa, indústria, educação, imprensa e gestão pública com experiência relevante para o SENAI-SP."
-        noun={{ singular: 'especialista', plural: 'especialistas' }}
+        title="Pessoas Físicas"
+        description="Profissionais, pesquisadores, personalidades públicas, agentes públicos e outras pessoas relevantes para o SENAI-SP."
+        noun={{ singular: 'pessoa', plural: 'pessoas' }}
         total={pesquisadores.length}
         items={filtered}
         sort={state.ordem}
@@ -126,13 +130,14 @@ export default function PesquisadoresPage() {
           <FilterBar
             query={state.q}
             onQueryChange={(value) => setValue('q', value)}
-            placeholder="Buscar por nome, cargo, instituição, atuação ou tema"
+            placeholder="Buscar por nome, subtipo, cargo, instituição, atuação ou tema"
             expanded={expanded}
             onToggleExpanded={() => setExpanded((current) => !current)}
             activeChips={activeChips}
             onRemoveChip={removeChip}
             onClearAll={clear}
             facets={[
+              { key: 'subtipo', label: 'Subtipo', options: PERSON_SUBTYPES, value: state.subtipo, onChange: (next) => setValue('subtipo', next) },
               { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
               { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
               { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
@@ -165,7 +170,7 @@ export default function PesquisadoresPage() {
             item={item}
             view={state.exibir}
             accent="catalog"
-            eyebrow={(item.perfis_atuacao || [])[0] || 'Especialista'}
+            eyebrow={item.subtipo || 'Pessoa Física'}
             title={item.nome}
             subtitle={[item.cargo, item.instituicao].filter(Boolean).join(' · ')}
             summary={item.miniBio || summarize(item.pesquisa)}

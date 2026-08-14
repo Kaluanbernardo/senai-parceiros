@@ -14,6 +14,7 @@ const longDescription = 'Perfil factual sustentado pelas fontes públicas fornec
 function completeOrganization(targetKey) {
   return {
     targetKey,
+    subtipo: 'Instituto ou fundação',
     pais: 'Brasil',
     descricao: longDescription,
     resumo: 'Instituição com atuação técnica comprovada e cooperação pública com a indústria.',
@@ -35,7 +36,6 @@ function completeOrganization(targetKey) {
 function providerFromStore() {
   return {
     organization: catalogStore.getRecords('organization'),
-    school: catalogStore.getRecords('school'),
     person: catalogStore.getRecords('person'),
   };
 }
@@ -48,7 +48,7 @@ describe('catalog enrichment batches', () => {
     delete complete.targetKey;
     const shallow = { id: 'o-2', nome: 'Rasa', pais: 'Brasil' };
 
-    const batch = createCatalogEnrichmentBatch({ organization: [complete, shallow], school: [], person: [] }, new Date('2026-08-14T12:00:00Z'));
+    const batch = createCatalogEnrichmentBatch({ organization: [complete, shallow], person: [] }, new Date('2026-08-14T12:00:00Z'));
 
     expect(batch.targets).toHaveLength(1);
     expect(batch.targets[0]).toMatchObject({ name: 'Rasa', category: 'organization', status: 'pending' });
@@ -59,13 +59,14 @@ describe('catalog enrichment batches', () => {
     const school = {
       id: 'school:stakeholders:6', _source: 'stakeholders', _sourceId: 6,
       nome: 'Escola projetada', pais: 'Brasil', descricao: longDescription,
+      subtipo: 'Instituição de ensino',
       relevancia: 'Formação profissional aplicada', website: 'https://example.org', areas: '',
       _original: { id: 6, nome: 'Escola projetada', categoria: 'Escola' },
     };
 
-    const batch = createCatalogEnrichmentBatch({ organization: [], school: [school], person: [] });
+    const batch = createCatalogEnrichmentBatch({ organization: [school], person: [] });
 
-    expect(batch.targets[0].storageId).toBe('school-stakeholder-6');
+    expect(batch.targets[0].storageId).toBe('organization-stakeholders-6');
   });
 
   it('researches, validates and commits a complete batch before changing the catalog', async () => {
@@ -84,7 +85,7 @@ describe('catalog enrichment batches', () => {
 
     const processed = await processCatalogEnrichment(batch.batchId, { searchEvidence, generate, enforceBudget: false, now: new Date('2026-08-14T12:10:00Z') });
     expect(processed.readyToCommit).toBe(true);
-    expect(catalogStore.getRecords('organization')).toEqual([shallow]);
+    expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining(shallow)]);
 
     const committed = commitCatalogEnrichment(batch.batchId, { provideCatalog: providerFromStore, now: new Date('2026-08-14T12:11:00Z') });
     expect(committed.audit.needsEnrichment).toBe(0);
@@ -96,12 +97,12 @@ describe('catalog enrichment batches', () => {
 
     const storedBatch = catalogStore.getCommitted(batch.batchId);
     expect(rollbackCatalogEnrichment(storedBatch)).toMatchObject({ rolledBack: true, restored: 1 });
-    expect(catalogStore.getRecords('organization')).toEqual([shallow]);
+    expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining(shallow)]);
   });
 
   it('keeps a generated card pending when the post-generation gate still fails', async () => {
     const shallow = { id: 'o-test', nome: 'Instituto Teste', pais: 'Brasil' };
-    const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], person: [] });
     catalogStore.setPending(batch);
     const searchEvidence = async () => ({ sources: [], openAlex: null });
     const generate = async () => ({ data: { items: [{ ...completeOrganization(batch.targets[0].key), website: '', fontes: [] }] }, trace: {} });
@@ -110,7 +111,7 @@ describe('catalog enrichment batches', () => {
 
     expect(processed.readyToCommit).toBe(false);
     expect(processed.counts).toMatchObject({ pending: 1, passed: 0 });
-    expect(() => commitCatalogEnrichment(batch.batchId, { provideCatalog: () => ({ organization: [shallow], school: [], person: [] }) })).toThrow('enrichment_batch_incomplete');
+    expect(() => commitCatalogEnrichment(batch.batchId, { provideCatalog: () => ({ organization: [shallow], person: [] }) })).toThrow('enrichment_batch_incomplete');
   });
 
   it('drops publication URLs that were not present in the gathered evidence', () => {
@@ -127,5 +128,34 @@ describe('catalog enrichment batches', () => {
     const merged = mergeCatalogEnrichment(target, generated, { sources: [], openAlex: null });
 
     expect(merged.artigos.map((article) => article.url)).toEqual(['https://doi.org/10.1/existing']);
+  });
+
+  it('rolls back enrichment batches created with the legacy school category', () => {
+    const id = 'organization-escolas-1';
+    catalogStore.replaceCategory('organization', [{
+      id,
+      instituicao: 'Escola Legada',
+      nome: 'Escola Legada',
+      subtipo: 'Instituição de ensino',
+      descricao: 'Versão enriquecida',
+      enrichmentBatchId: 'legacy-school-batch',
+      enrichmentRecordHash: 'enriched-hash',
+    }], []);
+    const batch = {
+      batchId: 'legacy-school-batch',
+      category: 'school',
+      applied: [{ category: 'school', id, rowHash: 'enriched-hash' }],
+      beforeByCategory: {
+        school: { records: [{ id, instituicao: 'Escola Legada', descricao: 'Versão anterior' }], rowHashes: [] },
+      },
+    };
+
+    expect(rollbackCatalogEnrichment(batch)).toMatchObject({ rolledBack: true, restored: 1 });
+    expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining({
+      id,
+      descricao: 'Versão anterior',
+      categoria: 'Pessoa Jurídica',
+      subtipo: 'Instituição de ensino',
+    })]);
   });
 });

@@ -1,4 +1,5 @@
-import { mergeSchoolSources } from './schoolCatalog';
+import { buildLegalEntityCatalog } from './legalEntityCatalog';
+import { normalizeCatalogCategory } from './catalogTaxonomy';
 import { extractSignals } from './answerSignals.js';
 import { explainCandidate } from './candidateExplanation.js';
 import {
@@ -603,7 +604,7 @@ function exclusionReport(entries, shortlist, threshold) {
   }));
 }
 
-export function buildLocalEvaluation({ category, objective, answers, candidates, brief }) {
+export function buildLocalEvaluation({ category, subtype = '', objective, answers, candidates, brief }) {
   const criteria = deriveDimensionWeights({ objective, category, brief: brief || {}, answers: answers || {} });
   const profile = buildContextProfile({ brief: brief || {}, answers: answers || {}, category, objective });
   const terms = buildTermWeights(candidates);
@@ -621,6 +622,7 @@ export function buildLocalEvaluation({ category, objective, answers, candidates,
     trace: {
       evaluatorVersion: 'local-v2',
       category,
+      subtype: subtype || brief?.subtype || '',
       objective,
       answers,
       brief: brief || null,
@@ -715,9 +717,10 @@ export function mergeAiEvaluation(local, aiResult = {}) {
 }
 
 export function getCandidatePool({ category, data }) {
-  if (category === 'person' || category === 'researcher') return data.pesquisadores || [];
-  if (category === 'school') return mergeSchoolSources({ schools: data.escolas || [], stakeholders: data.stakeholders || [] });
-  return data.stakeholders || [];
+  const normalizedCategory = normalizeCatalogCategory(category);
+  if (normalizedCategory === 'person') return data.pesquisadores || [];
+  if (normalizedCategory === 'organization') return buildLegalEntityCatalog({ schools: data.escolas || [], stakeholders: data.stakeholders || [] });
+  return [];
 }
 
 export { DIMENSION_LABELS };

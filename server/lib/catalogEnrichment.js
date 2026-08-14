@@ -4,8 +4,9 @@ import { getCatalog } from './catalog.js';
 import { catalogStore } from './catalogStore.js';
 import { generateStructured } from './structuredGeneration.js';
 import { canUseAi, recordAiUsageAtomic } from './usageBudget.js';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES, normalizeCatalogRequest, normalizeCatalogSubtype, withCatalogClassification } from '../../src/domain/catalogTaxonomy.js';
 
-const CATEGORIES = ['organization', 'school', 'person'];
+const CATEGORIES = ['organization', 'person'];
 const MAX_ATTEMPTS = 2;
 const BATCH_SIZE = 3;
 
@@ -73,10 +74,11 @@ function storageRecord(record, category) {
   const original = record?._original && typeof record._original === 'object' ? record._original : {};
   const merged = withoutInternalFields({ ...original, ...record });
   const sourceId = record?._sourceId ?? original?.id ?? record?.id;
-  const storageId = category === 'school' && record?._source === 'stakeholders'
-    ? `school-stakeholder-${String(sourceId)}`
+  const educationRecord = category === 'organization' && record?.subtipo === ORGANIZATION_SUBTYPES[0];
+  const storageId = educationRecord && record?._source
+    ? `organization-${record._source}-${String(sourceId)}`
     : sourceId;
-  if (category === 'school') {
+  if (educationRecord) {
     merged.id = storageId;
     merged.instituicao = record?.nome || record?.instituicao || original?.instituicao || original?.nome;
   } else {
@@ -247,7 +249,7 @@ async function openAlexEvidence(record, fetchImpl) {
 function evidenceQuery(record, category) {
   const identity = [record.nome || record.instituicao, record.instituicao, record.pais].filter(Boolean).map((value) => `"${text(value)}"`).join(' ');
   if (category === 'person') return `${identity} perfil profissional publicações projetos biografia`;
-  if (category === 'school') return `${identity} educação profissional cursos indústria site oficial`;
+  if (record.subtipo === ORGANIZATION_SUBTYPES[0]) return `${identity} educação profissional cursos indústria site oficial`;
   return `${identity} atuação programas parcerias indústria site oficial`;
 }
 
@@ -292,6 +294,7 @@ const strings = { type: 'array', items: string };
 function generatedItemSchema(category, researchProfile) {
   const common = {
     targetKey: string,
+    subtipo: { type: 'string', enum: category === 'person' ? PERSON_SUBTYPES : ORGANIZATION_SUBTYPES },
     pais: string,
     descricao: { type: 'string', minLength: 400 },
     resumo: string,
@@ -317,12 +320,6 @@ function generatedItemSchema(category, researchProfile) {
       minItems: researchProfile ? 5 : 0,
       items: { type: 'object', additionalProperties: false, required: ['titulo', 'url', 'ano'], properties: { titulo: string, url: string, ano: string } },
     },
-  } : category === 'school' ? {
-    tipo_instituicao: string,
-    niveis_oferta: strings,
-    relacao_industria: string,
-    escala: string,
-    acreditacoes: strings,
   } : {
     natureza: string,
     setor: string,
@@ -331,6 +328,11 @@ function generatedItemSchema(category, researchProfile) {
     programas_relevantes: strings,
     parcerias_industriais: strings,
     alcance_geografico: string,
+    tipo_instituicao: string,
+    niveis_oferta: strings,
+    relacao_industria: string,
+    escala: string,
+    acreditacoes: strings,
   };
   const properties = { ...common, ...specific };
   return { type: 'object', additionalProperties: false, required: Object.keys(properties), properties };
@@ -407,6 +409,8 @@ export function mergeCatalogEnrichment(target, generated, evidence, now = new Da
   const generatedSources = (generated.fontes || []).map((url) => allowedGeneratedUrl(url, allowed)).filter(Boolean);
   const merged = {
     ...current,
+    subtipo: normalizeCatalogSubtype(target.category, current.subtipo)
+      || normalizeCatalogSubtype(target.category, generated.subtipo),
     pais: prefer(current.pais, generated.pais),
     descricao: longer(current.descricao, generated.descricao),
     website: prefer(current.website || current.website_oficial, allowedGeneratedUrl(generated.website, allowed)),
@@ -433,15 +437,6 @@ export function mergeCatalogEnrichment(target, generated, evidence, now = new Da
     merged.openalex_id = prefer(current.openalex_id, generated.openalex_id || openAlex.id);
     merged.citacoes = prefer(current.citacoes, generated.citacoes || openAlex.citations);
     merged.artigos = mergeArticles(current.artigos, [...(generated.artigos || []), ...openAlexArticles], allowed);
-  } else if (target.category === 'school') {
-    merged.instituicao = current.instituicao || current.nome;
-    merged.relevancia = longer(current.relevancia || current.diferencial, generated.resumo);
-    merged.tipo_instituicao = prefer(current.tipo_instituicao, generated.tipo_instituicao);
-    merged.areas_formacao = unique([current.areas_formacao || [], merged.areas]);
-    merged.niveis_oferta = unique([current.niveis_oferta || [], generated.niveis_oferta || []]);
-    merged.relacao_industria = prefer(current.relacao_industria, generated.relacao_industria);
-    merged.escala = prefer(current.escala, generated.escala);
-    merged.acreditacoes = unique([current.acreditacoes || [], generated.acreditacoes || []]);
   } else {
     merged.diferencial = longer(current.diferencial, generated.resumo);
     merged.natureza = prefer(current.natureza, generated.natureza);
@@ -453,6 +448,16 @@ export function mergeCatalogEnrichment(target, generated, evidence, now = new Da
     merged.programas_relevantes = unique([current.programas_relevantes || [], generated.programas_relevantes || []]);
     merged.parcerias_industriais = unique([current.parcerias_industriais || [], generated.parcerias_industriais || []]);
     merged.alcance_geografico = prefer(current.alcance_geografico, generated.alcance_geografico);
+    if (merged.subtipo === ORGANIZATION_SUBTYPES[0]) {
+      merged.instituicao = current.instituicao || current.nome;
+      merged.relevancia = longer(current.relevancia || current.diferencial, generated.resumo);
+      merged.tipo_instituicao = prefer(current.tipo_instituicao, generated.tipo_instituicao);
+      merged.areas_formacao = unique([current.areas_formacao || [], merged.areas]);
+      merged.niveis_oferta = unique([current.niveis_oferta || [], generated.niveis_oferta || []]);
+      merged.relacao_industria = prefer(current.relacao_industria, generated.relacao_industria);
+      merged.escala = prefer(current.escala, generated.escala);
+      merged.acreditacoes = unique([current.acreditacoes || [], generated.acreditacoes || []]);
+    }
   }
   return merged;
 }
@@ -584,7 +589,10 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
 }
 
 export function rollbackCatalogEnrichment(batch) {
-  const applied = Array.isArray(batch?.applied) ? batch.applied : [];
+  const applied = Array.isArray(batch?.applied) ? batch.applied.map((change) => ({
+    ...change,
+    category: normalizeCatalogRequest(change.category || batch.category).category,
+  })) : [];
   const byCategory = new Map(CATEGORIES.map((category) => [category, catalogStore.snapshot(category)]));
   const conflicts = [];
   for (const change of applied) {
@@ -603,7 +611,16 @@ export function rollbackCatalogEnrichment(batch) {
     const currentSnapshot = byCategory.get(change.category);
     const records = currentSnapshot.records;
     const index = records.findIndex((record) => String(record.id) === String(change.id));
-    const previous = batch.beforeByCategory?.[change.category]?.records?.find((record) => String(record.id) === String(change.id));
+    let previous;
+    for (const [sourceCategory, beforeSnapshot] of Object.entries(batch.beforeByCategory || {})) {
+      const request = normalizeCatalogRequest(sourceCategory);
+      if (request.category !== change.category) continue;
+      const found = (beforeSnapshot?.records || []).find((record) => String(record.id) === String(change.id));
+      if (found) {
+        previous = withCatalogClassification(request.subtype && !found.subtipo ? { ...found, subtipo: request.subtype } : found, request.category);
+        break;
+      }
+    }
     if (previous && index >= 0) records[index] = previous;
     else if (previous) records.push(previous);
     else if (index >= 0) records.splice(index, 1);

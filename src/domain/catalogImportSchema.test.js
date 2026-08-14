@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { CATALOG_SCHEMA_VERSION, LEGACY_CATALOG_SCHEMA_VERSION, getCatalogHeaders, getRequiredHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
+import { CATALOG_SCHEMA_VERSION, LEGACY_CATALOG_SCHEMA_VERSION, LEGACY_CATALOG_SCHEMA_VERSION_V2, getCatalogHeaders, getRequiredHeaders, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from './catalogImportSchema';
 
 describe('catalog import schema', () => {
   it('keeps category headers deterministic and validates the version/type', () => {
-    const headers = getCatalogHeaders('researcher');
+    const headers = getCatalogHeaders('person');
     expect(headers[0]).toBe('schema_version');
     expect(validateCatalogHeaders(headers, 'researcher').valid).toBe(true);
     const row = Object.fromEntries(headers.map((header) => [header, '']));
     row.schema_version = CATALOG_SCHEMA_VERSION;
-    row.tipo_registro = 'researcher';
+    row.tipo_registro = 'person';
     row.nome = 'Pesquisador de teste';
     row.pais = 'Brasil';
-    expect(validateCatalogRow(row, 'researcher').valid).toBe(true);
+    expect(validateCatalogRow(row, 'person').valid).toBe(true);
   });
 
   describe('cabeçalho parcial', () => {
@@ -55,13 +55,13 @@ describe('catalog import schema', () => {
 
     it('does not treat an absent optional column as an invalid value', () => {
       // `confianca` fora do recorte: undefined não pode reprovar a linha.
-      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Especialista', pais: 'Brasil' };
-      expect(validateCatalogRow(row, 'researcher').valid).toBe(true);
+      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'person', nome: 'Especialista', pais: 'Brasil' };
+      expect(validateCatalogRow(row, 'person').valid).toBe(true);
     });
 
     it('still rejects a confidence outside the range when the column is there', () => {
-      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Especialista', pais: 'Brasil', confianca: '140' };
-      expect(validateCatalogRow(row, 'researcher').valid).toBe(false);
+      const row = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'person', nome: 'Especialista', pais: 'Brasil', confianca: '140' };
+      expect(validateCatalogRow(row, 'person').valid).toBe(false);
     });
   });
 
@@ -114,5 +114,18 @@ describe('catalog import schema', () => {
     const row = { schema_version: LEGACY_CATALOG_SCHEMA_VERSION, tipo_registro: 'researcher', nome: 'Pesquisadora legada', pais: 'Brasil' };
     expect(validateCatalogRow(row, 'person').valid).toBe(true);
     expect(rowToCanonical(row).perfis_atuacao).toEqual(['pesquisa']);
+  });
+
+  it('maps a legacy school row to a legal entity with education subtype', () => {
+    const row = { schema_version: LEGACY_CATALOG_SCHEMA_VERSION_V2, tipo_registro: 'school', nome: 'Escola legada', pais: 'Brasil' };
+    expect(validateCatalogRow(row, 'organization').valid).toBe(true);
+    expect(rowToCanonical(row)).toMatchObject({ categoria: 'Pessoa Jurídica', subtipo: 'Instituição de ensino' });
+  });
+
+  it('rejects free-text subtypes in the current schema', () => {
+    const person = { schema_version: CATALOG_SCHEMA_VERSION, tipo_registro: 'person', subtipo: 'Categoria inventada', nome: 'Pessoa', pais: 'Brasil' };
+    const organization = { ...person, tipo_registro: 'organization', nome: 'Organização' };
+    expect(validateCatalogRow(person, 'person').errors.join(' ')).toMatch(/subtipo/);
+    expect(validateCatalogRow(organization, 'organization').errors.join(' ')).toMatch(/subtipo/);
   });
 });

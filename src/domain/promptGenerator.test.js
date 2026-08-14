@@ -4,14 +4,19 @@ import { CATEGORY_SCHEMAS, generateResearchPrompt } from './promptGenerator';
 
 describe('generateResearchPrompt', () => {
   it.each([
-    ['person', 'pessoas especialistas'],
-    ['organization', 'organizações'],
-    ['school', 'instituições de educação'],
+    ['person', 'pessoas físicas'],
+    ['organization', 'pessoas jurídicas'],
   ])('declares that the selected category is exclusive: %s', (category, label) => {
     const prompt = generateResearchPrompt({ category, context: 'Economia circular', purpose: 'Parceria' });
 
     expect(prompt).toContain(`PESQUISE SOMENTE ${label.toUpperCase()}.`);
     expect(prompt).toContain('Não misture categorias no mesmo CSV');
+  });
+
+  it('carries the selected subtype into the research request', () => {
+    const prompt = generateResearchPrompt({ category: 'organization', subtype: 'Instituição de ensino', context: 'Formação dual' });
+    expect(prompt).toContain('Subtipo desejado: Instituição de ensino');
+    expect(prompt).toContain('Instituições de ensino pertencem a Pessoas Jurídicas');
   });
 
   it('requires the exact person schema and a portable CSV output', () => {

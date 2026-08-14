@@ -10,6 +10,12 @@ describe('domain contracts', () => {
     expect(validateSelectionBrief({ ...brief, context: '' }).valid).toBe(false);
   });
 
+  it('preserves a canonical subtype and the implicit subtype of legacy school requests', () => {
+    const brief = createSelectionBrief({ category: 'school', objective: 'benchmark', answers: { context: 'Formação dual' } });
+    expect(brief).toMatchObject({ category: 'organization', subtype: 'Instituição de ensino' });
+    expect(validateSelectionBrief({ ...brief, subtype: 'Categoria inventada' }).valid).toBe(false);
+  });
+
   it('keeps the selection contract compatible with the current MVP while reserving the 5–10 policy', () => {
     expect(validateSelectionResult({ shortlist: [], candidatePool: [], trace: {} }).valid).toBe(true);
     expect(validateSelectionResult({ shortlist: new Array(11).fill({}), candidatePool: [], trace: {} }).valid).toBe(false);
@@ -24,7 +30,7 @@ describe('domain contracts', () => {
 
   it('validates transient adaptive interview contracts and their limits', () => {
     const question = { id: 'context', prompt: 'Qual é o contexto?', helper: 'Uma frase basta.', example: 'Ex.: benchmarking de formação dual.', reasonTag: 'estabelecer_contexto', kind: 'textarea', dimensions: ['impact', 'alignment'] };
-    const state = { category: 'school', objective: 'benchmark', answers: {}, askedIds: ['context'], currentQuestion: question, status: 'active' };
+    const state = { category: 'organization', objective: 'benchmark', answers: {}, askedIds: ['context'], currentQuestion: question, status: 'active' };
     expect(validateInterviewQuestion(question)).toEqual({ valid: true, errors: [] });
     expect(validateInterviewState(state)).toEqual({ valid: true, errors: [] });
     expect(validateInterviewState({ ...state, askedIds: new Array(21).fill('context') }).valid).toBe(false);

@@ -16,13 +16,14 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { CATEGORY_LABELS } from '../domain/interview';
 import { getCatalogHeaders } from '../domain/catalogImportSchema';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 import { generateResearchPrompt } from '../domain/promptGenerator';
 import { buildCatalogTemplate, downloadTemplateBuffer } from '../services/catalogTemplate';
 import PageContainer from '../design-system/primitives/PageContainer';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
 export default function PromptGeneratorPage() {
-  const [form, setForm] = useState({ category: 'person', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '', personProfiles: '', sourcePreferences: '' });
+  const [form, setForm] = useState({ category: 'person', subtype: '', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '', personProfiles: '', sourcePreferences: '' });
   const [prompt, setPrompt] = useState('');
   const [snack, setSnack] = useState('');
 
@@ -74,8 +75,15 @@ export default function PromptGeneratorPage() {
               </Typography>
               <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Quem você quer encontrar?</InputLabel>
-                <Select label="Quem você quer encontrar?" value={form.category} onChange={(event) => change('category', event.target.value)}>
+                <Select label="Quem você quer encontrar?" value={form.category} onChange={(event) => setForm((previous) => ({ ...previous, category: event.target.value, subtype: '' }))}>
                   {Object.entries(CATEGORY_LABELS).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Subtipo (opcional)</InputLabel>
+                <Select label="Subtipo (opcional)" value={form.subtype} onChange={(event) => change('subtype', event.target.value)}>
+                  <MenuItem value="">Todos os subtipos</MenuItem>
+                  {(form.category === 'person' ? PERSON_SUBTYPES : ORGANIZATION_SUBTYPES).map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
                 </Select>
               </FormControl>
               {form.category === 'person' && <>
