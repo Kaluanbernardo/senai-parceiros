@@ -93,7 +93,10 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    await expect(editorializeRadarItems([gazetteItem('convênio')])).rejects.toThrow('radar_editorial_rejected');
+    const { items: [item], stats } = await editorializeRadarItems([gazetteItem('convênio')]);
+
+    expect(item.editorialStatus).toBe('source');
+    expect(stats).toMatchObject({ rewritten: 0, rejected: 1, errors: ['radar_editorial_rejected'] });
   });
 
   it('traduz o item internacional e devolve os temas em português', async () => {
@@ -140,9 +143,7 @@ describe('reescrita editorial do Radar', () => {
     expect(item.displaySummary).toBe(EDITORIAL_SUMMARY);
   });
 
-  it('derruba o run ao recusar um texto gerado que continua em inglês', async () => {
-    // Recusar o texto e seguir deixaria o item com a redação da fonte, que na
-    // interface é idêntica a um item que não precisava de reescrita.
+  it('mantém na fila um texto gerado que continua em inglês', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
       title: 'Federal institutes are allowed to open new technical courses',
@@ -150,7 +151,10 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    await expect(editorializeRadarItems([gazetteItem('77')])).rejects.toThrow('radar_editorial_rejected');
+    const { items: [item], stats } = await editorializeRadarItems([gazetteItem('77')]);
+
+    expect(item.editorialStatus).toBe('source');
+    expect(stats).toMatchObject({ rewritten: 0, rejected: 1, errors: ['radar_editorial_rejected'] });
   });
 
   it('processa os itens em lotes de no máximo seis', async () => {
@@ -529,7 +533,7 @@ describe('reescrita editorial do Radar', () => {
     expect(rewritten.rawSourceText).toBe(false);
   });
 
-  it('derruba o run quando o modelo devolve JSON válido que o Radar recusa', async () => {
+  it('relata sem derrubar o run quando o modelo devolve JSON válido que o Radar recusa', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
       // Valid JSON that the Radar refuses: a headline still in English.
@@ -538,7 +542,27 @@ describe('reescrita editorial do Radar', () => {
       topics: item.temas,
     })));
 
-    await expect(editorializeRadarItems([gazetteItem('a'), gazetteItem('b')])).rejects.toThrow('radar_editorial_rejected');
+    const { items, stats } = await editorializeRadarItems([gazetteItem('a'), gazetteItem('b')]);
+
+    expect(items.every((item) => item.editorialStatus === 'source')).toBe(true);
+    expect(stats).toMatchObject({ rewritten: 0, rejected: 2, errors: ['radar_editorial_rejected'] });
+  });
+
+  it('preserva itens válidos quando outro item do mesmo lote é recusado', async () => {
+    vi.stubGlobal('fetch', respondWith((item) => (item.id === 'válido'
+      ? { id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas }
+      : {
+        id: item.id,
+        title: 'Federal institutes are allowed to open new technical courses',
+        summary: 'The act allows institutes to open technical courses in the next academic term.',
+        topics: item.temas,
+      })));
+
+    const { items, stats } = await editorializeRadarItems([gazetteItem('válido'), gazetteItem('recusado')]);
+
+    expect(items.find((item) => item.externalId === 'válido').editorialStatus).toBe('ai');
+    expect(items.find((item) => item.externalId === 'recusado').editorialStatus).toBe('source');
+    expect(stats).toMatchObject({ rewritten: 1, rejected: 1, errors: ['radar_editorial_rejected'] });
   });
 
   it('derruba o run quando o modelo ignora o schema estrito', async () => {
