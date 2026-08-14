@@ -193,15 +193,16 @@ function providerHeaders(provider) {
  *
  * `OPENROUTER_REASONING` reativa quando for desejado: low, medium ou high.
  */
-function reasoningOption() {
+function reasoningOption(disableReasoning = false) {
+  if (disableReasoning) return { reasoning: { enabled: false } };
   const configured = String(process.env.OPENROUTER_REASONING || '').trim().toLowerCase();
   if (['low', 'medium', 'high'].includes(configured)) return { reasoning: { effort: configured } };
   return { reasoning: { enabled: false } };
 }
 
-function providerOptions(provider, model, costQualityTradeoff) {
+function providerOptions(provider, model, costQualityTradeoff, disableReasoning) {
   if (provider !== 'openrouter') return {};
-  const base = { provider: { require_parameters: true }, ...reasoningOption() };
+  const base = { provider: { require_parameters: true }, ...reasoningOption(disableReasoning) };
   if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
   return {
     ...base,
@@ -215,7 +216,7 @@ function providerOptions(provider, model, costQualityTradeoff) {
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, webSearch, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const searchTool = webSearchTool(webSearch);
   const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
@@ -223,7 +224,7 @@ export async function generateStructured({ task = 'structured_generation', schem
   let lastError = null;
   for (const provider of providers) {
     try {
-      const options = providerOptions(provider.id, provider.model, costQualityTradeoff);
+      const options = providerOptions(provider.id, provider.model, costQualityTradeoff, disableReasoning);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,

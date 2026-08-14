@@ -245,6 +245,21 @@ describe('structured generation boundary', () => {
     delete process.env.OPENROUTER_REASONING;
   });
 
+  it('permite que uma tarefa estruturada recuse o raciocínio global', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_REASONING = 'high';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], disableReasoning: true });
+
+    expect(bodies[0].reasoning).toEqual({ enabled: false });
+  });
+
   it('normalizes provider failures without leaking response content', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';
