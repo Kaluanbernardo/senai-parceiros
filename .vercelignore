@@ -9,6 +9,7 @@ dist/
 output/
 tmp/
 tmp-atomic-*.json*
+.worktrees/
 
 # Local exploratory collectors that are intentionally outside the product.
 scripts/bing-j.mjs
