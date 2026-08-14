@@ -24,11 +24,13 @@ function blobRetryDelay(attempt) {
   return Math.min(BLOB_RETRY_MAX_DELAY_MS, BLOB_RETRY_BASE_DELAY_MS * (2 ** attempt));
 }
 
-function etagFingerprint(value) {
-  const text = String(value || '');
-  let hash = 0;
-  for (const character of text) hash = ((hash * 31) + character.charCodeAt(0)) >>> 0;
-  return text ? `${text.length}:${hash.toString(16)}` : 'missing';
+function normalizeBlobEtag(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  const withoutWeakPrefix = text.startsWith('W/') ? text.slice(2) : text;
+  return withoutWeakPrefix.startsWith('"') && withoutWeakPrefix.endsWith('"')
+    ? withoutWeakPrefix.slice(1, -1)
+    : withoutWeakPrefix;
 }
 
 async function acquireFileLock(lockPath, timeoutMs = DEFAULT_LOCK_TIMEOUT_MS) {
@@ -121,11 +123,11 @@ export class AtomicJsonStore {
     }
     if (result?.statusCode === 404 || !result?.stream) return { state: clone(this.emptyState()), etag: null };
     if (result?.statusCode && result.statusCode >= 400) throw new Error('store_hydrate_failed');
-    let etag = result.blob?.etag || null;
+    let etag = normalizeBlobEtag(result.blob?.etag);
     if (!etag) {
       try {
         const { head } = await import('@vercel/blob');
-        etag = (await head(this.blobPath))?.etag || null;
+        etag = normalizeBlobEtag((await head(this.blobPath))?.etag);
       } catch (error) {
         if (Number(error?.statusCode || error?.status) !== 404) throw error;
       }
@@ -138,8 +140,9 @@ export class AtomicJsonStore {
 
   async writeBlob(state, etag) {
     const { put } = await import('@vercel/blob');
-    const options = { access: 'private', contentType: 'application/json', allowOverwrite: Boolean(etag) };
-    if (etag) options.ifMatch = etag;
+    const normalizedEtag = normalizeBlobEtag(etag);
+    const options = { access: 'private', contentType: 'application/json', allowOverwrite: Boolean(normalizedEtag) };
+    if (normalizedEtag) options.ifMatch = normalizedEtag;
     return put(this.blobPath, JSON.stringify(state), options);
   }
 
@@ -175,9 +178,8 @@ export class AtomicJsonStore {
     if (this.driver !== 'vercel_blob') throw new Error('unsupported_store_driver');
     let lastError = null;
     for (let attempt = 0; attempt < retries; attempt += 1) {
-      let current = null;
       try {
-        current = await this.readBlob();
+        const current = await this.readBlob();
         const draft = clone(current.state);
         const next = mutator(draft);
         const state = clone(next === undefined ? draft : next);
@@ -185,30 +187,10 @@ export class AtomicJsonStore {
         this.state = state;
         this.remoteHydrated = true;
         this.lastError = null;
-        this.remoteEtag = result?.etag || current.etag || null;
+        this.remoteEtag = normalizeBlobEtag(result?.etag) || current.etag || null;
         return clone(state);
       } catch (error) {
         lastError = error;
-        if (isConflict(error)) {
-          let headEtag = null;
-          let headError = null;
-          try {
-            const { head } = await import('@vercel/blob');
-            headEtag = (await head(this.blobPath))?.etag || null;
-          } catch (diagnosticError) {
-            headError = diagnosticError?.name || 'unknown';
-          }
-          console.error('[DEBUG-blob-cas-7a19]', {
-            store: this.name,
-            attempt: attempt + 1,
-            status: Number(error?.statusCode || error?.status || error?.response?.status || 0) || null,
-            errorName: error?.name || null,
-            readEtag: etagFingerprint(current?.etag),
-            headEtag: etagFingerprint(headEtag),
-            etagsMatch: Boolean(current?.etag && headEtag && current.etag === headEtag),
-            headError,
-          });
-        }
         if (!isConflict(error) || attempt === retries - 1) break;
         await wait(blobRetryDelay(attempt));
       }
