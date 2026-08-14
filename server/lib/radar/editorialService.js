@@ -22,6 +22,10 @@ import { canUseAi, getUsageBudget, recordAiUsageAtomic } from '../usageBudget.js
 
 const EDITORIAL_BATCH_SIZE = 6;
 const DEFAULT_MAX_ITEMS_PER_RUN = 48;
+// Six translated titles plus explanatory summaries can legitimately exceed the
+// old 1,200-token ceiling. This is only a maximum: a complete shorter response
+// stops normally and is billed for what it actually used.
+const EDITORIAL_MAX_OUTPUT_TOKENS = 4000;
 /**
  * Bumped whenever the acceptance rules change. An item whose stored editorial is
  * missing one of its two halves was refused by the rules of its day, and without
@@ -363,7 +367,11 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
         task: 'radar_editorial_items',
         schema: EDITORIAL_SCHEMA,
         messages: editorialMessages(batch),
-        maxOutputTokens: 1200,
+        maxOutputTokens: EDITORIAL_MAX_OUTPUT_TOKENS,
+        // A global reasoning preference is useful for selection, not for a
+        // schema-bound translation task. Letting it share the completion budget
+        // is how production exhausted 1,200 tokens before producing valid JSON.
+        disableReasoning: true,
       });
       await recordAiUsageAtomic('radar-editorial', generated.trace.usage);
       for (const rewritten of applyGenerated(batch, generated)) {
