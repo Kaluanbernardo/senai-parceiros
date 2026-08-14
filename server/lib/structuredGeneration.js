@@ -205,7 +205,7 @@ function reasoningOption(disableReasoning = false, defaultDisabled = true) {
   return defaultDisabled ? { reasoning: { enabled: false } } : {};
 }
 
-function providerOptions(provider, model, costQualityTradeoff, disableReasoning, strictOutput) {
+function providerOptions(provider, model, costQualityTradeoff, disableReasoning, strictOutput, requireParameters) {
   if (provider !== 'openrouter') return {};
   const isAutoRouter = String(model || '').trim().toLowerCase() === DEFAULT_OPENROUTER_MODEL;
   // Um modelo fixado já define se raciocínio existe. Enviar implicitamente o
@@ -214,7 +214,7 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning,
   // No Auto Router ele continua explícito para evitar que a rota escolha um
   // modelo de raciocínio e reintroduza latência sem o chamador pedir.
   const base = {
-    ...(strictOutput ? { provider: { require_parameters: true } } : {}),
+    ...(strictOutput && requireParameters ? { provider: { require_parameters: true } } : {}),
     ...reasoningOption(disableReasoning, isAutoRouter),
   };
   if (!isAutoRouter) return base;
@@ -230,7 +230,7 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning,
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, strictOutput = true, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, strictOutput = true, requireParameters = true, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const searchTool = webSearchTool(webSearch);
   // A ferramenta hospedada de busca usa o contrato do OpenRouter. Quando ela é
@@ -244,7 +244,7 @@ export async function generateStructured({ task = 'structured_generation', schem
       const providerModel = provider.id === 'openrouter' && String(requestedModel || '').trim()
         ? String(requestedModel).trim()
         : provider.model;
-      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput);
+      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput, requireParameters);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,

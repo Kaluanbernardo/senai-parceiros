@@ -201,6 +201,7 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     model: 'x-ai/grok-4.3',
     disableReasoning: true,
     strictOutput: true,
+    requireParameters: false,
     schema: catalogResearchOutputSchema(request.category, request.quantity),
     messages: [
       { role: 'system', content: 'Você realiza pesquisa pública, rastreável e conservadora para o catálogo de stakeholders do SENAI-SP.' },

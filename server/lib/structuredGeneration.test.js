@@ -98,6 +98,28 @@ describe('structured generation boundary', () => {
     });
   });
 
+  it('can keep the strict schema while bypassing provider parameter pre-filtering', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({
+      schema,
+      messages: [{ role: 'user', content: 'pesquise' }],
+      model: 'openai/gpt-4.1-mini',
+      requireParameters: false,
+      webSearch: { engine: 'native' },
+    });
+
+    expect(bodies[0].provider).toBeUndefined();
+    expect(bodies[0].response_format.json_schema.strict).toBe(true);
+    expect(bodies[0].tools).toEqual([expect.objectContaining({ type: 'openrouter:web_search' })]);
+  });
+
   it('lets an internal task pin a faster OpenRouter model without invoking the auto-router', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';

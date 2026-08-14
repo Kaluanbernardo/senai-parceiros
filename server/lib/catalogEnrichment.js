@@ -530,6 +530,10 @@ export async function processCatalogEnrichment(batchId, {
       schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
       messages: generationMessages(targets, evidence, hostedWebSearch),
       model: hostedWebSearch ? (process.env.CATALOG_ENRICHMENT_MODEL || 'openai/gpt-4.1-mini') : undefined,
+      // O modelo está fixado e o schema continua estrito. O pré-filtro do
+      // roteador, porém, rejeita a combinação com a ferramenta hospedada antes
+      // de encaminhá-la a endpoints que declaram suporte aos parâmetros.
+      requireParameters: !hostedWebSearch,
       maxOutputTokens: hostedWebSearch ? 2600 : 4000,
       temperature: 0.1,
       costQualityTradeoff: 8,
