@@ -4,12 +4,14 @@ import catalogImportPreview from '../server/routes/admin/catalog-import-preview.
 import catalogImportRollback from '../server/routes/admin/catalog-import-rollback.js';
 import adminStatus from '../server/routes/admin/status.js';
 import adminAiCheck from '../server/routes/admin/ai-check.js';
+import catalogEnrichment from '../server/routes/admin/catalog-enrichment.js';
 
 const handlers = {
   'catalog-import-batches': catalogImportBatches,
   'catalog-import-commit': catalogImportCommit,
   'catalog-import-preview': catalogImportPreview,
   'catalog-import-rollback': catalogImportRollback,
+  'catalog-enrichment': catalogEnrichment,
   status: adminStatus,
   'ai-check': adminAiCheck,
 };

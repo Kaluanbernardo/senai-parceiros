@@ -1,6 +1,7 @@
 import { requireSession } from '../../lib/cookies.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../lib/http.js';
-import { flushCatalogStore, hydrateCatalogStore, rollbackCatalogImport } from '../../lib/catalogImport.js';
+import { flushCatalogStore, getImportBatch, hydrateCatalogStore, rollbackCatalogImport } from '../../lib/catalogImport.js';
+import { rollbackCatalogEnrichment } from '../../lib/catalogEnrichment.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -12,7 +13,8 @@ export default async function handler(req, res) {
     await hydrateCatalogStore({ force: true });
     const payload = await readJson(req);
     if (!payload?.batchId) return res.status(400).json({ error: 'batch_id_required' });
-    const result = rollbackCatalogImport(payload.batchId);
+    const batch = getImportBatch(payload.batchId);
+    const result = batch?.kind === 'enrichment' ? rollbackCatalogEnrichment(batch) : rollbackCatalogImport(payload.batchId);
     await flushCatalogStore();
     return res.status(200).json(result);
   } catch (error) {
