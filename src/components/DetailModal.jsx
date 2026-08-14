@@ -47,17 +47,32 @@ const naturezaColor = {
   'PPP': 'success',
 };
 
-const profileLabels = {
-  scholar: 'Google Scholar',
-  lattes: 'Lattes / CNPq',
-  orcid: 'ORCID',
-  researchgate: 'ResearchGate',
-  academia: 'Academia.edu',
-};
+export function personProfileLinks(item = {}) {
+  const orcid = isHttpUrl(item.orcid)
+    ? item.orcid
+    : /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(String(item.orcid || '').trim())
+      ? `https://orcid.org/${String(item.orcid).trim()}`
+      : '';
+  const candidates = [
+    { label: 'Website', href: item.website },
+    { label: 'Perfil institucional', href: item.perfil_principal_url },
+    { label: 'LinkedIn', href: item.linkedin_url },
+    { label: 'Google Scholar', href: item.scholar },
+    { label: 'ORCID', href: orcid },
+  ].filter((entry) => isHttpUrl(entry.href));
+  const links = [];
+  for (const candidate of candidates) {
+    const existing = links.find((entry) => entry.href === candidate.href);
+    if (!existing) links.push(candidate);
+    else if (existing.label === 'Perfil institucional' && candidate.label !== 'Website') existing.label = candidate.label;
+  }
+  return links;
+}
 
 export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
   if (!item) return null;
   const isPerson = type === 'person' || type === 'pesquisador';
+  const profileLinks = isPerson ? personProfileLinks(item) : [];
 
   const rawTitle =
     type === 'stakeholder' ? item.nome :
@@ -101,9 +116,9 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
 
       <DialogContent sx={{ pt: 2 }}>
         {/* Links */}
-        {(isHttpUrl(item.website) || isHttpUrl(item.perfil_principal_url) || isHttpUrl(item.linkedin_url) || isHttpUrl(item.scholar)) && (
+        {(profileLinks.length > 0 || (!isPerson && isHttpUrl(item.website))) && (
           <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-            {isHttpUrl(item.website) && (
+            {!isPerson && isHttpUrl(item.website) && (
               <Button
                 variant="outlined"
                 size="small"
@@ -117,20 +132,21 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
                 Website
               </Button>
             )}
-            {isPerson && isHttpUrl(item.perfil_principal_url || item.linkedin_url || item.scholar) && (
+            {profileLinks.map((profile) => (
               <Button
+                key={profile.href}
                 variant="outlined"
                 size="small"
-                startIcon={<SchoolIcon />}
+                startIcon={profile.label === 'Google Scholar' ? <SchoolIcon /> : <OpenInNewIcon />}
                 component="a"
-                href={item.perfil_principal_url || item.linkedin_url || item.scholar}
+                href={profile.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={catalogActionSx}
               >
-                {item.linkedin_url ? 'LinkedIn' : profileLabels[item.profileType] || 'Perfil público'}
+                {profile.label}
               </Button>
-            )}
+            ))}
           </Box>
         )}
 
