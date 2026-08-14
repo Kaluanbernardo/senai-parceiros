@@ -133,6 +133,24 @@ describe('needsEditorialTreatment', () => {
     expect(needsEditorialTreatment({ sourceName: 'Cedefop', title: 'Skills forecast for the green transition', summaryPt: 'Report on skills and training in Europe.' })).toBe(true);
   });
 
+  it('manda traduzir títulos de estudos em outros idiomas mesmo sem abstract em inglês', () => {
+    expect(needsEditorialTreatment({
+      section: 'research',
+      sourceName: 'OpenAlex',
+      title: 'Analisis ketidaksesuaian pekerjaan pada pelatihan vokasi',
+      summaryPt: 'Resumo indisponível na fonte.',
+    })).toBe(true);
+  });
+
+  it('não manda traduzir de novo um título de estudo que já está em português', () => {
+    expect(needsEditorialTreatment({
+      section: 'research',
+      sourceName: 'OpenAlex',
+      title: 'Formação profissional para a indústria brasileira',
+      summaryPt: 'O estudo analisa cursos técnicos e demanda industrial.',
+    })).toBe(false);
+  });
+
   it('leaves a Portuguese institutional item alone', () => {
     expect(needsEditorialTreatment({ sourceName: 'MEC / SETEC', title: 'MEC amplia oferta de cursos técnicos', summaryPt: 'Relação com educação profissional: o ministério amplia a oferta de cursos técnicos.' })).toBe(false);
   });
