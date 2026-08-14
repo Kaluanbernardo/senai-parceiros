@@ -13,7 +13,7 @@
  * baseline; it never replaces it.
  */
 
-export const EDITORIAL_RULES_VERSION = 2;
+export const EDITORIAL_RULES_VERSION = 3;
 
 function safeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -284,6 +284,10 @@ export function needsEditorialTreatment(item) {
   if (!item) return false;
   if (safeText(item.editorialTitle) && safeText(item.editorialSummary) && editorialIsGrounded(item)) return false;
   if (isOfficialAct(item)) return true;
+  // Academic sources publish in several languages, not only English. A title
+  // with no Portuguese marker still needs a translated display title even when
+  // its abstract happens to be in Portuguese (or is missing altogether).
+  if (item.section === 'research' && (isLikelyEnglish(item.title) || !hasPortugueseMarkers(item.title))) return true;
   // The abstract counts as visible text. A paper whose source published no
   // usable summary falls back to a Portuguese sentence saying so, and that
   // sentence was the only thing inspected besides the title: an English paper

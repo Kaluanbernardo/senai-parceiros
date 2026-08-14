@@ -642,6 +642,31 @@ function douThemeSummary(content, title = '') {
   return `Relação com educação profissional: ${conciseText(excerpt, 520)}`;
 }
 
+/**
+ * Gives the editorial pass enough of the act to explain it, not merely prove
+ * that it matched the Radar's theme. The relevant clause comes first so it is
+ * never cut off by long legal preambles; nearby clauses then supply audience,
+ * scope and practical conditions when the act actually states them.
+ */
+function douEditorialContext(content, title = '') {
+  const clean = htmlText(content || title);
+  const sentences = clean.match(/[^.!?;]+[.!?;]?/g)?.map((value) => value.trim()).filter(Boolean) || [];
+  const evidenceIndex = sentences.findIndex((sentence) => {
+    const folded = stripDouInstitutionalBoilerplate(sentence);
+    return countWholeTerms(folded, DOU_STRONG_TERMS) > 0
+      && DOU_SUBSTANTIVE_TERMS.some((term) => folded.includes(term));
+  });
+  const selected = [
+    title ? `Título oficial: ${title}.` : '',
+    evidenceIndex >= 0 ? sentences[evidenceIndex] : douThemeEvidence(clean, title),
+    evidenceIndex >= 0 ? sentences[evidenceIndex + 1] : '',
+    evidenceIndex > 0 && sentences[evidenceIndex - 1]?.length <= 420 ? sentences[evidenceIndex - 1] : '',
+    evidenceIndex >= 0 ? sentences[evidenceIndex + 2] : '',
+    sentences[0]?.length <= 420 ? sentences[0] : '',
+  ].filter(Boolean);
+  return conciseText([...new Set(selected)].join(' '), 1800);
+}
+
 function douItemFromDocument(document, candidate = {}) {
   const content = String(document?.content || document?.summaryPt || candidate?.summaryPt || '').trim();
   // The listing payload carries the act's own title; the fetched page's <title>
@@ -667,6 +692,7 @@ function douItemFromDocument(document, candidate = {}) {
     // the card cites for traceability once an editorial headline replaces it.
     originalTitle,
     summaryPt: summary,
+    sourceContext: douEditorialContext(sourceText, originalTitle),
     publishedAt: document?.publishedAt || candidate?.publishedAt,
     sourceName: 'Diário Oficial da União',
     sourceUrl,

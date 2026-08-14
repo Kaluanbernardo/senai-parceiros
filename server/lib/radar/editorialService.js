@@ -30,9 +30,10 @@ const DEFAULT_MAX_ITEMS_PER_RUN = 48;
  * input hash on purpose, so relaxing a rule retries only what was refused
  * instead of re-running the hundreds of items that already came out whole.
  */
-const EDITORIAL_VALIDATION_VERSION = 3;
+const EDITORIAL_VALIDATION_VERSION = 4;
 const DEFAULT_DEADLINE_MS = 25_000;
 const MAX_SOURCE_TEXT = 900;
+const MAX_OFFICIAL_SOURCE_TEXT = 2200;
 
 const EDITORIAL_SCHEMA = {
   type: 'object',
@@ -61,8 +62,10 @@ const EDITORIAL_SCHEMA = {
 const itemId = (item) => String(item?.externalId || item?.id || '');
 
 function sourceTextFor(item) {
-  const text = stripEvidencePrefix(item?.summaryPt) || String(item?.abstractText || '');
-  return text.replace(/\s+/g, ' ').trim().slice(0, MAX_SOURCE_TEXT);
+  const contextual = isOfficialAct(item) ? String(item?.sourceContext || '') : '';
+  const text = contextual || stripEvidencePrefix(item?.summaryPt) || String(item?.abstractText || '');
+  const limit = isOfficialAct(item) ? MAX_OFFICIAL_SOURCE_TEXT : MAX_SOURCE_TEXT;
+  return text.replace(/\s+/g, ' ').trim().slice(0, limit);
 }
 
 export function editorialInputHash(item) {
@@ -129,6 +132,7 @@ export function editorialPriority(item) {
 }
 
 function editorialMode(item) {
+  if (isOfficialAct(item)) return 'dou';
   // A paper's title is its citation. Translating it keeps the item readable
   // without inventing a headline the literature cannot be searched by.
   return item?.section === 'research' ? 'traducao' : 'editorial';
@@ -141,8 +145,9 @@ function editorialMessages(items) {
       content: [
         'Você reescreve itens do Radar de educação profissional para leitores que não são especialistas em legislação nem em pesquisa acadêmica.',
         'Responda sempre em português do Brasil, mesmo quando o texto recebido estiver em inglês.',
+        'Para modo "dou": troque a referência legal por um título de até 110 caracteres que diga qual decisão foi tomada. Depois explique o ato em duas a quatro frases: o que ele determina, quem é afetado, quais condições ou prazos são informados e qual é o efeito prático. Omita qualquer parte que a fonte não permita responder.',
         'Para modo "editorial": escreva um título de até 110 caracteres dizendo o que o documento faz e para quem, sem começar por número de ato, e um resumo de duas a três frases explicando em linguagem simples o que muda na prática.',
-        'Para modo "traducao": traduza o título fielmente, sem reescrevê-lo, e escreva um resumo de duas a três frases em linguagem simples sobre o que o trabalho investiga e o que encontrou.',
+        'Para modo "traducao": traduza fielmente o título completo do estudo, sem abreviar nem transformá-lo em manchete, e escreva um resumo de duas a três frases em linguagem simples sobre o que o trabalho investiga e o que encontrou.',
         'Não use jargão jurídico ou acadêmico; se um termo técnico for indispensável, explique-o na mesma frase.',
         'Use somente as informações recebidas. Nunca invente prazos, valores, números, vagas ou efeitos.',
         'O SENAI-SP é o público do produto, não uma informação da fonte: nunca diga que um ato é do, para, voltado a, conveniado com ou recomendado ao SENAI-SP ou ao SESI sem que isso esteja explicitamente no texto recebido.',
@@ -197,7 +202,11 @@ export function validateEditorialTitle(value, item = {}) {
   const limit = editorialTitleLimit(item);
   const title = cleanText(value, limit + 40);
   if (title.length < 12 || title.length > limit) return false;
-  if (folded(title) === folded(item.title)) return false;
+  const unchanged = folded(title) === folded(item.title);
+  // A Portuguese paper may enter the pass because only its abstract needs a
+  // rewrite. Keeping its already-Portuguese title is a valid faithful
+  // translation; official acts and foreign titles must still change.
+  if (unchanged && !(item?.section === 'research' && hasPortugueseMarkers(item.title))) return false;
   if (item?.section === 'research') {
     // Translated titles keep the field's canonical English terms, so demanding
     // that the whole string not read as English rejected the very translations

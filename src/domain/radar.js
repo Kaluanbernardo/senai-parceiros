@@ -68,6 +68,7 @@ export function normalizeRadarItem(item, index = 0) {
     isPlaceholder: Boolean(item?.isPlaceholder),
     editorialTitle: safeText(item?.editorialTitle) || null,
     editorialSummary: safeText(item?.editorialSummary) || null,
+    sourceContext: safeText(item?.sourceContext) || null,
     editorialStatus: ['ai', 'source'].includes(item?.editorialStatus) ? item.editorialStatus : (safeText(item?.editorialTitle) ? 'ai' : 'source'),
     editorialInputHash: safeText(item?.editorialInputHash) || null,
     editorialUpdatedAt: safeText(item?.editorialUpdatedAt) || null,
