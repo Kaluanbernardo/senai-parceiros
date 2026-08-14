@@ -65,6 +65,7 @@ export default function EntityCard({
   badge,
   link,
   flags = [],
+  dateLabel = 'Adicionada em',
 }) {
   const tone = T.tools[accent] || T.tools.catalog;
   const compact = view === 'list';
@@ -158,7 +159,7 @@ export default function EntityCard({
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', mt: .25, color: T.ink.subtle }}>
-              Adicionada em {formatEntityAddedAt(item)}
+              {dateLabel} {formatEntityAddedAt(item)}
             </Typography>
           </Box>
 
