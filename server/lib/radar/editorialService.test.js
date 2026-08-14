@@ -48,6 +48,7 @@ afterEach(() => {
   resetUsageBudgetForTests();
   delete process.env.RADAR_EDITORIAL_PROVIDER;
   delete process.env.RADAR_EDITORIAL_MAX_ITEMS;
+  delete process.env.AI_DAILY_REQUEST_LIMIT;
 });
 
 describe('reescrita editorial do Radar', () => {
@@ -205,6 +206,18 @@ describe('reescrita editorial do Radar', () => {
     await expect(editorializeRadarItems([gazetteItem('off')])).rejects.toThrow('radar_editorial_provider_disabled');
     expect(fetch).not.toHaveBeenCalled();
     delete process.env.RADAR_SUMMARY_PROVIDER;
+  });
+
+  it('falha visivelmente quando há candidatos mas o orçamento diário acabou', async () => {
+    // Produção devolvia uma execução "ok" com candidatos, zero reescritas e
+    // modelo nulo. A interface dizia apenas que nada foi reescrito, escondendo
+    // que o limite diário impediu qualquer chamada ao provedor.
+    process.env.AI_DAILY_REQUEST_LIMIT = '0';
+    vi.stubGlobal('fetch', vi.fn());
+
+    await expect(editorializeRadarItems([gazetteItem('sem-orcamento')]))
+      .rejects.toThrow('radar_editorial_budget_exceeded');
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('não exige provedor quando não há nada para reescrever', async () => {

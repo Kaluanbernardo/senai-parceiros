@@ -31,7 +31,8 @@ export default async function handler(req, res) {
   const mode = new URL(req.url || '/api/radar/refresh', 'http://localhost').searchParams.get('mode');
   if (mode === 'editorial') {
     const editorial = await refreshRadarEditorials();
-    return res.status(editorial.refreshed ? 200 : 503).json(editorial);
+    const status = editorial.refreshed ? 200 : editorial.error === 'radar_editorial_budget_exceeded' ? 429 : 503;
+    return res.status(status).json(editorial);
   }
   const startedAt = Date.now();
   let result;

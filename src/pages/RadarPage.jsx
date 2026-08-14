@@ -99,6 +99,14 @@ function originalTitleLabel(item) {
   return isOfficialAct(item) ? 'Título publicado no Diário Oficial' : 'Título original';
 }
 
+function editorialFailureMessage(error) {
+  if (error === 'radar_editorial_budget_exceeded') {
+    return 'O limite interno diário de IA do Radar foi atingido. A coleta foi preservada; tente novamente após a renovação do limite.';
+  }
+  if (error === 'radar_editorial_provider_disabled') return 'A reescrita editorial do Radar não está habilitada.';
+  return 'Nenhum texto foi reescrito.';
+}
+
 function localDate(date) {
   if (!date) return 'Data não informada';
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`));
@@ -163,8 +171,11 @@ export default function RadarPage() {
       lastRun = body.lastRun || lastRun;
       const status = body.lastRun?.sourceStatus?.['Títulos e resumos editoriais'];
       if (!response.ok || !body.stats) {
-        const reason = status?.errors?.length ? `: ${status.errors.join(', ')}` : '';
-        return { severity: 'warning', message: `Nenhum texto foi reescrito${reason}.`, lastRun };
+        const errorCode = body.error || status?.error || status?.errors?.[0];
+        const detail = errorCode && !['radar_editorial_budget_exceeded', 'radar_editorial_provider_disabled'].includes(errorCode)
+          ? ` Motivo: ${errorCode}.`
+          : '';
+        return { severity: 'warning', message: `${editorialFailureMessage(errorCode)}${detail}`, lastRun };
       }
       rewritten += body.stats.rewritten || 0;
       // A pass takes about half a minute and there can be five of them. Without

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dedupeRadarItems, douRelevance, fetchDouItems, fetchFeedItems, fetchOecdItems, fetchOpenAlexItems, fetchWebItems, filterRadarItems, normalizeRadarItem, refreshRadarEditorials, refreshRadarSnapshot, getRadarFeedPolicy, getRadarFeedReadiness, getRadarItems, getRadarStoreStatus, getTrackedResearcherCatalog, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY, resetRadarLiveCache } from './radar.js';
 import { radarStore } from './radarStore.js';
 import { catalogStore } from './catalogStore.js';
+import { resetUsageBudgetForTests } from './usageBudget.js';
 
 const baseItems = [
   normalizeRadarItem({ id: 'a', section: 'research', title: 'IA na indústria', summaryPt: 'Competências para manufatura', publishedAt: '2026-07-10', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['IA', 'indústria'], relevanceScore: 90, externalId: 'doi:a' }),
@@ -32,7 +33,7 @@ function providerReply(request) {
 }
 
 describe('radar domain', () => {
-  afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); radarStore.configure({ driver: 'memory' }); catalogStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; });
+  afterEach(() => { vi.restoreAllMocks(); resetRadarLiveCache(); resetUsageBudgetForTests(); radarStore.configure({ driver: 'memory' }); catalogStore.configure({ driver: 'memory' }); delete process.env.RADAR_EXTRA_FEEDS_JSON; delete process.env.AI_DAILY_REQUEST_LIMIT; });
 
   it('usa pesquisadores importados no catálogo acompanhado pelo Radar', async () => {
     catalogStore.configure({ driver: 'memory' });
@@ -785,6 +786,42 @@ describe('radar domain', () => {
     const result = await refreshRadarEditorials();
 
     expect(result).toMatchObject({ refreshed: false, error: 'empty_snapshot' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('registra explicitamente quando o orçamento impede a fila editorial', async () => {
+    enableRadarProvider();
+    process.env.AI_DAILY_REQUEST_LIMIT = '0';
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'paper-budget', externalId: 'paper-budget', section: 'research',
+        title: 'Vocational pathways in advanced manufacturing',
+        summaryPt: 'The study compares apprenticeship systems and workforce skills across industry.',
+        publishedAt: '2026-08-14', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'],
+      })],
+      fetchedAt: '2026-08-14T12:00:00.000Z',
+      sourceStatus: {},
+      liveProvider: true,
+    });
+    vi.stubGlobal('fetch', vi.fn());
+
+    const result = await refreshRadarEditorials();
+
+    expect(result).toMatchObject({
+      refreshed: false,
+      error: 'radar_editorial_budget_exceeded',
+      budget: { limits: { requests: 0 }, remaining: { requests: 0 } },
+      lastRun: {
+        status: 'failed',
+        sourceStatus: {
+          'Títulos e resumos editoriais': {
+            status: 'error',
+            error: 'radar_editorial_budget_exceeded',
+          },
+        },
+      },
+    });
     expect(fetch).not.toHaveBeenCalled();
   });
 

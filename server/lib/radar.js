@@ -12,6 +12,7 @@ import { DirectOfficialWebProvider } from './radar/web/directOfficial.js';
 import { TavilyWebProvider } from './radar/web/tavily.js';
 import { collectDoeSpSource, collectIloSitemapSource, collectPaginatedInstitutionalSource, collectWordPressSource, semanticEvidence } from './radar/institutional.js';
 import { collectTrackedResearcherStudies } from './radar/researchers.js';
+import { getUsageBudget, hydrateUsageBudget } from './usageBudget.js';
 export { dedupeRadarItems, filterRadarItems, normalizeRadarItem, RADAR_SECTIONS, RADAR_SECTION_LABELS } from '../../src/domain/radar.js';
 
 export const RADAR_SOURCE_POLICY = [
@@ -874,6 +875,7 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
   // snapshot. Always reload the durable snapshot so GETs do not serve the
   // document first hydrated by this process for the rest of its lifetime.
   const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: true }));
+  if (live && includeAi) await hydrateUsageBudget({ force: true });
   const feedPolicy = getRadarFeedPolicy();
   const allowedSources = new Set(RADAR_SOURCE_POLICY.map((entry) => entry.name));
   const isAllowedItem = (item) => allowedSources.has(item.sourceName)
@@ -1024,8 +1026,8 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     // interface; only these counts tell them apart.
     const { stats } = editorialResult.value;
     sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais',
-      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
-      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors });
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, budgetExceeded: stats.budgetExceeded, budget: stats.budget, model: stats.model || null, errors: stats.errors });
   }
   // O que este run nao alcancou (teto por run ou deadline) fica de fora do
   // snapshot: e melhor um Radar incompleto do que um item com o texto cru da
@@ -1090,19 +1092,41 @@ export async function refreshRadarSnapshot({ filters = {}, includeAi = true } = 
 export async function refreshRadarEditorials() {
   const startedAt = Date.now();
   const hydrateError = await safeStoreCall(() => radarStore.hydrate({ force: true }));
+  await hydrateUsageBudget({ force: true });
   const stored = radarStore.getSnapshot();
   if (!stored?.items?.length) {
     return { refreshed: false, error: hydrateError || 'empty_snapshot', stats: null, lastRun: radarStore.getLastRun(), store: radarStore.status() };
   }
-  const { items, stats } = await editorializeRadarItems(stored.items.map(normalizeRadarItem), {
-    previousItems: stored.items,
-    deadlineAt: startedAt + runBudgetMs(),
-  });
+  let editorial;
+  try {
+    editorial = await editorializeRadarItems(stored.items.map(normalizeRadarItem), {
+      previousItems: stored.items,
+      deadlineAt: startedAt + runBudgetMs(),
+    });
+  } catch (error) {
+    const reason = sanitizeProviderError(error, 'radar_editorial_unavailable');
+    const budget = error?.budget || getUsageBudget('radar-editorial');
+    const sourceStatus = {
+      ...(stored.sourceStatus || {}),
+      'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais', 'error', { error: reason, errors: [reason], budget }),
+    };
+    const lastRun = radarStore.recordRun({
+      status: 'failed',
+      fetchedAt: stored.fetchedAt,
+      itemCount: stored.items.length,
+      sourceStatus,
+      durationMs: Date.now() - startedAt,
+      error: reason,
+    });
+    await safeStoreCall(() => radarStore.flush());
+    return { refreshed: false, error: reason, stats: null, budget, lastRun, store: radarStore.status() };
+  }
+  const { items, stats } = editorial;
   const sourceStatus = {
     ...(stored.sourceStatus || {}),
     'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais',
-      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached ? 'partial' : 'ok',
-      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, model: stats.model || null, errors: stats.errors }),
+      !stats.enabled ? 'disabled' : stats.failedBatches || stats.deadlineReached || stats.budgetExceeded ? 'partial' : 'ok',
+      { count: stats.rewritten, reused: stats.reused, pending: stats.pending, candidates: stats.candidates, rejected: stats.rejected, deadlineReached: stats.deadlineReached, budgetExceeded: stats.budgetExceeded, budget: stats.budget, model: stats.model || null, errors: stats.errors }),
   };
   // `fetchedAt` dates the collection, not the rewrite. Advancing it here would
   // tell every reader the sources were consulted again when they were not.
