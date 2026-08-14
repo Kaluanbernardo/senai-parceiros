@@ -69,6 +69,10 @@ describe('catalog research module', () => {
     expect(item.required).toContain('programas_relevantes');
     expect(item.required).not.toContain('h_index');
     expect(item.additionalProperties).toBe(false);
+
+    const person = catalogResearchOutputSchema('person', CATALOG_RESEARCH_BATCH_SIZE).properties.candidates.items.properties;
+    expect(person.h_index.type).toEqual(['integer', 'null']);
+    expect(person.citacoes.type).toEqual(['integer', 'null']);
   });
 
   it('turns researched JSON into the same canonical rows consumed by catalog preview', async () => {
@@ -105,19 +109,48 @@ describe('catalog research module', () => {
     expect(result.parsed.rows[0].row.data_consulta).toBe('2026-08-14');
   });
 
-  it('requires a targeted identity pass before academic fields can be declared missing', async () => {
-    const generate = vi.fn(async () => ({
-      data: { candidates: [candidate({ nome: 'Marina Exemplo' })] },
-      trace: { provider: 'openrouter', model: 'test/model', webSearchRequests: 4 },
-    }));
+  it('runs a separate targeted identity pass before academic fields can be declared missing', async () => {
+    const generate = vi.fn()
+      .mockResolvedValueOnce({
+        data: { candidates: [candidate({
+          nome: 'Marina Exemplo',
+          instituicao_atual: 'Instituto Federal Exemplo',
+          google_scholar_url: '',
+          h_index: null,
+          citacoes: null,
+          dados_nao_localizados: ['google_scholar_url: não apareceu na descoberta inicial'],
+        })] },
+        trace: { provider: 'openrouter', model: 'test/model', usage: { total_tokens: 100 }, webSearchRequests: 2 },
+      })
+      .mockResolvedValueOnce({
+        data: { profiles: [{
+          nome: 'Marina Exemplo',
+          website_oficial: 'https://example.edu/marina',
+          perfil_principal_url: 'https://example.edu/marina',
+          linkedin_url: '',
+          google_scholar_url: 'https://scholar.google.com/citations?user=abc',
+          orcid: '0000-0000-0000-0000',
+          openalex_id: 'https://openalex.org/A123',
+          h_index: 14,
+          citacoes: 800,
+          publicacoes_relevantes: ['Artigo verificável | https://doi.org/10.1000/teste | 2025'],
+          fontes_enriquecimento: ['https://example.edu/marina', 'https://scholar.google.com/citations?user=abc'],
+          dados_nao_localizados: ['linkedin_url: consulta dedicada sem correspondência inequívoca'],
+        }] },
+        trace: { provider: 'openrouter', model: 'test/model', usage: { total_tokens: 80 }, webSearchRequests: 3 },
+      });
 
-    await researchCatalogCandidates(
+    const result = await researchCatalogCandidates(
       { category: 'person', context: 'Especialistas em IA na educação profissional', quantity: 5, geography: 'brasil' },
       { generate, now: () => new Date('2026-08-14T12:00:00Z') },
     );
 
-    const prompt = generate.mock.calls[0][0].messages[1].content;
-    expect(prompt).toContain('segunda passagem de enriquecimento para cada pessoa');
+    expect(generate).toHaveBeenCalledTimes(2);
+    const prompt = generate.mock.calls[1][0].messages[1].content;
+    expect(generate.mock.calls[1][0].task).toBe('catalog_research_person_enrichment_batch_1');
+    expect(prompt).toContain('segunda passagem de enriquecimento');
+    expect(prompt).toContain('Marina Exemplo');
+    expect(prompt).toContain('Instituto Federal Exemplo');
     expect(prompt).toContain('site:scholar.google.com/citations');
     expect(prompt).toContain('site:orcid.org');
     expect(prompt).toContain('site:linkedin.com/in');
@@ -125,6 +158,18 @@ describe('catalog research module', () => {
     expect(prompt).toContain('google_scholar_url, orcid, openalex_id, linkedin_url, h_index, citacoes e publicacoes_relevantes');
     expect(prompt).toContain('Só registre um campo em dados_nao_localizados depois da consulta dedicada');
     expect(prompt).toContain('campo: buscas realizadas e motivo da não confirmação');
+    expect(generate.mock.calls[1][0].webSearch).toMatchObject({ maxTotalResults: 20, searchContextSize: 'high' });
+
+    expect(result.parsed.rows[0].record).toMatchObject({
+      scholar: 'https://scholar.google.com/citations?user=abc',
+      h_index: '14',
+      citacoes: '800',
+    });
+    expect(result.parsed.rows[0].record.fontes).toContain('https://scholar.google.com/citations?user=abc');
+    expect(result.parsed.rows[0].record.dados_nao_localizados).not.toContain('google_scholar_url: não apareceu na descoberta inicial');
+    expect(result.parsed.rows[0].record.dados_nao_localizados).toContain('linkedin_url: consulta dedicada sem correspondência inequívoca');
+    expect(result.trace).toMatchObject({ webSearchRequests: 5, usage: { total_tokens: 180 } });
+    expect(result.trace.usages).toHaveLength(2);
 
     const personSchema = catalogResearchOutputSchema('person', 5).properties.candidates.items.properties;
     expect(personSchema.google_scholar_url.description).toContain('busca dedicada por nome e instituição');
