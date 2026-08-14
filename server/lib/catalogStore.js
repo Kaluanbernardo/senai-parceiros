@@ -138,6 +138,11 @@ class CatalogStore {
     this.persist();
   }
 
+  listPending() {
+    this.load();
+    return Object.values(this.state.pendingBatches).map(clone);
+  }
+
   setCommitted(batch) {
     this.load();
     this.state.committedBatches[batch.batchId] = clone(batch);
@@ -159,6 +164,7 @@ class CatalogStore {
     this.load();
     return Object.values(this.state.committedBatches).map((batch) => ({
       batchId: batch.batchId,
+      kind: batch.kind || 'import',
       category: batch.category,
       filename: batch.filename,
       createdAt: batch.createdAt,

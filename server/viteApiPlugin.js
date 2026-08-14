@@ -10,6 +10,7 @@ import catalogImportPreview from './routes/admin/catalog-import-preview.js';
 import catalogImportCommit from './routes/admin/catalog-import-commit.js';
 import catalogImportRollback from './routes/admin/catalog-import-rollback.js';
 import catalogImportBatches from './routes/admin/catalog-import-batches.js';
+import catalogEnrichment from './routes/admin/catalog-enrichment.js';
 import adminStatus from './routes/admin/status.js';
 import catalog from '../api/catalog.js';
 import { loadServerEnv } from './lib/envFile.js';
@@ -30,6 +31,7 @@ const handlers = {
   '/api/admin/catalog-import-commit': catalogImportCommit,
   '/api/admin/catalog-import-rollback': catalogImportRollback,
   '/api/admin/catalog-import-batches': catalogImportBatches,
+  '/api/admin/catalog-enrichment': catalogEnrichment,
   '/api/admin/status': adminStatus,
   '/api/catalog': catalog,
 };
