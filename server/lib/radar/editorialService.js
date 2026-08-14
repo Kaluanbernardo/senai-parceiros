@@ -3,7 +3,7 @@ import { normalizeRadarItem } from '../../../src/domain/radar.js';
 import { EDITORIAL_RULES_VERSION, editorialIsGrounded, hasPortugueseMarkers, isLikelyEnglish, isOfficialAct, needsEditorialTreatment, stripEvidencePrefix } from '../../../src/domain/radarEditorial.js';
 import { generateStructured } from '../structuredGeneration.js';
 import { sanitizeProviderError } from './contracts.js';
-import { canUseAi, recordAiUsageAtomic } from '../usageBudget.js';
+import { canUseAi, getUsageBudget, recordAiUsageAtomic } from '../usageBudget.js';
 
 /**
  * Editorial rewriting for Radar items.
@@ -295,7 +295,7 @@ function providerEnabled() {
  * nothing to do" — the two have very different fixes.
  */
 function emptyStats() {
-  return { pending: 0, candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, errors: [] };
+  return { pending: 0, candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, budgetExceeded: false, errors: [] };
 }
 
 export async function editorializeRadarItems(items = [], { previousItems = [], deadlineAt: runDeadlineAt = null } = {}) {
@@ -326,6 +326,11 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // provedor deixa de ser irrelevante e passa a ser falha.
   if (!pending.length) return { items: result, stats: { ...stats, enabled: providerEnabled(), pendingBeyondRun: 0 } };
   if (!providerEnabled()) throw new Error('radar_editorial_provider_disabled');
+  if (!canUseAi('radar-editorial')) {
+    const error = new Error('radar_editorial_budget_exceeded');
+    error.budget = getUsageBudget('radar-editorial');
+    throw error;
+  }
   const byId = new Map(result.map((item, index) => [itemId(item), index]));
   // This pass runs after every collector and before the snapshot is written, so
   // time spent here is time the write may not get. A serverless function killed
@@ -342,7 +347,11 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   const deadlineAt = Number(runDeadlineAt)
     || Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
 
-  for (let index = 0; index < candidates.length && canUseAi('radar-editorial'); index += EDITORIAL_BATCH_SIZE) {
+  for (let index = 0; index < candidates.length; index += EDITORIAL_BATCH_SIZE) {
+    if (!canUseAi('radar-editorial')) {
+      stats.budgetExceeded = true;
+      break;
+    }
     if (Date.now() >= deadlineAt) {
       stats.deadlineReached = true;
       break;
@@ -373,7 +382,7 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   }
   // Item recusado pelo validador tambem ficaria com o texto da fonte.
   if (stats.rejected) throw new Error('radar_editorial_rejected');
-  return { items: result, stats: { ...stats, enabled: true, pendingBeyondRun: stats.pending - stats.rewritten } };
+  return { items: result, stats: { ...stats, enabled: true, pendingBeyondRun: stats.pending - stats.rewritten, budget: getUsageBudget('radar-editorial') } };
 }
 
 export { EDITORIAL_BATCH_SIZE };
