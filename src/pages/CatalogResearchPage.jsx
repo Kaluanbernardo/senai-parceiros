@@ -15,7 +15,6 @@ import Button from '@mui/material/Button';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid';
 import InputLabel from '@mui/material/InputLabel';
@@ -29,12 +28,16 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+import DetailModal from '../components/DetailModal';
+import EntityCard from '../components/catalog/EntityCard';
 import { CATEGORY_LABELS } from '../domain/interview';
+import { formatInstitutionName } from '../domain/institutionName';
 import { useData } from '../context/DataContext';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
 import SectionCard from '../design-system/primitives/SectionCard';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
+import { getCategoriasFromAreas } from '../utils/areaCategories';
 import {
   CATALOG_RESEARCH_GEOGRAPHIES,
   CATALOG_RESEARCH_QUANTITIES,
@@ -63,13 +66,6 @@ const SOURCE_OPTIONS = Object.freeze([
   ['professional', 'Perfis profissionais e institucionais'],
 ]);
 
-const DECISION_LABELS = Object.freeze({
-  use_imported: 'Adicionar',
-  merge: 'Mesclar',
-  keep_existing: 'Manter atual',
-  ignore: 'Descartar',
-});
-
 function errorMessage(body) {
   if (body?.error === 'too_many_research_attempts') return 'Muitas pesquisas em sequência. Aguarde alguns minutos antes de tentar novamente.';
   if (body?.error === 'ai_budget_exceeded') return 'O limite diário de uso da IA foi atingido.';
@@ -87,76 +83,150 @@ function statusLabel(row) {
   return 'Novo';
 }
 
+function summarize(text, maxSentences = 2) {
+  if (!text) return '';
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  return sentences.slice(0, maxSentences).join(' ').trim();
+}
+
+function isHttpUrl(value) {
+  try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; }
+}
+
 function sourceLabel(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
-function ResearchCandidateCard({ row, decision, onDecision }) {
+function researchCardPresentation(record) {
+  const category = record.categoria === 'Pessoa' ? 'person' : record.categoria === 'Escola' ? 'school' : 'organization';
+  const item = { ...record, addedAt: record.data_consulta || record.addedAt };
+  if (category === 'person') {
+    const href = record.perfil_principal_url || record.linkedin_url || record.scholar;
+    return {
+      category,
+      item,
+      detailItem: record,
+      detailType: 'person',
+      eyebrow: (record.perfis_atuacao || [])[0] || 'Especialista',
+      title: record.nome,
+      subtitle: [record.cargo, record.instituicao].filter(Boolean).join(' · '),
+      summary: record.miniBio || summarize(record.pesquisa || record.descricao),
+      tags: getCategoriasFromAreas(record.areas),
+      badge: record.h_index ? `h-index ${record.h_index}` : undefined,
+      link: isHttpUrl(href) ? { href, label: href === record.linkedin_url ? 'LinkedIn' : 'Perfil público' } : undefined,
+    };
+  }
+  if (category === 'school') {
+    return {
+      category,
+      item,
+      detailItem: record,
+      detailType: 'escola',
+      eyebrow: 'Instituição de educação',
+      title: formatInstitutionName(record.nome),
+      summary: record.descricao,
+      tags: Array.isArray(record.areas) ? record.areas : [],
+      link: isHttpUrl(record.website) ? { href: record.website, label: 'Abrir site oficial' } : undefined,
+    };
+  }
+  return {
+    category,
+    item,
+    detailItem: { ...record, natureza: record.natureza || record.natureza_juridica },
+    detailType: 'stakeholder',
+    eyebrow: record.natureza_juridica || 'Organização',
+    title: formatInstitutionName(record.nome),
+    summary: record.descricao,
+    tags: Array.isArray(record.areas) ? record.areas : [],
+    link: isHttpUrl(record.website) ? { href: record.website, label: 'Abrir site oficial' } : undefined,
+  };
+}
+
+export function ResearchCandidateCard({ row, decision, onDecision }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const record = row.record || {};
   const invalid = row.status === 'invalid';
   const duplicate = row.status === 'possible_duplicate';
   const importedDuplicate = duplicate && row.match?.source === 'imported';
   const sources = Array.isArray(record.fontes) ? record.fontes : [];
-  const areas = Array.isArray(record.areas) ? record.areas : [];
   const missing = Array.isArray(record.dados_nao_localizados) ? record.dados_nao_localizados : [];
-  const subtitle = record.instituicao || record.tipo_instituicao || record.setor || record.cidade_estado || '';
-  const selectedTone = ['use_imported', 'merge'].includes(decision) ? 'success' : decision === 'keep_existing' ? 'info' : 'default';
+  const presentation = researchCardPresentation(record);
+  const approved = ['use_imported', 'merge'].includes(decision);
 
   return (
-    <SectionCard sx={{ height: '100%', borderColor: ['use_imported', 'merge'].includes(decision) ? T.feedback.success : T.border.subtle }}>
-      <CardContent sx={{ p: { xs: 2, md: 2.5 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1.5}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: T.tools.research.dark }}>{CATEGORY_LABELS[row.record?.categoria === 'Pessoa' ? 'person' : row.record?.categoria === 'Escola' ? 'school' : 'organization']}</Typography>
-            <Typography variant="h5" sx={{ mt: .25 }}>{record.nome || record.instituicao}</Typography>
-            <Typography variant="body2" sx={{ mt: .35, color: T.ink.muted }}>{[subtitle, record.pais].filter(Boolean).join(' · ')}</Typography>
-          </Box>
-          <Stack direction="row" gap={.75} flexWrap="wrap" justifyContent="flex-end">
-            <Chip size="small" label={statusLabel(row)} color={invalid ? 'error' : duplicate ? 'warning' : 'default'} />
-            {record.confianca !== null && record.confianca !== undefined && <Chip size="small" variant="outlined" label={`${record.confianca}% confiança`} />}
-          </Stack>
-        </Stack>
-
-        <Typography variant="body2" sx={{ mt: 1.5, color: T.ink.base }}>{record.diferencial || record.descricao}</Typography>
-        {record.descricao && record.descricao !== record.diferencial && <Typography variant="body2" sx={{ mt: 1, color: T.ink.muted }}>{record.descricao}</Typography>}
-
-        {areas.length > 0 && <Stack direction="row" gap={.75} flexWrap="wrap" sx={{ mt: 1.5 }}>{areas.slice(0, 6).map((area) => <Chip key={area} size="small" variant="outlined" label={area} />)}</Stack>}
-
-        {duplicate && <Alert severity="warning" sx={{ mt: 2 }}>Já existe correspondência com <strong>{row.match?.name}</strong>. {importedDuplicate ? 'Você pode mesclar os dados pesquisados ou manter o cadastro atual.' : 'O cadastro existente será preservado neste MVP.'}</Alert>}
-        {invalid && <Alert severity="error" sx={{ mt: 2 }}>{(row.errors || []).join(' ')}</Alert>}
-        {missing.length > 0 && <Alert severity="info" sx={{ mt: 2 }}>Não localizado: {missing.join(', ')}.</Alert>}
-
-        <Box sx={{ mt: 2, flex: 1 }}>
-          <Typography variant="subtitle2">Fontes consultadas</Typography>
-          {sources.length ? (
-            <Stack component="ul" gap={.5} sx={{ pl: 2.5, mt: .75, mb: 0 }}>
-              {sources.map((source) => (
-                <Typography component="li" variant="body2" key={source}>
-                  <Link href={source} target="_blank" rel="noopener noreferrer" underline="hover">{sourceLabel(source)} <OpenInNewIcon sx={{ fontSize: 13, verticalAlign: 'middle' }} /></Link>
-                </Typography>
-              ))}
-            </Stack>
-          ) : <Typography variant="body2" sx={{ mt: .5, color: T.ink.muted }}>Nenhuma fonte válida.</Typography>}
+    <>
+      <Stack gap={1.25} sx={{ height: '100%' }}>
+        <Box sx={{ flex: 1, borderRadius: 1, outline: approved ? `2px solid ${T.feedback.success}` : 'none', outlineOffset: 2 }}>
+          <EntityCard
+            item={presentation.item}
+            view="grid"
+            accent="catalog"
+            eyebrow={presentation.eyebrow}
+            title={presentation.title}
+            subtitle={presentation.subtitle}
+            summary={presentation.summary}
+            tags={presentation.tags}
+            badge={presentation.badge}
+            link={presentation.link}
+            dateLabel="Pesquisada em"
+            onClick={() => setDetailsOpen(true)}
+          />
         </Box>
 
-        <Divider sx={{ my: 2 }} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
-          <Chip size="small" color={selectedTone} variant={selectedTone === 'default' ? 'outlined' : 'filled'} label={`Decisão: ${DECISION_LABELS[decision] || 'Pendente'}`} />
-          {!invalid && !duplicate && row.status !== 'already_imported' && (
-            <Stack direction="row" gap={1}>
-              <Button size="small" variant={decision === 'ignore' ? 'contained' : 'outlined'} color="inherit" startIcon={<CloseIcon />} onClick={() => onDecision('ignore')}>Descartar</Button>
-              <Button size="small" variant={decision === 'use_imported' ? 'contained' : 'outlined'} color="success" startIcon={<CheckCircleOutlineIcon />} onClick={() => onDecision('use_imported')}>Adicionar</Button>
+        <SectionCard sx={{ borderColor: approved ? T.feedback.success : T.border.subtle }}>
+          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Stack direction="row" gap={.75} flexWrap="wrap" alignItems="center">
+              <Chip size="small" label={statusLabel(row)} color={invalid ? 'error' : duplicate ? 'warning' : 'default'} />
+              {record.confianca !== null && record.confianca !== undefined && <Chip size="small" variant="outlined" label={`${record.confianca}% confiança`} />}
+              <Chip size="small" variant="outlined" label={`${sources.length} ${sources.length === 1 ? 'fonte' : 'fontes'}`} />
             </Stack>
-          )}
-          {importedDuplicate && (
-            <Stack direction="row" gap={1}>
-              <Button size="small" variant={decision === 'keep_existing' ? 'contained' : 'outlined'} color="inherit" onClick={() => onDecision('keep_existing')}>Manter atual</Button>
-              <Button size="small" variant={decision === 'merge' ? 'contained' : 'outlined'} color="success" startIcon={<MergeIcon />} onClick={() => onDecision('merge')}>Mesclar</Button>
+
+            {(duplicate || invalid || missing.length > 0) && (
+              <Stack gap={1} sx={{ mt: 1.25 }}>
+                {duplicate && <Alert severity="warning">Já existe correspondência com <strong>{row.match?.name}</strong>. {importedDuplicate ? 'Você pode mesclar os dados pesquisados ou manter o cadastro atual.' : 'O cadastro existente será preservado neste MVP.'}</Alert>}
+                {invalid && <Alert severity="error">{(row.errors || []).join(' ')}</Alert>}
+                {missing.length > 0 && <Alert severity="info">Não localizado: {missing.join('; ')}.</Alert>}
+              </Stack>
+            )}
+
+            {sources.length > 0 && (
+              <Accordion disableGutters elevation={0} sx={{ mt: 1, '&::before': { display: 'none' } }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 36, px: 0, '& .MuiAccordionSummary-content': { my: .5 } }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: T.ink.muted }}>Ver fontes consultadas</Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                  <Stack component="ul" gap={.5} sx={{ pl: 2.5, my: 0 }}>
+                    {sources.map((source) => (
+                      <Typography component="li" variant="body2" key={source}>
+                        <Link href={source} target="_blank" rel="noopener noreferrer" underline="hover">
+                          {sourceLabel(source)} <OpenInNewIcon sx={{ fontSize: 13, verticalAlign: 'middle' }} />
+                        </Link>
+                      </Typography>
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            )}
+
+            <Stack direction="row" gap={1} justifyContent="flex-end" sx={{ mt: 1.25 }}>
+              {!invalid && !duplicate && row.status !== 'already_imported' && (
+                <>
+                  <Button size="small" variant={decision === 'ignore' ? 'contained' : 'outlined'} color="inherit" startIcon={<CloseIcon />} onClick={() => onDecision('ignore')}>Descartar</Button>
+                  <Button size="small" variant={decision === 'use_imported' ? 'contained' : 'outlined'} color="success" startIcon={<CheckCircleOutlineIcon />} onClick={() => onDecision('use_imported')}>Adicionar</Button>
+                </>
+              )}
+              {importedDuplicate && (
+                <>
+                  <Button size="small" variant={decision === 'keep_existing' ? 'contained' : 'outlined'} color="inherit" onClick={() => onDecision('keep_existing')}>Manter atual</Button>
+                  <Button size="small" variant={decision === 'merge' ? 'contained' : 'outlined'} color="success" startIcon={<MergeIcon />} onClick={() => onDecision('merge')}>Mesclar</Button>
+                </>
+              )}
             </Stack>
-          )}
-        </Stack>
-      </CardContent>
-    </SectionCard>
+          </CardContent>
+        </SectionCard>
+      </Stack>
+      <DetailModal open={detailsOpen} onClose={() => setDetailsOpen(false)} item={presentation.detailItem} type={presentation.detailType} />
+    </>
   );
 }
 
@@ -398,7 +468,7 @@ export default function CatalogResearchPage() {
               {busy && <Box sx={{ mb: 2 }}><LinearProgress variant="determinate" value={Math.min(100, (previewSummary.cards / form.quantity) * 100)} /><Typography variant="caption" sx={{ mt: .5, display: 'block', color: T.ink.muted }}>Os cards concluídos já podem ser revisados enquanto o próximo lote é pesquisado.</Typography></Box>}
               <Grid container spacing={2}>
                 {flattenResearchPreviews(previews).map((row) => (
-                  <Grid size={{ xs: 12 }} key={`${row.batchId}:${row.hash || row.rowNumber}`}>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={`${row.batchId}:${row.hash || row.rowNumber}`}>
                     <ResearchCandidateCard row={row} decision={decisions[researchDecisionKey(row.batchId, row.rowNumber)] || 'ignore'} onDecision={(decision) => setDecisions((previous) => ({ ...previous, [researchDecisionKey(row.batchId, row.rowNumber)]: decision }))} />
                   </Grid>
                 ))}

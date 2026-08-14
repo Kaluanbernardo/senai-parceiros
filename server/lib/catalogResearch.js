@@ -78,19 +78,32 @@ export function normalizeCatalogResearchRequest(input = {}) {
   };
 }
 
-function propertySchema(column) {
+function propertySchema(column, category) {
+  const personSearchDescriptions = {
+    google_scholar_url: 'Faça busca dedicada por nome e instituição em scholar.google.com/citations; deixe vazio somente sem correspondência inequívoca.',
+    linkedin_url: 'Faça busca dedicada por nome e instituição em linkedin.com/in; aceite somente perfil público com identidade confirmada.',
+    orcid: 'Faça busca dedicada em orcid.org e confirme afiliação, temas ou publicações antes de associar o identificador.',
+    openalex_id: 'Resolva a pessoa no OpenAlex por nome, afiliação e produção; não associe apenas por semelhança nominal.',
+    h_index: 'Informe somente métrica pública atribuída à identidade confirmada e registre a fonte.',
+    citacoes: 'Informe somente contagem pública atribuída à identidade confirmada e registre a fonte e a data.',
+    publicacoes_relevantes: 'Para pesquisadores, procure as cinco publicações mais citadas verificáveis, com URL direta e ano.',
+    dados_nao_localizados: 'Só inclua um campo após consulta dedicada, no formato "campo: buscas realizadas e motivo da não confirmação".',
+  };
+  const description = category === 'person' && personSearchDescriptions[column.name]
+    ? `${column.description} ${personSearchDescriptions[column.name]}`
+    : column.description;
   if (column.name === 'confianca') {
-    return { type: 'integer', minimum: 0, maximum: 100, description: column.description };
+    return { type: 'integer', minimum: 0, maximum: 100, description };
   }
   if (column.type === 'lista') {
-    return { type: 'array', items: { type: 'string' }, description: column.description };
+    return { type: 'array', items: { type: 'string' }, description };
   }
-  return { type: 'string', description: column.description };
+  return { type: 'string', description };
 }
 
 export function catalogResearchOutputSchema(category, quantity) {
   const columns = getCatalogColumns(category).filter((column) => !SYSTEM_MANAGED_FIELDS.has(column.name));
-  const properties = Object.fromEntries(columns.map((column) => [column.name, propertySchema(column)]));
+  const properties = Object.fromEntries(columns.map((column) => [column.name, propertySchema(column, category)]));
   return {
     type: 'object',
     additionalProperties: false,
@@ -116,7 +129,12 @@ function promptFor(request) {
     ? [
       'Diferencie atuação acadêmica, industrial, educacional, jornalística ou pública.',
       'Aplique métricas acadêmicas somente a pesquisadores. Quando for pesquisador, priorize em publicacoes_relevantes os cinco artigos mais citados que conseguir verificar publicamente, com URL direta; se a contagem não for pública, registre a lacuna.',
-      'Use páginas institucionais, ORCID, OpenAlex, Crossref e perfis públicos diretos para resolver a identidade correta.',
+      'Depois de selecionar os candidatos, faça uma segunda passagem de enriquecimento para cada pessoa; não encerre a pesquisa ao atingir as três fontes mínimas.',
+      'Na segunda passagem, pesquise o nome completo junto da instituição atual e repita com variações sem acentos ou nomes intermediários quando houver ambiguidade.',
+      'Execute consultas dedicadas com "nome completo" "instituição" site:scholar.google.com/citations, "nome completo" site:orcid.org, "nome completo" site:linkedin.com/in e "nome completo" site:lattes.cnpq.br.',
+      'Use também páginas institucionais, OpenAlex e Crossref para confirmar identidade e completar google_scholar_url, orcid, openalex_id, linkedin_url, h_index, citacoes e publicacoes_relevantes.',
+      'Procure separadamente cidade_estado, website_oficial, perfil_principal_url e contato_publico profissional; um resultado ausente na primeira consulta não prova que o dado não existe.',
+      'Só registre um campo em dados_nao_localizados depois da consulta dedicada. Use o formato "campo: buscas realizadas e motivo da não confirmação" para tornar a lacuna auditável.',
     ]
     : ['Priorize o site oficial e fontes públicas independentes que confirmem atuação, escala, programas e relação com indústria ou educação profissional.'];
   return [

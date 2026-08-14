@@ -105,6 +105,32 @@ describe('catalog research module', () => {
     expect(result.parsed.rows[0].row.data_consulta).toBe('2026-08-14');
   });
 
+  it('requires a targeted identity pass before academic fields can be declared missing', async () => {
+    const generate = vi.fn(async () => ({
+      data: { candidates: [candidate({ nome: 'Marina Exemplo' })] },
+      trace: { provider: 'openrouter', model: 'test/model', webSearchRequests: 4 },
+    }));
+
+    await researchCatalogCandidates(
+      { category: 'person', context: 'Especialistas em IA na educação profissional', quantity: 5, geography: 'brasil' },
+      { generate, now: () => new Date('2026-08-14T12:00:00Z') },
+    );
+
+    const prompt = generate.mock.calls[0][0].messages[1].content;
+    expect(prompt).toContain('segunda passagem de enriquecimento para cada pessoa');
+    expect(prompt).toContain('site:scholar.google.com/citations');
+    expect(prompt).toContain('site:orcid.org');
+    expect(prompt).toContain('site:linkedin.com/in');
+    expect(prompt).toContain('site:lattes.cnpq.br');
+    expect(prompt).toContain('google_scholar_url, orcid, openalex_id, linkedin_url, h_index, citacoes e publicacoes_relevantes');
+    expect(prompt).toContain('Só registre um campo em dados_nao_localizados depois da consulta dedicada');
+    expect(prompt).toContain('campo: buscas realizadas e motivo da não confirmação');
+
+    const personSchema = catalogResearchOutputSchema('person', 5).properties.candidates.items.properties;
+    expect(personSchema.google_scholar_url.description).toContain('busca dedicada por nome e instituição');
+    expect(personSchema.dados_nao_localizados.description).toContain('buscas realizadas e motivo da não confirmação');
+  });
+
   it('keeps weakly sourced output visible but invalid for approval', async () => {
     const result = await researchCatalogCandidates(
       { category: 'school', context: 'Comparar aprendizagem industrial', quantity: 5, geography: 'brasil' },
