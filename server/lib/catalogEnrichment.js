@@ -7,7 +7,8 @@ import { canUseAi, recordAiUsageAtomic } from './usageBudget.js';
 
 const CATEGORIES = ['organization', 'school', 'person'];
 const MAX_ATTEMPTS = 2;
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 1;
+const PROCESS_TIMEOUT_MS = 45_000;
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -212,15 +213,15 @@ function openAlexId(value) {
   return text(value).match(/A\d+/i)?.[0]?.toUpperCase() || '';
 }
 
-async function openAlexEvidence(record, fetchImpl) {
+async function openAlexEvidence(record, fetchImpl, signal) {
   let author = null;
   const knownId = openAlexId(record.openalex_id);
   if (knownId) {
-    author = await fetchJson(`https://api.openalex.org/authors/${knownId}`, { headers: openAlexHeaders() }, fetchImpl);
+    author = await fetchJson(`https://api.openalex.org/authors/${knownId}`, { headers: openAlexHeaders(), signal }, fetchImpl);
   } else {
     const params = new URLSearchParams({ search: record.nome, per_page: '5', select: 'id,display_name,alternate_names,last_known_institutions,topics,summary_stats,cited_by_count' });
     if (process.env.OPENALEX_API_KEY) params.set('api_key', process.env.OPENALEX_API_KEY);
-    const body = await fetchJson(`https://api.openalex.org/authors?${params}`, { headers: openAlexHeaders() }, fetchImpl);
+    const body = await fetchJson(`https://api.openalex.org/authors?${params}`, { headers: openAlexHeaders(), signal }, fetchImpl);
     const exact = (body.results || []).filter((candidate) => [candidate.display_name, ...(candidate.alternate_names || [])].some((name) => fold(name) === fold(record.nome)));
     author = exact.sort((left, right) => {
       const leftInstitution = (left.last_known_institutions || []).map((entry) => entry.display_name).join(' ');
@@ -237,7 +238,7 @@ async function openAlexEvidence(record, fetchImpl) {
     select: 'id,doi,title,display_name,publication_year,publication_date,cited_by_count,primary_location',
   });
   if (process.env.OPENALEX_API_KEY) params.set('api_key', process.env.OPENALEX_API_KEY);
-  const worksBody = await fetchJson(`https://api.openalex.org/works?${params}`, { headers: openAlexHeaders() }, fetchImpl);
+  const worksBody = await fetchJson(`https://api.openalex.org/works?${params}`, { headers: openAlexHeaders(), signal }, fetchImpl);
   const works = (worksBody.results || []).map((work) => ({
     titulo: text(work.display_name || work.title),
     url: safeUrl(work.doi || work.primary_location?.landing_page_url || work.id),
@@ -262,7 +263,7 @@ function evidenceQuery(record, category) {
   return `${identity} atuação programas parcerias indústria site oficial`;
 }
 
-export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fetch } = {}) {
+export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fetch, signal } = {}) {
   if (!process.env.TAVILY_API_KEY && !process.env.OPENROUTER_API_KEY) throw new Error('catalog_search_not_configured');
   const sources = [];
   if (process.env.TAVILY_API_KEY) {
@@ -277,6 +278,7 @@ export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fe
         include_answer: false,
         include_raw_content: false,
       }),
+      signal,
     }, fetchImpl);
     sources.push(...(response.results || []).map((result) => ({
       title: text(result.title).slice(0, 240),
@@ -287,7 +289,10 @@ export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fe
   const existing = catalogPublicUrls(target.record).map((url) => ({ title: 'Link já registrado no card', url, content: 'Fonte pública já associada ao perfil.' }));
   let openAlex = null;
   if (target.researchProfile) {
-    try { openAlex = await openAlexEvidence(target.record, fetchImpl); } catch { openAlex = null; }
+    try { openAlex = await openAlexEvidence(target.record, fetchImpl, signal); } catch (error) {
+      if (signal?.aborted) throw error;
+      openAlex = null;
+    }
   }
   if (openAlex) {
     sources.push({
@@ -502,6 +507,7 @@ export async function processCatalogEnrichment(batchId, {
   generate = generateStructured,
   enforceBudget = true,
   now = new Date(),
+  timeoutMs = PROCESS_TIMEOUT_MS,
 } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
@@ -511,17 +517,28 @@ export async function processCatalogEnrichment(batchId, {
   const usesConfiguredSearch = searchEvidence === collectCatalogEvidence;
   const hostedWebSearch = usesConfiguredSearch && !process.env.TAVILY_API_KEY && Boolean(process.env.OPENROUTER_API_KEY);
   if (usesConfiguredSearch && !process.env.TAVILY_API_KEY && !hostedWebSearch) throw new Error('catalog_search_not_configured');
-
-  const evidence = await Promise.all(targets.map((target) => searchEvidence(target)));
-  const generated = await generate({
-    task: `catalog_enrichment_${targets[0].category}`,
-    schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
-    messages: generationMessages(targets, evidence, hostedWebSearch),
-    maxOutputTokens: 4000,
-    temperature: 0.1,
-    costQualityTradeoff: 8,
-    webSearch: hostedWebSearch ? { engine: 'auto', maxResults: 8, maxTotalResults: 20, searchContextSize: 'high' } : undefined,
-  });
+  const requestedTimeout = Number(timeoutMs);
+  const signal = AbortSignal.timeout(Number.isFinite(requestedTimeout)
+    ? Math.max(1, Math.min(PROCESS_TIMEOUT_MS, Math.round(requestedTimeout)))
+    : PROCESS_TIMEOUT_MS);
+  let evidence;
+  let generated;
+  try {
+    evidence = await Promise.all(targets.map((target) => searchEvidence(target, { signal })));
+    generated = await generate({
+      task: `catalog_enrichment_${targets[0].category}`,
+      schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
+      messages: generationMessages(targets, evidence, hostedWebSearch),
+      maxOutputTokens: 4000,
+      temperature: 0.1,
+      costQualityTradeoff: 8,
+      webSearch: hostedWebSearch ? { engine: 'auto', maxResults: 8, maxTotalResults: 20, searchContextSize: 'high' } : undefined,
+      signal,
+    });
+  } catch (error) {
+    if (signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') throw new Error('provider_timeout');
+    throw error;
+  }
   if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null);
   const items = new Map((generated.data?.items || []).map((item) => [item.targetKey, item]));
   for (let index = 0; index < targets.length; index += 1) {
