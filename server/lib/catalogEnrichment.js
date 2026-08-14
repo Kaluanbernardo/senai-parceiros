@@ -37,6 +37,16 @@ function safeUrl(value) {
   }
 }
 
+function normalizeSources(sources) {
+  const byUrl = new Map();
+  for (const source of sources || []) {
+    const url = safeUrl(source?.url);
+    if (!url) continue;
+    byUrl.set(url, { ...source, url });
+  }
+  return [...byUrl.values()];
+}
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (!value || typeof value !== 'object') return value;
@@ -152,8 +162,9 @@ export function catalogEnrichmentBatchSummary(batch) {
 
 export function catalogEnrichmentCapabilities() {
   const ai = Boolean(process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT));
-  const search = Boolean(process.env.TAVILY_API_KEY);
-  return { ai, search, ready: ai && search };
+  const searchProvider = process.env.TAVILY_API_KEY ? 'tavily' : process.env.OPENROUTER_API_KEY ? 'openrouter' : 'none';
+  const search = searchProvider !== 'none';
+  return { ai, search, searchProvider, ready: ai && search };
 }
 
 export function getCatalogEnrichmentOverview({ provideCatalog = catalogProvider } = {}) {
@@ -252,24 +263,27 @@ function evidenceQuery(record, category) {
 }
 
 export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fetch } = {}) {
-  if (!process.env.TAVILY_API_KEY) throw new Error('catalog_search_not_configured');
-  const response = await fetchJson(`${String(process.env.TAVILY_API_URL || 'https://api.tavily.com').replace(/\/$/, '')}/search`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query: evidenceQuery(target.record, target.category),
-      search_depth: process.env.TAVILY_SEARCH_DEPTH || 'advanced',
-      max_results: 8,
-      include_answer: false,
-      include_raw_content: false,
-    }),
-  }, fetchImpl);
-  const sources = (response.results || []).map((result) => ({
-    title: text(result.title).slice(0, 240),
-    url: safeUrl(result.url),
-    content: text(result.content || result.raw_content).slice(0, 700),
-  })).filter((source) => source.url && source.content);
+  if (!process.env.TAVILY_API_KEY && !process.env.OPENROUTER_API_KEY) throw new Error('catalog_search_not_configured');
+  const sources = [];
+  if (process.env.TAVILY_API_KEY) {
+    const response = await fetchJson(`${String(process.env.TAVILY_API_URL || 'https://api.tavily.com').replace(/\/$/, '')}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
+      body: JSON.stringify({
+        api_key: process.env.TAVILY_API_KEY,
+        query: evidenceQuery(target.record, target.category),
+        search_depth: process.env.TAVILY_SEARCH_DEPTH || 'advanced',
+        max_results: 8,
+        include_answer: false,
+        include_raw_content: false,
+      }),
+    }, fetchImpl);
+    sources.push(...(response.results || []).map((result) => ({
+      title: text(result.title).slice(0, 240),
+      url: safeUrl(result.url),
+      content: text(result.content || result.raw_content).slice(0, 700),
+    })).filter((source) => source.url && source.content));
+  }
   const existing = catalogPublicUrls(target.record).map((url) => ({ title: 'Link já registrado no card', url, content: 'Fonte pública já associada ao perfil.' }));
   let openAlex = null;
   if (target.researchProfile) {
@@ -283,7 +297,7 @@ export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fe
     });
     openAlex.works.forEach((work) => sources.push({ title: work.titulo, url: work.url, content: `Publicação de ${work.ano || 'ano não informado'}; ${work.citacoes} citações no OpenAlex.` }));
   }
-  return { sources: [...new Map([...existing, ...sources].map((source) => [source.url, source])).values()], openAlex };
+  return { sources: normalizeSources([...existing, ...sources]), openAlex };
 }
 
 const string = { type: 'string' };
@@ -345,7 +359,7 @@ function generationSchema(category, researchProfile, size) {
   };
 }
 
-function generationMessages(targets, evidence) {
+function generationMessages(targets, evidence, hostedWebSearch = false) {
   const category = targets[0].category;
   const payload = targets.map((target, index) => ({
     targetKey: target.key,
@@ -363,10 +377,13 @@ function generationMessages(targets, evidence) {
         'Escreva em português do Brasil. Preserve todo dado atual que já esteja correto e complete apenas lacunas.',
         'A descrição deve ter pelo menos 400 caracteres, ser factual e específica. Nunca aumente texto com frases genéricas.',
         'Toda URL devolvida precisa ser exatamente uma URL recebida em cardAtual, fontesDisponiveis ou openAlex. Não invente nem altere URLs.',
+        hostedWebSearch
+          ? 'Use a pesquisa web hospedada para cada targetKey. Em fontes, website, perfis e artigos, devolva apenas URLs que apareçam nas citações da própria pesquisa.'
+          : '',
         category === 'person'
           ? 'Para perfil de pesquisa, artigos são os cinco trabalhos com maior número de citações dentre as evidências OpenAlex e devem usar links diretos, nunca uma busca do Google Scholar.'
           : 'Preencha os campos centrais da categoria somente quando a evidência sustentar o conteúdo; registre o que não foi localizado.',
-      ].join(' '),
+      ].filter(Boolean).join(' '),
     },
     { role: 'user', content: JSON.stringify(payload) },
   ];
@@ -467,6 +484,19 @@ function errorCode(error) {
   return String(error?.message || 'catalog_enrichment_failed').replace(/[^a-z0-9_-]+/gi, '_').slice(0, 80);
 }
 
+function evidenceWithHostedCitations(evidence, generated, citations) {
+  const generatedUrls = new Set([
+    ...(Array.isArray(generated?.fontes) ? generated.fontes : []),
+    generated?.website,
+    generated?.perfil_principal_url,
+    generated?.linkedin_url,
+    generated?.scholar,
+    ...(Array.isArray(generated?.artigos) ? generated.artigos.map((article) => article?.url) : []),
+  ].map(safeUrl).filter(Boolean));
+  const matched = (Array.isArray(citations) ? citations : []).filter((source) => generatedUrls.has(safeUrl(source?.url)));
+  return { ...evidence, sources: normalizeSources([...(evidence?.sources || []), ...matched]) };
+}
+
 export async function processCatalogEnrichment(batchId, {
   searchEvidence = collectCatalogEvidence,
   generate = generateStructured,
@@ -478,15 +508,19 @@ export async function processCatalogEnrichment(batchId, {
   const targets = selectedTargets(batch);
   if (!targets.length) return catalogEnrichmentBatchSummary(batch);
   if (enforceBudget && !canUseAi('catalog-enrichment')) throw new Error('budget_exceeded');
+  const usesConfiguredSearch = searchEvidence === collectCatalogEvidence;
+  const hostedWebSearch = usesConfiguredSearch && !process.env.TAVILY_API_KEY && Boolean(process.env.OPENROUTER_API_KEY);
+  if (usesConfiguredSearch && !process.env.TAVILY_API_KEY && !hostedWebSearch) throw new Error('catalog_search_not_configured');
 
   const evidence = await Promise.all(targets.map((target) => searchEvidence(target)));
   const generated = await generate({
     task: `catalog_enrichment_${targets[0].category}`,
     schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
-    messages: generationMessages(targets, evidence),
+    messages: generationMessages(targets, evidence, hostedWebSearch),
     maxOutputTokens: 4000,
     temperature: 0.1,
     costQualityTradeoff: 8,
+    webSearch: hostedWebSearch ? { engine: 'auto', maxResults: 8, maxTotalResults: 20, searchContextSize: 'high' } : undefined,
   });
   if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null);
   const items = new Map((generated.data?.items || []).map((item) => [item.targetKey, item]));
@@ -496,7 +530,10 @@ export async function processCatalogEnrichment(batchId, {
     try {
       const item = items.get(target.key);
       if (!item) throw new Error('enrichment_item_missing');
-      const merged = mergeCatalogEnrichment(target, item, evidence[index], now);
+      const verifiedEvidence = hostedWebSearch
+        ? evidenceWithHostedCitations(evidence[index], item, generated.trace?.webSearchSources)
+        : evidence[index];
+      const merged = mergeCatalogEnrichment(target, item, verifiedEvidence, now);
       const quality = auditCatalogRecord(merged, target.category);
       target.quality = quality;
       target.result = quality.pass ? merged : null;

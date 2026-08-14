@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   catalogEnrichmentBatchSummary,
+  catalogEnrichmentCapabilities,
   commitCatalogEnrichment,
   createCatalogEnrichmentBatch,
   mergeCatalogEnrichment,
@@ -97,6 +98,46 @@ describe('catalog enrichment batches', () => {
     const storedBatch = catalogStore.getCommitted(batch.batchId);
     expect(rollbackCatalogEnrichment(storedBatch)).toMatchObject({ rolledBack: true, restored: 1 });
     expect(catalogStore.getRecords('organization')).toEqual([shallow]);
+  });
+
+  it('uses cited OpenRouter search when Tavily is unavailable', async () => {
+    const previousOpenRouterKey = process.env.OPENROUTER_API_KEY;
+    const previousTavilyKey = process.env.TAVILY_API_KEY;
+    process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
+    delete process.env.TAVILY_API_KEY;
+    try {
+      expect(catalogEnrichmentCapabilities()).toMatchObject({
+        ai: true,
+        search: true,
+        searchProvider: 'openrouter',
+        ready: true,
+      });
+      const shallow = { id: 'o-hosted-search', nome: 'Instituto com busca hospedada', pais: 'Brasil' };
+      const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
+      catalogStore.setPending(batch);
+      let generationRequest;
+      const generate = async (request) => {
+        generationRequest = request;
+        return {
+          data: { items: [completeOrganization(batch.targets[0].key)] },
+          trace: {
+            webSearchRequests: 1,
+            webSearchSources: [{ title: 'Site institucional', url: 'https://example.org', content: 'Fonte pública citada.' }],
+          },
+        };
+      };
+
+      const processed = await processCatalogEnrichment(batch.batchId, { generate, enforceBudget: false });
+
+      expect(generationRequest.webSearch).toEqual({ engine: 'auto', maxResults: 8, maxTotalResults: 20, searchContextSize: 'high' });
+      expect(generationRequest.messages[0].content).toContain('pesquisa web hospedada');
+      expect(processed.readyToCommit).toBe(true);
+    } finally {
+      if (previousOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
+      else process.env.OPENROUTER_API_KEY = previousOpenRouterKey;
+      if (previousTavilyKey === undefined) delete process.env.TAVILY_API_KEY;
+      else process.env.TAVILY_API_KEY = previousTavilyKey;
+    }
   });
 
   it('keeps a generated card pending when the post-generation gate still fails', async () => {
