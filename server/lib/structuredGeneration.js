@@ -216,7 +216,7 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning)
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const searchTool = webSearchTool(webSearch);
   const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
@@ -224,7 +224,8 @@ export async function generateStructured({ task = 'structured_generation', schem
   let lastError = null;
   for (const provider of providers) {
     try {
-      const options = providerOptions(provider.id, provider.model, costQualityTradeoff, disableReasoning);
+      const providerModel = requestedModel || provider.model;
+      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,
@@ -234,7 +235,7 @@ export async function generateStructured({ task = 'structured_generation', schem
           ...providerHeaders(provider.id),
         },
         body: JSON.stringify({
-          model: provider.model,
+          model: providerModel,
           messages,
           temperature: safeTemperature(temperature),
           max_tokens: Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700)),
@@ -271,7 +272,7 @@ export async function generateStructured({ task = 'structured_generation', schem
         data,
         trace: {
           provider: provider.id,
-          model: payload.model || provider.model,
+          model: payload.model || providerModel,
           usage: payload.usage || null,
           task,
           fallback: false,

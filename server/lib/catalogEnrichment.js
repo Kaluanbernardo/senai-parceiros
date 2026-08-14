@@ -529,10 +529,11 @@ export async function processCatalogEnrichment(batchId, {
       task: `catalog_enrichment_${targets[0].category}`,
       schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
       messages: generationMessages(targets, evidence, hostedWebSearch),
-      maxOutputTokens: 4000,
+      model: hostedWebSearch ? (process.env.CATALOG_ENRICHMENT_MODEL || 'openai/gpt-4.1-mini') : undefined,
+      maxOutputTokens: hostedWebSearch ? 2600 : 4000,
       temperature: 0.1,
       costQualityTradeoff: 8,
-      webSearch: hostedWebSearch ? { engine: 'auto', maxResults: 8, maxTotalResults: 20, searchContextSize: 'high' } : undefined,
+      webSearch: hostedWebSearch ? { engine: 'native', maxResults: 5, maxTotalResults: 8, searchContextSize: 'medium' } : undefined,
       signal,
     });
   } catch (error) {
