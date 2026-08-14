@@ -136,6 +136,7 @@ describe('structured generation boundary', () => {
     expect(bodies[0].model).toBe('openai/gpt-4.1-mini');
     expect(bodies[0].plugins).toBeUndefined();
     expect(bodies[0].provider).toEqual({ require_parameters: true });
+    expect(bodies[0].reasoning).toBeUndefined();
   });
 
   it('lets the caller choose the temperature and keeps extraction deterministic by default', async () => {
