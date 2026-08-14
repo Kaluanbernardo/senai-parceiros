@@ -117,6 +117,27 @@ describe('structured generation boundary', () => {
     expect(bodies[0].response_format.json_schema.strict).toBe(true);
   });
 
+  it('lets one latency-sensitive call pin a compatible model without changing the global setting', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({
+      schema,
+      messages: [{ role: 'user', content: 'x' }],
+      model: 'openai/gpt-4.1-mini',
+    });
+
+    expect(bodies[0].model).toBe('openai/gpt-4.1-mini');
+    expect(bodies[0].plugins).toBeUndefined();
+    expect(bodies[0].provider).toEqual({ require_parameters: true });
+  });
+
   it('lets the caller choose the temperature and keeps extraction deterministic by default', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';
