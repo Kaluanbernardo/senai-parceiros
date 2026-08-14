@@ -56,6 +56,56 @@ describe('structured generation boundary', () => {
     expect(bodies[0].provider).toEqual({ require_parameters: true });
   });
 
+  it('uses the hosted OpenRouter web-search tool without falling back to a provider that cannot honor it', async () => {
+    process.env.OPENAI_API_KEY = 'openai-test-key';
+    process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    const requests = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+      requests.push({ url, body: JSON.parse(init.body) });
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: '{"value":"ok"}' } }],
+          usage: { total_tokens: 42, server_tool_use: { web_search_requests: 2 } },
+        }),
+      };
+    }));
+
+    const result = await generateStructured({
+      schema,
+      messages: [{ role: 'user', content: 'pesquise' }],
+      webSearch: { engine: 'exa', maxResults: 99, maxTotalResults: 99, searchContextSize: 'high' },
+    });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].url).toContain('openrouter.ai');
+    expect(requests[0].body.tools).toEqual([{
+      type: 'openrouter:web_search',
+      parameters: { engine: 'exa', max_results: 25, max_total_results: 20, search_context_size: 'high' },
+    }]);
+    expect(result.trace.webSearchRequests).toBe(2);
+  });
+
+  it('lets an internal task pin a faster OpenRouter model without invoking the auto-router', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], model: 'openai/gpt-5-mini', includeReasoning: false, strictOutput: false });
+
+    expect(bodies[0].model).toBe('openai/gpt-5-mini');
+    expect(bodies[0].plugins).toBeUndefined();
+    expect(bodies[0].provider).toBeUndefined();
+    expect(bodies[0].reasoning).toEqual({ enabled: false });
+    expect(bodies[0].response_format).toBeUndefined();
+  });
+
   it('keeps a pinned model instead of letting the auto-router replace it', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';

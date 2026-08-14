@@ -43,6 +43,36 @@ function safeTemperature(value) {
   return Math.max(0, Math.min(1.2, number));
 }
 
+function safeInteger(value, minimum, maximum, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(minimum, Math.min(maximum, Math.round(number)));
+}
+
+/**
+ * Configuração pequena e deliberadamente fechada para a busca hospedada pelo
+ * OpenRouter. A interface não aceita ferramentas arbitrárias: isso impediria
+ * cada domínio de montar corpos de provedor diferentes e transformaria esta
+ * seam num simples pass-through.
+ */
+function webSearchTool(options) {
+  if (!options) return null;
+  const requested = typeof options === 'object' ? options : {};
+  const engines = new Set(['auto', 'native', 'exa', 'firecrawl', 'parallel', 'perplexity']);
+  const sizes = new Set(['low', 'medium', 'high']);
+  const engine = engines.has(requested.engine) ? requested.engine : 'auto';
+  const searchContextSize = sizes.has(requested.searchContextSize) ? requested.searchContextSize : 'medium';
+  return {
+    type: 'openrouter:web_search',
+    parameters: {
+      engine,
+      max_results: safeInteger(requested.maxResults, 1, 25, 5),
+      max_total_results: safeInteger(requested.maxTotalResults, 2, 20, 12),
+      search_context_size: searchContextSize,
+    },
+  };
+}
+
 function providerConfig() {
   const preferred = String(process.env.AI_PROVIDER || '').trim().toLowerCase();
   const azureEndpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
@@ -167,9 +197,12 @@ function reasoningOption() {
   return { reasoning: { enabled: false } };
 }
 
-function providerOptions(provider, model, costQualityTradeoff) {
+function providerOptions(provider, model, costQualityTradeoff, includeReasoning, strictOutput) {
   if (provider !== 'openrouter') return {};
-  const base = { provider: { require_parameters: true }, ...reasoningOption() };
+  const base = {
+    ...(strictOutput ? { provider: { require_parameters: true } } : {}),
+    ...(includeReasoning ? reasoningOption() : { reasoning: { enabled: false } }),
+  };
   if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
   return {
     ...base,
@@ -183,14 +216,21 @@ function providerOptions(provider, model, costQualityTradeoff) {
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, includeReasoning = true, strictOutput = true, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, webSearch, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
-  const providers = providerConfig();
+  const searchTool = webSearchTool(webSearch);
+  // A ferramenta hospedada de busca usa o contrato do OpenRouter. Quando ela é
+  // requerida, cair silenciosamente para OpenAI/Azure produziria uma resposta
+  // sem pesquisa atual, apesar de a interface afirmar o contrário.
+  const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
   if (!providers.length) throw new Error('ai_not_configured');
   let lastError = null;
   for (const provider of providers) {
     try {
-      const options = providerOptions(provider.id, provider.model, costQualityTradeoff);
+      const providerModel = provider.id === 'openrouter' && String(requestedModel || '').trim()
+        ? String(requestedModel).trim()
+        : provider.model;
+      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, includeReasoning, strictOutput);
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,
@@ -200,12 +240,13 @@ export async function generateStructured({ task = 'structured_generation', schem
           ...providerHeaders(provider.id),
         },
         body: JSON.stringify({
-          model: provider.model,
+          model: providerModel,
           messages,
           temperature: safeTemperature(temperature),
           max_tokens: Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700)),
           ...options,
-          response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } },
+          ...(searchTool ? { tools: [searchTool] } : {}),
+          ...(strictOutput ? { response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } } } : {}),
         }),
       });
       if (!response.ok) {
@@ -236,11 +277,12 @@ export async function generateStructured({ task = 'structured_generation', schem
         data,
         trace: {
           provider: provider.id,
-          model: payload.model || provider.model,
+          model: payload.model || providerModel,
           usage: payload.usage || null,
           task,
           fallback: false,
           costQualityTradeoff: provider.id === 'openrouter' ? safeTradeoff(costQualityTradeoff) : null,
+          webSearchRequests: Number(payload.usage?.server_tool_use?.web_search_requests || 0),
         },
       };
     } catch (error) {

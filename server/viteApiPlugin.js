@@ -11,6 +11,7 @@ import catalogImportCommit from './routes/admin/catalog-import-commit.js';
 import catalogImportRollback from './routes/admin/catalog-import-rollback.js';
 import catalogImportBatches from './routes/admin/catalog-import-batches.js';
 import catalogEnrichment from './routes/admin/catalog-enrichment.js';
+import catalogResearch from './routes/admin/catalog-research.js';
 import adminStatus from './routes/admin/status.js';
 import catalog from '../api/catalog.js';
 import { loadServerEnv } from './lib/envFile.js';
@@ -32,6 +33,7 @@ const handlers = {
   '/api/admin/catalog-import-rollback': catalogImportRollback,
   '/api/admin/catalog-import-batches': catalogImportBatches,
   '/api/admin/catalog-enrichment': catalogEnrichment,
+  '/api/admin/catalog-research': catalogResearch,
   '/api/admin/status': adminStatus,
   '/api/catalog': catalog,
 };

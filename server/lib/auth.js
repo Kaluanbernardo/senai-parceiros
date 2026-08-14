@@ -6,6 +6,7 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 const MAX_SELECTION_ATTEMPTS = 12;
 const MAX_INTERVIEW_ATTEMPTS = 40;
+const MAX_CATALOG_RESEARCH_ATTEMPTS = 6;
 const RADAR_WINDOW_MS = 10 * 60 * 1000;
 const MAX_RADAR_ATTEMPTS = 30;
 
@@ -77,6 +78,10 @@ export async function consumeSelectionAttempt(req, session) {
 
 export async function consumeInterviewAttempt(req, session) {
   return rateLimitStore.consume(`interview:${selectionKey(req, session)}`, MAX_INTERVIEW_ATTEMPTS, WINDOW_MS);
+}
+
+export async function consumeCatalogResearchAttempt(req, session) {
+  return rateLimitStore.consume(`catalog-research:${selectionKey(req, session)}`, MAX_CATALOG_RESEARCH_ATTEMPTS, WINDOW_MS);
 }
 
 export async function consumeRadarAttempt(req, session) {
