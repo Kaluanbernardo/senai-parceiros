@@ -83,4 +83,28 @@ describe('AtomicJsonStore on Vercel Blob', () => {
     expect(head).toHaveBeenCalledWith('test/usage.json');
     expect(put.mock.calls[0][2]).toMatchObject({ allowOverwrite: true, ifMatch: 'etag-from-head' });
   });
+
+  it('normalizes the quoted ETag returned by get before a conditional write', async () => {
+    const store = new AtomicJsonStore({
+      name: 'test',
+      emptyState: () => ({ entries: {} }),
+      normalizeState: (value) => value,
+    });
+    store.configure({ driver: 'vercel_blob', blobPath: 'test/usage.json' });
+
+    get.mockResolvedValue(blobResult(30, '"etag-current"'));
+    head.mockResolvedValue({ etag: 'etag-current' });
+    put.mockImplementation(async (_pathname, _body, options) => {
+      if (options.ifMatch !== 'etag-current') throw new BlobPreconditionFailedError();
+      return { etag: 'etag-written' };
+    });
+
+    await expect(store.update((state) => {
+      state.entries.count += 1;
+      return state;
+    }, { retries: 1 })).resolves.toEqual({ entries: { count: 31 } });
+
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(put.mock.calls[0][2]).toMatchObject({ allowOverwrite: true, ifMatch: 'etag-current' });
+  });
 });
