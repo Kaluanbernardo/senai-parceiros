@@ -136,11 +136,13 @@ describe('reescrita editorial do Radar', () => {
   it('descarta uma manchete que apenas repete a referência do ato', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: 'Portaria nº 1.234, de 15 de julho de 2026', summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
-    const { items: [item] } = await editorializeRadarItems([gazetteItem('1234')]);
+    const { items: [item], stats } = await editorializeRadarItems([gazetteItem('1234')]);
 
     expect(item.editorialTitle).toBeNull();
+    expect(item.editorialSummary).toBeNull();
+    expect(item.editorialStatus).toBe('source');
     expect(item.displayTitle).toBe('Portaria nº 1234, de 15 de julho de 2026');
-    expect(item.displaySummary).toBe(EDITORIAL_SUMMARY);
+    expect(stats).toMatchObject({ rewritten: 0, rejected: 1, errors: ['radar_editorial_rejected'] });
   });
 
   it('mantém na fila um texto gerado que continua em inglês', async () => {
@@ -441,7 +443,7 @@ describe('reescrita editorial do Radar', () => {
       editorialStatus: 'ai',
       editorialTitle: null,
       editorialSummary: 'O estudo compara sistemas de aprendizagem profissional em quatro países e o que a indústria exige de quem se forma.',
-      editorialProvenance: { provider: 'openrouter', model: 'antigo', validationVersion: 1 },
+      editorialProvenance: { provider: 'openrouter', model: 'antigo', validationVersion: 4 },
     };
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
