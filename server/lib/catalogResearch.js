@@ -14,6 +14,18 @@ import { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES } from '../../
 export { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES };
 
 const SYSTEM_MANAGED_FIELDS = new Set(['schema_version', 'tipo_registro', 'data_consulta']);
+const PERSON_ENRICHMENT_FIELDS = Object.freeze([
+  'website_oficial',
+  'perfil_principal_url',
+  'linkedin_url',
+  'google_scholar_url',
+  'orcid',
+  'openalex_id',
+  'h_index',
+  'citacoes',
+  'publicacoes_relevantes',
+]);
+const PERSON_ENRICHMENT_MISSING_FIELDS = new Set([...PERSON_ENRICHMENT_FIELDS, 'lattes.cnpq.br']);
 
 const CATEGORY_LABELS = Object.freeze({
   person: 'pessoas especialistas',
@@ -95,6 +107,9 @@ function propertySchema(column, category) {
   if (column.name === 'confianca') {
     return { type: 'integer', minimum: 0, maximum: 100, description };
   }
+  if (column.type === 'numero') {
+    return { type: ['integer', 'null'], minimum: 0, description };
+  }
   if (column.type === 'lista') {
     return { type: 'array', items: { type: 'string' }, description };
   }
@@ -129,12 +144,7 @@ function promptFor(request) {
     ? [
       'Diferencie atuação acadêmica, industrial, educacional, jornalística ou pública.',
       'Aplique métricas acadêmicas somente a pesquisadores. Quando for pesquisador, priorize em publicacoes_relevantes os cinco artigos mais citados que conseguir verificar publicamente, com URL direta; se a contagem não for pública, registre a lacuna.',
-      'Depois de selecionar os candidatos, faça uma segunda passagem de enriquecimento para cada pessoa; não encerre a pesquisa ao atingir as três fontes mínimas.',
-      'Na segunda passagem, pesquise o nome completo junto da instituição atual e repita com variações sem acentos ou nomes intermediários quando houver ambiguidade.',
-      'Execute consultas dedicadas com "nome completo" "instituição" site:scholar.google.com/citations, "nome completo" site:orcid.org, "nome completo" site:linkedin.com/in e "nome completo" site:lattes.cnpq.br.',
-      'Use também páginas institucionais, OpenAlex e Crossref para confirmar identidade e completar google_scholar_url, orcid, openalex_id, linkedin_url, h_index, citacoes e publicacoes_relevantes.',
-      'Procure separadamente cidade_estado, website_oficial, perfil_principal_url e contato_publico profissional; um resultado ausente na primeira consulta não prova que o dado não existe.',
-      'Só registre um campo em dados_nao_localizados depois da consulta dedicada. Use o formato "campo: buscas realizadas e motivo da não confirmação" para tornar a lacuna auditável.',
+      'Esta chamada faz a descoberta e a verificação de identidade. Capture os perfis acadêmicos que estiverem diretamente confirmados, mas não gaste o orçamento inteiro tentando esgotar cada métrica: uma segunda chamada fará o enriquecimento dedicado das pessoas selecionadas.',
     ]
     : ['Priorize o site oficial e fontes públicas independentes que confirmem atuação, escala, programas e relação com indústria ou educação profissional.'];
   return [
@@ -161,6 +171,112 @@ function promptFor(request) {
     ...categoryGuidance.map((line) => `- ${line}`),
     '- Responda somente o JSON exigido pelo schema. Não produza CSV, Markdown ou explicações fora dele.',
   ].join('\n');
+}
+
+function personEnrichmentOutputSchema(quantity) {
+  const stringField = (description) => ({ type: 'string', description });
+  const listField = (description) => ({ type: 'array', items: { type: 'string' }, description });
+  const properties = {
+    nome: stringField('Nome exatamente como recebido na lista de identidades.'),
+    website_oficial: stringField('Página institucional ou pessoal oficial confirmada.'),
+    perfil_principal_url: stringField('Melhor perfil público confirmado para abrir no catálogo.'),
+    linkedin_url: stringField('URL pública inequívoca em linkedin.com/in, ou string vazia.'),
+    google_scholar_url: stringField('URL pública inequívoca em scholar.google.com/citations, ou string vazia.'),
+    orcid: stringField('Identificador ORCID confirmado, ou string vazia.'),
+    openalex_id: stringField('Identificador ou URL de autor no OpenAlex confirmado, ou string vazia.'),
+    h_index: { type: ['integer', 'null'], minimum: 0, description: 'h-index público da identidade confirmada; null quando não verificável.' },
+    citacoes: { type: ['integer', 'null'], minimum: 0, description: 'Contagem pública de citações da identidade confirmada; null quando não verificável.' },
+    publicacoes_relevantes: listField('Até cinco itens no formato Título | URL direta | ano, ordenados por citações somente quando a ordem for verificável.'),
+    fontes_enriquecimento: listField('URLs http(s) exatas consultadas nesta segunda passagem.'),
+    dados_nao_localizados: listField('Somente lacunas desta segunda passagem, no formato campo: buscas realizadas e motivo da não confirmação.'),
+  };
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['profiles'],
+    properties: {
+      profiles: {
+        type: 'array',
+        minItems: quantity,
+        maxItems: quantity,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: Object.keys(properties),
+          properties,
+        },
+      },
+    },
+  };
+}
+
+function personEnrichmentPrompt(request, candidates) {
+  const identities = candidates.map((candidate) => ({
+    nome: candidate.nome,
+    instituicao_atual: candidate.instituicao_atual,
+    cargo: candidate.cargo,
+    website_oficial: candidate.website_oficial,
+    perfil_principal_url: candidate.perfil_principal_url,
+    google_scholar_url: candidate.google_scholar_url,
+    orcid: candidate.orcid,
+    openalex_id: candidate.openalex_id,
+    fontes: candidate.fontes,
+  }));
+  return [
+    'Faça a segunda passagem de enriquecimento das pessoas já selecionadas abaixo.',
+    'Não descubra novas pessoas, não troque identidades e devolva uma entrada para cada nome recebido.',
+    'Comece pelas páginas e fontes já localizadas. Inspecione links públicos nelas antes de concluir que um perfil não existe.',
+    'Para cada pessoa, pesquise o nome completo junto da instituição atual e repita com variações sem acentos ou nomes intermediários quando houver ambiguidade.',
+    'Execute consultas dedicadas com "nome completo" "instituição" site:scholar.google.com/citations, "nome completo" site:orcid.org, "nome completo" site:linkedin.com/in e "nome completo" site:lattes.cnpq.br.',
+    'Use também páginas institucionais, OpenAlex e Crossref para confirmar identidade e completar google_scholar_url, orcid, openalex_id, linkedin_url, h_index, citacoes e publicacoes_relevantes.',
+    'Métricas devem ser inteiros atribuídos a uma identidade confirmada. Não coloque justificativas, faixas ou "não localizado" em h_index ou citacoes; use null.',
+    'Só registre um campo em dados_nao_localizados depois da consulta dedicada. Use o formato "campo: buscas realizadas e motivo da não confirmação" para tornar a lacuna auditável.',
+    `Contexto original: ${request.context}`,
+    `Identidades confirmadas na descoberta: ${JSON.stringify(identities)}`,
+    'Responda somente o JSON exigido pelo schema.',
+  ].join('\n');
+}
+
+function normalizedIdentity(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function missingField(value) {
+  return String(value || '').split(':', 1)[0].trim().toLowerCase();
+}
+
+function mergePersonEnrichment(candidates, profiles) {
+  const byName = new Map((profiles || []).map((profile) => [normalizedIdentity(profile.nome), profile]));
+  return candidates.map((candidate) => {
+    const profile = byName.get(normalizedIdentity(candidate.nome));
+    if (!profile) return candidate;
+    const merged = { ...candidate };
+    for (const field of PERSON_ENRICHMENT_FIELDS) {
+      const value = profile[field];
+      if (Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined && value !== '') merged[field] = value;
+    }
+    merged.fontes = [...new Set([...(Array.isArray(candidate.fontes) ? candidate.fontes : []), ...(Array.isArray(profile.fontes_enriquecimento) ? profile.fontes_enriquecimento : [])])];
+    const priorMissing = (Array.isArray(candidate.dados_nao_localizados) ? candidate.dados_nao_localizados : [])
+      .filter((entry) => !PERSON_ENRICHMENT_MISSING_FIELDS.has(missingField(entry)));
+    merged.dados_nao_localizados = [...priorMissing, ...(Array.isArray(profile.dados_nao_localizados) ? profile.dados_nao_localizados : [])];
+    return merged;
+  });
+}
+
+function mergedTrace(traces) {
+  const usable = traces.filter(Boolean);
+  const usage = usable.reduce((total, trace) => {
+    for (const field of ['prompt_tokens', 'completion_tokens', 'total_tokens']) total[field] += Number(trace.usage?.[field] || 0);
+    return total;
+  }, { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 });
+  const last = usable.at(-1) || {};
+  return {
+    ...last,
+    usage,
+    usages: usable.map((trace) => trace.usage || null),
+    webSearchRequests: usable.reduce((sum, trace) => sum + Number(trace.webSearchRequests || 0), 0),
+    webSearchSources: usable.flatMap((trace) => trace.webSearchSources || []),
+  };
 }
 
 function validHttpUrl(value) {
@@ -214,7 +330,7 @@ function candidateToEntry(candidate, category, rowNumber, consultedAt) {
  */
 export async function researchCatalogCandidates(input, { generate = generateStructured, now = () => new Date(), signal } = {}) {
   const request = normalizeCatalogResearchRequest(input);
-  const generated = await generate({
+  const discovery = await generate({
     task: `catalog_research_${request.category}_batch_${request.batchIndex + 1}`,
     model: 'openai/gpt-5.6-luna',
     strictOutput: true,
@@ -235,8 +351,34 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     signal,
   });
   const consultedAt = now().toISOString().slice(0, 10);
-  const candidates = Array.isArray(generated.data?.candidates) ? generated.data.candidates.slice(0, request.batchSize) : [];
+  let candidates = Array.isArray(discovery.data?.candidates) ? discovery.data.candidates.slice(0, request.batchSize) : [];
   if (!candidates.length) throw new Error('research_empty_output');
+  const traces = [discovery.trace];
+  if (request.category === 'person') {
+    const enrichment = await generate({
+      task: `catalog_research_person_enrichment_batch_${request.batchIndex + 1}`,
+      model: 'openai/gpt-5.6-luna',
+      strictOutput: true,
+      requireParameters: false,
+      schema: personEnrichmentOutputSchema(candidates.length),
+      messages: [
+        { role: 'system', content: 'Você verifica identidades e perfis acadêmicos públicos com rastreabilidade e sem inferir URLs ou métricas.' },
+        { role: 'user', content: personEnrichmentPrompt(request, candidates) },
+      ],
+      maxOutputTokens: 10000,
+      temperature: 0.1,
+      webSearch: {
+        engine: 'native',
+        maxResults: 10,
+        maxTotalResults: 20,
+        searchContextSize: 'high',
+      },
+      signal,
+    });
+    candidates = mergePersonEnrichment(candidates, enrichment.data?.profiles);
+    traces.push(enrichment.trace);
+  }
+  const trace = mergedTrace(traces);
   const rows = candidates.map((candidate, index) => candidateToEntry(candidate, request.category, index + 1, consultedAt));
   return {
     category: request.category,
@@ -248,15 +390,15 @@ export async function researchCatalogCandidates(input, { generate = generateStru
       errors: rows.flatMap((row) => row.errors),
       metadata: {
         origin: 'catalog_research',
-        provider: generated.trace.provider,
-        model: generated.trace.model,
-        webSearchRequests: generated.trace.webSearchRequests || 0,
+        provider: trace.provider,
+        model: trace.model,
+        webSearchRequests: trace.webSearchRequests || 0,
         batchIndex: request.batchIndex,
         requestedQuantity: request.quantity,
       },
       filename: `Pesquisa profunda — ${CATEGORY_LABELS[request.category]} — lote ${request.batchIndex + 1} — ${consultedAt}`,
       rowCount: rows.length,
     },
-    trace: generated.trace,
+    trace,
   };
 }

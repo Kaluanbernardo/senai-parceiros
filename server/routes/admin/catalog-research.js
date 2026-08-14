@@ -40,7 +40,10 @@ export default async function handler(req, res) {
     const researched = await researchCatalogCandidates(payload, { signal: controller.signal });
     let usageRecorded = true;
     try {
-      await recordAiUsageAtomic('catalog_research', researched.trace.usage || null);
+      const usages = Array.isArray(researched.trace.usages) && researched.trace.usages.length
+        ? researched.trace.usages
+        : [researched.trace.usage || null];
+      for (const usage of usages) await recordAiUsageAtomic('catalog_research', usage);
     } catch (error) {
       usageRecorded = false;
       console.warn('catalog_research_usage_record_failed', {
