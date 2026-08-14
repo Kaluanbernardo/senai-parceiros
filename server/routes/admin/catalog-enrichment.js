@@ -31,6 +31,11 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   } catch (error) {
     const code = String(error?.message || 'catalog_enrichment_failed').slice(0, 100);
+    console.error('catalog_enrichment_failed', {
+      code,
+      status: Number(error?.status || 0) || undefined,
+      provider: String(error?.providerMessage || '').replace(/\s+/g, ' ').slice(0, 300) || undefined,
+    });
     const status = code === 'provider_timeout' ? 504
       : code === 'budget_exceeded' || code === 'catalog_search_not_configured' || code === 'ai_not_configured' ? 503
       : code === 'enrichment_source_changed' || code === 'enrichment_commit_quality_failed' ? 409
