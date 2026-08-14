@@ -24,9 +24,14 @@ const ERROR_MESSAGES = {
   budget_exceeded: 'O limite diário de IA foi atingido. O lote ficou salvo e pode continuar depois.',
   catalog_search_not_configured: 'A pesquisa pública do catálogo ainda não está configurada.',
   ai_not_configured: 'O provedor de IA ainda não está configurado.',
+  provider_timeout: 'A pesquisa deste card demorou mais que o limite. O lote ficou salvo; use Continuar enriquecimento para tentar novamente.',
   enrichment_source_changed: 'O catálogo mudou durante o processamento. Reabra a auditoria antes de consolidar o lote.',
   enrichment_commit_quality_failed: 'A conferência final encontrou um card fora do padrão. Nenhuma alteração do lote foi mantida.',
 };
+
+export function catalogEnrichmentErrorMessage(code) {
+  return ERROR_MESSAGES[code] || 'Não foi possível concluir o enriquecimento agora.';
+}
 
 async function requestEnrichment(body) {
   const response = await fetch('/api/admin/catalog-enrichment', {
@@ -37,7 +42,7 @@ async function requestEnrichment(body) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(ERROR_MESSAGES[payload.error] || 'Não foi possível concluir o enriquecimento agora.');
+    const error = new Error(catalogEnrichmentErrorMessage(payload.error));
     error.code = payload.error;
     throw error;
   }

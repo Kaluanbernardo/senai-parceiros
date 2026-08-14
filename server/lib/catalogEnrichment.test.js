@@ -140,6 +140,50 @@ describe('catalog enrichment batches', () => {
     }
   });
 
+  it('processes a single card per request and gives the provider an internal deadline', async () => {
+    const records = [1, 2, 3].map((id) => ({ id: `o-timeout-${id}`, nome: `Instituto ${id}`, pais: 'Brasil' }));
+    const batch = createCatalogEnrichmentBatch({ organization: records, school: [], person: [] });
+    catalogStore.setPending(batch);
+    let generationRequest;
+    const searchEvidence = async () => ({
+      sources: [{ title: 'Site institucional', url: 'https://example.org', content: 'Atuação técnica pública.' }],
+      openAlex: null,
+    });
+    const generate = async (request) => {
+      generationRequest = request;
+      return {
+        data: { items: [completeOrganization(batch.targets[0].key)] },
+        trace: {},
+      };
+    };
+
+    const processed = await processCatalogEnrichment(batch.batchId, { searchEvidence, generate, enforceBudget: false });
+    const requestedTargets = JSON.parse(generationRequest.messages[1].content);
+
+    expect(requestedTargets).toHaveLength(1);
+    expect(generationRequest.signal).toBeInstanceOf(AbortSignal);
+    expect(processed.counts).toMatchObject({ passed: 1, pending: 2 });
+  });
+
+  it('converts an internal provider deadline into a retryable catalog error', async () => {
+    const shallow = { id: 'o-provider-timeout', nome: 'Instituto demorado', pais: 'Brasil' };
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
+    catalogStore.setPending(batch);
+    const searchEvidence = async () => ({ sources: [], openAlex: null });
+    const generate = async ({ signal }) => new Promise((resolve, reject) => {
+      if (signal.aborted) reject(signal.reason);
+      else signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    });
+
+    await expect(processCatalogEnrichment(batch.batchId, {
+      searchEvidence,
+      generate,
+      enforceBudget: false,
+      timeoutMs: 5,
+    })).rejects.toThrow('provider_timeout');
+    expect(catalogEnrichmentBatchSummary(catalogStore.getPending(batch.batchId)).counts).toMatchObject({ passed: 0, pending: 1 });
+  });
+
   it('keeps a generated card pending when the post-generation gate still fails', async () => {
     const shallow = { id: 'o-test', nome: 'Instituto Teste', pais: 'Brasil' };
     const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
