@@ -1,5 +1,5 @@
 /**
- * Registro único das ferramentas públicas do produto.
+ * Registro único das ferramentas do produto.
  *
  * O registro é deliberadamente livre de JSX para poder ser reutilizado por
  * navegação, Home, telemetria futura e integrações sem acoplar o domínio à UI.
@@ -58,18 +58,31 @@ export const TOOL_REGISTRY = Object.freeze([
     themeKey: 'prompt',
     status: 'ready',
   }),
+  Object.freeze({
+    id: 'research',
+    route: '/pesquisar-catalogo',
+    matchPrefix: '/pesquisar-catalogo',
+    label: 'Pesquisar novos parceiros',
+    navLabel: 'Pesquisar',
+    description: 'Pesquise a web e revise cada sugestão antes de adicioná-la ao catálogo.',
+    actionLabel: 'Iniciar pesquisa',
+    iconKey: 'research',
+    themeKey: 'research',
+    status: 'ready',
+    roles: Object.freeze(['admin']),
+  }),
 ]);
 
 export function getToolById(id) {
   return TOOL_REGISTRY.find((tool) => tool.id === id) || null;
 }
 
-export function getNavTools() {
-  return TOOL_REGISTRY.filter((tool) => tool.status !== 'hidden');
+export function getNavTools(role) {
+  return TOOL_REGISTRY.filter((tool) => tool.status !== 'hidden' && (!role || !tool.roles || tool.roles.includes(role)));
 }
 
-export function getNavItems() {
-  return getNavTools().flatMap((tool) => [
+export function getNavItems(role) {
+  return getNavTools(role).flatMap((tool) => [
     { ...tool, isPrimary: true },
     ...(tool.children || []).map((child) => ({ ...child, parentId: tool.id, isPrimary: false })),
   ]);

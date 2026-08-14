@@ -2,6 +2,7 @@ import catalogImportBatches from '../server/routes/admin/catalog-import-batches.
 import catalogImportCommit from '../server/routes/admin/catalog-import-commit.js';
 import catalogImportPreview from '../server/routes/admin/catalog-import-preview.js';
 import catalogImportRollback from '../server/routes/admin/catalog-import-rollback.js';
+import catalogResearch from '../server/routes/admin/catalog-research.js';
 import adminStatus from '../server/routes/admin/status.js';
 import adminAiCheck from '../server/routes/admin/ai-check.js';
 import catalogEnrichment from '../server/routes/admin/catalog-enrichment.js';
@@ -12,6 +13,7 @@ const handlers = {
   'catalog-import-preview': catalogImportPreview,
   'catalog-import-rollback': catalogImportRollback,
   'catalog-enrichment': catalogEnrichment,
+  'catalog-research': catalogResearch,
   status: adminStatus,
   'ai-check': adminAiCheck,
 };
