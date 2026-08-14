@@ -11,6 +11,9 @@ import { usageStore } from './usageStore.js';
   delete process.env.RADAR_EDITORIAL_DAILY_REQUEST_LIMIT;
   delete process.env.RADAR_EDITORIAL_DAILY_TOKEN_LIMIT;
   delete process.env.RADAR_EDITORIAL_DAILY_COST_LIMIT_USD;
+  delete process.env.CATALOG_ENRICHMENT_DAILY_REQUEST_LIMIT;
+  delete process.env.CATALOG_ENRICHMENT_DAILY_TOKEN_LIMIT;
+  delete process.env.CATALOG_ENRICHMENT_DAILY_COST_LIMIT_USD;
   delete process.env.CATALOG_RESEARCH_DAILY_REQUEST_LIMIT;
   delete process.env.CATALOG_RESEARCH_DAILY_TOKEN_LIMIT;
   delete process.env.CATALOG_RESEARCH_DAILY_COST_LIMIT_USD;
@@ -32,6 +35,16 @@ describe('AI usage budget', () => {
     expect(getUsageBudget('selection').limits).toMatchObject({ requests: 100, tokens: 100000, costUsd: 25 });
     expect(getUsageBudget('radar-editorial').limits).toMatchObject({ requests: 200, tokens: 500000, costUsd: 5 });
     expect(getUsageBudget('catalog_research').limits).toMatchObject({ requests: 100, tokens: 1000000, costUsd: 25 });
+  });
+
+  it('mantém orçamento disponível durante um lote completo de enriquecimento', () => {
+    process.env.AI_DAILY_TOKEN_LIMIT = '1';
+    expect(getUsageBudget('catalog-enrichment').limits).toMatchObject({ requests: 150, tokens: 1000000, costUsd: 10 });
+
+    for (let card = 1; card <= 66; card += 1) {
+      expect(canUseAi('catalog-enrichment'), `orçamento esgotou antes do card ${card}`).toBe(true);
+      recordAiUsage('catalog-enrichment', { total_tokens: 10_000 });
+    }
   });
 
   it('supports a durable file adapter without changing the budget contract', () => {
