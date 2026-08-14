@@ -9,10 +9,12 @@ import PageContainer from '../design-system/primitives/PageContainer';
 import ToolCard from '../design-system/primitives/ToolCard';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 import { BRAND_NAME } from '../design-system/brand';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const tools = getNavTools();
+  const { user } = useAuth();
+  const tools = getNavTools(user?.role);
 
   return (
     <>

@@ -14,6 +14,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const CatalogHomePage = lazy(() => import('./pages/CatalogHomePage'));
 const SelectionPage = lazy(() => import('./pages/SelectionPage'));
 const PromptGeneratorPage = lazy(() => import('./pages/PromptGeneratorPage'));
+const CatalogResearchPage = lazy(() => import('./pages/CatalogResearchPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const EscolasUnificadaPage = lazy(() => import('./pages/EscolasUnificadaPage'));
 const OrganizacoesPage = lazy(() => import('./pages/OrganizacoesPage'));
@@ -64,6 +65,7 @@ export default function App() {
       <Route path="/" element={<InShell><HomePage /></InShell>} />
       <Route path="/selecionar" element={<InShell><SelectionPage /></InShell>} />
       <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
+      <Route path="/pesquisar-catalogo" element={<InShell adminOnly><CatalogResearchPage /></InShell>} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
       <Route path="/catalogo" element={<InShell><CatalogHomePage /></InShell>} />
       <Route path="/catalogo/especialistas" element={<InShell><PesquisadoresPage /></InShell>} />
