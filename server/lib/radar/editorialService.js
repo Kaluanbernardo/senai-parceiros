@@ -34,7 +34,7 @@ const EDITORIAL_MAX_OUTPUT_TOKENS = 4000;
  * input hash on purpose, so relaxing a rule retries only what was refused
  * instead of re-running the hundreds of items that already came out whole.
  */
-const EDITORIAL_VALIDATION_VERSION = 4;
+const EDITORIAL_VALIDATION_VERSION = 5;
 const DEFAULT_DEADLINE_MS = 25_000;
 // A provider request needs its own ceiling. Checking the run deadline only
 // before `fetch` cannot help once an upstream model stalls, and Vercel then
@@ -242,7 +242,10 @@ function applyGenerated(items, generated) {
     if (!entry) return item;
     const title = validateEditorialTitle(entry.title, item) && editorialIsGrounded(item, entry.title, '') ? cleanText(entry.title, editorialTitleLimit(item)) : null;
     const summary = validateEditorialSummary(entry.summary, item) && editorialIsGrounded(item, '', entry.summary) ? cleanText(entry.summary, 1000) : null;
-    if (!title && !summary) return item;
+    // A card is only finished when both halves are safe. Accepting just the
+    // summary permanently left some studies with an English title because the
+    // item was already marked as AI-processed and left the queue.
+    if (!title || !summary) return item;
     // Topics are replaced only when the model returned exactly the list it was
     // given, translated. A different length means it added or dropped a theme,
     // and a theme is also a filter option.
