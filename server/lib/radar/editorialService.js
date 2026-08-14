@@ -36,6 +36,11 @@ const EDITORIAL_MAX_OUTPUT_TOKENS = 4000;
  */
 const EDITORIAL_VALIDATION_VERSION = 4;
 const DEFAULT_DEADLINE_MS = 25_000;
+// A provider request needs its own ceiling. Checking the run deadline only
+// before `fetch` cannot help once an upstream model stalls, and Vercel then
+// terminates the function before completed batches reach durable storage.
+const DEFAULT_BATCH_TIMEOUT_MS = 20_000;
+const DEFAULT_DEADLINE_BUFFER_MS = 5_000;
 const MAX_SOURCE_TEXT = 900;
 const MAX_OFFICIAL_SOURCE_TEXT = 2200;
 
@@ -350,18 +355,27 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // no deadline at all.
   const deadlineAt = Number(runDeadlineAt)
     || Date.now() + Math.max(1000, Number(process.env.RADAR_EDITORIAL_DEADLINE_MS || DEFAULT_DEADLINE_MS));
+  const configuredBufferMs = Math.max(0, Number(process.env.RADAR_EDITORIAL_DEADLINE_BUFFER_MS || DEFAULT_DEADLINE_BUFFER_MS));
+  const availableAtStart = Math.max(0, deadlineAt - Date.now());
+  // Tiny test/local budgets should still get a chance to run; the production
+  // buffer applies when the caller actually granted enough time to preserve it.
+  const deadlineBufferMs = availableAtStart > configuredBufferMs ? configuredBufferMs : 0;
+  const configuredBatchTimeoutMs = Math.max(1, Number(process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS || DEFAULT_BATCH_TIMEOUT_MS));
 
   for (let index = 0; index < candidates.length; index += EDITORIAL_BATCH_SIZE) {
     if (!canUseAi('radar-editorial')) {
       stats.budgetExceeded = true;
       break;
     }
-    if (Date.now() >= deadlineAt) {
+    const remainingMs = deadlineAt - Date.now() - deadlineBufferMs;
+    if (remainingMs <= 0) {
       stats.deadlineReached = true;
       break;
     }
     const batch = candidates.slice(index, index + EDITORIAL_BATCH_SIZE);
     stats.batches += 1;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), Math.max(1, Math.min(configuredBatchTimeoutMs, remainingMs)));
     try {
       const generated = await generateStructured({
         task: 'radar_editorial_items',
@@ -372,6 +386,7 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
         // schema-bound translation task. Letting it share the completion budget
         // is how production exhausted 1,200 tokens before producing valid JSON.
         disableReasoning: true,
+        signal: controller.signal,
       });
       await recordAiUsageAtomic('radar-editorial', generated.trace.usage);
       for (const rewritten of applyGenerated(batch, generated)) {
@@ -382,10 +397,24 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       }
       stats.model = `${generated.trace.provider}:${generated.trace.model}`;
     } catch (error) {
+      if (controller.signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+        stats.failedBatches += 1;
+        if (!stats.errors.includes('provider_timeout')) stats.errors.push('provider_timeout');
+        // A timed-out batch remains pending. Continue with the next one while
+        // there is room: any success will be persisted and the skipped batch
+        // naturally returns to the front of the next run.
+        if (Date.now() >= deadlineAt - deadlineBufferMs) {
+          stats.deadlineReached = true;
+          break;
+        }
+        continue;
+      }
       // Um lote que falha deixaria os itens dele com o texto da fonte, e um
       // item com texto de fonte e indistinguivel de um item que nao precisava
       // de reescrita. A falha sobe para que o run inteiro falhe visivelmente.
       throw new Error(sanitizeProviderError(error, 'radar_editorial_unavailable'));
+    } finally {
+      clearTimeout(timer);
     }
   }
   // Item recusado pelo validador tambem ficaria com o texto da fonte.

@@ -48,6 +48,8 @@ afterEach(() => {
   resetUsageBudgetForTests();
   delete process.env.RADAR_EDITORIAL_PROVIDER;
   delete process.env.RADAR_EDITORIAL_MAX_ITEMS;
+  delete process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS;
+  delete process.env.RADAR_EDITORIAL_DEADLINE_BUFFER_MS;
   delete process.env.AI_DAILY_REQUEST_LIMIT;
   delete process.env.OPENROUTER_REASONING;
 });
@@ -553,8 +555,57 @@ describe('reescrita editorial do Radar', () => {
     // matters more than finishing the backlog.
     process.env.RADAR_EDITORIAL_DEADLINE_MS = '1000';
     vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
-      await new Promise((resolve) => { setTimeout(resolve, 1100); });
       const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+      return await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve({
+          ok: true,
+          json: async () => ({
+            model: 'test/model',
+            usage: { total_tokens: 100 },
+            choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+          }),
+        }), 1100);
+        request.signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+        }, { once: true });
+      });
+    }));
+
+    const { items, stats } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`prazo-${index + 1}`)));
+
+    // The in-flight batch is cancelled at the deadline; every item keeps the
+    // source wording rather than putting the run's snapshot at risk.
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(stats).toMatchObject({ deadlineReached: true, rewritten: 0, failedBatches: 1, errors: ['provider_timeout'] });
+    expect(items).toHaveLength(12);
+    delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
+  });
+
+  it('aborta um lote lento e preserva os lotes concluídos antes do timeout', async () => {
+    process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS = '20';
+    process.env.RADAR_EDITORIAL_DEADLINE_BUFFER_MS = '5';
+    let call = 0;
+    vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
+      call += 1;
+      const payload = JSON.parse(request.body);
+      const requested = JSON.parse(payload.messages.at(-1).content);
+      if (call === 2) {
+        return await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => resolve({
+            ok: true,
+            json: async () => ({
+              model: 'test/model',
+              usage: { total_tokens: 100 },
+              choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+            }),
+          }), 80);
+          request.signal?.addEventListener('abort', () => {
+            clearTimeout(timer);
+            reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+          }, { once: true });
+        });
+      }
       return {
         ok: true,
         json: async () => ({
@@ -565,14 +616,14 @@ describe('reescrita editorial do Radar', () => {
       };
     }));
 
-    const { items, stats } = await editorializeRadarItems(Array.from({ length: 12 }, (_, index) => gazetteItem(`prazo-${index + 1}`)));
+    const { items, stats } = await editorializeRadarItems(
+      Array.from({ length: 7 }, (_, index) => gazetteItem(`timeout-${index + 1}`)),
+      { deadlineAt: Date.now() + 500 },
+    );
 
-    // One batch went out before the clock ran down; the rest keep the source's
-    // wording rather than putting the run's snapshot at risk.
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(stats).toMatchObject({ deadlineReached: true, rewritten: 6 });
-    expect(items).toHaveLength(12);
-    delete process.env.RADAR_EDITORIAL_DEADLINE_MS;
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(items.filter((item) => item.editorialStatus === 'ai')).toHaveLength(6);
+    expect(stats).toMatchObject({ rewritten: 6, failedBatches: 1, deadlineReached: false, errors: ['provider_timeout'] });
   });
 
   it('respeita o prazo do chamador quando ele é mais curto que o próprio', async () => {
