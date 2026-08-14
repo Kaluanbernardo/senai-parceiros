@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const DEFAULT_LOCK_TIMEOUT_MS = 5000;
-const DEFAULT_RETRIES = 4;
+const DEFAULT_RETRIES = 8;
+const BLOB_RETRY_BASE_DELAY_MS = 100;
+const BLOB_RETRY_MAX_DELAY_MS = 6400;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -16,6 +18,10 @@ function isConflict(error) {
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function blobRetryDelay(attempt) {
+  return Math.min(BLOB_RETRY_MAX_DELAY_MS, BLOB_RETRY_BASE_DELAY_MS * (2 ** attempt));
 }
 
 async function acquireFileLock(lockPath, timeoutMs = DEFAULT_LOCK_TIMEOUT_MS) {
@@ -108,9 +114,18 @@ export class AtomicJsonStore {
     }
     if (result?.statusCode === 404 || !result?.stream) return { state: clone(this.emptyState()), etag: null };
     if (result?.statusCode && result.statusCode >= 400) throw new Error('store_hydrate_failed');
+    let etag = result.blob?.etag || null;
+    if (!etag) {
+      try {
+        const { head } = await import('@vercel/blob');
+        etag = (await head(this.blobPath))?.etag || null;
+      } catch (error) {
+        if (Number(error?.statusCode || error?.status) !== 404) throw error;
+      }
+    }
     return {
       state: this.normalizeState(JSON.parse(await new Response(result.stream).text())),
-      etag: result.blob?.etag || null,
+      etag,
     };
   }
 
@@ -167,7 +182,7 @@ export class AtomicJsonStore {
       } catch (error) {
         lastError = error;
         if (!isConflict(error) || attempt === retries - 1) break;
-        await wait(20 * (attempt + 1));
+        await wait(blobRetryDelay(attempt));
       }
     }
     this.lastError = isConflict(lastError) ? 'store_conflict' : 'store_update_failed';
