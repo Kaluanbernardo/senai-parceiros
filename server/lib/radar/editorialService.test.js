@@ -66,6 +66,21 @@ describe('reescrita editorial do Radar', () => {
     expect(getUsageBudget('radar-editorial')).toMatchObject({ requests: 1, tokens: 300 });
   });
 
+  it('recebe contexto do DOU e pede uma explicação orientada a decisão, público e efeito', async () => {
+    let payload;
+    vi.stubGlobal('fetch', respondWith((item) => {
+      payload = item;
+      return { id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas };
+    }));
+
+    await editorializeRadarItems([gazetteItem('contexto', {
+      sourceContext: 'Título oficial: PORTARIA Nº 10. Autoriza novos cursos técnicos para institutos federais. As instituições devem iniciar a oferta no próximo semestre.',
+    })]);
+
+    expect(payload).toMatchObject({ modo: 'dou' });
+    expect(payload.texto).toMatch(/instituições devem iniciar a oferta/i);
+  });
+
   it('recusa atribuir ao SENAI-SP um ato que não o menciona', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({
       id: item.id,
@@ -336,6 +351,30 @@ describe('reescrita editorial do Radar', () => {
     }]);
 
     expect(item.displayTitle).toBe(mixed);
+  });
+
+  it('traduz título de estudo em outro idioma mesmo quando o resumo já está em português', async () => {
+    vi.stubGlobal('fetch', respondWith((item) => ({
+      id: item.id,
+      title: 'Análise da incompatibilidade profissional na formação vocacional não formal',
+      summary: 'O estudo analisa a distância entre a formação vocacional oferecida e as competências exigidas no trabalho. Também descreve os dados usados para comparar esses dois lados.',
+      topics: item.temas,
+    })));
+
+    const { items: [item] } = await editorializeRadarItems([{
+      id: 'id-title', externalId: 'id-title', section: 'research',
+      title: 'Analisis ketidaksesuaian pekerjaan pada pelatihan vokasi nonformal',
+      summaryPt: 'O estudo compara a formação oferecida com as competências exigidas no trabalho.',
+      sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'], publishedAt: '2026-08-02',
+    }]);
+
+    expect(item.displayTitle).toBe('Análise da incompatibilidade profissional na formação vocacional não formal');
+    expect(item.originalTitle).toBe('Analisis ketidaksesuaian pekerjaan pada pelatihan vokasi nonformal');
+  });
+
+  it('aceita preservar um título que já veio em português ao reescrever só o resumo', () => {
+    const item = { section: 'research', title: 'Formação profissional para a indústria brasileira' };
+    expect(validateEditorialTitle(item.title, item)).toBe(true);
   });
 
   it('ainda recusa o título de pesquisa que voltou sem nenhum português', () => {

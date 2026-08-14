@@ -28,6 +28,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import RadarIcon from '@mui/icons-material/Radar';
 import { countUndatedItems, filterRadarItems, RADAR_SECTIONS } from '../domain/radar';
+import { isOfficialAct } from '../domain/radarEditorial';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../design-system/primitives/EmptyState';
 import PageContainer from '../design-system/primitives/PageContainer';
@@ -89,8 +90,13 @@ function originalTitleOf(item) {
 }
 
 function summaryLabel(item) {
-  if (item.section === 'research') return 'Em poucas palavras';
+  if (item.section === 'research') return 'Resumo do estudo';
+  if (isOfficialAct(item)) return 'Entenda o ato';
   return item.editorialSummary ? 'O que isso significa' : 'Por que está no Radar';
+}
+
+function originalTitleLabel(item) {
+  return isOfficialAct(item) ? 'Título publicado no Diário Oficial' : 'Título original';
 }
 
 function localDate(date) {
@@ -357,7 +363,7 @@ export default function RadarPage() {
                       wording the source published stays one line below, so the
                       rewrite never costs the reader the original reference. */}
                   <Typography variant="h6" sx={{ mt: 1.25, lineHeight: 1.3, overflowWrap: 'anywhere' }}>{item.displayTitle}</Typography>
-                  {originalTitleOf(item) && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}>Título original: {originalTitleOf(item)}</Typography>}
+                  {originalTitleOf(item) && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}>{originalTitleLabel(item)}: {originalTitleOf(item)}</Typography>}
                   <Divider sx={{ my: 1.5 }} />
                   {item.displaySummary ? (
                     <>

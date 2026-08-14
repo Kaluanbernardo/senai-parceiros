@@ -315,6 +315,8 @@ describe('radar domain', () => {
     expect(result.items[0].summaryPt).toMatch(/formação técnica e profissional|cursos técnicos/i);
     expect(result.items[0].summaryPt).not.toMatch(/Secretaria de Educação Profissional e Tecnológica/i);
     expect(result.items[0].summaryPt).not.toMatch(/^considerando disposições administrativas/i);
+    expect(result.items[0].sourceContext).toMatch(/título oficial: portaria setec/i);
+    expect(result.items[0].sourceContext).toMatch(/institui itinerário de formação técnica e profissional/i);
   });
 
   it('descarta atos administrativos rotineiros mesmo quando o orgao pertence a EPT', async () => {
