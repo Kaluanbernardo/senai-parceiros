@@ -24,6 +24,13 @@ function blobRetryDelay(attempt) {
   return Math.min(BLOB_RETRY_MAX_DELAY_MS, BLOB_RETRY_BASE_DELAY_MS * (2 ** attempt));
 }
 
+function etagFingerprint(value) {
+  const text = String(value || '');
+  let hash = 0;
+  for (const character of text) hash = ((hash * 31) + character.charCodeAt(0)) >>> 0;
+  return text ? `${text.length}:${hash.toString(16)}` : 'missing';
+}
+
 async function acquireFileLock(lockPath, timeoutMs = DEFAULT_LOCK_TIMEOUT_MS) {
   const startedAt = Date.now();
   fs.mkdirSync(path.dirname(lockPath), { recursive: true });
@@ -168,8 +175,9 @@ export class AtomicJsonStore {
     if (this.driver !== 'vercel_blob') throw new Error('unsupported_store_driver');
     let lastError = null;
     for (let attempt = 0; attempt < retries; attempt += 1) {
+      let current = null;
       try {
-        const current = await this.readBlob();
+        current = await this.readBlob();
         const draft = clone(current.state);
         const next = mutator(draft);
         const state = clone(next === undefined ? draft : next);
@@ -181,6 +189,26 @@ export class AtomicJsonStore {
         return clone(state);
       } catch (error) {
         lastError = error;
+        if (isConflict(error)) {
+          let headEtag = null;
+          let headError = null;
+          try {
+            const { head } = await import('@vercel/blob');
+            headEtag = (await head(this.blobPath))?.etag || null;
+          } catch (diagnosticError) {
+            headError = diagnosticError?.name || 'unknown';
+          }
+          console.error('[DEBUG-blob-cas-7a19]', {
+            store: this.name,
+            attempt: attempt + 1,
+            status: Number(error?.statusCode || error?.status || error?.response?.status || 0) || null,
+            errorName: error?.name || null,
+            readEtag: etagFingerprint(current?.etag),
+            headEtag: etagFingerprint(headEtag),
+            etagsMatch: Boolean(current?.etag && headEtag && current.etag === headEtag),
+            headError,
+          });
+        }
         if (!isConflict(error) || attempt === retries - 1) break;
         await wait(blobRetryDelay(attempt));
       }
