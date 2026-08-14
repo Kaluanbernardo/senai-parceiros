@@ -47,6 +47,7 @@ const tools = Object.freeze({
   catalog: Object.freeze({ main: BLUE[700], soft: NEUTRAL[0], dark: BLUE[900], contrast: NEUTRAL[0] }),
   radar: Object.freeze({ main: GREEN[700], soft: NEUTRAL[0], dark: GREEN[800], contrast: NEUTRAL[0] }),
   prompt: Object.freeze({ main: AMBER[700], soft: NEUTRAL[0], dark: AMBER[800], contrast: NEUTRAL[0] }),
+  research: Object.freeze({ main: BLUE[900], soft: NEUTRAL[0], dark: NEUTRAL[950], contrast: NEUTRAL[0] }),
 });
 
 /**

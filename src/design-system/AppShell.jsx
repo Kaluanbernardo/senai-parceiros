@@ -35,7 +35,7 @@ import Wordmark from './Wordmark';
  * - **Um andar em vez de dois.** O cabeçalho anterior empilhava uma barra com o
  *   nome e uma faixa de abas que rolava na horizontal, somando 120px de cromo
  *   antes de qualquer conteúdo. No celular a faixa exigia rolar de lado para
- *   descobrir que existiam quatro ferramentas — navegação escondida atrás de um
+ *   descobrir as ferramentas disponíveis — navegação escondida atrás de um
  *   gesto que nada anuncia. Agora: uma linha só, com as ferramentas visíveis no
  *   desktop e uma gaveta explícita no celular.
  * - **Trilha.** Quem chega por link direto em `/catalogo/especialistas` passa a
@@ -44,14 +44,13 @@ import Wordmark from './Wordmark';
  *   inteiro em vez de percorrer sete botões de navegação a cada tela.
  */
 
-const NAV_TOOLS = getNavTools();
-
 export default function AppShell({ children, user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const trail = getBreadcrumbs(location.pathname);
   const isAdmin = user?.role === 'admin';
+  const navTools = getNavTools(user?.role);
 
   const go = (route) => {
     setDrawerOpen(false);
@@ -100,7 +99,7 @@ export default function AppShell({ children, user, onLogout }) {
             direction="row"
             sx={{ display: { xs: 'none', md: 'flex' }, gap: .25, flex: 1, minWidth: 0 }}
           >
-            {NAV_TOOLS.map((tool) => {
+            {navTools.map((tool) => {
               const active = isActive(location.pathname, tool.route, tool.matchPrefix);
               const tone = T.tools[tool.themeKey];
               return (
@@ -152,7 +151,7 @@ export default function AppShell({ children, user, onLogout }) {
         </Toolbar>
       </AppBar>
 
-      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={location.pathname} onNavigate={go} isAdmin={isAdmin} />
+      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={location.pathname} onNavigate={go} isAdmin={isAdmin} tools={navTools} />
 
       {/* A trilha só aparece fora da home: lá ela diria apenas "Início". */}
       {trail.length > 1 && (
@@ -242,7 +241,7 @@ function SkipLink() {
   );
 }
 
-function NavDrawer({ open, onClose, pathname, onNavigate, isAdmin }) {
+function NavDrawer({ open, onClose, pathname, onNavigate, isAdmin, tools }) {
   return (
     <Drawer
       open={open}
@@ -257,7 +256,7 @@ function NavDrawer({ open, onClose, pathname, onNavigate, isAdmin }) {
       </Box>
 
       <List component="nav" aria-label="Ferramentas" sx={{ py: 1 }}>
-        {NAV_TOOLS.map((tool) => {
+        {tools.map((tool) => {
           const active = isActive(pathname, tool.route, tool.matchPrefix);
           const tone = T.tools[tool.themeKey];
           return (

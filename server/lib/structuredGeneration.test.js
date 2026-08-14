@@ -59,6 +59,7 @@ describe('structured generation boundary', () => {
   it('uses hosted OpenRouter search and exposes only public citation evidence', async () => {
     process.env.OPENAI_API_KEY = 'openai-test-key';
     process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
     const requests = [];
     vi.stubGlobal('fetch', vi.fn(async (url, init) => {
       requests.push({ url, body: JSON.parse(init.body) });
@@ -95,6 +96,25 @@ describe('structured generation boundary', () => {
       webSearchRequests: 2,
       webSearchSources: [{ url: 'https://example.org/fonte', title: 'Fonte pública', content: 'Trecho público.' }],
     });
+  });
+
+  it('lets an internal task pin a faster OpenRouter model without invoking the auto-router', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], model: 'openai/gpt-5-mini', disableReasoning: true, strictOutput: false });
+
+    expect(bodies[0].model).toBe('openai/gpt-5-mini');
+    expect(bodies[0].plugins).toBeUndefined();
+    expect(bodies[0].provider).toBeUndefined();
+    expect(bodies[0].reasoning).toEqual({ enabled: false });
+    expect(bodies[0].response_format).toBeUndefined();
   });
 
   it('keeps a pinned model instead of letting the auto-router replace it', async () => {
