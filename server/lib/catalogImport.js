@@ -3,12 +3,13 @@ import { Readable } from 'node:stream';
 import ExcelJS from 'exceljs';
 import { CATALOG_CATEGORIES, CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogHeaders, normalizeCatalogCategory, normalizeCell, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from '../../src/domain/catalogImportSchema.js';
 import { normalizeResearcherName } from '../../src/domain/researcherCatalog.js';
+import { inferOrganizationSubtype } from '../../src/domain/catalogTaxonomy.js';
 import { catalogStore } from './catalogStore.js';
 
 // JSON transport adds about 33% in base64; 3 MiB stays below Vercel's request limit.
 const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const MAX_ROWS = 1000;
-const INPUT_CATEGORIES = [...CATALOG_CATEGORIES, 'researcher'];
+const INPUT_CATEGORIES = [...CATALOG_CATEGORIES, 'researcher', 'school'];
 
 function fold(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -60,7 +61,7 @@ function hashRow(row) {
 }
 
 function makeId(category, record, existing = []) {
-  const prefix = category === 'person' ? 'p' : category === 'school' ? 's' : 'o';
+  const prefix = category === 'person' ? 'p' : 'o';
   const sequence = existing.reduce((max, item) => Math.max(max, Number(String(item.id || '').match(/import-(\d+)/)?.[1] || 0)), 0) + 1;
   return `${prefix}-import-${sequence}-${hashRow(record).slice(0, 8)}`;
 }
@@ -98,7 +99,7 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
   if (sheet.rowCount < 2) throw new Error('stakeholders_rows_required');
   if (sheet.rowCount - 1 > MAX_ROWS) throw new Error('too_many_rows');
   const sourceHeaders = rowValues(sheet.getRow(1));
-  const category = reportSheet ? (requestedCategory || 'organization') : null;
+  const category = reportSheet ? normalizeCatalogCategory(requestedCategory || 'organization') : null;
   const headers = reportSheet ? getCatalogHeaders(category) : sourceHeaders;
   const typeColumnIndex = headers.indexOf('tipo_registro');
   const declaredCategories = new Set();
@@ -158,14 +159,22 @@ function evaluationRowToCatalog(headers, values, category, workbook) {
   return {
     schema_version: CATALOG_SCHEMA_VERSION,
     tipo_registro: category,
+    subtipo: category === 'person'
+      ? 'Pesquisador(a) ou acadêmico(a)'
+      : inferOrganizationSubtype({ categoria: source.categoria, natureza: source.categoria }),
     nome: source.stakeholder,
     pais: match?.pais || 'Não informado',
     cidade_estado: '', resumo: match?.justificativa || '', descricao: match?.diferencial_comparativo || '',
     areas_temas: '', aderencia_contexto: match?.justificativa || '', relacao_publica: '',
     evidencias_publicas: sources, riscos_sinais: match?.trade_offs || '', website_oficial: source.website,
     contato_publico: '', fontes: sources, data_consulta: '', confianca: match?.confianca || '', dados_nao_localizados: '',
-    ...(category === 'school' ? { tipo_instituicao: source.categoria, areas_formacao: '' } : {}),
-    ...(category === 'organization' ? { natureza_juridica: source.categoria, setor: source.categoria, atuacao: match?.justificativa || '' } : {}),
+    ...(category === 'organization' ? {
+      natureza_juridica: source.categoria,
+      setor: source.categoria,
+      atuacao: match?.justificativa || '',
+      tipo_instituicao: fold(source.categoria).includes('escola') ? source.categoria : '',
+      areas_formacao: '',
+    } : {}),
     ...(category === 'person' ? { instituicao_atual: source.instituicao, areas_especialidade: '', linhas_pesquisa: '', perfis_atuacao: 'pesquisa' } : {}),
   };
 }

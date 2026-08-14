@@ -163,7 +163,7 @@ describe('adaptive interview provider', () => {
       return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
     }));
 
-    const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+    const result = await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
     // Em 10 o roteador escolhia modelos de raciocínio que passavam de 45s e
     // nunca respondiam: numa chamada interativa, um modelo excelente que não
@@ -181,7 +181,7 @@ describe('adaptive interview provider', () => {
     }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+    const result = await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
     expect(nextQuestionSchema.additionalProperties).toBe(false);
     expect(result.question.id).toBe('adaptive_publico');
@@ -201,7 +201,7 @@ describe('adaptive interview provider', () => {
     process.env.AZURE_OPENAI_DEPLOYMENT = 'senai-deployment';
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ model: 'senai-deployment', choices: [{ message: { content: JSON.stringify(validResponse) } }] }) }));
     vi.stubGlobal('fetch', fetchMock);
-    const result = await generateNextQuestionWithProvider({ category: 'school', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+    const result = await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
     expect(result.trace.provider).toBe('azure');
     expect(fetchMock.mock.calls[0][0]).toContain('/openai/deployments/senai-deployment/chat/completions');
     expect(fetchMock.mock.calls[0][1].headers['api-key']).toBe('azure-test-key');

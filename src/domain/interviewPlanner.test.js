@@ -16,8 +16,8 @@ describe('InterviewPlanner', () => {
     expect(state).not.toHaveProperty('storageKey');
   });
 
-  it('adapts the next questions to school benchmarking and does not add speaker branches', () => {
-    let state = start({ category: 'school', objective: 'benchmark' });
+  it('adapts the next questions to legal-entity benchmarking and does not add speaker branches', () => {
+    let state = start({ category: 'organization', objective: 'benchmark' });
     const ids = [];
     for (let index = 0; index < 20 && state.currentQuestion; index += 1) {
       ids.push(state.currentQuestion.id);
@@ -30,7 +30,7 @@ describe('InterviewPlanner', () => {
   });
 
   it('uses the meaning of the answer to choose and phrase the next question', () => {
-    let benchmarking = start({ category: 'school', objective: 'benchmark' });
+    let benchmarking = start({ category: 'organization', objective: 'benchmark' });
     benchmarking = answerAndNext(benchmarking, 'Quero comparar gestão curricular e integração das escolas com empresas industriais.');
 
     let event = start({ category: 'researcher', objective: 'speaker' });
@@ -43,12 +43,20 @@ describe('InterviewPlanner', () => {
   });
 
   it('opens with a question written for the chosen category and objective', () => {
-    const benchmarking = start({ category: 'school', objective: 'benchmark' });
+    const benchmarking = start({ category: 'organization', objective: 'benchmark' });
     const partnership = start({ category: 'organization', objective: 'project_partner' });
 
     expect(benchmarking.currentQuestion.prompt).not.toBe(partnership.currentQuestion.prompt);
-    expect(benchmarking.currentQuestion.prompt).toMatch(/institui/i);
+    expect(benchmarking.currentQuestion.prompt).toMatch(/pessoa jurídica|prática/i);
     expect(partnership.currentQuestion.prompt).toMatch(/iniciativa|organiza/i);
+  });
+
+  it('carries the subtype from the first question through the final brief', () => {
+    const state = start({ category: 'school', objective: 'benchmark' });
+    expect(state).toMatchObject({ category: 'organization', subtype: 'Instituição de ensino' });
+    expect(state.currentQuestion).toMatchObject({ subtype: 'Instituição de ensino' });
+    expect(state.currentQuestion.prompt).toMatch(/SENAI-SP|institui/i);
+    expect(finalize(state).subtype).toBe('Instituição de ensino');
   });
 
   it('does not ask again what the answer already covered', () => {
@@ -145,7 +153,7 @@ describe('InterviewPlanner', () => {
   });
 
   it('has nothing to go back to on the first question', () => {
-    const state = start({ category: 'school', objective: 'benchmark' });
+    const state = start({ category: 'organization', objective: 'benchmark' });
     expect(InterviewPlanner.back(state)).toBe(state);
     expect(InterviewPlanner.back(null)).toBe(null);
   });
@@ -163,7 +171,7 @@ describe('InterviewPlanner', () => {
   });
 
   it('keeps the displayed transcript and maps an adaptive turn to a canonical brief field', () => {
-    let state = start({ category: 'school', objective: 'benchmark' });
+    let state = start({ category: 'organization', objective: 'benchmark' });
     state = answerAndNext(state, 'Quero comparar currÃ­culos e gestÃ£o com empresas.');
     const dynamicId = 'adaptive_2_benchmark_focus';
     const dynamicQuestion = { id: dynamicId, targetField: 'benchmark_focus', prompt: 'Que prÃ¡tica deseja comparar?', label: 'Que prÃ¡tica deseja comparar?', reasonTag: 'aprofundar_benchmark', dimensions: ['alignment'] };

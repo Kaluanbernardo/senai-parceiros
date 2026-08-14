@@ -5,8 +5,20 @@ Este contexto reúne a linguagem usada para descobrir, comparar e acompanhar pos
 ## Seleção
 
 **Stakeholder**:
-Pessoa especialista, instituição de educação ou outra organização cadastrada que pode contribuir para uma iniciativa do SENAI-SP.
+Pessoa física ou pessoa jurídica cadastrada que pode contribuir para uma iniciativa do SENAI-SP.
 _Avoid_: Contato, lead, perfil
+
+**Pessoa Física**:
+Indivíduo cadastrado no catálogo, classificado por um subtipo principal como profissional, pesquisador, personalidade pública ou agente público.
+_Avoid_: Especialista, pesquisador
+
+**Pessoa Jurídica**:
+Organização ou ator organizacional identificável cadastrado no catálogo, incluindo empresas, órgãos públicos, instituições de ensino, redes e organizações da sociedade civil. Programas, políticas, qualificações, modelos e sistemas abstratos não são registros de Pessoa Jurídica.
+_Avoid_: Instituição, escola, organização
+
+**Subtipo**:
+Classificação principal, canônica e filtrável que descreve a atuação da pessoa física ou a identidade organizacional da pessoa jurídica sem criar uma nova categoria de catálogo. Na Pessoa Jurídica, a natureza declarada prevalece sobre palavras incidentais do nome, setor ou descrição.
+_Avoid_: Categoria, natureza
 
 **Contexto da seleção**:
 Situação, objetivo e resultado que motivam a busca por stakeholders.

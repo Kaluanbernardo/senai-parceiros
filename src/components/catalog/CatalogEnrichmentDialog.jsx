@@ -15,9 +15,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 const CATEGORY_LABELS = {
-  organization: 'Outras organizações',
-  school: 'Instituições de educação',
-  person: 'Especialistas',
+  organization: 'Pessoas Jurídicas',
+  person: 'Pessoas Físicas',
 };
 
 const ERROR_MESSAGES = {

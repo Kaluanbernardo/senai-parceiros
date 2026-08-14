@@ -190,6 +190,7 @@ function askedPromptsFor(state) {
 function interviewPrompt(state) {
   const payload = {
     category: state.category,
+    subtype: state.subtype || '',
     objective: state.objective,
     context: text(state.context || state.answers?.context, 2000),
     transcript: transcriptFor(state),

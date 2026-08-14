@@ -10,6 +10,7 @@ import {
 } from '../../src/domain/catalogImportSchema.js';
 import { generateStructured } from './structuredGeneration.js';
 import { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES } from '../../src/domain/catalogResearchFlow.js';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES, normalizeCatalogRequest } from '../../src/domain/catalogTaxonomy.js';
 
 export { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES };
 
@@ -28,10 +29,11 @@ const PERSON_ENRICHMENT_FIELDS = Object.freeze([
 const PERSON_ENRICHMENT_MISSING_FIELDS = new Set([...PERSON_ENRICHMENT_FIELDS, 'lattes.cnpq.br']);
 
 const CATEGORY_LABELS = Object.freeze({
-  person: 'pessoas especialistas',
-  school: 'instituições de educação',
-  organization: 'organizações',
+  person: 'pessoas físicas',
+  organization: 'pessoas jurídicas',
 });
+
+const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
 
 const SOURCE_PREFERENCE_LABELS = Object.freeze({
   auto: 'as melhores fontes públicas disponíveis para cada fato',
@@ -54,8 +56,11 @@ function limitedText(value, field, maximum, { required = false } = {}) {
 }
 
 export function normalizeCatalogResearchRequest(input = {}) {
-  const category = normalizeCatalogCategory(String(input.category || '').trim().toLowerCase());
+  const requestedSubtype = limitedText(input.subtype, 'research_subtype', 120);
+  const request = normalizeCatalogRequest(input.category, requestedSubtype);
+  const category = normalizeCatalogCategory(request.category);
   if (!CATEGORY_LABELS[category]) throw new Error('invalid_research_category');
+  if (requestedSubtype && !SUBTYPES[category].includes(requestedSubtype)) throw new Error('invalid_research_subtype');
   const quantity = Number(input.quantity || CATALOG_RESEARCH_QUANTITIES[0]);
   if (!CATALOG_RESEARCH_QUANTITIES.includes(quantity)) {
     throw new Error('invalid_research_quantity');
@@ -73,6 +78,7 @@ export function normalizeCatalogResearchRequest(input = {}) {
     : [];
   return {
     category,
+    subtype: request.subtype,
     quantity,
     batchSize,
     batchIndex,
@@ -104,6 +110,9 @@ function propertySchema(column, category) {
   const description = category === 'person' && personSearchDescriptions[column.name]
     ? `${column.description} ${personSearchDescriptions[column.name]}`
     : column.description;
+  if (column.name === 'subtipo') {
+    return { type: 'string', enum: SUBTYPES[category], description: column.description };
+  }
   if (column.name === 'confianca') {
     return { type: 'integer', minimum: 0, maximum: 100, description };
   }
@@ -149,6 +158,7 @@ function promptFor(request) {
     : ['Priorize o site oficial e fontes públicas independentes que confirmem atuação, escala, programas e relação com indústria ou educação profissional.'];
   return [
     `Pesquise somente ${CATEGORY_LABELS[request.category]}.`,
+    `Subtipo desejado: ${request.subtype || 'qualquer subtipo coerente com o contexto'}.`,
     `Este é o lote ${request.batchIndex + 1}. Entregue até ${request.batchSize} sugestões novas; a pesquisa completa pediu ${request.quantity}.`,
     `Contexto: ${request.context}`,
     `Finalidade: ${request.purpose || 'não informada'}`,
@@ -163,6 +173,7 @@ function promptFor(request) {
     '- Aplique os fatores de exclusão como eliminatórios e use os fatores de priorização para ordenar os candidatos restantes.',
     '- Use somente informações públicas e verificáveis; confirme identidade, atuação atual e aderência antes de preencher a ficha.',
     '- Não invente entidades, vínculos, cargos, números, contatos, publicações ou URLs.',
+    '- Classifique cada sugestão em exatamente um subtipo permitido pelo schema.',
     '- Cada sugestão precisa do schema completo, descrição factual detalhada, pelo menos três temas específicos e três URLs públicas distintas em fontes.',
     '- fontes deve conter apenas URLs http(s) exatas. evidencias_publicas deve ligar fatos importantes às respectivas URLs.',
     '- Separe fatos de inferências; registre conflitos em riscos_sinais e ausências em dados_nao_localizados.',

@@ -1,5 +1,6 @@
 import { RADAR_SECTIONS } from './radar';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from './interview';
+import { isCatalogSubtype, normalizeCatalogRequest } from './catalogTaxonomy';
 
 const CATEGORIES = CATEGORY_IDS;
 const OBJECTIVES = OBJECTIVE_IDS;
@@ -34,6 +35,7 @@ export function validateInterviewState(value) {
   const errors = [];
   if (!isObject(value)) return result(false, ['interview state must be an object']);
   if (!CATEGORIES.includes(value.category)) errors.push('interview category is invalid');
+  if (value.subtype && !isCatalogSubtype(value.category, value.subtype)) errors.push('interview subtype is invalid');
   if (!OBJECTIVES.includes(value.objective)) errors.push('interview objective is invalid');
   if (!isObject(value.answers)) errors.push('interview answers must be an object');
   else if (Object.keys(value.answers).length > 20 || Object.values(value.answers).some((answer) => typeof answer !== 'string' || answer.length > 4000)) errors.push('interview answers exceed limits');
@@ -57,8 +59,10 @@ export function createSelectionBrief(input = {}) {
   const answers = isObject(input.answers) ? { ...input.answers } : {};
   const list = (value) => Array.isArray(value) ? value.filter(nonEmpty).map((entry) => entry.trim()) : [];
   const record = (value) => isObject(value) ? { ...value } : {};
+  const request = normalizeCatalogRequest(input.category, input.subtype);
   return {
-    category: input.category === 'researcher' ? 'person' : (nonEmpty(input.category) ? input.category : ''),
+    category: nonEmpty(input.category) ? request.category : '',
+    subtype: request.subtype || (nonEmpty(input.subtype) ? input.subtype.trim() : ''),
     objective: nonEmpty(input.objective) ? input.objective : '',
     context: nonEmpty(input.context) ? input.context.trim() : (nonEmpty(answers.context) ? String(answers.context).trim() : ''),
     desiredOutcomes: list(input.desiredOutcomes),
@@ -81,7 +85,8 @@ export function createSelectionBrief(input = {}) {
 export function validateSelectionBrief(value) {
   const errors = [];
   if (!isObject(value)) return result(false, ['brief must be an object']);
-  if (!CATEGORIES.includes(value.category)) errors.push('category must be person, school or organization');
+  if (!CATEGORIES.includes(value.category)) errors.push('category must be person or organization');
+  if (value.subtype && !isCatalogSubtype(value.category, value.subtype)) errors.push('subtype must belong to category');
   if (!OBJECTIVES.includes(value.objective)) errors.push('objective is required');
   if (!nonEmpty(value.context)) errors.push('context is required');
   if (!isObject(value.answers)) errors.push('answers must be an object');

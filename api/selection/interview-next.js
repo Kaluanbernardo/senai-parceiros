@@ -4,6 +4,7 @@ import { consumeInterviewAttempt, hydrateRateLimitStore } from '../../server/lib
 import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
+import { isCatalogSubtype, normalizeCatalogRequest } from '../../src/domain/catalogTaxonomy.js';
 import { getExampleCoverage } from '../../src/domain/exampleResolver.js';
 import { canUseAi, getUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../server/lib/usageBudget.js';
 
@@ -19,6 +20,7 @@ function validAnswers(answers) {
 function validState(state) {
   return state && typeof state === 'object' && !Array.isArray(state)
     && CATEGORY_IDS.includes(state.category)
+    && (!state.subtype || isCatalogSubtype(state.category, state.subtype))
     && OBJECTIVE_IDS.includes(state.objective)
     && validAnswers(state.answers)
     && Array.isArray(state.askedIds)
@@ -122,6 +124,7 @@ function asQuestion(value, state) {
     example: question.example,
     reasonTag: question.reasonTag,
     category: state.category,
+    subtype: state.subtype || '',
     objective: state.objective,
     context,
     exampleCoverage: getExampleCoverage({ category: state.category, objective: state.objective, context }),
@@ -156,10 +159,16 @@ export default async function handler(req, res) {
 
   try {
     const payload = await readJson(req);
-    const state = payload?.state;
+    const invalidRequestedSubtype = Boolean(payload?.state?.subtype && !isCatalogSubtype(payload.state.category, payload.state.subtype));
+    const catalogRequest = payload?.state
+      ? normalizeCatalogRequest(payload.state.category, payload.state.subtype)
+      : null;
+    const state = payload?.state
+      ? { ...payload.state, category: catalogRequest.category, subtype: catalogRequest.subtype }
+      : payload?.state;
     const answer = typeof payload?.answer === 'string' ? payload.answer.trim() : '';
     const questionId = String(payload?.questionId || '');
-    if (!validState(state) || !questionId || questionId !== state.currentQuestion.id || answer.length > MAX_ANSWER_LENGTH) {
+    if (invalidRequestedSubtype || !validState(state) || !questionId || questionId !== state.currentQuestion.id || answer.length > MAX_ANSWER_LENGTH) {
       return res.status(400).json({ error: 'invalid_interview_payload' });
     }
     try {
@@ -188,6 +197,7 @@ export default async function handler(req, res) {
     try {
       const ai = await generateNextQuestionWithProvider({
         category: answeredState.category,
+        subtype: answeredState.subtype || '',
         objective: answeredState.objective,
         answers: answeredState.answers,
         history: answeredState.history,

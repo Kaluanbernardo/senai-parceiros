@@ -16,7 +16,6 @@ const SelectionPage = lazy(() => import('./pages/SelectionPage'));
 const PromptGeneratorPage = lazy(() => import('./pages/PromptGeneratorPage'));
 const CatalogResearchPage = lazy(() => import('./pages/CatalogResearchPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
-const EscolasUnificadaPage = lazy(() => import('./pages/EscolasUnificadaPage'));
 const OrganizacoesPage = lazy(() => import('./pages/OrganizacoesPage'));
 const PesquisadoresPage = lazy(() => import('./pages/PesquisadoresPage'));
 const RadarPage = lazy(() => import('./pages/RadarPage'));
@@ -54,9 +53,12 @@ function InShell({ children, adminOnly = false }) {
 
 /** Rotas antigas do catálogo, mantidas redirecionando para as novas. */
 export const LEGACY_CATALOG_ROUTES = Object.freeze([
-  ['/catalogo/pesquisadores', '/catalogo/especialistas'],
-  ['/catalogo/escolas', '/catalogo/instituicoes-de-educacao'],
-  ['/catalogo/organizacoes', '/catalogo/outras-organizacoes'],
+  ['/catalogo/pesquisadores', '/catalogo/pessoas-fisicas'],
+  ['/catalogo/especialistas', '/catalogo/pessoas-fisicas'],
+  ['/catalogo/escolas', '/catalogo/pessoas-juridicas?subtipo=Institui%C3%A7%C3%A3o%20de%20ensino'],
+  ['/catalogo/instituicoes-de-educacao', '/catalogo/pessoas-juridicas?subtipo=Institui%C3%A7%C3%A3o%20de%20ensino'],
+  ['/catalogo/organizacoes', '/catalogo/pessoas-juridicas'],
+  ['/catalogo/outras-organizacoes', '/catalogo/pessoas-juridicas'],
 ]);
 
 export default function App() {
@@ -68,9 +70,8 @@ export default function App() {
       <Route path="/pesquisar-catalogo" element={<InShell adminOnly><CatalogResearchPage /></InShell>} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
       <Route path="/catalogo" element={<InShell><CatalogHomePage /></InShell>} />
-      <Route path="/catalogo/especialistas" element={<InShell><PesquisadoresPage /></InShell>} />
-      <Route path="/catalogo/instituicoes-de-educacao" element={<InShell><EscolasUnificadaPage /></InShell>} />
-      <Route path="/catalogo/outras-organizacoes" element={<InShell><OrganizacoesPage /></InShell>} />
+      <Route path="/catalogo/pessoas-fisicas" element={<InShell><PesquisadoresPage /></InShell>} />
+      <Route path="/catalogo/pessoas-juridicas" element={<InShell><OrganizacoesPage /></InShell>} />
       {/* Caminhos anteriores. O catch-all abaixo mandaria para a home, o que
           transformaria um link já compartilhado num beco sem explicação. */}
       {LEGACY_CATALOG_ROUTES.map(([from, to]) => (

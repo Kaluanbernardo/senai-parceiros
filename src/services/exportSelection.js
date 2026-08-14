@@ -55,7 +55,7 @@ export function snapshotSelection(result = {}, metadata = {}) {
   return {
     version: 2,
     generatedAt: metadata.generatedAt || new Date().toISOString(),
-    metadata: { title: metadata.title || 'Avaliação de stakeholders', category: metadata.category || result?.category || '', objective: metadata.objective || result?.objective || '', context: metadata.context || result?.answers?.context || '', provider: metadata.provider || trace.provider || '', model: metadata.model || trace.model || '', ...metadata },
+    metadata: { title: metadata.title || 'Avaliação de stakeholders', category: metadata.category || result?.category || trace.category || '', subtype: metadata.subtype || result?.subtype || trace.subtype || trace.brief?.subtype || '', objective: metadata.objective || result?.objective || '', context: metadata.context || result?.answers?.context || '', provider: metadata.provider || trace.provider || '', model: metadata.model || trace.model || '', ...metadata },
     answers: result?.answers || trace.answers || {},
     catalog: Array.isArray(result?.candidatePool) ? result.candidatePool : [],
     shortlist,
@@ -66,7 +66,7 @@ export function snapshotSelection(result = {}, metadata = {}) {
 
 function metadataRows(snapshot) {
   const metadata = snapshot.metadata || {};
-  return [['Título', metadata.title], ['Gerado em', snapshot.generatedAt], ['Categoria', metadata.category], ['Objetivo', metadata.objective], ['Contexto', metadata.context], ['Provedor', metadata.provider || 'Não informado'], ['Modelo', metadata.model || 'Não informado']];
+  return [['Título', metadata.title], ['Gerado em', snapshot.generatedAt], ['Categoria', metadata.category], ['Subtipo', metadata.subtype || 'Todos'], ['Objetivo', metadata.objective], ['Contexto', metadata.context], ['Provedor', metadata.provider || 'Não informado'], ['Modelo', metadata.model || 'Não informado']];
 }
 
 function shortlistColumns() {

@@ -23,15 +23,14 @@ export const TOOL_REGISTRY = Object.freeze([
     matchPrefix: '/catalogo',
     label: 'Explorar o catálogo',
     navLabel: 'Catálogo',
-    description: 'Pesquise diretamente por pessoa, instituição, tema ou país.',
+    description: 'Pesquise pessoas físicas e jurídicas por subtipo, tema ou país.',
     actionLabel: 'Pesquisar',
     iconKey: 'catalog',
     themeKey: 'catalog',
     status: 'ready',
     children: Object.freeze([
-      Object.freeze({ route: '/catalogo/especialistas', label: 'Especialistas', iconKey: 'researcher' }),
-      Object.freeze({ route: '/catalogo/instituicoes-de-educacao', label: 'Instituições de Educação', iconKey: 'school' }),
-      Object.freeze({ route: '/catalogo/outras-organizacoes', label: 'Outras organizações', iconKey: 'organization' }),
+      Object.freeze({ route: '/catalogo/pessoas-fisicas', label: 'Pessoas Físicas', iconKey: 'researcher' }),
+      Object.freeze({ route: '/catalogo/pessoas-juridicas', label: 'Pessoas Jurídicas', iconKey: 'organization' }),
     ]),
   }),
   Object.freeze({

@@ -70,7 +70,7 @@ describe('selection criteria', () => {
   });
 
   it('exposes group shares and a readable rubric', () => {
-    const criteria = deriveDimensionWeights({ objective: 'guided', category: 'school' });
+    const criteria = deriveDimensionWeights({ objective: 'guided', category: 'organization' });
     const shares = groupShares(criteria.weights, 'strategic');
 
     expect(Number(Object.values(shares).reduce((total, value) => total + value, 0).toFixed(2))).toBe(1);

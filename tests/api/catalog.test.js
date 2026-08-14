@@ -29,8 +29,9 @@ describe('GET /api/catalog', () => {
     const res = response();
     await handler(request(), res);
     expect(res.statusCode).toBe(200);
-    expect(res.body.records.organization).toEqual([{ id: 'o-import-1', nome: 'Importada' }]);
+    expect(res.body.records.organization).toEqual([expect.objectContaining({ id: 'o-import-1', nome: 'Importada', categoria: 'Pessoa Jurídica', subtipo: 'Outro' })]);
     expect(res.body.records.person).toEqual([]);
+    expect(res.body.records).not.toHaveProperty('school');
     expect(res.body).not.toHaveProperty('pendingBatches');
   });
 
