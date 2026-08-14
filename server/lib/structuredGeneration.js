@@ -198,20 +198,26 @@ function providerHeaders(provider) {
  *
  * `OPENROUTER_REASONING` reativa quando for desejado: low, medium ou high.
  */
-function reasoningOption(disableReasoning = false) {
+function reasoningOption(disableReasoning = false, defaultDisabled = true) {
   if (disableReasoning) return { reasoning: { enabled: false } };
   const configured = String(process.env.OPENROUTER_REASONING || '').trim().toLowerCase();
   if (['low', 'medium', 'high'].includes(configured)) return { reasoning: { effort: configured } };
-  return { reasoning: { enabled: false } };
+  return defaultDisabled ? { reasoning: { enabled: false } } : {};
 }
 
 function providerOptions(provider, model, costQualityTradeoff, disableReasoning, strictOutput) {
   if (provider !== 'openrouter') return {};
+  const isAutoRouter = String(model || '').trim().toLowerCase() === DEFAULT_OPENROUTER_MODEL;
+  // Um modelo fixado já define se raciocínio existe. Enviar implicitamente o
+  // parâmetro `reasoning` para um modelo que não o declara, junto com
+  // `require_parameters`, faz o OpenRouter recusar a chamada antes de gerar.
+  // No Auto Router ele continua explícito para evitar que a rota escolha um
+  // modelo de raciocínio e reintroduza latência sem o chamador pedir.
   const base = {
     ...(strictOutput ? { provider: { require_parameters: true } } : {}),
-    ...reasoningOption(disableReasoning),
+    ...reasoningOption(disableReasoning, isAutoRouter),
   };
-  if (String(model || '').trim().toLowerCase() !== DEFAULT_OPENROUTER_MODEL) return base;
+  if (!isAutoRouter) return base;
   return {
     ...base,
     plugins: [{ id: 'auto-router', cost_quality_tradeoff: safeTradeoff(costQualityTradeoff) }],
