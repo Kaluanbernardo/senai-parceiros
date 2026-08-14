@@ -130,6 +130,7 @@ describe('catalog enrichment batches', () => {
       const processed = await processCatalogEnrichment(batch.batchId, { generate, enforceBudget: false });
 
       expect(generationRequest.model).toBe('openai/gpt-4.1-mini');
+      expect(generationRequest.requireParameters).toBe(false);
       expect(generationRequest.webSearch).toEqual({ engine: 'native', maxResults: 5, maxTotalResults: 8, searchContextSize: 'medium' });
       expect(generationRequest.maxOutputTokens).toBe(2600);
       expect(generationRequest.messages[0].content).toContain('pesquisa web hospedada');

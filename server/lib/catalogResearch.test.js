@@ -73,6 +73,7 @@ describe('catalog research module', () => {
       model: 'x-ai/grok-4.3',
       disableReasoning: true,
       strictOutput: true,
+      requireParameters: false,
       webSearch: expect.objectContaining({ engine: 'native', maxResults: 3, maxTotalResults: 3, searchContextSize: 'low' }),
     }));
     expect(generate.mock.calls[0][0].messages[1].content).toContain('Não produza CSV');
