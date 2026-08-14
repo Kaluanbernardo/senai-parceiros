@@ -6,7 +6,7 @@ import { requireSession } from '../../lib/cookies.js';
 import { methodNotAllowed, readJson, requireSameOrigin } from '../../lib/http.js';
 import { canUseAi, hydrateUsageBudget, recordAiUsageAtomic } from '../../lib/usageBudget.js';
 
-const TIMEOUT_MS = 55_000;
+const TIMEOUT_MS = Math.max(60_000, Math.min(280_000, Number(process.env.CATALOG_RESEARCH_TIMEOUT_MS) || 180_000));
 
 function safeTrace(trace = {}) {
   return {

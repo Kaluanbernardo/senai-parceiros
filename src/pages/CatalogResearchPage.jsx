@@ -20,6 +20,7 @@ import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid';
 import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
+import LinearProgress from '@mui/material/LinearProgress';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
@@ -34,14 +35,23 @@ import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
 import SectionCard from '../design-system/primitives/SectionCard';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
+import {
+  CATALOG_RESEARCH_GEOGRAPHIES,
+  CATALOG_RESEARCH_QUANTITIES,
+  flattenResearchPreviews,
+  groupApprovedResearchDecisions,
+  researchDecisionKey,
+  runCatalogResearchBatches,
+} from '../domain/catalogResearchFlow';
 
 const EMPTY_FORM = Object.freeze({
   category: 'person',
   context: '',
   purpose: '',
-  geography: '',
-  quantity: 1,
-  extraCriteria: '',
+  geography: 'brasil',
+  quantity: 5,
+  prioritizationFactors: '',
+  exclusionFactors: '',
   sourcePreferences: 'auto',
 });
 
@@ -64,8 +74,8 @@ function errorMessage(body) {
   if (body?.error === 'too_many_research_attempts') return 'Muitas pesquisas em sequência. Aguarde alguns minutos antes de tentar novamente.';
   if (body?.error === 'ai_budget_exceeded') return 'O limite diário de uso da IA foi atingido.';
   if (body?.reason === 'ai_not_configured') return 'A pesquisa por IA não está configurada neste ambiente.';
-  if (body?.reason === 'provider_timeout') return 'A pesquisa demorou mais que o limite. Tente novamente com um pedido mais específico.';
-  if (body?.reason === 'output_truncated') return 'A resposta ficou grande demais. Reduza a quantidade de sugestões e tente novamente.';
+  if (body?.reason === 'provider_timeout') return 'Um lote demorou mais que o limite. Os cards já concluídos foram preservados; tente continuar a pesquisa.';
+  if (body?.reason === 'output_truncated') return 'Um lote ficou grande demais. Os cards já concluídos foram preservados; tente continuar a pesquisa.';
   if (body?.error === 'research_context_required') return 'Descreva o que você procura.';
   return 'Não foi possível concluir a pesquisa. Tente novamente.';
 }
@@ -154,7 +164,7 @@ export default function CatalogResearchPage() {
   const navigate = useNavigate();
   const data = useData();
   const [form, setForm] = useState({ ...EMPTY_FORM });
-  const [preview, setPreview] = useState(null);
+  const [previews, setPreviews] = useState([]);
   const [decisions, setDecisions] = useState({});
   const [busy, setBusy] = useState(false);
   const [commitBusy, setCommitBusy] = useState(false);
@@ -163,63 +173,94 @@ export default function CatalogResearchPage() {
 
   const approvedCount = useMemo(() => Object.values(decisions).filter((decision) => ['use_imported', 'merge'].includes(decision)).length, [decisions]);
   const previewSummary = useMemo(() => {
-    const rows = preview?.rows || [];
+    const rows = flattenResearchPreviews(previews);
     const sources = new Set(rows.flatMap((row) => Array.isArray(row.record?.fontes) ? row.record.fontes : []));
     return { cards: rows.length, sources: sources.size };
-  }, [preview]);
+  }, [previews]);
 
-  const change = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
+  const change = (field, value) => {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    setPreviews([]);
+    setDecisions({});
+    setError('');
+  };
 
   async function research(event) {
     event.preventDefault();
     setError('');
     setSuccess('');
     setBusy(true);
+    let workingPreviews = [...previews];
     try {
-      const response = await fetch('/api/admin/catalog-research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(form),
+      const result = await runCatalogResearchBatches({
+        initialPreviews: workingPreviews,
+        requestedQuantity: form.quantity,
+        requestBatch: async (batch) => {
+          const response = await fetch('/api/admin/catalog-research', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ ...form, ...batch }),
+          });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(errorMessage(body));
+          return body;
+        },
+        onBatch: (nextPreviews, body) => {
+          workingPreviews = nextPreviews;
+          setPreviews(nextPreviews);
+          setDecisions((previous) => ({
+            ...previous,
+            ...Object.fromEntries((body.rows || []).map((row) => [
+              researchDecisionKey(body.batchId, row.rowNumber),
+              row.status === 'possible_duplicate' ? 'keep_existing' : 'ignore',
+            ])),
+          }));
+        },
       });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(errorMessage(body));
-      setPreview(body);
-      setDecisions(Object.fromEntries((body.rows || []).map((row) => [
-        String(row.rowNumber),
-        row.status === 'possible_duplicate' ? 'keep_existing' : 'ignore',
-      ])));
+      if (!result.complete) setError(`A pesquisa encontrou ${result.cards} de ${form.quantity} cards com evidência suficiente. Você pode continuar para buscar os restantes.`);
     } catch (requestError) {
-      setPreview(null);
-      setError(requestError.message || 'Não foi possível concluir a pesquisa.');
+      const preserved = flattenResearchPreviews(workingPreviews).length;
+      setError(`${requestError.message || 'Não foi possível concluir a pesquisa.'}${preserved ? ` ${preserved} cards já concluídos foram preservados.` : ''}`);
     } finally {
       setBusy(false);
     }
   }
 
   async function commit() {
-    if (!preview || approvedCount === 0) return;
+    const approvedBatches = groupApprovedResearchDecisions(previews, decisions);
+    if (!approvedBatches.length || approvedCount === 0) return;
     setError('');
     setCommitBusy(true);
+    let applied = 0;
+    let refreshRadar = false;
     try {
-      const response = await fetch('/api/admin/catalog-import-commit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ batchId: preview.batchId, decisions }),
-      });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body.error || 'Falha ao adicionar os registros aprovados.');
-      data.mergeImportedRecords(body.category, body.records || []);
-      if (body.category === 'person' && body.applied?.length) {
-        await fetch('/api/radar/refresh', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined);
+      for (const batch of approvedBatches) {
+        const response = await fetch('/api/admin/catalog-import-commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(batch),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.error || 'Falha ao adicionar os registros aprovados.');
+        data.mergeImportedRecords(body.category, body.records || []);
+        applied += body.applied?.length || 0;
+        refreshRadar ||= body.category === 'person' && Boolean(body.applied?.length);
+        setPreviews((previous) => previous.filter((preview) => preview.batchId !== batch.batchId));
+        setDecisions((previous) => {
+          const remaining = { ...previous };
+          Object.keys(batch.decisions).forEach((rowNumber) => {
+            delete remaining[researchDecisionKey(batch.batchId, rowNumber)];
+          });
+          return remaining;
+        });
       }
-      const applied = body.applied?.length || 0;
-      setSuccess(`${applied} ${applied === 1 ? 'registro foi adicionado' : 'registros foram adicionados'} ao catálogo. O lote pode ser desfeito no histórico administrativo.`);
-      setPreview(null);
+      if (refreshRadar) await fetch('/api/radar/refresh', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined);
+      setSuccess(`${applied} ${applied === 1 ? 'registro foi adicionado' : 'registros foram adicionados'} ao catálogo. Cada lote pode ser desfeito no histórico administrativo.`);
       setDecisions({});
     } catch (commitError) {
-      setError(commitError.message || 'Falha ao adicionar os registros aprovados.');
+      setError(`${commitError.message || 'Falha ao adicionar os registros aprovados.'}${applied ? ` ${applied} registros anteriores já foram adicionados.` : ''}`);
     } finally {
       setCommitBusy(false);
     }
@@ -229,8 +270,8 @@ export default function CatalogResearchPage() {
     <PageContainer width="wide" tool="research">
       <PageHeader
         eyebrow="PESQUISA PARA O CATÁLOGO"
-        title="Encontre novos parceiros com pesquisa assistida"
-        description="A plataforma pesquisa fontes públicas e prepara sugestões. Nada entra no catálogo sem sua aprovação card por card."
+        title="Encontre novos parceiros com pesquisa profunda"
+        description="A plataforma cruza fontes públicas, prepara cards completos e preserva cada lote concluído. Nada entra no catálogo sem sua aprovação card por card."
         accent="research"
         dense
       />
@@ -284,13 +325,18 @@ export default function CatalogResearchPage() {
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, sm: 7, md: 4 }}>
-                <TextField fullWidth label="País ou idioma (opcional)" value={form.geography} onChange={(event) => change('geography', event.target.value)} disabled={busy} />
+                <FormControl fullWidth>
+                  <InputLabel>Escopo geográfico</InputLabel>
+                  <Select label="Escopo geográfico" value={form.geography} onChange={(event) => change('geography', event.target.value)} disabled={busy}>
+                    {CATALOG_RESEARCH_GEOGRAPHIES.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid size={{ xs: 12, sm: 5, md: 2 }}>
                 <FormControl fullWidth>
                   <InputLabel>Resultados</InputLabel>
                   <Select label="Resultados" value={form.quantity} onChange={(event) => change('quantity', Number(event.target.value))} disabled={busy}>
-                    {[1, 2, 3].map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                    {CATALOG_RESEARCH_QUANTITIES.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
@@ -306,16 +352,19 @@ export default function CatalogResearchPage() {
                     <TextField fullWidth label="Como pretende usar o resultado?" value={form.purpose} onChange={(event) => change('purpose', event.target.value)} disabled={busy} />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField fullWidth label="Critérios de inclusão" value={form.extraCriteria} onChange={(event) => change('extraCriteria', event.target.value)} disabled={busy} />
+                    <TextField fullWidth multiline minRows={2} label="Fatores de priorização" helperText="O que faz um resultado aparecer antes dos demais." value={form.prioritizationFactors} onChange={(event) => change('prioritizationFactors', event.target.value)} disabled={busy} />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField fullWidth multiline minRows={2} label="Fatores de exclusão" helperText="Condições que eliminam um resultado da pesquisa." value={form.exclusionFactors} onChange={(event) => change('exclusionFactors', event.target.value)} disabled={busy} />
                   </Grid>
                 </Grid>
               </AccordionDetails>
             </Accordion>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2}>
-              <Typography variant="caption" sx={{ color: T.ink.subtle }}>A busca consulta fontes públicas, gera até três cards e pode levar cerca de 55 segundos.</Typography>
-              <Button type="submit" variant="contained" size="large" startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />} disabled={busy || !form.context.trim()} sx={{ minWidth: 220, bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark } }}>
-                {busy ? 'Buscando e verificando…' : 'Buscar na web'}
+              <Typography variant="caption" sx={{ color: T.ink.subtle }}>A pesquisa aprofunda e verifica lotes de até cinco cards. Pedidos maiores podem levar vários minutos; cada lote concluído é preservado.</Typography>
+              <Button type="submit" variant="contained" size="large" startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />} disabled={busy || !form.context.trim() || previewSummary.cards >= form.quantity} sx={{ minWidth: 220, bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark } }}>
+                {busy ? `Pesquisando ${Math.min(previewSummary.cards + 5, form.quantity)} de ${form.quantity}…` : previewSummary.cards ? 'Continuar pesquisa' : 'Iniciar pesquisa profunda'}
               </Button>
             </Stack>
           </Stack>
@@ -323,7 +372,7 @@ export default function CatalogResearchPage() {
       </SectionCard>
 
       <Box sx={{ mt: 3 }}>
-          {!preview && !busy && !success && (
+          {!previews.length && !busy && !success && (
             <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}>
               <Box sx={{ p: 4, maxWidth: 560, textAlign: 'center' }}>
                 <SearchIcon sx={{ fontSize: 46, color: T.tools.research.main }} />
@@ -332,24 +381,25 @@ export default function CatalogResearchPage() {
               </Box>
             </SectionCard>
           )}
-          {busy && <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}><Stack alignItems="center" gap={2} sx={{ p: 4 }}><CircularProgress /><Typography>Pesquisando e conferindo fontes públicas…</Typography></Stack></SectionCard>}
-          {preview && (
+          {busy && !previews.length && <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}><Stack alignItems="center" gap={2} sx={{ p: 4 }}><CircularProgress /><Typography>Pesquisando e conferindo fontes públicas…</Typography><Typography variant="body2" sx={{ color: T.ink.muted }}>O primeiro lote pode levar alguns minutos.</Typography></Stack></SectionCard>}
+          {previews.length > 0 && (
             <>
               <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2} sx={{ mb: 2 }}>
                 <Box>
                   <Typography variant="h5">Revise as sugestões</Typography>
                   <Typography variant="body2" sx={{ mt: .35, color: T.ink.muted }}>
-                    {previewSummary.cards} {previewSummary.cards === 1 ? 'card encontrado' : 'cards encontrados'} · {previewSummary.sources} {previewSummary.sources === 1 ? 'fonte consultada' : 'fontes consultadas'}
+                    {previewSummary.cards} de {form.quantity} cards · {previewSummary.sources} {previewSummary.sources === 1 ? 'fonte consultada' : 'fontes consultadas'}
                   </Typography>
                 </Box>
-                <Button variant="contained" color="success" startIcon={commitBusy ? <CircularProgress size={18} color="inherit" /> : <CheckCircleOutlineIcon />} disabled={commitBusy || approvedCount === 0} onClick={commit}>
+                <Button variant="contained" color="success" startIcon={commitBusy ? <CircularProgress size={18} color="inherit" /> : <CheckCircleOutlineIcon />} disabled={busy || commitBusy || approvedCount === 0} onClick={commit}>
                   Adicionar aprovados ({approvedCount})
                 </Button>
               </Stack>
+              {busy && <Box sx={{ mb: 2 }}><LinearProgress variant="determinate" value={Math.min(100, (previewSummary.cards / form.quantity) * 100)} /><Typography variant="caption" sx={{ mt: .5, display: 'block', color: T.ink.muted }}>Os cards concluídos já podem ser revisados enquanto o próximo lote é pesquisado.</Typography></Box>}
               <Grid container spacing={2}>
-                {(preview.rows || []).map((row) => (
-                  <Grid size={{ xs: 12 }} key={row.hash || row.rowNumber}>
-                    <ResearchCandidateCard row={row} decision={decisions[String(row.rowNumber)] || 'ignore'} onDecision={(decision) => setDecisions((previous) => ({ ...previous, [String(row.rowNumber)]: decision }))} />
+                {flattenResearchPreviews(previews).map((row) => (
+                  <Grid size={{ xs: 12 }} key={`${row.batchId}:${row.hash || row.rowNumber}`}>
+                    <ResearchCandidateCard row={row} decision={decisions[researchDecisionKey(row.batchId, row.rowNumber)] || 'ignore'} onDecision={(decision) => setDecisions((previous) => ({ ...previous, [researchDecisionKey(row.batchId, row.rowNumber)]: decision }))} />
                   </Grid>
                 ))}
               </Grid>

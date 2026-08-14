@@ -11,6 +11,9 @@ import { usageStore } from './usageStore.js';
   delete process.env.RADAR_EDITORIAL_DAILY_REQUEST_LIMIT;
   delete process.env.RADAR_EDITORIAL_DAILY_TOKEN_LIMIT;
   delete process.env.RADAR_EDITORIAL_DAILY_COST_LIMIT_USD;
+  delete process.env.CATALOG_RESEARCH_DAILY_REQUEST_LIMIT;
+  delete process.env.CATALOG_RESEARCH_DAILY_TOKEN_LIMIT;
+  delete process.env.CATALOG_RESEARCH_DAILY_COST_LIMIT_USD;
 });
 
 describe('AI usage budget', () => {
@@ -28,6 +31,7 @@ describe('AI usage budget', () => {
   it('reserva um limite próprio e controlado para a fila editorial do Radar', () => {
     expect(getUsageBudget('selection').limits).toMatchObject({ requests: 100, tokens: 100000, costUsd: 25 });
     expect(getUsageBudget('radar-editorial').limits).toMatchObject({ requests: 200, tokens: 500000, costUsd: 5 });
+    expect(getUsageBudget('catalog_research').limits).toMatchObject({ requests: 100, tokens: 1000000, costUsd: 25 });
   });
 
   it('supports a durable file adapter without changing the budget contract', () => {

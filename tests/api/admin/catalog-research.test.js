@@ -52,6 +52,7 @@ function researchedBatch() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.mocked(researchCatalogCandidates).mockReset();
   catalogStore.configure({ driver: 'memory' });
   rateLimitStore.configure({ driver: 'memory' });
@@ -110,5 +111,26 @@ describe('POST /api/admin/catalog-research', () => {
     expect(warning).toHaveBeenCalledWith('catalog_research_usage_record_failed', { code: 'store_conflict' });
     accounting.mockRestore();
     warning.mockRestore();
+  });
+
+  it('allows a deep-research batch to run beyond the old 55-second limit', async () => {
+    vi.useFakeTimers();
+    vi.mocked(researchCatalogCandidates).mockImplementation((_input, { signal }) => new Promise((resolve, reject) => {
+      const completion = setTimeout(() => resolve(researchedBatch()), 60_000);
+      signal.addEventListener('abort', () => {
+        clearTimeout(completion);
+        const error = new Error('This operation was aborted');
+        error.name = 'AbortError';
+        reject(error);
+      }, { once: true });
+    }));
+    const res = response();
+
+    const pending = handler(request(), res);
+    await vi.advanceTimersByTimeAsync(60_000);
+    await pending;
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ category: 'organization', counts: { total: 1 } });
   });
 });
