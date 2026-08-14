@@ -49,6 +49,7 @@ afterEach(() => {
   delete process.env.RADAR_EDITORIAL_PROVIDER;
   delete process.env.RADAR_EDITORIAL_MAX_ITEMS;
   delete process.env.AI_DAILY_REQUEST_LIMIT;
+  delete process.env.OPENROUTER_REASONING;
 });
 
 describe('reescrita editorial do Radar', () => {
@@ -158,6 +159,35 @@ describe('reescrita editorial do Radar', () => {
 
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(result.every((item) => item.editorialStatus === 'ai')).toBe(true);
+  });
+
+  it('reserva saída suficiente e desliga raciocínio para o lote editorial', async () => {
+    // Em produção, seis itens consumiram o teto de 1.200 tokens e o provedor
+    // devolveu finish_reason=length antes de formar o JSON. O raciocínio global
+    // também não deve disputar esse teto numa tarefa de tradução estruturada.
+    process.env.OPENROUTER_REASONING = 'low';
+    const requests = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
+      const payload = JSON.parse(request.body);
+      requests.push(payload);
+      if (payload.max_tokens < 4000 || payload.reasoning?.enabled !== false) {
+        return { ok: true, json: async () => ({ choices: [{ finish_reason: 'length', message: { content: '{"items":[' } }] }) };
+      }
+      const requested = JSON.parse(payload.messages.at(-1).content);
+      return {
+        ok: true,
+        json: async () => ({
+          model: 'test/model',
+          usage: { total_tokens: 900 },
+          choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+        }),
+      };
+    }));
+
+    const result = await editorializeRadarItems(Array.from({ length: 6 }, (_, index) => gazetteItem(`saida-${index + 1}`)));
+
+    expect(result.stats).toMatchObject({ rewritten: 6 });
+    expect(requests[0]).toMatchObject({ max_tokens: 4000, reasoning: { enabled: false } });
   });
 
   it('reaproveita a reescrita anterior quando o texto de origem não mudou', async () => {
