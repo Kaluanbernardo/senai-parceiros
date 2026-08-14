@@ -7,6 +7,7 @@ function dayKey() {
 
 const DEFAULT_LIMITS = Object.freeze({ tokens: 100000, costUsd: 25, requests: 100 });
 const RADAR_EDITORIAL_DEFAULT_LIMITS = Object.freeze({ tokens: 500000, costUsd: 5, requests: 200 });
+const CATALOG_RESEARCH_DEFAULT_LIMITS = Object.freeze({ tokens: 1000000, costUsd: 25, requests: 100 });
 
 function numericLimit(specificName, genericName, fallback) {
   const configured = process.env[specificName] ?? process.env[genericName] ?? fallback;
@@ -16,14 +17,16 @@ function numericLimit(specificName, genericName, fallback) {
 
 function limits(kind = 'selection') {
   const editorial = kind === 'radar-editorial';
-  const defaults = editorial ? RADAR_EDITORIAL_DEFAULT_LIMITS : DEFAULT_LIMITS;
+  const catalogResearch = kind === 'catalog_research';
+  const defaults = editorial ? RADAR_EDITORIAL_DEFAULT_LIMITS : catalogResearch ? CATALOG_RESEARCH_DEFAULT_LIMITS : DEFAULT_LIMITS;
+  const prefix = editorial ? 'RADAR_EDITORIAL' : catalogResearch ? 'CATALOG_RESEARCH' : 'AI';
   return {
     // Reescrever centenas de itens em lotes consome muito mais chamadas que
     // uma entrevista ou uma seleção. Um limite próprio impede essa fila de
     // parar as outras ferramentas e mantém um teto financeiro menor, de US$ 5.
-    tokens: numericLimit('RADAR_EDITORIAL_DAILY_TOKEN_LIMIT', 'AI_DAILY_TOKEN_LIMIT', defaults.tokens),
-    costUsd: numericLimit('RADAR_EDITORIAL_DAILY_COST_LIMIT_USD', 'AI_DAILY_COST_LIMIT_USD', defaults.costUsd),
-    requests: numericLimit('RADAR_EDITORIAL_DAILY_REQUEST_LIMIT', 'AI_DAILY_REQUEST_LIMIT', defaults.requests),
+    tokens: numericLimit(`${prefix}_DAILY_TOKEN_LIMIT`, 'AI_DAILY_TOKEN_LIMIT', defaults.tokens),
+    costUsd: numericLimit(`${prefix}_DAILY_COST_LIMIT_USD`, 'AI_DAILY_COST_LIMIT_USD', defaults.costUsd),
+    requests: numericLimit(`${prefix}_DAILY_REQUEST_LIMIT`, 'AI_DAILY_REQUEST_LIMIT', defaults.requests),
     costPer1kUsd: Math.max(0, Number(process.env.AI_ESTIMATED_COST_PER_1K_USD || 0.01)),
   };
 }

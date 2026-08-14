@@ -9,34 +9,11 @@ import {
   validateCatalogRow,
 } from '../../src/domain/catalogImportSchema.js';
 import { generateStructured } from './structuredGeneration.js';
+import { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES } from '../../src/domain/catalogResearchFlow.js';
 
-export const CATALOG_RESEARCH_MAX_CANDIDATES = 3;
+export { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES };
 
-const COMMON_FIELDS = [
-  'nome', 'pais', 'cidade_estado', 'resumo', 'descricao', 'areas_temas',
-  'aderencia_contexto', 'relacao_publica', 'evidencias_publicas',
-  'riscos_sinais', 'website_oficial', 'contato_publico', 'fontes',
-  'confianca', 'dados_nao_localizados',
-];
-
-const CATEGORY_FIELDS = Object.freeze({
-  person: [
-    'perfis_atuacao', 'instituicao_atual', 'cargo', 'areas_especialidade',
-    'perfil_principal_url', 'linkedin_url', 'producoes_relevantes',
-    'credenciais_relevantes', 'linhas_pesquisa', 'publicacoes_relevantes',
-    'citacoes', 'h_index', 'orcid', 'google_scholar_url', 'openalex_id',
-  ],
-  school: [
-    'tipo_instituicao', 'nivel_rede', 'areas_formacao', 'niveis_oferta',
-    'relacao_industria', 'escala', 'acreditacoes', 'dominio_oficial',
-    'identificador_publico',
-  ],
-  organization: [
-    'natureza_juridica', 'setor', 'atuacao', 'programas_relevantes',
-    'parcerias_industriais', 'alcance_geografico', 'dominio_oficial',
-    'identificador_publico',
-  ],
-});
+const SYSTEM_MANAGED_FIELDS = new Set(['schema_version', 'tipo_registro', 'data_consulta']);
 
 const CATEGORY_LABELS = Object.freeze({
   person: 'pessoas especialistas',
@@ -52,6 +29,11 @@ const SOURCE_PREFERENCE_LABELS = Object.freeze({
   professional: 'perfis profissionais e páginas institucionais',
 });
 
+const GEOGRAPHY_LABELS = Object.freeze({
+  brasil: 'Brasil; inclua somente pessoas ou instituições com atuação verificável no país',
+  internacional: 'Internacional; procure referências fora do Brasil ou com atuação transnacional comprovada',
+});
+
 function limitedText(value, field, maximum, { required = false } = {}) {
   const text = String(value || '').trim();
   if (required && !text) throw new Error(`${field}_required`);
@@ -61,18 +43,33 @@ function limitedText(value, field, maximum, { required = false } = {}) {
 
 export function normalizeCatalogResearchRequest(input = {}) {
   const category = normalizeCatalogCategory(String(input.category || '').trim().toLowerCase());
-  if (!CATEGORY_FIELDS[category]) throw new Error('invalid_research_category');
-  const quantity = Number(input.quantity || CATALOG_RESEARCH_MAX_CANDIDATES);
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > CATALOG_RESEARCH_MAX_CANDIDATES) {
+  if (!CATEGORY_LABELS[category]) throw new Error('invalid_research_category');
+  const quantity = Number(input.quantity || CATALOG_RESEARCH_QUANTITIES[0]);
+  if (!CATALOG_RESEARCH_QUANTITIES.includes(quantity)) {
     throw new Error('invalid_research_quantity');
   }
+  const batchSize = Number(input.batchSize || Math.min(CATALOG_RESEARCH_BATCH_SIZE, quantity));
+  if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > CATALOG_RESEARCH_BATCH_SIZE || batchSize > quantity) {
+    throw new Error('invalid_research_batch_size');
+  }
+  const batchIndex = Number(input.batchIndex || 0);
+  if (!Number.isInteger(batchIndex) || batchIndex < 0 || batchIndex > 99) throw new Error('invalid_research_batch_index');
+  const geography = limitedText(input.geography || 'brasil', 'research_geography', 30).toLowerCase();
+  if (!GEOGRAPHY_LABELS[geography]) throw new Error('invalid_research_geography');
+  const excludeCandidates = Array.isArray(input.excludeCandidates)
+    ? [...new Set(input.excludeCandidates.map((value) => limitedText(value, 'research_excluded_candidate', 240)).filter(Boolean))].slice(0, 100)
+    : [];
   return {
     category,
     quantity,
+    batchSize,
+    batchIndex,
     context: limitedText(input.context, 'research_context', 1600, { required: true }),
     purpose: limitedText(input.purpose, 'research_purpose', 800),
-    geography: limitedText(input.geography, 'research_geography', 300),
-    extraCriteria: limitedText(input.extraCriteria, 'research_criteria', 1000),
+    geography,
+    prioritizationFactors: limitedText(input.prioritizationFactors, 'research_prioritization_factors', 1200),
+    exclusionFactors: limitedText(input.exclusionFactors, 'research_exclusion_factors', 1200),
+    excludeCandidates,
     sourcePreferences: (() => {
       const value = limitedText(input.sourcePreferences || 'auto', 'research_sources', 50).toLowerCase();
       if (!SOURCE_PREFERENCE_LABELS[value]) throw new Error('invalid_research_source_preference');
@@ -92,8 +89,7 @@ function propertySchema(column) {
 }
 
 export function catalogResearchOutputSchema(category, quantity) {
-  const wanted = new Set([...COMMON_FIELDS, ...CATEGORY_FIELDS[category]]);
-  const columns = getCatalogColumns(category).filter((column) => wanted.has(column.name));
+  const columns = getCatalogColumns(category).filter((column) => !SYSTEM_MANAGED_FIELDS.has(column.name));
   const properties = Object.fromEntries(columns.map((column) => [column.name, propertySchema(column)]));
   return {
     type: 'object',
@@ -125,17 +121,21 @@ function promptFor(request) {
     : ['Priorize o site oficial e fontes públicas independentes que confirmem atuação, escala, programas e relação com indústria ou educação profissional.'];
   return [
     `Pesquise somente ${CATEGORY_LABELS[request.category]}.`,
-    `Entregue no máximo ${request.quantity} sugestões.`,
+    `Este é o lote ${request.batchIndex + 1}. Entregue até ${request.batchSize} sugestões novas; a pesquisa completa pediu ${request.quantity}.`,
     `Contexto: ${request.context}`,
     `Finalidade: ${request.purpose || 'não informada'}`,
-    `Geografia ou idioma: ${request.geography || 'sem preferência'}`,
-    `Critérios adicionais: ${request.extraCriteria || 'nenhum'}`,
+    `Escopo geográfico: ${GEOGRAPHY_LABELS[request.geography]}.`,
+    `Fatores de priorização: ${request.prioritizationFactors || 'nenhum além da aderência e da qualidade das evidências'}`,
+    `Fatores de exclusão: ${request.exclusionFactors || 'nenhum além das regras obrigatórias abaixo'}`,
+    `Não repita candidatos de lotes anteriores: ${request.excludeCandidates.length ? request.excludeCandidates.join(' | ') : 'nenhum candidato anterior'}.`,
     `Fontes prioritárias: ${SOURCE_PREFERENCE_LABELS[request.sourcePreferences]}. Use a preferência para ordenar a busca, sem dispensar fontes complementares necessárias à verificação.`,
     '',
-    'Regras obrigatórias:',
-    '- Pesquise a web e use somente informações públicas e verificáveis.',
+    'Método de pesquisa profunda obrigatório:',
+    '- Planeje consultas diferentes, pesquise a web repetidamente e compare fontes antes de selecionar cada candidato.',
+    '- Aplique os fatores de exclusão como eliminatórios e use os fatores de priorização para ordenar os candidatos restantes.',
+    '- Use somente informações públicas e verificáveis; confirme identidade, atuação atual e aderência antes de preencher a ficha.',
     '- Não invente entidades, vínculos, cargos, números, contatos, publicações ou URLs.',
-    '- Cada sugestão precisa de descrição factual detalhada, pelo menos três temas específicos e três URLs públicas distintas em fontes.',
+    '- Cada sugestão precisa do schema completo, descrição factual detalhada, pelo menos três temas específicos e três URLs públicas distintas em fontes.',
     '- fontes deve conter apenas URLs http(s) exatas. evidencias_publicas deve ligar fatos importantes às respectivas URLs.',
     '- Separe fatos de inferências; registre conflitos em riscos_sinais e ausências em dados_nao_localizados.',
     '- Para qualquer campo não localizado, use string vazia ou lista vazia, conforme o schema.',
@@ -197,28 +197,27 @@ function candidateToEntry(candidate, category, rowNumber, consultedAt) {
 export async function researchCatalogCandidates(input, { generate = generateStructured, now = () => new Date(), signal } = {}) {
   const request = normalizeCatalogResearchRequest(input);
   const generated = await generate({
-    task: `catalog_research_${request.category}`,
-    model: 'x-ai/grok-4.3',
-    disableReasoning: true,
+    task: `catalog_research_${request.category}_batch_${request.batchIndex + 1}`,
+    model: 'openai/gpt-5.6-luna',
     strictOutput: true,
     requireParameters: false,
-    schema: catalogResearchOutputSchema(request.category, request.quantity),
+    schema: catalogResearchOutputSchema(request.category, request.batchSize),
     messages: [
       { role: 'system', content: 'Você realiza pesquisa pública, rastreável e conservadora para o catálogo de stakeholders do SENAI-SP.' },
       { role: 'user', content: promptFor(request) },
     ],
-    maxOutputTokens: 3200,
+    maxOutputTokens: 16000,
     temperature: 0.1,
     webSearch: {
       engine: 'native',
-      maxResults: 3,
-      maxTotalResults: 3,
-      searchContextSize: 'low',
+      maxResults: 10,
+      maxTotalResults: 20,
+      searchContextSize: 'high',
     },
     signal,
   });
   const consultedAt = now().toISOString().slice(0, 10);
-  const candidates = Array.isArray(generated.data?.candidates) ? generated.data.candidates.slice(0, request.quantity) : [];
+  const candidates = Array.isArray(generated.data?.candidates) ? generated.data.candidates.slice(0, request.batchSize) : [];
   if (!candidates.length) throw new Error('research_empty_output');
   const rows = candidates.map((candidate, index) => candidateToEntry(candidate, request.category, index + 1, consultedAt));
   return {
@@ -234,8 +233,10 @@ export async function researchCatalogCandidates(input, { generate = generateStru
         provider: generated.trace.provider,
         model: generated.trace.model,
         webSearchRequests: generated.trace.webSearchRequests || 0,
+        batchIndex: request.batchIndex,
+        requestedQuantity: request.quantity,
       },
-      filename: `Pesquisa direta — ${CATEGORY_LABELS[request.category]} — ${consultedAt}`,
+      filename: `Pesquisa profunda — ${CATEGORY_LABELS[request.category]} — lote ${request.batchIndex + 1} — ${consultedAt}`,
       rowCount: rows.length,
     },
     trace: generated.trace,

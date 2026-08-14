@@ -23,7 +23,7 @@ const DEFAULT_TEMPERATURE = 0.15;
  * no meio e chegava aqui como JSON invalido. Cortar por engano custa a chamada
  * inteira, entao o teto e alto e quem chama pede o que precisa.
  */
-const MAX_OUTPUT_TOKENS = 4000;
+const MAX_OUTPUT_TOKENS = 16000;
 
 /**
  * Nem toda chamada tem o mesmo valor por acerto. Escrever a pergunta da

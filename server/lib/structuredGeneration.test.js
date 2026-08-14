@@ -286,7 +286,7 @@ describe('structured generation boundary', () => {
     await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 3000 });
     await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 99999 });
 
-    expect(bodies.map((body) => body.max_tokens)).toEqual([3000, 4000]);
+    expect(bodies.map((body) => body.max_tokens)).toEqual([3000, 16000]);
   });
 
   it('desliga o raciocínio interno, que o schema já exige de forma explícita', async () => {

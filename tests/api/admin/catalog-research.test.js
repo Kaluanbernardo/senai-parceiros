@@ -4,6 +4,7 @@ import { researchCatalogCandidates } from '../../../server/lib/catalogResearch.j
 import { catalogStore } from '../../../server/lib/catalogStore.js';
 import { rateLimitStore } from '../../../server/lib/rateLimitStore.js';
 import { usageStore } from '../../../server/lib/usageStore.js';
+import * as usageBudget from '../../../server/lib/usageBudget.js';
 import { createSessionToken } from '../../../server/lib/cookies.js';
 
 vi.mock('../../../server/lib/catalogResearch.js', () => ({ researchCatalogCandidates: vi.fn() }));
@@ -51,6 +52,7 @@ function researchedBatch() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.mocked(researchCatalogCandidates).mockReset();
   catalogStore.configure({ driver: 'memory' });
   rateLimitStore.configure({ driver: 'memory' });
@@ -89,5 +91,46 @@ describe('POST /api/admin/catalog-research', () => {
     expect(res.statusCode).toBe(503);
     expect(res.body).toEqual({ error: 'ai_unavailable', reason: 'ai_not_configured' });
     expect(catalogStore.getRecords('organization')).toEqual([]);
+  });
+
+  it('keeps a completed research result when usage accounting hits a store conflict', async () => {
+    vi.mocked(researchCatalogCandidates).mockResolvedValue(researchedBatch());
+    const accounting = vi.spyOn(usageBudget, 'recordAiUsageAtomic').mockRejectedValueOnce(new Error('store_conflict'));
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const res = response();
+
+    await handler(request(), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      category: 'organization',
+      counts: { total: 1, new: 1 },
+      usageRecorded: false,
+    });
+    expect(catalogStore.getPending(res.body.batchId)).toBeTruthy();
+    expect(warning).toHaveBeenCalledWith('catalog_research_usage_record_failed', { code: 'store_conflict' });
+    accounting.mockRestore();
+    warning.mockRestore();
+  });
+
+  it('allows a deep-research batch to run beyond the old 55-second limit', async () => {
+    vi.useFakeTimers();
+    vi.mocked(researchCatalogCandidates).mockImplementation((_input, { signal }) => new Promise((resolve, reject) => {
+      const completion = setTimeout(() => resolve(researchedBatch()), 60_000);
+      signal.addEventListener('abort', () => {
+        clearTimeout(completion);
+        const error = new Error('This operation was aborted');
+        error.name = 'AbortError';
+        reject(error);
+      }, { once: true });
+    }));
+    const res = response();
+
+    const pending = handler(request(), res);
+    await vi.advanceTimersByTimeAsync(60_000);
+    await pending;
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ category: 'organization', counts: { total: 1 } });
   });
 });

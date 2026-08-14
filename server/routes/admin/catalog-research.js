@@ -4,9 +4,9 @@ import { flushCatalogStore, hydrateCatalogStore, previewCatalogImport } from '..
 import { researchCatalogCandidates } from '../../lib/catalogResearch.js';
 import { requireSession } from '../../lib/cookies.js';
 import { methodNotAllowed, readJson, requireSameOrigin } from '../../lib/http.js';
-import { canUseAi, flushUsageBudget, hydrateUsageBudget, recordAiUsageAtomic } from '../../lib/usageBudget.js';
+import { canUseAi, hydrateUsageBudget, recordAiUsageAtomic } from '../../lib/usageBudget.js';
 
-const TIMEOUT_MS = 55_000;
+const TIMEOUT_MS = Math.max(60_000, Math.min(280_000, Number(process.env.CATALOG_RESEARCH_TIMEOUT_MS) || 180_000));
 
 function safeTrace(trace = {}) {
   return {
@@ -38,15 +38,24 @@ export default async function handler(req, res) {
 
     const payload = await readJson(req, 32 * 1024);
     const researched = await researchCatalogCandidates(payload, { signal: controller.signal });
-    await recordAiUsageAtomic('catalog_research', researched.trace.usage || null);
+    let usageRecorded = true;
+    try {
+      await recordAiUsageAtomic('catalog_research', researched.trace.usage || null);
+    } catch (error) {
+      usageRecorded = false;
+      console.warn('catalog_research_usage_record_failed', {
+        code: String(error?.message || 'store_update_failed').slice(0, 100),
+      });
+    }
     const preview = previewCatalogImport(researched.parsed, getCatalog(researched.category));
-    await Promise.all([flushCatalogStore(), flushUsageBudget()]);
+    await flushCatalogStore();
 
     return res.status(200).json({
       batchId: preview.batchId,
       category: preview.category,
       counts: preview.counts,
       trace: safeTrace(researched.trace),
+      usageRecorded,
       rows: preview.rows.map(({ rowNumber, status, match, errors, record, hash }) => ({ rowNumber, status, match, errors, record, hash })),
     });
   } catch (error) {
