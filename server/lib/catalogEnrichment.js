@@ -144,6 +144,7 @@ function counts(batch) {
 
 export function catalogEnrichmentBatchSummary(batch) {
   const progress = counts(batch);
+  const nextTarget = (batch.targets || []).find((target) => target.status === 'pending');
   return {
     batchId: batch.batchId,
     kind: batch.kind,
@@ -151,6 +152,13 @@ export function catalogEnrichmentBatchSummary(batch) {
     counts: progress,
     readyToCommit: progress.total > 0 && progress.passed === progress.total,
     completeWithoutChanges: progress.total === 0,
+    next: nextTarget ? {
+      key: nextTarget.key,
+      name: nextTarget.name,
+      category: nextTarget.category,
+      attempt: Math.min(MAX_ATTEMPTS, Number(nextTarget.attempts || 0) + 1),
+      maxAttempts: MAX_ATTEMPTS,
+    } : null,
     failures: (batch.targets || []).filter((target) => target.status === 'failed').slice(0, 30).map((target) => ({
       key: target.key,
       name: target.name,
@@ -489,6 +497,19 @@ function errorCode(error) {
   return String(error?.message || 'catalog_enrichment_failed').replace(/[^a-z0-9_-]+/gi, '_').slice(0, 80);
 }
 
+function recordSelectedTargetError(batch, selected, error) {
+  for (const selectedTarget of selected) {
+    const target = batch.targets.find((entry) => entry.key === selectedTarget.key);
+    if (!target) continue;
+    target.attempts += 1;
+    target.status = target.attempts < MAX_ATTEMPTS ? 'pending' : 'failed';
+    target.error = errorCode(error);
+    target.result = null;
+  }
+  catalogStore.setPending(batch);
+  return catalogEnrichmentBatchSummary(batch);
+}
+
 function evidenceWithHostedCitations(evidence, generated, citations) {
   const generatedUrls = new Set([
     ...(Array.isArray(generated?.fontes) ? generated.fontes : []),
@@ -541,7 +562,10 @@ export async function processCatalogEnrichment(batchId, {
       signal,
     });
   } catch (error) {
-    if (signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') throw new Error('provider_timeout');
+    if (signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+      if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
+      return recordSelectedTargetError(batch, targets, new Error('provider_timeout'));
+    }
     throw error;
   }
   if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null);
