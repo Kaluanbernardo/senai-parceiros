@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const CATEGORIES = ['researcher', 'school', 'organization'];
+const CATEGORIES = ['person', 'school', 'organization'];
+const normalizeCategory = (category) => category === 'researcher' ? 'person' : category;
 
 function emptyState() {
   return {
@@ -22,8 +23,13 @@ function normalizeState(value) {
     if (Array.isArray(value?.records?.[category])) state.records[category] = value.records[category];
     if (Array.isArray(value?.rowHashes?.[category])) state.rowHashes[category] = value.rowHashes[category];
   }
+  if (Array.isArray(value?.records?.researcher)) state.records.person.push(...value.records.researcher);
+  if (Array.isArray(value?.rowHashes?.researcher)) state.rowHashes.person.push(...value.rowHashes.researcher);
   if (value?.pendingBatches && typeof value.pendingBatches === 'object') state.pendingBatches = value.pendingBatches;
   if (value?.committedBatches && typeof value.committedBatches === 'object') state.committedBatches = value.committedBatches;
+  for (const batches of [state.pendingBatches, state.committedBatches]) {
+    for (const batch of Object.values(batches)) if (batch?.category === 'researcher') batch.category = 'person';
+  }
   return state;
 }
 
@@ -76,21 +82,25 @@ class CatalogStore {
   }
 
   getRecords(category) {
+    category = normalizeCategory(category);
     this.load();
     return clone(this.state.records[category] || []);
   }
 
   hasRowHash(category, hash) {
+    category = normalizeCategory(category);
     this.load();
     return (this.state.rowHashes[category] || []).includes(hash);
   }
 
   snapshot(category) {
+    category = normalizeCategory(category);
     this.load();
     return clone({ records: this.state.records[category] || [], rowHashes: this.state.rowHashes[category] || [] });
   }
 
   restore(category, snapshot) {
+    category = normalizeCategory(category);
     this.load();
     this.state.records[category] = clone(snapshot?.records || []);
     this.state.rowHashes[category] = clone(snapshot?.rowHashes || []);
@@ -98,6 +108,7 @@ class CatalogStore {
   }
 
   replaceCategory(category, records, rowHashes) {
+    category = normalizeCategory(category);
     this.load();
     this.state.records[category] = clone(records || []);
     this.state.rowHashes[category] = [...new Set(rowHashes || [])];
@@ -105,6 +116,7 @@ class CatalogStore {
   }
 
   markRowHash(category, hash) {
+    category = normalizeCategory(category);
     this.load();
     if (hash && !this.state.rowHashes[category].includes(hash)) this.state.rowHashes[category].push(hash);
   }
@@ -124,6 +136,11 @@ class CatalogStore {
     this.load();
     delete this.state.pendingBatches[batchId];
     this.persist();
+  }
+
+  listPending() {
+    this.load();
+    return Object.values(this.state.pendingBatches).map(clone);
   }
 
   setCommitted(batch) {
@@ -147,6 +164,7 @@ class CatalogStore {
     this.load();
     return Object.values(this.state.committedBatches).map((batch) => ({
       batchId: batch.batchId,
+      kind: batch.kind || 'import',
       category: batch.category,
       filename: batch.filename,
       createdAt: batch.createdAt,

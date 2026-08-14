@@ -93,9 +93,25 @@ describe('catalog XLSX import', () => {
       contentBase64: Buffer.from(csv).toString('base64'),
     });
 
-    expect(parsed.category).toBe('researcher');
+    expect(parsed.category).toBe('person');
     expect(parsed.rows[0].record).toMatchObject({ nome: 'Nancy Bocken', pais: 'Países Baixos' });
     expect(parsed.errors).toEqual([]);
+  });
+
+  it('rejects a CSV that mixes catalog categories before preview', async () => {
+    const headers = getCatalogHeaders('researcher');
+    const row = (category, name) => headers.map((header) => ({
+      schema_version: CATALOG_SCHEMA_VERSION,
+      tipo_registro: category,
+      nome: name,
+      pais: 'Brasil',
+    }[header] || '')).join(',');
+    const csv = [headers.join(','), row('researcher', 'Pesquisador CSV'), row('organization', 'Organização CSV')].join('\n');
+
+    await expect(parseCatalogWorkbook({
+      filename: 'misto.csv',
+      contentBase64: Buffer.from(csv).toString('base64'),
+    })).rejects.toMatchObject({ code: 'catalog_mixed_categories', categories: ['person', 'organization'] });
   });
 
   it('imports the Catálogo considerado sheet from an evaluation workbook', async () => {

@@ -1,13 +1,14 @@
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import ExcelJS from 'exceljs';
-import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogHeaders, normalizeCell, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from '../../src/domain/catalogImportSchema.js';
+import { CATALOG_CATEGORIES, CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogHeaders, normalizeCatalogCategory, normalizeCell, rowToCanonical, validateCatalogHeaders, validateCatalogRow } from '../../src/domain/catalogImportSchema.js';
 import { normalizeResearcherName } from '../../src/domain/researcherCatalog.js';
 import { catalogStore } from './catalogStore.js';
 
 // JSON transport adds about 33% in base64; 3 MiB stays below Vercel's request limit.
 const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const MAX_ROWS = 1000;
+const INPUT_CATEGORIES = [...CATALOG_CATEGORIES, 'researcher'];
 
 function fold(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -33,15 +34,17 @@ function rowValues(row) {
  * `tipo_registro`, que é coluna obrigatória justamente por isso.
  */
 function detectCategory(headers, requestedCategory, declaredType) {
-  const candidates = ['researcher', 'school', 'organization'].filter((category) => validateCatalogHeaders(headers, category).valid);
+  const candidates = CATALOG_CATEGORIES.filter((category) => validateCatalogHeaders(headers, category).valid);
   if (!candidates.length) return null;
-  if (requestedCategory && candidates.includes(requestedCategory)) return requestedCategory;
-  if (declaredType && candidates.includes(declaredType)) return declaredType;
+  const requested = normalizeCatalogCategory(requestedCategory);
+  const declared = normalizeCatalogCategory(declaredType);
+  if (requested && candidates.includes(requested)) return requested;
+  if (declared && candidates.includes(declared)) return declared;
   return candidates.length === 1 ? candidates[0] : null;
 }
 
 export function catalogKey(category, record) {
-  if (category === 'researcher') {
+  if (category === 'person') {
     const scholar = String(record.scholar || record.google_scholar_url || '').match(/[?&]user=([^&]+)/i)?.[1];
     if (scholar) return `scholar:${scholar}`;
     if (record.orcid) return `orcid:${String(record.orcid).toUpperCase()}`;
@@ -57,7 +60,7 @@ function hashRow(row) {
 }
 
 function makeId(category, record, existing = []) {
-  const prefix = category === 'researcher' ? 'r' : category === 'school' ? 's' : 'o';
+  const prefix = category === 'person' ? 'p' : category === 'school' ? 's' : 'o';
   const sequence = existing.reduce((max, item) => Math.max(max, Number(String(item.id || '').match(/import-(\d+)/)?.[1] || 0)), 0) + 1;
   return `${prefix}-import-${sequence}-${hashRow(record).slice(0, 8)}`;
 }
@@ -97,6 +100,21 @@ export async function parseCatalogWorkbook({ contentBase64, filename, category: 
   const sourceHeaders = rowValues(sheet.getRow(1));
   const category = reportSheet ? (requestedCategory || 'organization') : null;
   const headers = reportSheet ? getCatalogHeaders(category) : sourceHeaders;
+  const typeColumnIndex = headers.indexOf('tipo_registro');
+  const declaredCategories = new Set();
+  if (!reportSheet && typeColumnIndex >= 0) {
+    for (let index = 2; index <= sheet.rowCount; index += 1) {
+      const values = rowValues(sheet.getRow(index));
+      const declared = String(values[typeColumnIndex] || '').trim().toLowerCase();
+      if (INPUT_CATEGORIES.includes(declared)) declaredCategories.add(normalizeCatalogCategory(declared));
+    }
+  }
+  if (declaredCategories.size > 1) {
+    const error = new Error('catalog_mixed_categories');
+    error.code = 'catalog_mixed_categories';
+    error.categories = [...declaredCategories];
+    throw error;
+  }
   // O tipo declarado na primeira linha de dados desempata quando o cabeçalho
   // traz só colunas comuns às três categorias.
   const declaredType = headers.includes('tipo_registro')
@@ -148,7 +166,7 @@ function evaluationRowToCatalog(headers, values, category, workbook) {
     contato_publico: '', fontes: sources, data_consulta: '', confianca: match?.confianca || '', dados_nao_localizados: '',
     ...(category === 'school' ? { tipo_instituicao: source.categoria, areas_formacao: '' } : {}),
     ...(category === 'organization' ? { natureza_juridica: source.categoria, setor: source.categoria, atuacao: match?.justificativa || '' } : {}),
-    ...(category === 'researcher' ? { instituicao_atual: source.instituicao, areas_especialidade: '', linhas_pesquisa: '' } : {}),
+    ...(category === 'person' ? { instituicao_atual: source.instituicao, areas_especialidade: '', linhas_pesquisa: '', perfis_atuacao: 'pesquisa' } : {}),
   };
 }
 
@@ -271,6 +289,7 @@ export function rollbackCatalogImport(batchId) {
 }
 
 export function getImportedRecords(category) {
+  category = normalizeCatalogCategory(category);
   const batchDates = new Map(catalogStore.listBatches().map((batch) => [batch.batchId, batch.committedAt || batch.createdAt]));
   return catalogStore.getRecords(category).map((record) => {
     if (record.adicionadoEm) return record;

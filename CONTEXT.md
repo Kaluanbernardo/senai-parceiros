@@ -5,7 +5,7 @@ Este contexto reúne a linguagem usada para descobrir, comparar e acompanhar pos
 ## Seleção
 
 **Stakeholder**:
-Pesquisador, escola ou outra organização cadastrada que pode contribuir para uma iniciativa do SENAI-SP.
+Pessoa especialista, instituição de educação ou outra organização cadastrada que pode contribuir para uma iniciativa do SENAI-SP.
 _Avoid_: Contato, lead, perfil
 
 **Contexto da seleção**:

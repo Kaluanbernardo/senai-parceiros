@@ -58,7 +58,7 @@ export function createSelectionBrief(input = {}) {
   const list = (value) => Array.isArray(value) ? value.filter(nonEmpty).map((entry) => entry.trim()) : [];
   const record = (value) => isObject(value) ? { ...value } : {};
   return {
-    category: nonEmpty(input.category) ? input.category : '',
+    category: input.category === 'researcher' ? 'person' : (nonEmpty(input.category) ? input.category : ''),
     objective: nonEmpty(input.objective) ? input.objective : '',
     context: nonEmpty(input.context) ? input.context.trim() : (nonEmpty(answers.context) ? String(answers.context).trim() : ''),
     desiredOutcomes: list(input.desiredOutcomes),
@@ -81,7 +81,7 @@ export function createSelectionBrief(input = {}) {
 export function validateSelectionBrief(value) {
   const errors = [];
   if (!isObject(value)) return result(false, ['brief must be an object']);
-  if (!CATEGORIES.includes(value.category)) errors.push('category must be researcher, school or organization');
+  if (!CATEGORIES.includes(value.category)) errors.push('category must be person, school or organization');
   if (!OBJECTIVES.includes(value.objective)) errors.push('objective is required');
   if (!nonEmpty(value.context)) errors.push('context is required');
   if (!isObject(value.answers)) errors.push('answers must be an object');

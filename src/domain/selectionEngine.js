@@ -60,9 +60,9 @@ export { SENAI_STRATEGIC_BASELINE };
  * `relacao` fica de fora de propósito: descrever a *ausência* de parceria é
  * informação legítima e não pode virar penalidade nem bônus de risco.
  */
-const RISK_EVIDENCE_FIELDS = Object.freeze(['nome', 'instituicao', 'pais', 'areas', 'pesquisa', 'descricao', 'diferencial', 'website', 'scholar']);
+const RISK_EVIDENCE_FIELDS = Object.freeze(['nome', 'instituicao', 'cargo', 'pais', 'areas', 'perfis_atuacao', 'pesquisa', 'descricao', 'diferencial', 'website', 'perfil_principal_url', 'linkedin_url', 'scholar']);
 
-const EVIDENCE_FIELDS = Object.freeze(['nome', 'instituicao', 'pais', 'areas', 'pesquisa', 'descricao', 'diferencial', 'relevancia', 'relacao', 'relacao_publica', 'aderencia_contexto', 'evidencias_publicas', 'riscos_sinais', 'website', 'scholar']);
+const EVIDENCE_FIELDS = Object.freeze(['nome', 'instituicao', 'cargo', 'pais', 'areas', 'perfis_atuacao', 'pesquisa', 'descricao', 'diferencial', 'relevancia', 'relacao', 'relacao_publica', 'aderencia_contexto', 'evidencias_publicas', 'producoes_relevantes', 'credenciais_relevantes', 'riscos_sinais', 'website', 'perfil_principal_url', 'linkedin_url', 'scholar']);
 
 const PARTNERSHIP_CONFIRMED = /^(?:\s*(?:✅|🔗))|parceria\s+(?:entre|formalizada|not[aá]vel|firmada|ativa)|parceiro\s+(?:tecnol[oó]gico|de\s+projetos|irm[ãa]o|estrat[eé]gico|oficial)|firmaram|memorando de entendimento|\bmou\b|coopera[cç][ãa]o\s+(?:formalizada|firmada|t[eé]cnica ativa)|^\s*sim\b/i;
 const PARTNERSHIP_ABSENT = /sem\s+evid[eê]ncia\s+p[uú]blica\s+de\s+parceria|sem\s+parceria|n[ãa]o\s+h[áa]\s+parceria|parceria\s+n[ãa]o\s+(?:identificada|localizada|confirmada)/i;
@@ -88,6 +88,7 @@ function candidateText(candidate) {
   return [
     candidate.nome,
     candidate.instituicao,
+    candidate.cargo,
     candidate.organizacao,
     candidate.pais,
     candidate.areas,
@@ -103,6 +104,8 @@ function candidateText(candidate) {
     candidate.categoria,
     candidate.natureza,
     candidate.miniBio,
+    candidate.perfis_atuacao,
+    ...(candidate.producoes_relevantes || []).map((item) => item.titulo || item),
     ...(candidate.artigos || []).map((article) => article.titulo),
   ].filter(Boolean).join(' ');
 }
@@ -338,7 +341,7 @@ function scoreCollaboration({ candidate, profile, partnership }) {
   const candidateContributions = matchTaxonomy(candidateText(candidate), CONTRIBUTION_TYPES);
   const contributionOverlap = taxonomyOverlap(profile.contributions, candidateContributions);
   const contributionFit = contributionOverlap ? 25 + contributionOverlap.ratio * 75 : (candidateContributions.length ? 55 : 45);
-  const contactable = Boolean(candidate.website || candidate.scholar);
+  const contactable = Boolean(candidate.website || candidate.perfil_principal_url || candidate.linkedin_url || candidate.scholar || candidate.contato_publico);
   const relationshipScore = partnership.confirmed ? 92 : (candidate.relacao ? 48 : 40);
 
   return compose('collaboration', [
@@ -712,7 +715,7 @@ export function mergeAiEvaluation(local, aiResult = {}) {
 }
 
 export function getCandidatePool({ category, data }) {
-  if (category === 'researcher') return data.pesquisadores || [];
+  if (category === 'person' || category === 'researcher') return data.pesquisadores || [];
   if (category === 'school') return mergeSchoolSources({ schools: data.escolas || [], stakeholders: data.stakeholders || [] });
   return data.stakeholders || [];
 }

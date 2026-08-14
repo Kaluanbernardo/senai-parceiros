@@ -164,6 +164,7 @@ const OBJECTIVE_REQUIRED = Object.freeze({
 });
 
 const CATEGORY_REQUIRED = Object.freeze({
+  person: ['evidence_preferences'],
   researcher: ['evidence_preferences'],
   school: ['evidence_preferences'],
   organization: ['evidence_preferences'],
@@ -175,6 +176,7 @@ const CATEGORY_REQUIRED = Object.freeze({
  * todo mundo.
  */
 const OPENERS = Object.freeze({
+  person: { prompt: 'Em que situação você pretende envolver uma pessoa especialista?', helper: 'Descreva a situação com suas palavras; não precisa de termos técnicos.' },
   'researcher:speaker': { prompt: 'Conte o que vai acontecer: que encontro ou conversa você quer que essa pessoa ajude a construir?', helper: 'Descreva o evento, onde ele acontece, para quem e o que precisa sair dali.' },
   'researcher:research_support': { prompt: 'Que pergunta ou decisão de pesquisa está travada e precisa de alguém de fora?', helper: 'Explique o estudo ou a dúvida com suas palavras.' },
   'researcher:benchmark': { prompt: 'O que você quer entender comparando com o trabalho de outra pessoa?', helper: 'Descreva a prática ou abordagem que está tentando avaliar.' },
@@ -233,7 +235,10 @@ function lowerFirst(text) {
   return value[0].toLocaleLowerCase('pt-BR') + value.slice(1);
 }
 
-function safeCategory(category) { return CATEGORY_IDS.includes(category) ? category : 'organization'; }
+function safeCategory(category) {
+  const normalized = category === 'researcher' ? 'person' : category;
+  return CATEGORY_IDS.includes(normalized) ? normalized : 'organization';
+}
 function safeObjective(objective) { return OBJECTIVE_IDS.includes(objective) ? objective : 'guided'; }
 function questionById(id) { return QUESTION_BANK.find((question) => question.id === id) || null; }
 function definitionFor(state, id) { return state?.questionDefinitions?.[id] || questionById(id); }
@@ -381,8 +386,9 @@ function nextQuestionFor(state) {
 
 function questionForState(question, state) {
   const coverage = getExampleCoverage({ category: state.category, objective: state.objective, context: state.answers?.context || state.context });
+  const openerCategory = state.category === 'person' ? 'researcher' : state.category;
   const opener = question.id === 'context'
-    ? (OPENERS[`${state.category}:${state.objective}`] || OPENERS[state.category] || null)
+    ? (OPENERS[`${openerCategory}:${state.objective}`] || OPENERS[state.category] || null)
     : null;
   const basePrompt = opener?.prompt || question.prompt;
   const helper = opener?.helper || question.helper;

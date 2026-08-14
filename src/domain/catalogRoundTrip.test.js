@@ -12,7 +12,7 @@ import { parseCatalogWorkbook, previewCatalogImport } from '../../server/lib/cat
  */
 describe('recorte de colunas: template e importação concordam', () => {
   it('o template do recorte essencial é aceito pelo importador', async () => {
-    for (const category of ['researcher', 'school', 'organization']) {
+    for (const category of ['person', 'school', 'organization']) {
       const columns = getEssentialHeaders(category);
       const buffer = await buildCatalogTemplate(category, columns);
 

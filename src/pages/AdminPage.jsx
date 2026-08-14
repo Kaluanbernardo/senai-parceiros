@@ -205,7 +205,14 @@ export default function AdminPage() {
         body: JSON.stringify({ filename: file.name, contentBase64: btoa(binary) }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'Falha ao importar CSV.');
+      if (!response.ok) {
+        if (body.error === 'catalog_mixed_categories') {
+          const categoryLabels = { person: 'pessoas', researcher: 'pessoas', organization: 'organizações', school: 'instituições de educação' };
+          const categories = (body.categories || []).map((category) => categoryLabels[category] || category).join(', ');
+          throw new Error(`CSV misto (${categories}). Separe pessoas, organizações e instituições de educação em arquivos diferentes.`);
+        }
+        throw new Error(body.error || 'Falha ao importar CSV.');
+      }
       const decisions = Object.fromEntries((body.rows || []).map((row) => [String(row.rowNumber), row.status === 'new' ? 'use_imported' : 'keep_existing']));
       await commitCsv(body, decisions);
     } catch (error) {
@@ -224,14 +231,20 @@ export default function AdminPage() {
     if (!response.ok) throw new Error(body.error || 'Falha ao confirmar a importação.');
     data.mergeImportedRecords(body.category, body.records || []);
     let radarUpdated = true;
-    if (body.category === 'researcher' && body.applied?.length) {
+    if (body.category === 'person' && body.applied?.length) {
       const radarResponse = await fetch('/api/radar/refresh', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
       radarUpdated = radarResponse.ok;
     }
+    const appliedCount = body.applied?.length || 0;
+    const ignoredCount = body.ignored?.length || 0;
+    if (!appliedCount) {
+      showSnack(`Importação concluída: nenhum registro novo foi aplicado (${ignoredCount} mantido(s) ou já importado(s)).`, 'info');
+      return;
+    }
     showSnack(
-      `Importação confirmada: ${body.applied?.length || 0} registro(s) aplicado(s).${body.category === 'researcher' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo, mas o Radar precisa de atualização manual.') : ''}`,
+      `Importação confirmada: ${appliedCount} registro(s) aplicado(s).${body.category === 'person' ? (radarUpdated ? ' Radar atualizado.' : ' O catálogo foi salvo; o Radar acompanha apenas perfis acadêmicos.') : ''}`,
       radarUpdated ? 'success' : 'warning',
     );
   };

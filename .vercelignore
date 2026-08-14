@@ -8,6 +8,7 @@ dist/
 .playwright-cli/
 output/
 tmp/
+tmp-atomic-*.json*
 
 # Local exploratory collectors that are intentionally outside the product.
 scripts/bing-j.mjs

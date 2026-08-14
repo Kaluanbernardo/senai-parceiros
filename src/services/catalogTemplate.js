@@ -1,4 +1,4 @@
-import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, resolveCatalogColumns } from '../domain/catalogImportSchema';
+import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, normalizeCatalogCategory, resolveCatalogColumns } from '../domain/catalogImportSchema';
 
 /**
  * @param {string[]} [columns] mesmo recorte passado ao prompt. O template tem
@@ -6,6 +6,7 @@ import { CATALOG_METADATA_SHEET_NAME, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME
  *   duas definições diferentes do mesmo arquivo.
  */
 export async function buildCatalogTemplate(category, columns) {
+  category = normalizeCatalogCategory(category);
   const exceljs = await import('exceljs');
   const Workbook = exceljs.Workbook || exceljs.default?.Workbook;
   if (!Workbook) throw new Error('ExcelJS indisponível.');

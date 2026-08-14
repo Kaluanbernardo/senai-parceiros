@@ -14,7 +14,7 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 
 1. Autenticação do site com dois papéis: usuário e administrador.
 2. Página inicial com apresentação equilibrada das ferramentas, sem priorizar uma única feature.
-3. Catálogo existente de pesquisadores, escolas e organizações.
+3. Catálogo existente de pessoas especialistas, instituições de educação e organizações.
 4. Seleção guiada de stakeholders nas três categorias.
 5. Avaliação multidimensional aprofundada, shortlist diversa de cinco a dez resultados e revisão das respostas.
 6. Comparação por ranking, faixas de decisão, matriz de valor estratégico × viabilidade com tratamento de sobreposição e radar comparativo + individual.
@@ -26,9 +26,9 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 ### Fase 2 — enriquecimento e monitoramento
 
 1. Atualização automática e periódica dos perfis públicos.
-2. Radar EPT completo: novas pesquisas dos pesquisadores cadastrados, novidades governamentais e publicações internacionais, com ingestão automática, persistência, classificação e proveniência.
+2. Radar EPT completo: novas pesquisas das pessoas com atuação acadêmica cadastradas, novidades governamentais e publicações internacionais, com ingestão automática, persistência, classificação e proveniência.
 3. Fontes permitidas, quarentena, proveniência por campo, bloqueios manuais e rotinas de atualização.
-4. Catálogo textual de pesquisadores sem fotos, avatares, iniciais ou placeholders de mídia.
+4. Catálogo textual de pessoas especialistas sem fotos, avatares, iniciais ou placeholders de mídia.
 
 O Radar atual é uma base de transição. A versão v2 remove seeds e modo demonstração da leitura e passa a servir somente conteúdo processado por uma rotina de ingestão persistente.
 
@@ -38,7 +38,7 @@ Profissional da Gerência de Educação do SENAI-SP que procura parceiros, refer
 
 ## 4. Fluxo de seleção
 
-1. Escolher uma categoria: pesquisador, escola ou outra organização.
+1. Escolher uma categoria: pessoa especialista, instituição de educação ou outra organização.
 2. Escolher a finalidade: convidado/palestrante, parceiro de projeto, referência para benchmarking, apoio a pesquisa ou orientação totalmente guiada.
 3. Responder uma pergunta por tela em uma entrevista adaptativa, com exemplos, escolhas guiadas, opção “não sei ainda”, retorno e progresso aproximado.
 4. Revisar e, se necessário, alterar qualquer resposta.
@@ -93,7 +93,7 @@ O gerador não executa a pesquisa. Ele entrevista o usuário, produz um prompt i
 - fontes públicas, evidências e data de consulta;
 - indicação “não localizado” para ausência de informação;
 - proibição de inventar colunas ou fatos;
-- núcleo comum e campos específicos para pesquisador, escola ou organização.
+- núcleo comum e campos específicos para pessoa, instituição de educação ou organização; dados acadêmicos são opcionais dentro de pessoa.
 
 O XLSX importável usa uma aba `Stakeholders`, sem prosa, fórmulas, macros, células mescladas ou colunas extras. Contexto e limitações ficam em uma aba opcional `Metadados`.
 

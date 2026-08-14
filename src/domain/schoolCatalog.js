@@ -83,6 +83,7 @@ function normalizeRecord(record, source) {
     id: `${source}:${record.id}`,
     nome: formatInstitutionName(name),
     descricao: record.descricao || record.diferencial || record.relevancia || '',
+    relevancia: record.relevancia || record.diferencial || '',
     pais: record.pais || '',
     logo: record.logo || '',
     website,
@@ -122,11 +123,13 @@ function mergeGroup(records) {
   }
   const areas = [...new Set(ordered.flatMap((record) => String(record.areas || '').split(';').map((area) => area.trim()).filter(Boolean)))].join('; ');
   const descricao = descriptionSource?.descricao || '';
+  const relevancia = longestValue(ordered, 'relevancia');
   if (descriptionSource) fieldProvenance.descricao = { source: descriptionSource._source, id: descriptionSource._sourceId };
   if (areaSources.length > 1) fieldProvenance.areas = areaSources;
   return {
     ...first,
     descricao,
+    relevancia,
     areas,
     id: `school:${first._source}:${first._sourceId}`,
     aliases: names,
@@ -136,6 +139,10 @@ function mergeGroup(records) {
     hasPartnership: ordered.some((record) => record.hasPartnership),
     catalogIdentity: matchKey(first),
   };
+}
+
+function longestValue(records, field) {
+  return records.map((record) => record[field]).filter(Boolean).sort((left, right) => String(right).length - String(left).length)[0] || '';
 }
 
 export function mergeSchoolSources({ schools = [], stakeholders = [] } = {}) {
