@@ -8,14 +8,28 @@ function dayKey() {
 const DEFAULT_LIMITS = Object.freeze({ tokens: 100000, costUsd: 25, requests: 100 });
 const RADAR_EDITORIAL_DEFAULT_LIMITS = Object.freeze({ tokens: 500000, costUsd: 5, requests: 200 });
 const CATALOG_RESEARCH_DEFAULT_LIMITS = Object.freeze({ tokens: 1000000, costUsd: 25, requests: 100 });
+const CATALOG_ENRICHMENT_DEFAULT_LIMITS = Object.freeze({ tokens: 1000000, costUsd: 10, requests: 150 });
 
 function numericLimit(specificName, genericName, fallback) {
-  const configured = process.env[specificName] ?? process.env[genericName] ?? fallback;
+  const configured = (specificName ? process.env[specificName] : undefined)
+    ?? (genericName ? process.env[genericName] : undefined)
+    ?? fallback;
   const value = Number(configured);
   return Number.isFinite(value) ? Math.max(0, value) : fallback;
 }
 
 function limits(kind = 'selection') {
+  if (kind === 'catalog-enrichment') {
+    // Este trabalho percorre dezenas de cards em chamadas independentes.
+    // Herdar o teto interativo de 100 mil tokens interrompe o lote no meio;
+    // o perfil próprio continua limitado sem consumir a cota das entrevistas.
+    return {
+      tokens: numericLimit('CATALOG_ENRICHMENT_DAILY_TOKEN_LIMIT', null, CATALOG_ENRICHMENT_DEFAULT_LIMITS.tokens),
+      costUsd: numericLimit('CATALOG_ENRICHMENT_DAILY_COST_LIMIT_USD', null, CATALOG_ENRICHMENT_DEFAULT_LIMITS.costUsd),
+      requests: numericLimit('CATALOG_ENRICHMENT_DAILY_REQUEST_LIMIT', null, CATALOG_ENRICHMENT_DEFAULT_LIMITS.requests),
+      costPer1kUsd: Math.max(0, Number(process.env.AI_ESTIMATED_COST_PER_1K_USD || 0.01)),
+    };
+  }
   const editorial = kind === 'radar-editorial';
   const catalogResearch = kind === 'catalog_research';
   const defaults = editorial ? RADAR_EDITORIAL_DEFAULT_LIMITS : catalogResearch ? CATALOG_RESEARCH_DEFAULT_LIMITS : DEFAULT_LIMITS;
