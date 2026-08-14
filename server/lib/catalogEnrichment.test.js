@@ -53,7 +53,10 @@ describe('catalog enrichment batches', () => {
 
     expect(batch.targets).toHaveLength(1);
     expect(batch.targets[0]).toMatchObject({ name: 'Rasa', category: 'organization', status: 'pending' });
-    expect(catalogEnrichmentBatchSummary(batch).counts).toEqual({ total: 1, pending: 1, passed: 0, failed: 0 });
+    expect(catalogEnrichmentBatchSummary(batch)).toMatchObject({
+      counts: { total: 1, pending: 1, passed: 0, failed: 0 },
+      next: { name: 'Rasa', category: 'organization', attempt: 1, maxAttempts: 2 },
+    });
   });
 
   it('uses a collision-safe overlay id for schools projected from organizations', () => {
@@ -168,7 +171,7 @@ describe('catalog enrichment batches', () => {
     expect(processed.counts).toMatchObject({ passed: 1, pending: 2 });
   });
 
-  it('converts an internal provider deadline into a retryable catalog error', async () => {
+  it('records provider deadlines per card and continues the batch after two attempts', async () => {
     const shallow = { id: 'o-provider-timeout', nome: 'Instituto demorado', pais: 'Brasil' };
     const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
     catalogStore.setPending(batch);
@@ -178,13 +181,28 @@ describe('catalog enrichment batches', () => {
       else signal.addEventListener('abort', () => reject(signal.reason), { once: true });
     });
 
-    await expect(processCatalogEnrichment(batch.batchId, {
+    const firstAttempt = await processCatalogEnrichment(batch.batchId, {
       searchEvidence,
       generate,
       enforceBudget: false,
       timeoutMs: 5,
-    })).rejects.toThrow('provider_timeout');
-    expect(catalogEnrichmentBatchSummary(catalogStore.getPending(batch.batchId)).counts).toMatchObject({ passed: 0, pending: 1 });
+    });
+    expect(firstAttempt).toMatchObject({
+      counts: { passed: 0, pending: 1, failed: 0 },
+      next: { name: 'Instituto demorado', attempt: 2 },
+    });
+
+    const secondAttempt = await processCatalogEnrichment(batch.batchId, {
+      searchEvidence,
+      generate,
+      enforceBudget: false,
+      timeoutMs: 5,
+    });
+    expect(secondAttempt).toMatchObject({
+      counts: { passed: 0, pending: 0, failed: 1 },
+      next: null,
+      failures: [{ name: 'Instituto demorado', error: 'provider_timeout' }],
+    });
   });
 
   it('keeps a generated card pending when the post-generation gate still fails', async () => {

@@ -33,6 +33,23 @@ export function catalogEnrichmentErrorMessage(code) {
   return ERROR_MESSAGES[code] || 'Não foi possível concluir o enriquecimento agora.';
 }
 
+export function catalogEnrichmentActionState({ running, hasFailed, pending, needsEnrichment }) {
+  if (running) return { kind: 'running', label: 'Processando...' };
+  if (hasFailed) return { kind: 'retry', label: 'Tentar novamente' };
+  if (pending > 0) return { kind: 'continue', label: 'Continuar enriquecimento' };
+  return { kind: 'start', label: `Enriquecer ${needsEnrichment || ''} card(s)` };
+}
+
+export function catalogEnrichmentRunningMessage(batch, elapsedSeconds = 0) {
+  const elapsed = Math.max(0, Math.floor(Number(elapsedSeconds) || 0));
+  const target = batch?.next;
+  const card = target?.name ? ` ${target.name}` : ' o próximo card';
+  const attempt = target?.attempt && target?.maxAttempts
+    ? ` (tentativa ${target.attempt} de ${target.maxAttempts})`
+    : '';
+  return `Processando${card}${attempt} · ${elapsed} s nesta etapa. Cada card pode levar até 45 segundos; o contador avança quando a etapa termina.`;
+}
+
 async function requestEnrichment(body) {
   const response = await fetch('/api/admin/catalog-enrichment', {
     method: body ? 'POST' : 'GET',
@@ -84,7 +101,7 @@ function QualityContract({ quality }) {
   );
 }
 
-function BatchProgress({ batch }) {
+function BatchProgress({ batch, running, runningSeconds }) {
   if (!batch || batch.completeWithoutChanges) return null;
   const counts = batch.counts || {};
   const handled = Number(counts.passed || 0) + Number(counts.failed || 0);
@@ -102,6 +119,17 @@ function BatchProgress({ batch }) {
         <Chip size="small" label={`${counts.pending || 0} pendentes`} variant="outlined" />
         {Boolean(counts.failed) && <Chip size="small" label={`${counts.failed} com pendência`} color="warning" variant="outlined" />}
       </Stack>
+      {running && (
+        <Box
+          aria-label="Enriquecimento em andamento"
+          sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'info.50', color: 'info.dark' }}
+        >
+          <LinearProgress sx={{ mb: 1, borderRadius: 999 }} />
+          <Typography variant="body2" fontWeight={700}>
+            {catalogEnrichmentRunningMessage(batch, runningSeconds)}
+          </Typography>
+        </Box>
+      )}
     </Stack>
   );
 }
@@ -111,8 +139,15 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   const [batch, setBatch] = useState(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
+  const [runningSeconds, setRunningSeconds] = useState(0);
   const [notice, setNotice] = useState(null);
   const continueRef = useRef(false);
+
+  useEffect(() => {
+    if (!running) return undefined;
+    const interval = setInterval(() => setRunningSeconds((seconds) => seconds + 1), 1000);
+    return () => clearInterval(interval);
+  }, [running]);
 
   useEffect(() => {
     if (!open) {
@@ -144,11 +179,13 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
 
   const run = async (initial) => {
     continueRef.current = true;
+    setRunningSeconds(0);
     setRunning(true);
     setNotice({ severity: 'info', text: 'Pesquisando fontes e conferindo os cards. Você pode fechar esta janela e continuar o lote depois.' });
     let current = initial;
     try {
       while (continueRef.current && current?.counts?.pending > 0) {
+        setRunningSeconds(0);
         current = await requestEnrichment({ action: 'process', batchId: current.batchId });
         setBatch(current);
       }
@@ -204,6 +241,12 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   const capabilities = overview?.capabilities;
   const needsEnrichment = Number(audit?.needsEnrichment || 0);
   const hasFailed = Number(batch?.counts?.failed || 0) > 0;
+  const primaryAction = catalogEnrichmentActionState({
+    running,
+    hasFailed,
+    pending: Number(batch?.counts?.pending || 0),
+    needsEnrichment,
+  });
 
   return (
     <Dialog open={open} onClose={running ? undefined : handleClose} fullWidth maxWidth="md">
@@ -219,7 +262,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           )}
           <AuditSummary audit={audit} />
           <QualityContract quality={overview?.quality} />
-          <BatchProgress batch={batch} />
+          <BatchProgress batch={batch} running={running} runningSeconds={runningSeconds} />
           {capabilities && !capabilities.ready && needsEnrichment > 0 && (
             <Alert severity="warning">
               {!capabilities.ai && !capabilities.search
@@ -248,10 +291,12 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={handleClose}>{running ? 'Fechar e continuar depois' : 'Fechar'}</Button>
-        {hasFailed ? (
-          <Button variant="contained" onClick={handleRetry} disabled={loading || running || !capabilities?.ready}>Tentar novamente</Button>
-        ) : batch?.counts?.pending > 0 ? (
-          <Button variant="contained" onClick={() => run(batch)} disabled={loading || running || !capabilities?.ready}>Continuar enriquecimento</Button>
+        {primaryAction.kind === 'running' ? (
+          <Button variant="contained" disabled>{primaryAction.label}</Button>
+        ) : primaryAction.kind === 'retry' ? (
+          <Button variant="contained" onClick={handleRetry} disabled={loading || running || !capabilities?.ready}>{primaryAction.label}</Button>
+        ) : primaryAction.kind === 'continue' ? (
+          <Button variant="contained" onClick={() => run(batch)} disabled={loading || running || !capabilities?.ready}>{primaryAction.label}</Button>
         ) : (
           <Button
             variant="contained"
@@ -259,7 +304,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
             onClick={handleStart}
             disabled={loading || running || !needsEnrichment || !capabilities?.ready}
           >
-            Enriquecer {needsEnrichment || ''} card(s)
+            {primaryAction.label}
           </Button>
         )}
       </DialogActions>
