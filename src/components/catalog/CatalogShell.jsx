@@ -18,14 +18,15 @@ import ResultsToolbar from './ResultsToolbar';
 const PAGE_SIZE = 36;
 
 /**
- * Estrutura comum às três listas do catálogo.
+ * Estrutura comum às duas naturezas do catálogo.
  *
  * O que ela resolve, além de acabar com três telas parecidas mas não iguais:
  *
- * - **Trocar de categoria virou um clique.** As abas no topo levam direto de
- *   Especialistas para Instituições. O caminho antigo era voltar ao catálogo,
- *   achar o cartão certo e entrar de novo — três telas para trocar de aba.
- * - **A lista deixou de renderizar tudo de uma vez.** Especialistas monta 322
+ * - **Trocar de natureza virou um clique.** As abas no topo levam direto de
+ *   Pessoas Físicas para Pessoas Jurídicas. O caminho antigo era voltar ao
+ *   catálogo, achar o cartão certo e entrar de novo.
+ * - **A lista deixou de renderizar tudo de uma vez.** A lista de pessoas físicas
+ *   montava centenas de cartões
  *   cartões no primeiro render, cada um com fichas e bandeira; o custo aparece
  *   como travada ao digitar, porque cada tecla remonta a lista inteira. Agora
  *   entram 36 por vez, com um botão que diz quantos faltam.

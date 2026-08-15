@@ -14,13 +14,13 @@ O produto deve transformar um contexto ainda impreciso em uma shortlist defensá
 
 1. Autenticação do site com dois papéis: usuário e administrador.
 2. Página inicial com apresentação equilibrada das ferramentas, sem priorizar uma única feature.
-3. Catálogo existente de pessoas especialistas, instituições de educação e organizações.
-4. Seleção guiada de stakeholders nas três categorias.
+3. Catálogo existente de pessoas físicas e pessoas jurídicas, com subtipos filtráveis.
+4. Seleção guiada de stakeholders nas duas naturezas de entidade.
 5. Avaliação multidimensional aprofundada, shortlist diversa de cinco a dez resultados e revisão das respostas.
 6. Comparação por ranking, faixas de decisão, matriz de valor estratégico × viabilidade com tratamento de sobreposição e radar comparativo + individual.
 7. Rastreabilidade de perguntas, respostas, critérios, pesos, evidências, fórmula, modelo e confiança.
 8. Exportação única em uma planilha XLSX rica e auditável.
-9. Gerador de Prompt para Deep Research com esquema padronizado por categoria.
+9. Gerador de Prompt para Deep Research com esquema padronizado por natureza e subtipo.
 10. Importação administrativa do XLSX resultante para o catálogo, com prévia, validação e deduplicação.
 
 ### Fase 2 — enriquecimento e monitoramento
@@ -38,16 +38,17 @@ Profissional da Gerência de Educação do SENAI-SP que procura parceiros, refer
 
 ## 4. Fluxo de seleção
 
-1. Escolher uma categoria: pessoa especialista, instituição de educação ou outra organização.
-2. Escolher a finalidade: convidado/palestrante, parceiro de projeto, referência para benchmarking, apoio a pesquisa ou orientação totalmente guiada.
-3. Responder uma pergunta por tela em uma entrevista adaptativa, com exemplos, escolhas guiadas, opção “não sei ainda”, retorno e progresso aproximado.
-4. Revisar e, se necessário, alterar qualquer resposta.
-5. Avaliar apenas registros existentes no catálogo.
-6. Receber de cinco a dez resultados elegíveis; resultados abaixo da faixa recomendada aparecem como exploratórios, com lacunas explícitas.
-7. Examinar possibilidades materialmente distintas na comparação, matriz, radares, ficha técnica e evidências.
-8. Exportar o resultado. Nada da avaliação é persistido pela aplicação.
+1. Escolher uma natureza: pessoa física ou pessoa jurídica.
+2. Escolher o subtipo desejado dentro da natureza selecionada.
+3. Escolher a finalidade: convidado/palestrante, parceiro de projeto, referência para benchmarking, apoio a pesquisa ou orientação totalmente guiada.
+4. Responder uma pergunta por tela em uma entrevista adaptativa, com exemplos, escolhas guiadas, opção “não sei ainda”, retorno e progresso aproximado.
+5. Revisar e, se necessário, alterar qualquer resposta.
+6. Avaliar apenas registros existentes no catálogo.
+7. Receber de cinco a dez resultados elegíveis; resultados abaixo da faixa recomendada aparecem como exploratórios, com lacunas explícitas.
+8. Examinar possibilidades materialmente distintas na comparação, matriz, radares, ficha técnica e evidências.
+9. Exportar o resultado. Nada da avaliação é persistido pela aplicação.
 
-A entrevista não possui quantidade fixa. Um planejador adaptativo usa categoria, objetivo, respostas, cobertura e incertezas para decidir o próximo aprofundamento e encerrar quando houver informação suficiente para diferenciar candidatos, com limite máximo de 20 perguntas. Perguntas redundantes são puladas e falha da IA aciona um fluxo determinístico equivalente.
+A entrevista não possui quantidade fixa. Um planejador adaptativo usa natureza, subtipo, objetivo, respostas, cobertura e incertezas para decidir o próximo aprofundamento e encerrar quando houver informação suficiente para diferenciar candidatos, com limite máximo de 20 perguntas. Perguntas redundantes são puladas e falha da IA aciona um fluxo determinístico equivalente.
 
 ## 5. Modelo de avaliação
 
@@ -100,7 +101,7 @@ O XLSX importável usa uma aba `Stakeholders`, sem prosa, fórmulas, macros, cé
 ## 9. Importação de stakeholders
 
 - Disponível apenas para administrador.
-- Aceita `.xlsx` conforme o schema vigente e oferece template vazio por categoria.
+- Aceita `.xlsx` conforme o schema vigente e oferece template vazio por natureza e subtipo.
 - Mostra prévia com novos registros, atualizações, possíveis duplicatas, conflitos e linhas inválidas.
 - Nunca substitui silenciosamente o catálogo completo; conflitos exigem decisão explícita.
 - Usa identificadores públicos, aliases e regras canônicas para deduplicação.

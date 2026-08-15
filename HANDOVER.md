@@ -228,14 +228,14 @@ três categorias, que é onde as duas pontas poderiam divergir sem ninguém nota
 
 | Rótulo | Id | Rota |
 |---|---|---|
-| Especialistas | `researcher` | `/catalogo/especialistas` |
-| Instituições de Educação | `school` | `/catalogo/instituicoes-de-educacao` |
-| Outras organizações | `organization` | `/catalogo/outras-organizacoes` |
+| Pessoas Físicas | `person` | `/catalogo/pessoas-fisicas` |
+| Pessoas Jurídicas | `organization` | `/catalogo/pessoas-juridicas` |
 
-Os caminhos antigos redirecionam (`LEGACY_CATALOG_ROUTES` em `src/App.jsx`).
-O campo `categoria` dos registros continua com os valores antigos
-(`'Pesquisador'`, `'Escola'`, `'Organização'`) porque alimenta filtros do
-catálogo — renomeá-lo esvaziaria listas sem erro nenhum.
+Os caminhos antigos continuam redirecionando (`LEGACY_CATALOG_ROUTES` em
+`src/App.jsx`) e os subtipos filtram cada pessoa física ou jurídica. O
+normalizador ainda aceita os valores históricos de `categoria` (`'Pesquisador'`,
+`'Escola'`, `'Organização'`) na entrada, mas o catálogo canônico expõe apenas
+`person` e `organization` como naturezas de entidade.
 
 ---
 
