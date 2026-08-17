@@ -8,7 +8,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 
 1. ajuda uma pessoa leiga a descobrir e estruturar sua necessidade;
 2. formula cada nova pergunta a partir do significado das respostas anteriores;
-3. recomenda de 5 a 10 pessoas especialistas, instituições de educação ou organizações já cadastradas;
+3. recomenda de 5 a 10 pessoas físicas ou pessoas jurídicas já cadastradas, com filtro por subtipo;
 4. mostra diferenças, evidências, riscos, lacunas e rastreabilidade completa;
 5. exporta uma planilha XLSX rica, sem persistir entrevista ou resultado;
 6. importa para o catálogo planilhas XLSX geradas por pesquisas orientadas pelo Gerador de Prompt;
@@ -19,7 +19,7 @@ Entregar uma ferramenta pública de MVP realmente funcional para profissionais d
 
 **Importação de stakeholders via XLSX** é parte do fluxo principal, não um utilitário isolado. O profissional deve conseguir usar o Gerador de Prompt para orientar uma pesquisa externa, receber uma planilha estruturada com as mesmas colunas do catálogo e, no painel administrativo, importar esse arquivo com prévia, validação, deduplicação, decisões por linha, confirmação, histórico e rollback. O contrato compartilhado deve ser a fonte única para o prompt, o template, o importador e o catálogo; nenhum campo de foto/avatar pode ser criado para pessoas.
 
-O Gerador de Prompt deve orientar um output diretamente importável: uma aba `Stakeholders` com uma entidade por linha e as colunas do tipo escolhido (`person`, `school` ou `organization`), mais uma aba `Metadados` para contexto, critérios, limitações, fontes consultadas e data da pesquisa. Pessoas declaram atuações profissionais e perfis públicos; campos acadêmicos são opcionais e só se aplicam a quem atua em pesquisa. Os campos precisam cobrir não só identidade e descrição, mas também aderência ao contexto, evidências, proveniência, confiança e lacunas — elementos usados pelo catálogo e pela seleção para diferenciar candidatos. Essa definição vive em `src/domain/catalogImportSchema.js` e não deve ser duplicada na UI ou em prompts alternativos.
+O Gerador de Prompt deve orientar um output diretamente importável: uma aba `Stakeholders` com uma entidade por linha, a natureza (`person` ou `organization`) e o subtipo escolhido, mais uma aba `Metadados` para contexto, critérios, limitações, fontes consultadas e data da pesquisa. Pessoas declaram atuações profissionais e perfis públicos; campos acadêmicos são opcionais e só se aplicam a quem atua em pesquisa. Os campos precisam cobrir não só identidade e descrição, mas também aderência ao contexto, evidências, proveniência, confiança e lacunas — elementos usados pelo catálogo e pela seleção para diferenciar candidatos. Essa definição vive em `src/domain/catalogImportSchema.js` e não deve ser duplicada na UI ou em prompts alternativos.
 
 ### Critério adicional — o XLSX precisa alimentar o catálogo, não apenas armazenar pesquisa
 
@@ -41,7 +41,7 @@ Esses campos devem ser representados no contrato versionado e mapeados para os c
 - autenticação do MVP com papéis de usuário e administrador;
 - navegação principal por ferramentas: Início, Seleção, Catálogo, Radar e Prompt;
 - Home sem privilegiar uma única feature;
-- catálogo unificado com pessoas especialistas, instituições de educação e organizações;
+- catálogo unificado em pessoas físicas e pessoas jurídicas, com subtipos filtráveis;
 - auditoria de produção sem nomes canônicos repetidos: variantes cross-source e multilíngues de escolas usam alias com domínio/país, enquanto redes e escopos distintos permanecem separados;
 - gerador de prompt para deep research com saída estruturada;
 - shortlist local com testes para 5 a 10 resultados, diversidade e risco grave;
@@ -63,10 +63,10 @@ As lacunas corporativas abaixo são preparação para a migração futura e não
 ## Decisões de produto vigentes
 
 - A seleção de stakeholders é a feature principal; Radar é complementar.
-- A primeira escolha é sempre: pessoa especialista, instituição de educação ou outra organização.
+- A primeira escolha é sempre: pessoa física ou pessoa jurídica; o subtipo é definido em seguida.
 - A IA formula a próxima pergunta, mas regras determinísticas controlam cobertura, limites, segurança e encerramento.
 - A entrevista deve ter entre 8 e 20 perguntas, variando conforme clareza, incertezas e respostas.
-- Exemplos devem usar a categoria, objetivo e contexto atuais; escola para benchmarking não recebe exemplo de palestra sobre IA.
+- Exemplos devem usar a natureza, o subtipo, o objetivo e o contexto atuais; uma instituição de ensino para benchmarking não recebe exemplo de palestra sobre IA.
 - Ranking limitado ao catálogo cadastrado, com shortlist normal de 5 a 10. Candidatos eliminados ou com risco grave não podem ser reintroduzidos apenas para completar cinco.
 - Matriz principal: valor estratégico × viabilidade. Radar: impacto, alinhamento, credibilidade, colaboração, viabilidade e risco controlado.
 - Risco grave confirmado zera o valor estratégico e registra a regra aplicada.

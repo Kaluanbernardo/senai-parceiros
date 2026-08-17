@@ -32,6 +32,7 @@ import DetailModal from '../components/DetailModal';
 import EntityCard from '../components/catalog/EntityCard';
 import { CATEGORY_LABELS } from '../domain/interview';
 import { formatInstitutionName } from '../domain/institutionName';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 import { useData } from '../context/DataContext';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
@@ -49,6 +50,7 @@ import {
 
 const EMPTY_FORM = Object.freeze({
   category: 'person',
+  subtype: '',
   context: '',
   purpose: '',
   geography: 'brasil',
@@ -66,6 +68,14 @@ const SOURCE_OPTIONS = Object.freeze([
   ['professional', 'Perfis profissionais e institucionais'],
 ]);
 
+const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
+
+const DECISION_LABELS = Object.freeze({
+  use_imported: 'Adicionar',
+  merge: 'Mesclar',
+  keep_existing: 'Manter atual',
+  ignore: 'Descartar',
+});
 function errorMessage(body) {
   if (body?.error === 'too_many_research_attempts') return 'Muitas pesquisas em sequência. Aguarde alguns minutos antes de tentar novamente.';
   if (body?.error === 'ai_budget_exceeded') return 'O limite diário de uso da IA foi atingido.';
@@ -98,47 +108,36 @@ function sourceLabel(url) {
 }
 
 function researchCardPresentation(record) {
-  const category = record.categoria === 'Pessoa' ? 'person' : record.categoria === 'Escola' ? 'school' : 'organization';
+  const category = record.categoria === 'Pessoa Física' || record.tipo_registro === 'person' ? 'person' : 'organization';
   const item = { ...record, addedAt: record.data_consulta || record.addedAt };
   if (category === 'person') {
-    const href = record.perfil_principal_url || record.linkedin_url || record.scholar;
+    const href = record.perfil_principal_url || record.website_oficial || record.linkedin_url || record.scholar;
     return {
       category,
       item,
       detailItem: record,
       detailType: 'person',
-      eyebrow: (record.perfis_atuacao || [])[0] || 'Especialista',
+      eyebrow: record.subtipo || (record.perfis_atuacao || [])[0] || 'Pessoa física',
       title: record.nome,
-      subtitle: [record.cargo, record.instituicao].filter(Boolean).join(' · '),
-      summary: record.miniBio || summarize(record.pesquisa || record.descricao),
-      tags: getCategoriasFromAreas(record.areas),
+      subtitle: [record.cargo, record.instituicao_atual || record.instituicao].filter(Boolean).join(' · '),
+      summary: record.miniBio || record.resumo || summarize(record.pesquisa || record.descricao),
+      tags: getCategoriasFromAreas(record.areas || record.areas_especialidade || []),
       badge: record.h_index ? `h-index ${record.h_index}` : undefined,
       link: isHttpUrl(href) ? { href, label: href === record.linkedin_url ? 'LinkedIn' : 'Perfil público' } : undefined,
     };
   }
-  if (category === 'school') {
-    return {
-      category,
-      item,
-      detailItem: record,
-      detailType: 'escola',
-      eyebrow: 'Instituição de educação',
-      title: formatInstitutionName(record.nome),
-      summary: record.descricao,
-      tags: Array.isArray(record.areas) ? record.areas : [],
-      link: isHttpUrl(record.website) ? { href: record.website, label: 'Abrir site oficial' } : undefined,
-    };
-  }
+  const href = record.website_oficial || record.website;
   return {
     category,
     item,
     detailItem: { ...record, natureza: record.natureza || record.natureza_juridica },
     detailType: 'stakeholder',
-    eyebrow: record.natureza_juridica || 'Organização',
+    eyebrow: record.subtipo || record.tipo_instituicao || 'Pessoa jurídica',
     title: formatInstitutionName(record.nome),
-    summary: record.descricao,
-    tags: Array.isArray(record.areas) ? record.areas : [],
-    link: isHttpUrl(record.website) ? { href: record.website, label: 'Abrir site oficial' } : undefined,
+    subtitle: [record.setor, record.cidade_estado].filter(Boolean).join(' · '),
+    summary: record.resumo || record.descricao,
+    tags: Array.isArray(record.areas) ? record.areas : (record.areas_temas || record.areas_formacao || []),
+    link: isHttpUrl(href) ? { href, label: 'Abrir site oficial' } : undefined,
   };
 }
 
@@ -358,15 +357,27 @@ export default function CatalogResearchPage() {
                 exclusive
                 fullWidth
                 value={form.category}
-                onChange={(_, value) => value && change('category', value)}
+                onChange={(_, value) => value && setForm((previous) => ({ ...previous, category: value, subtype: '' }))}
                 disabled={busy}
                 aria-label="Tipo de parceiro"
-                sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' } }}
+                sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' } }}
               >
                 {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                   <ToggleButton key={value} value={value} sx={{ py: 1.35, textTransform: 'none', fontWeight: 700 }}>{label}</ToggleButton>
                 ))}
               </ToggleButtonGroup>
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Subtipo (opcional)</InputLabel>
+                <Select
+                  label="Subtipo (opcional)"
+                  value={form.subtype}
+                  onChange={(event) => change('subtype', event.target.value)}
+                  disabled={busy}
+                >
+                  <MenuItem value="">Todos os subtipos</MenuItem>
+                  {SUBTYPES[form.category].map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
+                </Select>
+              </FormControl>
             </Box>
 
             <Box>

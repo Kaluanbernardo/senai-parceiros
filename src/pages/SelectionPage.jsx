@@ -18,8 +18,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Grid from '@mui/material/Grid';
-import ScienceIcon from '@mui/icons-material/Science';
-import SchoolIcon from '@mui/icons-material/School';
+import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
 import { useData } from '../context/DataContext';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
@@ -29,12 +28,14 @@ import SelectionResults from '../components/SelectionResults';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 
 const CATEGORY_OPTIONS = [
-  { id: 'person', label: CATEGORY_LABELS.person, description: 'Pessoa com conhecimento especializado, produção ou experiência relevante.', icon: <ScienceIcon sx={{ fontSize: 34 }} /> },
-  { id: 'school', label: CATEGORY_LABELS.school, description: 'Escola, centro de formação ou rede de educação profissional.', icon: <SchoolIcon sx={{ fontSize: 34 }} /> },
-  { id: 'organization', label: CATEGORY_LABELS.organization, description: 'Empresa, órgão público, associação, fundação ou rede.', icon: <BusinessIcon sx={{ fontSize: 34 }} /> },
+  { id: 'person', label: CATEGORY_LABELS.person, description: 'Profissional, pesquisador, personalidade pública, agente público ou outra pessoa.', icon: <PersonIcon sx={{ fontSize: 34 }} /> },
+  { id: 'organization', label: CATEGORY_LABELS.organization, description: 'Empresa, órgão público, instituição de ensino, associação, fundação ou rede.', icon: <BusinessIcon sx={{ fontSize: 34 }} /> },
 ];
+
+const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
 
 const OBJECTIVE_OPTIONS = [
   { id: 'speaker', label: OBJECTIVE_LABELS.speaker },
@@ -97,6 +98,7 @@ export default function SelectionPage() {
   const data = useData();
   const [phase, setPhase] = useState('setup');
   const [category, setCategory] = useState('');
+  const [subtype, setSubtype] = useState('');
   const [objective, setObjective] = useState('');
   const [answers, setAnswers] = useState({});
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -150,6 +152,7 @@ export default function SelectionPage() {
 
   function chooseCategory(value) {
     setCategory(value);
+    setSubtype('');
     setObjective('');
     setAnswers({});
     setError('');
@@ -168,7 +171,7 @@ export default function SelectionPage() {
     setInterviewTrace([]);
     setAdaptiveStatus(null);
     setAdaptiveRetry(null);
-    setPlannerState(InterviewPlanner.start({ category, objective }));
+    setPlannerState(InterviewPlanner.start({ category, subtype, objective }));
   }
 
   function setAnswer(value) {
@@ -176,9 +179,10 @@ export default function SelectionPage() {
   }
 
   async function finishInterview(finalAnswers = answers, brief = null, traceEntries = interviewTrace) {
-    const pool = getCandidatePool({ category, data });
-    const local = buildLocalEvaluation({ category, objective, answers: finalAnswers, brief, candidates: pool });
-    if (brief) local.trace.selectionBrief = brief;
+    const pool = getCandidatePool({ category, data }).filter((candidate) => !subtype || candidate.subtipo === subtype);
+    const selectionBrief = brief ? { ...brief, subtype } : brief;
+    const local = buildLocalEvaluation({ category, subtype, objective, answers: finalAnswers, brief: selectionBrief, candidates: pool });
+    if (selectionBrief) local.trace.selectionBrief = selectionBrief;
     setBusy(true);
     setError('');
     try {
@@ -186,7 +190,7 @@ export default function SelectionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-          body: JSON.stringify({ category, objective, answers: finalAnswers, brief }),
+          body: JSON.stringify({ category, subtype, objective, answers: finalAnswers, brief: selectionBrief }),
       });
       if (!response.ok) throw new Error('ai_unavailable');
       const payload = await response.json();
@@ -307,6 +311,7 @@ export default function SelectionPage() {
   function restart() {
     setPhase('setup');
     setCategory('');
+    setSubtype('');
     setObjective('');
     setAnswers({});
     setPlannerState(null);
@@ -351,7 +356,7 @@ export default function SelectionPage() {
               {CATEGORY_OPTIONS.map((option) => {
                 const selected = category === option.id;
                 return (
-                  <Grid size={{ xs: 12, md: 4 }} key={option.id}>
+                  <Grid size={{ xs: 12, md: 6 }} key={option.id}>
                     <Card
                       sx={{
                         height: '100%',
@@ -380,11 +385,33 @@ export default function SelectionPage() {
                 );
               })}
             </Grid>
+            {category && (
+              <Box sx={{ mt: 2.5 }}>
+                <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>Subtipo (opcional)</Typography>
+                <Typography variant="body2" sx={{ mt: .25, color: T.ink.muted }}>Escolha um para restringir as recomendações, ou deixe sem seleção para considerar todos.</Typography>
+                <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.25 }}>
+                  {SUBTYPES[category].map((option) => {
+                    const selected = subtype === option;
+                    return (
+                      <Chip
+                        key={option}
+                        label={option}
+                        clickable
+                        variant={selected ? 'filled' : 'outlined'}
+                        aria-pressed={selected}
+                        onClick={() => setSubtype(selected ? '' : option)}
+                        sx={selected ? { bgcolor: T.ink.accent, color: '#fff' } : undefined}
+                      />
+                    );
+                  })}
+                </Stack>
+              </Box>
+            )}
           </SetupStep>
 
           <SetupStep
             number={2}
-            title="Para que você precisa dessa pessoa ou instituição?"
+            title="Para que você precisa desse parceiro?"
             done={Boolean(objective)}
             // Desabilitado em vez de ausente: o passo continua legível e diz o
             // que falta para liberá-lo.
@@ -453,7 +480,10 @@ export default function SelectionPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
         <Box>
           <Typography variant="overline" sx={{ color: T.tools.selection.dark }}>PERGUNTAS GUIADAS</Typography>
-          <Typography variant="h4" sx={{ color: T.ink.strong }}>{CATEGORY_LABELS[category]}</Typography>
+          <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+            <Typography variant="h4" sx={{ color: T.ink.strong }}>{CATEGORY_LABELS[category]}</Typography>
+            {subtype && <Chip size="small" label={subtype} variant="outlined" />}
+          </Stack>
         </Box>
         {reviewing && <Chip label="Revisando respostas" color="primary" variant="outlined" />}
       </Stack>

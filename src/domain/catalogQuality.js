@@ -1,9 +1,10 @@
-export const CATALOG_QUALITY_VERSION = 1;
+import { ORGANIZATION_SUBTYPES, normalizeCatalogCategory } from './catalogTaxonomy.js';
+
+export const CATALOG_QUALITY_VERSION = 2;
 
 export const CATALOG_QUALITY_RULES = Object.freeze({
   descriptionMinCharacters: 400,
   organizationMinPublicLinks: 1,
-  schoolMinPublicLinks: 1,
   personMinPublicLinks: 3,
   researcherMinPublicationLinks: 5,
 });
@@ -112,12 +113,11 @@ const CORE_FIELDS = Object.freeze({
   ],
 });
 
-function normalizedCategory(category) {
-  return category === 'researcher' ? 'person' : category;
-}
-
 export function auditCatalogRecord(record = {}, category = 'organization') {
-  const resolvedCategory = normalizedCategory(category);
+  const resolvedCategory = normalizeCatalogCategory(category);
+  const coreCategory = resolvedCategory === 'organization' && record.subtipo === ORGANIZATION_SUBTYPES[0]
+    ? 'school'
+    : resolvedCategory;
   const description = longest(record, resolvedCategory === 'person'
     ? ['pesquisa', 'descricao', 'miniBio']
     : ['descricao']);
@@ -126,9 +126,7 @@ export function auditCatalogRecord(record = {}, category = 'organization') {
   const researchProfile = resolvedCategory === 'person' && isResearchProfile(record);
   const minimumLinks = resolvedCategory === 'person'
     ? CATALOG_QUALITY_RULES.personMinPublicLinks
-    : resolvedCategory === 'school'
-      ? CATALOG_QUALITY_RULES.schoolMinPublicLinks
-      : CATALOG_QUALITY_RULES.organizationMinPublicLinks;
+    : CATALOG_QUALITY_RULES.organizationMinPublicLinks;
   const missing = [];
 
   if (description.length < CATALOG_QUALITY_RULES.descriptionMinCharacters) {
@@ -150,7 +148,7 @@ export function auditCatalogRecord(record = {}, category = 'organization') {
       expected: CATALOG_QUALITY_RULES.researcherMinPublicationLinks,
     });
   }
-  for (const field of CORE_FIELDS[resolvedCategory] || []) {
+  for (const field of CORE_FIELDS[coreCategory] || []) {
     if (!firstUseful(record, field.fields)) missing.push({ id: `field:${field.id}`, label: field.label, actual: 0, expected: 1 });
   }
 
@@ -169,7 +167,7 @@ export function auditCatalogRecord(record = {}, category = 'organization') {
 }
 
 export function auditCatalogQuality(catalog = {}) {
-  const categories = ['organization', 'school', 'person'].map((category) => {
+  const categories = ['organization', 'person'].map((category) => {
     const records = Array.isArray(catalog[category]) ? catalog[category] : [];
     const results = records.map((record) => ({ record, quality: auditCatalogRecord(record, category) }));
     return {
@@ -194,7 +192,6 @@ export function catalogQualityPublicContract() {
     version: CATALOG_QUALITY_VERSION,
     descriptionMinCharacters: CATALOG_QUALITY_RULES.descriptionMinCharacters,
     organizationMinPublicLinks: CATALOG_QUALITY_RULES.organizationMinPublicLinks,
-    schoolMinPublicLinks: CATALOG_QUALITY_RULES.schoolMinPublicLinks,
     personMinPublicLinks: CATALOG_QUALITY_RULES.personMinPublicLinks,
     researcherMinPublicationLinks: CATALOG_QUALITY_RULES.researcherMinPublicationLinks,
   };

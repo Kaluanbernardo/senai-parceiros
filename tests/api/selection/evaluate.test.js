@@ -25,7 +25,8 @@ function request() {
     headers: { cookie: `senai_session=${encodeURIComponent(token)}` },
     socket: { remoteAddress: 'evaluate-test' },
     body: {
-      category: 'school',
+      category: 'organization',
+      subtype: 'Instituição de ensino',
       objective: 'benchmark',
       answers: {
         context: 'Comparar currículos de educação profissional com outra instituição',
@@ -55,6 +56,11 @@ describe('POST /api/selection/evaluate', () => {
     expect(res.statusCode).toBe(502);
     expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'provider_4xx', retryable: true });
     expect(res.body.shortlist).toBeUndefined();
+    expect(evaluateWithProvider).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({ subtype: 'Instituição de ensino', brief: expect.objectContaining({ subtype: 'Instituição de ensino' }) }),
+      candidates: expect.arrayContaining([expect.objectContaining({ subtipo: 'Instituição de ensino' })]),
+    }));
+    expect(vi.mocked(evaluateWithProvider).mock.calls[0][0].candidates.every((candidate) => candidate.subtipo === 'Instituição de ensino')).toBe(true);
   });
 
   it('trata provedor ausente como problema de configuração, não como falha temporária', async () => {

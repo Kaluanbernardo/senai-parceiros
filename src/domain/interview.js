@@ -1,9 +1,8 @@
 import { ExampleResolver, getExampleCoverage, resolveExample } from './exampleResolver.js';
+import { CATALOG_CATEGORY_LABELS } from './catalogTaxonomy.js';
 
 export const CATEGORY_LABELS = {
-  person: 'Pessoa especialista',
-  school: 'Instituição de Educação',
-  organization: 'Organização',
+  ...CATALOG_CATEGORY_LABELS,
 };
 
 export const OBJECTIVE_LABELS = {

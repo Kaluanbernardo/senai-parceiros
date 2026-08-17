@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import { getEssentialHeaders, CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME } from './catalogImportSchema.js';
 import { buildCatalogTemplate } from '../services/catalogTemplate.js';
 import { parseCatalogWorkbook, previewCatalogImport } from '../../server/lib/catalogImport.js';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from './catalogTaxonomy.js';
 
 /**
  * O ciclo que o gerador de prompt passa a permitir: recorte de colunas ->
@@ -12,7 +13,7 @@ import { parseCatalogWorkbook, previewCatalogImport } from '../../server/lib/cat
  */
 describe('recorte de colunas: template e importação concordam', () => {
   it('o template do recorte essencial é aceito pelo importador', async () => {
-    for (const category of ['person', 'school', 'organization']) {
+    for (const category of ['person', 'organization']) {
       const columns = getEssentialHeaders(category);
       const buffer = await buildCatalogTemplate(category, columns);
 
@@ -28,6 +29,7 @@ describe('recorte de colunas: template e importação concordam', () => {
         else if (header === 'tipo_registro') row.getCell(index + 1).value = category;
         else if (header === 'nome') row.getCell(index + 1).value = `Registro ${category}`;
         else if (header === 'pais') row.getCell(index + 1).value = 'Brasil';
+        else if (header === 'subtipo') row.getCell(index + 1).value = category === 'person' ? PERSON_SUBTYPES[0] : ORGANIZATION_SUBTYPES[0];
         else if (/url|website|scholar/.test(header)) row.getCell(index + 1).value = 'https://example.org/registro';
         else row.getCell(index + 1).value = 'informação pública';
       });

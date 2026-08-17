@@ -1,4 +1,5 @@
 import { formatInstitutionName } from './institutionName.js';
+import { CATALOG_CATEGORY_LABELS, ORGANIZATION_SUBTYPES, normalizeOrganizationSubtype } from './catalogTaxonomy.js';
 
 function fold(value) {
   return String(value || '')
@@ -38,6 +39,30 @@ const ALIASES = [
   [/\bindustrial training institutes\b|\biti system\b|\bsistema de itis\b/, 'iti-system'],
   [/\btvet colleges\b/, 'tvet-colleges-system'],
 ];
+
+// A fonte histórica chamada `escolas` mistura instituições, redes e conceitos.
+// Só atores organizacionais identificáveis entram no catálogo de PJ. Programas,
+// políticas, qualificações e modelos permanecem na fonte para compatibilidade,
+// mas não viram registros de Pessoa Jurídica.
+const NON_ENTITY_SOURCE_IDS = new Set([30, 32, 41, 62, 63, 80, 94, 98, 99]);
+const LEGACY_SOURCE_SUBTYPES = new Map([
+  [[3, 21, 22, 26, 47, 60, 72, 73, 74, 77, 81, 82, 87, 93, 100, 108, 125], ORGANIZATION_SUBTYPES[8]],
+  [[14, 18, 24, 53, 59, 66, 71, 79, 85, 86, 89, 92, 104, 115, 116], ORGANIZATION_SUBTYPES[2]],
+  [[25, 33, 34, 43, 44, 67, 76, 88], ORGANIZATION_SUBTYPES[3]],
+  [[12, 54], ORGANIZATION_SUBTYPES[5]],
+  [[16, 61], ORGANIZATION_SUBTYPES[4]],
+  [[42, 58, 69, 84], ORGANIZATION_SUBTYPES[7]],
+  [[78], ORGANIZATION_SUBTYPES[1]],
+  [[96, 97], ORGANIZATION_SUBTYPES[6]],
+].flatMap(([ids, subtype]) => ids.map((id) => [id, subtype])));
+
+export function classifyLegacySchoolRecord(record = {}) {
+  const id = Number(record.id);
+  if (NON_ENTITY_SOURCE_IDS.has(id)) return null;
+  const explicit = normalizeOrganizationSubtype(record.subtipo);
+  if (explicit) return explicit;
+  return LEGACY_SOURCE_SUBTYPES.get(id) || ORGANIZATION_SUBTYPES[0];
+}
 
 function aliasKey(name, website = '', country = '') {
   const value = fold(name);
@@ -79,6 +104,8 @@ function normalizeRecord(record, source) {
     : /\b(sp|sao paulo|regional|departamento)\b/.test(normalizedName)
       ? 'regional'
       : 'national_or_network';
+  const subtype = source === 'escolas' ? classifyLegacySchoolRecord(record) : ORGANIZATION_SUBTYPES[0];
+  if (!subtype) return null;
   return {
     id: `${source}:${record.id}`,
     nome: formatInstitutionName(name),
@@ -91,7 +118,8 @@ function normalizeRecord(record, source) {
     city: record.cidade || '',
     acronym: record.sigla || '',
     scope,
-    categoria: 'Escola',
+    categoria: CATALOG_CATEGORY_LABELS.organization,
+    subtipo: subtype,
     areas: Array.isArray(record.areas || record.areas_formacao)
       ? (record.areas || record.areas_formacao).join('; ')
       : (record.areas || record.areas_formacao || ''),
@@ -148,8 +176,10 @@ function longestValue(records, field) {
 export function mergeSchoolSources({ schools = [], stakeholders = [] } = {}) {
   let records = [
     ...schools.map((record) => normalizeRecord(record, 'escolas')),
-    ...stakeholders.filter((record) => fold(record.categoria).includes('escola')).map((record) => normalizeRecord(record, 'stakeholders')),
-  ];
+    ...stakeholders
+      .filter((record) => fold(record.categoria).includes('escola') || fold(record.subtipo).includes('instituicao de ensino'))
+      .map((record) => normalizeRecord(record, 'stakeholders')),
+  ].filter(Boolean);
   const hasFederalNetwork = records.some((record) => /^rede federal de educacao profissional cientifica e tecnologica\b/.test(fold(record.nome)) || /^rede federal de ept\b/.test(fold(record.nome)));
   if (hasFederalNetwork) {
     records = records.filter((record) => !/^cefet(?: mg| rj)\b/.test(fold(record.nome)));

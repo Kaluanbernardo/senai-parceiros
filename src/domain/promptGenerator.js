@@ -1,18 +1,18 @@
-import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION, normalizeCatalogCategory } from './catalogImportSchema';
+import { CATALOG_COLUMNS, CATALOG_SCHEMA_VERSION } from './catalogImportSchema';
+import { normalizeCatalogRequest } from './catalogTaxonomy';
 
 // Backwards-compatible export for the existing prompt UI and tests. The
 // import schema is the single source of truth for both sides of the flow.
 export const CATEGORY_SCHEMAS = CATALOG_COLUMNS;
 
 const CATEGORY_PROMPT_LABELS = Object.freeze({
-  person: 'pessoas especialistas',
-  school: 'instituições de educação',
-  organization: 'organizações',
+  person: 'pessoas físicas',
+  organization: 'pessoas jurídicas',
 });
 
-export function generateResearchPrompt({ category, context, purpose, geography, quantity, extraCriteria, personProfiles, sourcePreferences }) {
-  const requestedCategory = normalizeCatalogCategory(category);
-  const selectedCategory = CATALOG_COLUMNS[requestedCategory] ? requestedCategory : 'organization';
+export function generateResearchPrompt({ category, subtype, context, purpose, geography, quantity, extraCriteria, personProfiles, sourcePreferences }) {
+  const request = normalizeCatalogRequest(category, subtype);
+  const selectedCategory = CATALOG_COLUMNS[request.category] ? request.category : 'organization';
   const schema = CATALOG_COLUMNS[selectedCategory];
   const selectedLabel = CATEGORY_PROMPT_LABELS[selectedCategory];
   const schemaLines = schema.map((column, index) => `${index + 1}. ${column.name} (${column.type}): ${column.description}${column.required ? ' [OBRIGATÓRIO]' : ''}`).join('\n');
@@ -24,6 +24,7 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     `- Geografia: ${geography || 'sem preferência'}`,
     `- Quantidade máxima desejada: ${quantity || 'a definir'}`,
     `- Critérios adicionais: ${extraCriteria || 'nenhum além do contexto'}`,
+    `- Subtipo desejado: ${request.subtype || 'qualquer subtipo coerente com o contexto'}`,
     ...(selectedCategory === 'person' ? [
       `- Atuações profissionais desejadas: ${personProfiles || 'qualquer atuação coerente com o contexto'}`,
       `- Fontes preferidas para descoberta ou verificação: ${sourcePreferences || 'fontes públicas adequadas ao perfil'}`,
@@ -31,7 +32,7 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
     '',
     'TIPO DE STAKEHOLDER SELECIONADO',
     `PESQUISE SOMENTE ${selectedLabel.toUpperCase()}.`,
-    'Não inclua pessoas, organizações ou instituições de educação de outra categoria, mesmo que sejam relevantes. Não misture categorias no mesmo CSV.',
+    'Não inclua registros de outra categoria, mesmo que sejam relevantes. Instituições de ensino pertencem a Pessoas Jurídicas. Não misture categorias no mesmo CSV.',
     `Toda linha deve ter tipo_registro exatamente igual a ${selectedCategory}.`,
     '',
     'ESCOPO E CRITÉRIO INSTITUCIONAL',
@@ -60,7 +61,7 @@ export function generateResearchPrompt({ category, context, purpose, geography, 
       : '3. Para cada registro, preencha os campos específicos da categoria com fatos verificáveis: não deixe o perfil depender apenas de nome, site e uma descrição curta.',
     selectedCategory === 'person'
       ? '4. Aplique exigências acadêmicas somente a perfis de pesquisa: localize publicações, ORCID, OpenAlex, Google Scholar, citações e h-index quando existirem. Para imprensa, registre veículo, área de cobertura e trabalhos recentes. Para LinkedIn, use a URL pública e confirme o vínculo atual em outra fonte quando possível.'
-      : '4. Para escolas e organizações, preencha os campos específicos de oferta, atuação, setor, relação com a indústria e programas/parcerias quando públicos.',
+      : '4. Para pessoas jurídicas, preencha os campos específicos do subtipo. Instituições de ensino usam também oferta, áreas de formação, relação com a indústria e acreditações quando públicas.',
     '5. Se uma entidade não atingir esses mínimos com fontes reais, não a inclua: pesquise outra entidade. Nunca complete a quantidade com perfil raso, link genérico ou dado inventado.',
     '',
     'SAÍDA OBRIGATÓRIA',

@@ -8,12 +8,12 @@ describe('seção ativa', () => {
     // caso especial escrito dentro do JSX.
     expect(isActive('/', '/')).toBe(true);
     expect(isActive('/radar', '/')).toBe(false);
-    expect(isActive('/catalogo/especialistas', '/')).toBe(false);
+    expect(isActive('/catalogo/pessoas-fisicas', '/')).toBe(false);
   });
 
   it('acende a ferramenta a partir de qualquer caminho dentro dela', () => {
     expect(isActive('/catalogo', '/catalogo', '/catalogo')).toBe(true);
-    expect(isActive('/catalogo/especialistas', '/catalogo', '/catalogo')).toBe(true);
+    expect(isActive('/catalogo/pessoas-fisicas', '/catalogo', '/catalogo')).toBe(true);
   });
 
   it('não acende por prefixo parcial de nome', () => {
@@ -25,7 +25,7 @@ describe('seção ativa', () => {
 
 describe('ferramenta de um caminho', () => {
   it('resolve a ferramenta pelo prefixo mais longo', () => {
-    expect(findTool('/catalogo/outras-organizacoes')?.id).toBe('catalog');
+    expect(findTool('/catalogo/pessoas-juridicas')?.id).toBe('catalog');
     expect(findTool('/radar')?.id).toBe('radar');
     expect(findTool('/gerador-prompt')?.id).toBe('prompt');
     expect(findTool('/pesquisar-catalogo')?.id).toBe('research');
@@ -50,17 +50,17 @@ describe('trilha', () => {
   });
 
   it('encadeia início › catálogo › categoria em uma subpágina', () => {
-    expect(getBreadcrumbs('/catalogo/especialistas')).toEqual([
+    expect(getBreadcrumbs('/catalogo/pessoas-fisicas')).toEqual([
       { label: 'Início', route: '/' },
       { label: 'Catálogo', route: '/catalogo' },
-      { label: 'Especialistas' },
+      { label: 'Pessoas Físicas' },
     ]);
   });
 
   it('nunca deixa o último item clicável', () => {
     // Um link para a página em que já se está é um clique que não leva a lugar
     // nenhum; a trilha existe para subir, não para ficar.
-    ['/radar', '/catalogo', '/catalogo/especialistas', '/admin', '/selecionar'].forEach((path) => {
+    ['/radar', '/catalogo', '/catalogo/pessoas-fisicas', '/admin', '/selecionar'].forEach((path) => {
       const trail = getBreadcrumbs(path);
       expect(trail.at(-1).route).toBeUndefined();
       trail.slice(0, -1).forEach((step) => expect(step.route).toBeTruthy());
@@ -81,14 +81,13 @@ describe('trilha', () => {
 
 describe('irmãos', () => {
   it('lista as categorias do catálogo marcando a atual', () => {
-    const siblings = getSiblingLinks('/catalogo/instituicoes-de-educacao');
+    const siblings = getSiblingLinks('/catalogo/pessoas-juridicas');
     expect(siblings.map((entry) => entry.route)).toEqual([
-      '/catalogo/especialistas',
-      '/catalogo/instituicoes-de-educacao',
-      '/catalogo/outras-organizacoes',
+      '/catalogo/pessoas-fisicas',
+      '/catalogo/pessoas-juridicas',
     ]);
     expect(siblings.filter((entry) => entry.active)).toHaveLength(1);
-    expect(siblings.find((entry) => entry.active).label).toBe('Instituições de Educação');
+    expect(siblings.find((entry) => entry.active).label).toBe('Pessoas Jurídicas');
   });
 
   it('não inventa irmãos para ferramentas sem subseções', () => {
@@ -102,7 +101,7 @@ describe('rotas achatadas', () => {
     const routes = getAllRoutes();
     expect(new Set(routes.map((entry) => entry.route)).size).toBe(routes.length);
     expect(routes.filter((entry) => entry.isTool)).toHaveLength(5);
-    expect(routes.filter((entry) => entry.parentRoute === '/catalogo')).toHaveLength(3);
+    expect(routes.filter((entry) => entry.parentRoute === '/catalogo')).toHaveLength(2);
     routes.forEach((entry) => expect(entry.label).toBeTruthy());
   });
 });

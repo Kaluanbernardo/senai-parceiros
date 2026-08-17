@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { normalizeCatalogCategory, normalizeCatalogRequest, withCatalogClassification } from '../../src/domain/catalogTaxonomy.js';
 
-const CATEGORIES = ['person', 'school', 'organization'];
-const normalizeCategory = (category) => category === 'researcher' ? 'person' : category;
+const CATEGORIES = ['person', 'organization'];
 
 function emptyState() {
   return {
@@ -17,18 +17,81 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function classifiedRecord(record, sourceCategory) {
+  const request = normalizeCatalogRequest(sourceCategory);
+  const source = request.subtype && !record?.subtipo ? { ...record, subtipo: request.subtype } : record;
+  return withCatalogClassification(source, request.category);
+}
+
+function normalizedSnapshot(snapshot, sourceCategory) {
+  return {
+    records: Array.isArray(snapshot?.records) ? snapshot.records.map((record) => classifiedRecord(record, sourceCategory)) : [],
+    rowHashes: Array.isArray(snapshot?.rowHashes) ? [...snapshot.rowHashes] : [],
+  };
+}
+
+function mergeSnapshot(target, incoming) {
+  target.records.push(...incoming.records);
+  target.rowHashes.push(...incoming.rowHashes);
+  target.rowHashes = [...new Set(target.rowHashes)];
+}
+
+function normalizeBatch(batch) {
+  if (!batch || typeof batch !== 'object') return batch;
+  const migrated = clone(batch);
+  const batchRequest = normalizeCatalogRequest(batch.category);
+  if (batch.category) migrated.category = batchRequest.category;
+  if (Array.isArray(batch.targets)) {
+    migrated.targets = batch.targets.map((target) => {
+      const request = normalizeCatalogRequest(target.category || batch.category);
+      return {
+        ...target,
+        category: request.category,
+        ...(target.record ? { record: classifiedRecord(target.record, target.category || batch.category) } : {}),
+        ...(target.result ? { result: classifiedRecord(target.result, target.category || batch.category) } : {}),
+      };
+    });
+  }
+  if (Array.isArray(batch.applied)) {
+    migrated.applied = batch.applied.map((change) => ({
+      ...change,
+      category: normalizeCatalogRequest(change.category || batch.category).category,
+    }));
+  }
+  if (batch.beforeByCategory && typeof batch.beforeByCategory === 'object') {
+    migrated.beforeByCategory = Object.fromEntries(CATEGORIES.map((category) => [category, { records: [], rowHashes: [] }]));
+    for (const [sourceCategory, snapshot] of Object.entries(batch.beforeByCategory)) {
+      const request = normalizeCatalogRequest(sourceCategory);
+      if (!CATEGORIES.includes(request.category)) continue;
+      mergeSnapshot(migrated.beforeByCategory[request.category], normalizedSnapshot(snapshot, sourceCategory));
+    }
+  }
+  if (Array.isArray(batch.appliedRecords)) {
+    migrated.appliedRecords = batch.appliedRecords.map((record) => {
+      const change = batch.applied?.find((entry) => String(entry.id) === String(record.id));
+      return classifiedRecord(record, change?.category || batch.category);
+    });
+  }
+  return migrated;
+}
+
 function normalizeState(value) {
   const state = emptyState();
   for (const category of CATEGORIES) {
-    if (Array.isArray(value?.records?.[category])) state.records[category] = value.records[category];
+    if (Array.isArray(value?.records?.[category])) state.records[category] = value.records[category].map((record) => withCatalogClassification(record, category));
     if (Array.isArray(value?.rowHashes?.[category])) state.rowHashes[category] = value.rowHashes[category];
   }
-  if (Array.isArray(value?.records?.researcher)) state.records.person.push(...value.records.researcher);
+  if (Array.isArray(value?.records?.researcher)) state.records.person.push(...value.records.researcher.map((record) => withCatalogClassification(record, 'person')));
   if (Array.isArray(value?.rowHashes?.researcher)) state.rowHashes.person.push(...value.rowHashes.researcher);
-  if (value?.pendingBatches && typeof value.pendingBatches === 'object') state.pendingBatches = value.pendingBatches;
-  if (value?.committedBatches && typeof value.committedBatches === 'object') state.committedBatches = value.committedBatches;
-  for (const batches of [state.pendingBatches, state.committedBatches]) {
-    for (const batch of Object.values(batches)) if (batch?.category === 'researcher') batch.category = 'person';
+  if (Array.isArray(value?.records?.school)) state.records.organization.push(...value.records.school.map((record) => withCatalogClassification({ ...record, subtipo: record.subtipo || 'Instituição de ensino' }, 'organization')));
+  if (Array.isArray(value?.rowHashes?.school)) state.rowHashes.organization.push(...value.rowHashes.school);
+  state.rowHashes.person = [...new Set(state.rowHashes.person)];
+  state.rowHashes.organization = [...new Set(state.rowHashes.organization)];
+  if (value?.pendingBatches && typeof value.pendingBatches === 'object') {
+    state.pendingBatches = Object.fromEntries(Object.entries(value.pendingBatches).map(([id, batch]) => [id, normalizeBatch(batch)]));
+  }
+  if (value?.committedBatches && typeof value.committedBatches === 'object') {
+    state.committedBatches = Object.fromEntries(Object.entries(value.committedBatches).map(([id, batch]) => [id, normalizeBatch(batch)]));
   }
   return state;
 }
@@ -82,41 +145,41 @@ class CatalogStore {
   }
 
   getRecords(category) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
     return clone(this.state.records[category] || []);
   }
 
   hasRowHash(category, hash) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
     return (this.state.rowHashes[category] || []).includes(hash);
   }
 
   snapshot(category) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
     return clone({ records: this.state.records[category] || [], rowHashes: this.state.rowHashes[category] || [] });
   }
 
   restore(category, snapshot) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
-    this.state.records[category] = clone(snapshot?.records || []);
+    this.state.records[category] = clone(snapshot?.records || []).map((record) => withCatalogClassification(record, category));
     this.state.rowHashes[category] = clone(snapshot?.rowHashes || []);
     this.persist();
   }
 
   replaceCategory(category, records, rowHashes) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
-    this.state.records[category] = clone(records || []);
+    this.state.records[category] = clone(records || []).map((record) => withCatalogClassification(record, category));
     this.state.rowHashes[category] = [...new Set(rowHashes || [])];
     this.persist();
   }
 
   markRowHash(category, hash) {
-    category = normalizeCategory(category);
+    category = normalizeCatalogCategory(category);
     this.load();
     if (hash && !this.state.rowHashes[category].includes(hash)) this.state.rowHashes[category].push(hash);
   }
@@ -233,3 +296,4 @@ class CatalogStore {
 
 export const catalogStore = new CatalogStore();
 export const CATALOG_STORE_CATEGORIES = CATEGORIES;
+export { normalizeState as normalizeCatalogStoreState };

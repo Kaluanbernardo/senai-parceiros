@@ -70,6 +70,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
   const metadata = useMemo(() => ({
     title: 'Recomendações do Farol de Parcerias',
     category: CATEGORY_LABELS[result?.trace?.category] || result?.trace?.category,
+    subtype: result?.trace?.subtype || result?.trace?.brief?.subtype || '',
     objective: OBJECTIVE_LABELS[result?.trace?.objective] || result?.trace?.objective,
     context: result?.trace?.answers?.context || '',
   }), [result]);
@@ -106,6 +107,7 @@ export default function SelectionResults({ result, onReview, onRestart }) {
           </Typography>
           <Stack direction="row" gap={1} mt={1.5} flexWrap="wrap">
             <Chip size="small" label={metadata.category} variant="outlined" />
+            {metadata.subtype && <Chip size="small" label={metadata.subtype} variant="outlined" />}
             <Chip size="small" label={metadata.objective} variant="outlined" />
           </Stack>
         </Box>

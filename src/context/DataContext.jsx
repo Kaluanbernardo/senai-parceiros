@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { canonicalizeResearchers, resolveResearcherId } from '../domain/researcherCatalog';
+import { normalizeCatalogCategory, withCatalogClassification } from '../domain/catalogTaxonomy';
 import { useAuth } from './AuthContext';
 
 const DataContext = createContext();
@@ -18,7 +19,7 @@ async function loadSeedCatalog() {
     import('../data/escolas.json'),
     import('../data/pesquisadores.json'),
   ]);
-  const researcherCatalog = canonicalizeResearchers(pesquisadores.default);
+  const researcherCatalog = canonicalizeResearchers(pesquisadores.default.map((record) => withCatalogClassification(record, 'person')));
   return {
     stakeholdersRaw: stakeholders.default,
     escolasRaw: escolas.default,
@@ -72,8 +73,8 @@ export function DataProvider({ children }) {
     // Rebuild from the reviewed seed so rollback/removal cannot leave stale
     // imported records in the current browser session.
     setStakeholders(upsertRecords([...stakeholdersRaw], payload.records.organization));
-    setEscolas(upsertRecords([...escolasRaw], payload.records.school));
-    setPesquisadores(canonicalizeResearchers(upsertRecords(researcherCatalog.records, payload.records.person)).records);
+    setEscolas([...escolasRaw]);
+    setPesquisadores(canonicalizeResearchers(upsertRecords(researcherCatalog.records, payload.records.person)).records.map((record) => withCatalogClassification(record, 'person')));
   }, [ensureSeeds]);
 
   useEffect(() => {
@@ -145,31 +146,44 @@ export function DataProvider({ children }) {
 
   // Import/Export
   const exportData = useCallback((type) => {
-    const dataMap = { stakeholders, escolas, pesquisadores };
+    const legalEntities = [
+      ...stakeholders.map((record) => ({ ...record, _sourceCollection: 'stakeholders' })),
+      ...escolas.map((record) => ({ ...record, _sourceCollection: 'escolas' })),
+    ];
+    const dataMap = { legalEntities, stakeholders, escolas, pesquisadores };
     const data = dataMap[type];
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${type}.json`;
+    a.download = `${type === 'legalEntities' ? 'pessoas-juridicas' : type === 'pesquisadores' ? 'pessoas-fisicas' : type}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }, [stakeholders, escolas, pesquisadores]);
 
   const exportAll = useCallback(() => {
-    ['stakeholders', 'escolas', 'pesquisadores'].forEach(type => exportData(type));
+    ['legalEntities', 'pesquisadores'].forEach(type => exportData(type));
   }, [exportData]);
 
   const importData = useCallback((type, jsonArray) => {
+    if (type === 'legalEntities') {
+      const clean = (record) => Object.fromEntries(Object.entries(record).filter(([key]) => key !== '_sourceCollection'));
+      setEscolas(jsonArray.filter((record) => record?._sourceCollection === 'escolas' || (!record?.nome && record?.instituicao)).map(clean));
+      setStakeholders(jsonArray.filter((record) => record?._sourceCollection !== 'escolas' && (record?.nome || !record?.instituicao)).map(clean));
+      return;
+    }
     const setterMap = { stakeholders: setStakeholders, escolas: setEscolas, pesquisadores: setPesquisadores };
     setterMap[type](jsonArray);
   }, []);
 
   const mergeImportedRecords = useCallback((category, records = []) => {
     if (!Array.isArray(records) || !records.length) return;
-    if (category === 'person' || category === 'researcher') setPesquisadores((previous) => canonicalizeResearchers(upsertRecords(previous, records)).records);
-    else if (category === 'school') setEscolas((previous) => upsertRecords(previous, records));
-    else if (category === 'organization') setStakeholders((previous) => upsertRecords(previous, records));
+    const normalizedCategory = normalizeCatalogCategory(category);
+    if (normalizedCategory === 'person') {
+      setPesquisadores((previous) => canonicalizeResearchers(upsertRecords(previous, records)).records.map((record) => withCatalogClassification(record, 'person')));
+    } else if (normalizedCategory === 'organization') {
+      setStakeholders((previous) => upsertRecords(previous, records.map((record) => withCatalogClassification(record, 'organization'))));
+    }
   }, []);
 
   const researcherAliases = useMemo(() => canonicalizeResearchers(pesquisadores).aliases, [pesquisadores]);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -22,7 +22,6 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
 import HandshakeIcon from '@mui/icons-material/Handshake';
-import SchoolIcon from '@mui/icons-material/School';
 import ScienceIcon from '@mui/icons-material/Science';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -37,6 +36,8 @@ import { useData } from '../context/DataContext';
 import AdminTable from '../components/AdminTable';
 import EditDialog from '../components/EditDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { withCatalogClassification } from '../domain/catalogTaxonomy';
+import { buildLegalEntityCatalog } from '../domain/legalEntityCatalog';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -64,10 +65,31 @@ export default function AdminPage() {
     setSnack({ open: true, message, severity });
   };
 
+  const legalEntityRows = useMemo(() => buildLegalEntityCatalog({
+    schools: data.escolas,
+    stakeholders: data.stakeholders,
+  }).map((record) => {
+    const adminType = record._type === 'stakeholder' ? 'stakeholder' : 'escola';
+    const original = record._original && typeof record._original === 'object' ? record._original : record;
+    const adminId = original.id ?? record._sourceId ?? record.id;
+    return {
+      ...record,
+      _adminType: adminType,
+      _adminKey: `${adminType}:${adminId}`,
+      _adminId: adminId,
+      _adminOriginal: original,
+    };
+  }), [data.escolas, data.stakeholders]);
+
+  const personRows = useMemo(() => data.pesquisadores.map((record) => ({
+    ...withCatalogClassification(record, 'person'),
+    _adminType: 'pesquisador',
+    _adminKey: `pesquisador:${record.id}`,
+  })), [data.pesquisadores]);
+
   const tabConfig = [
-    { label: 'Stakeholders', icon: <HandshakeIcon />, type: 'stakeholder', data: data.stakeholders },
-    { label: 'Instituições de Educação', icon: <SchoolIcon />, type: 'escola', data: data.escolas },
-    { label: 'Especialistas', icon: <ScienceIcon />, type: 'pesquisador', data: data.pesquisadores },
+    { label: 'Pessoas Jurídicas', icon: <HandshakeIcon />, type: 'legalEntity', addType: 'stakeholder', data: legalEntityRows },
+    { label: 'Pessoas Físicas', icon: <ScienceIcon />, type: 'person', addType: 'pesquisador', data: personRows },
   ];
 
   const currentTab = tabConfig[tab];
@@ -80,27 +102,29 @@ export default function AdminPage() {
 
   // Edit handlers
   const handleEdit = (item) => {
-    setEditItem(item);
-    setEditType(currentTab.type);
+    setEditItem({ ...(item._adminOriginal || item), subtipo: item.subtipo });
+    setEditType(item._adminType || currentTab.addType);
     setIsNew(false);
   };
 
   const handleAdd = () => {
     setEditItem(null);
-    setEditType(currentTab.type);
+    setEditType(currentTab.addType);
     setIsNew(true);
   };
 
   const handleSave = (formData) => {
+    const cleanForm = Object.fromEntries(Object.entries(formData).filter(([key]) => !key.startsWith('_admin')));
+    if (editType === 'escola') delete cleanForm.nome;
     if (isNew) {
-      if (editType === 'stakeholder') data.addStakeholder(formData);
-      else if (editType === 'escola') data.addEscola(formData);
-      else data.addPesquisador(formData);
+      if (editType === 'stakeholder') data.addStakeholder(cleanForm);
+      else if (editType === 'escola') data.addEscola(cleanForm);
+      else data.addPesquisador(cleanForm);
       showSnack('Registro adicionado com sucesso!');
     } else {
-      if (editType === 'stakeholder') data.updateStakeholder(editItem.id, formData);
-      else if (editType === 'escola') data.updateEscola(editItem.id, formData);
-      else data.updatePesquisador(editItem.id, formData);
+      if (editType === 'stakeholder') data.updateStakeholder(editItem.id, cleanForm);
+      else if (editType === 'escola') data.updateEscola(editItem.id, cleanForm);
+      else data.updatePesquisador(editItem.id, cleanForm);
       showSnack('Registro atualizado com sucesso!');
     }
   };
@@ -108,20 +132,21 @@ export default function AdminPage() {
   // Delete handlers
   const handleDeleteClick = (item) => {
     setDeleteItem(item);
-    setDeleteType(currentTab.type);
+    setDeleteType(item._adminType || currentTab.addType);
   };
 
   const handleDeleteConfirm = () => {
-    if (deleteType === 'stakeholder') data.deleteStakeholder(deleteItem.id);
-    else if (deleteType === 'escola') data.deleteEscola(deleteItem.id);
-    else data.deletePesquisador(deleteItem.id);
+    const id = deleteItem._adminId ?? deleteItem.id;
+    if (deleteType === 'stakeholder') data.deleteStakeholder(id);
+    else if (deleteType === 'escola') data.deleteEscola(id);
+    else data.deletePesquisador(id);
     showSnack('Registro excluido!', 'info');
     setDeleteItem(null);
   };
 
   // Export handler
   const handleExport = (type) => {
-    const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Instituições de Educação', pesquisadores: 'Especialistas' };
+    const typeLabels = { legalEntities: 'Pessoas Jurídicas', pesquisadores: 'Pessoas Físicas' };
     if (type === 'all') {
       data.exportAll();
       showSnack('Todos os JSONs exportados!');
@@ -207,9 +232,9 @@ export default function AdminPage() {
       const body = await response.json();
       if (!response.ok) {
         if (body.error === 'catalog_mixed_categories') {
-          const categoryLabels = { person: 'pessoas', researcher: 'pessoas', organization: 'organizações', school: 'instituições de educação' };
+          const categoryLabels = { person: 'pessoas físicas', researcher: 'pessoas físicas', organization: 'pessoas jurídicas', school: 'pessoas jurídicas' };
           const categories = (body.categories || []).map((category) => categoryLabels[category] || category).join(', ');
-          throw new Error(`CSV misto (${categories}). Separe pessoas, organizações e instituições de educação em arquivos diferentes.`);
+          throw new Error(`CSV misto (${categories}). Separe pessoas físicas e pessoas jurídicas em arquivos diferentes.`);
         }
         throw new Error(body.error || 'Falha ao importar CSV.');
       }
@@ -258,7 +283,7 @@ export default function AdminPage() {
         const parsed = JSON.parse(ev.target.result);
         if (!Array.isArray(parsed)) throw new Error('JSON deve ser um array');
         data.importData(importType, parsed);
-        const typeLabels = { stakeholders: 'Stakeholders', escolas: 'Instituições de Educação', pesquisadores: 'Especialistas' };
+        const typeLabels = { legalEntities: 'Pessoas Jurídicas', pesquisadores: 'Pessoas Físicas' };
         showSnack(`${typeLabels[importType]} importado com sucesso! (${parsed.length} registros)`);
       } catch (err) {
         showSnack(`Erro ao importar: ${err.message}`, 'error');
@@ -291,17 +316,13 @@ export default function AdminPage() {
             <MenuItem disabled>
               <Typography variant="caption" fontWeight={700}>EXPORTAR</Typography>
             </MenuItem>
-            <MenuItem onClick={() => handleExport('stakeholders')}>
+            <MenuItem onClick={() => handleExport('legalEntities')}>
               <ListItemIcon><FileDownloadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Stakeholders JSON</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleExport('escolas')}>
-              <ListItemIcon><FileDownloadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Instituições de Educação (JSON)</ListItemText>
+              <ListItemText>Pessoas Jurídicas (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleExport('pesquisadores')}>
               <ListItemIcon><FileDownloadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Especialistas (JSON)</ListItemText>
+              <ListItemText>Pessoas Físicas (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleExport('all')}>
               <ListItemIcon><DownloadIcon fontSize="small" color="primary" /></ListItemIcon>
@@ -320,17 +341,13 @@ export default function AdminPage() {
               <ListItemText primary="Histórico de importações" secondary="Consultar lotes e desfazer quando permitido" />
             </MenuItem>
             <Divider />
-            <MenuItem onClick={() => handleImportClick('stakeholders')}>
+            <MenuItem onClick={() => handleImportClick('legalEntities')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Stakeholders JSON</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleImportClick('escolas')}>
-              <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Instituições de Educação (JSON)</ListItemText>
+              <ListItemText>Pessoas Jurídicas (JSON)</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleImportClick('pesquisadores')}>
               <ListItemIcon><FileUploadIcon fontSize="small" /></ListItemIcon>
-              <ListItemText>Especialistas (JSON)</ListItemText>
+              <ListItemText>Pessoas Físicas (JSON)</ListItemText>
             </MenuItem>
           </Menu>
         </Toolbar>

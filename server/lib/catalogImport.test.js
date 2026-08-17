@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
 import ExcelJS from 'exceljs';
-import { CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, getCatalogHeaders } from '../../src/domain/catalogImportSchema.js';
+import { CATALOG_SCHEMA_VERSION, CATALOG_SHEET_NAME, LEGACY_CATALOG_SCHEMA_VERSION_V2, getCatalogHeaders } from '../../src/domain/catalogImportSchema.js';
 import { commitCatalogImport, parseCatalogWorkbook, previewCatalogImport, rollbackCatalogImport } from './catalogImport.js';
 import { catalogStore } from './catalogStore.js';
 
@@ -52,7 +52,7 @@ describe('catalog XLSX import', () => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(CATALOG_SHEET_NAME);
     sheet.addRow(['schema_version', 'tipo_registro', 'nome', 'pais', 'resumo', 'website_oficial']);
-    sheet.addRow([CATALOG_SCHEMA_VERSION, 'school', 'Centro de Formação Teste', 'Brasil', 'Rede pública de EPT.', 'https://example.org/centro']);
+    sheet.addRow([LEGACY_CATALOG_SCHEMA_VERSION_V2, 'school', 'Centro de Formação Teste', 'Brasil', 'Rede pública de EPT.', 'https://example.org/centro']);
     const contentBase64 = Buffer.from(await workbook.xlsx.writeBuffer()).toString('base64');
 
     const parsed = await parseCatalogWorkbook({ filename: 'recorte.xlsx', contentBase64 });
@@ -60,8 +60,8 @@ describe('catalog XLSX import', () => {
     expect(parsed.errors).toEqual([]);
     // A categoria vem de tipo_registro: só com colunas comuns o cabeçalho
     // serviria para as três.
-    expect(parsed.category).toBe('school');
-    expect(parsed.rows[0].record).toMatchObject({ nome: 'Centro de Formação Teste', pais: 'Brasil' });
+    expect(parsed.category).toBe('organization');
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'Centro de Formação Teste', pais: 'Brasil', subtipo: 'Instituição de ensino' });
     expect(previewCatalogImport(parsed, []).counts).toMatchObject({ total: 1, new: 1, invalid: 0 });
   });
 
@@ -85,7 +85,7 @@ describe('catalog XLSX import', () => {
   it('imports semicolon-delimited CSVs exported by pt-BR Excel', async () => {
     const csv = [
       'schema_version;tipo_registro;nome;pais;resumo;areas_temas;website_oficial',
-      `${CATALOG_SCHEMA_VERSION};researcher;Nancy Bocken;Países Baixos;Economia circular;economia circular;https://example.org/nancy`,
+      `${LEGACY_CATALOG_SCHEMA_VERSION_V2};researcher;Nancy Bocken;Países Baixos;Economia circular;economia circular;https://example.org/nancy`,
     ].join('\n');
 
     const parsed = await parseCatalogWorkbook({
@@ -127,9 +127,9 @@ describe('catalog XLSX import', () => {
       category: 'school',
       contentBase64: Buffer.from(await workbook.xlsx.writeBuffer()).toString('base64'),
     });
-    expect(parsed.category).toBe('school');
+    expect(parsed.category).toBe('organization');
     expect(parsed.errors).toEqual([]);
-    expect(parsed.rows[0].record).toMatchObject({ nome: 'SENA', pais: 'Colômbia', website: 'https://sena.edu.co' });
+    expect(parsed.rows[0].record).toMatchObject({ nome: 'SENA', pais: 'Colômbia', website: 'https://sena.edu.co', subtipo: 'Instituição de ensino' });
   });
 
   it('rejects a workbook with headers from another schema', async () => {
@@ -179,7 +179,7 @@ describe('catalog XLSX import', () => {
     catalogStore.configure({ driver: 'file', filePath });
     catalogStore.replaceCategory('organization', [{ id: 'o-1', nome: 'Persistido' }], ['row-hash']);
     catalogStore.configure({ driver: 'file', filePath });
-    expect(catalogStore.getRecords('organization')).toEqual([{ id: 'o-1', nome: 'Persistido' }]);
+    expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining({ id: 'o-1', nome: 'Persistido', categoria: 'Pessoa Jurídica', subtipo: 'Outro' })]);
     expect(catalogStore.hasRowHash('organization', 'row-hash')).toBe(true);
     catalogStore.configure({ driver: 'memory' });
     fs.rmSync(path.dirname(filePath), { recursive: true, force: true });

@@ -11,6 +11,7 @@ import { getCatalogColumns } from '../../src/domain/catalogImportSchema.js';
 function candidate(overrides = {}) {
   return {
     nome: 'Instituto Técnico Exemplo',
+    subtipo: 'Instituição de ensino',
     pais: 'Brasil',
     cidade_estado: 'São Paulo, SP',
     resumo: 'Instituição de educação profissional com atuação pública documentada em formação técnica industrial e aprendizagem.',
@@ -41,8 +42,8 @@ function candidate(overrides = {}) {
 describe('catalog research module', () => {
   it('accepts only the deep-research quantities and closed geography options', () => {
     for (const quantity of CATALOG_RESEARCH_QUANTITIES) {
-      expect(normalizeCatalogResearchRequest({ category: 'school', context: 'Formação dual', quantity, geography: 'brasil' })).toMatchObject({
-        category: 'school', context: 'Formação dual', quantity, geography: 'brasil', batchSize: CATALOG_RESEARCH_BATCH_SIZE,
+      expect(normalizeCatalogResearchRequest({ category: 'organization', subtype: 'Instituição de ensino', context: 'Formação dual', quantity, geography: 'brasil' })).toMatchObject({
+        category: 'organization', subtype: 'Instituição de ensino', context: 'Formação dual', quantity, geography: 'brasil', batchSize: CATALOG_RESEARCH_BATCH_SIZE,
       });
     }
     expect(normalizeCatalogResearchRequest({
@@ -53,7 +54,7 @@ describe('catalog research module', () => {
       sourcePreferences: 'academic', geography: 'internacional', prioritizationFactors: 'experiência industrial',
       exclusionFactors: 'consultorias sem projetos públicos', batchIndex: 2, excludeCandidates: ['Pessoa já localizada'],
     });
-    expect(() => normalizeCatalogResearchRequest({ category: 'school', context: 'x', quantity: 3, geography: 'brasil' })).toThrow('invalid_research_quantity');
+    expect(() => normalizeCatalogResearchRequest({ category: 'organization', subtype: 'Instituição de ensino', context: 'x', quantity: 3, geography: 'brasil' })).toThrow('invalid_research_quantity');
     expect(() => normalizeCatalogResearchRequest({ category: 'other', context: 'x', quantity: 5, geography: 'brasil' })).toThrow('invalid_research_category');
     expect(() => normalizeCatalogResearchRequest({ category: 'person', context: 'x', quantity: 5, geography: 'mundo' })).toThrow('invalid_research_geography');
     expect(() => normalizeCatalogResearchRequest({ category: 'person', context: 'x', quantity: 5, geography: 'brasil', sourcePreferences: 'qualquer site' })).toThrow('invalid_research_source_preference');
@@ -82,7 +83,7 @@ describe('catalog research module', () => {
     }));
     const result = await researchCatalogCandidates(
       {
-        category: 'school', context: 'Comparar aprendizagem industrial', quantity: 20, geography: 'internacional', sourcePreferences: 'official',
+        category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 20, geography: 'internacional', sourcePreferences: 'official',
         prioritizationFactors: 'programas com escala comprovada', exclusionFactors: 'instituições sem fonte oficial',
         batchIndex: 1, excludeCandidates: ['Instituto já encontrado'],
       },
@@ -90,7 +91,7 @@ describe('catalog research module', () => {
     );
 
     expect(generate).toHaveBeenCalledWith(expect.objectContaining({
-      task: 'catalog_research_school_batch_2',
+      task: 'catalog_research_organization_batch_2',
       model: 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
@@ -102,6 +103,7 @@ describe('catalog research module', () => {
     expect(generate.mock.calls[0][0].messages[1].content).toContain('programas com escala comprovada');
     expect(generate.mock.calls[0][0].messages[1].content).toContain('instituições sem fonte oficial');
     expect(generate.mock.calls[0][0].messages[1].content).toContain('Instituto já encontrado');
+    expect(generate.mock.calls[0][0].messages[1].content).toContain('Subtipo desejado: Instituição de ensino');
     expect(result.parsed.metadata).toMatchObject({ origin: 'catalog_research', provider: 'openrouter', webSearchRequests: 2, batchIndex: 1, requestedQuantity: 20 });
     expect(result.parsed.rows[0]).toMatchObject({ valid: true, rowNumber: 1 });
     expect(result.parsed.rows[0].record.areas_formacao).toEqual(['mecatrônica', 'automação']);
@@ -178,7 +180,7 @@ describe('catalog research module', () => {
 
   it('keeps weakly sourced output visible but invalid for approval', async () => {
     const result = await researchCatalogCandidates(
-      { category: 'school', context: 'Comparar aprendizagem industrial', quantity: 5, geography: 'brasil' },
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 5, geography: 'brasil' },
       {
         generate: async () => ({ data: { candidates: [candidate({ fontes: ['https://example.edu/'] })] }, trace: { provider: 'openrouter', model: 'test/model' } }),
         now: () => new Date('2026-08-14T12:00:00Z'),

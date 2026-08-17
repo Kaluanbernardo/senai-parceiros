@@ -11,10 +11,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import { getDisplayLogoUrl } from '../utils/media';
+import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 
 const FIELD_CONFIGS = {
   stakeholder: [
     { key: 'nome', label: 'Nome da Instituicao', required: true, multiline: false, gridSize: 12 },
+    { key: 'subtipo', label: 'Subtipo', required: true, gridSize: 12, select: true, options: ORGANIZATION_SUBTYPES },
     { key: 'pais', label: 'Pais', required: true, gridSize: 6 },
     { key: 'natureza', label: 'Natureza', required: true, gridSize: 6, select: true, options: ['Publica', 'Privada', 'PPP'] },
     { key: 'diferencial', label: 'Diferencial', multiline: true, rows: 3, gridSize: 12 },
@@ -24,6 +26,7 @@ const FIELD_CONFIGS = {
   ],
   escola: [
     { key: 'instituicao', label: 'Nome da Instituicao', required: true, gridSize: 12 },
+    { key: 'subtipo', label: 'Subtipo', required: true, gridSize: 12, select: true, options: ORGANIZATION_SUBTYPES },
     { key: 'pais', label: 'Pais', required: true, gridSize: 6 },
     { key: 'areas', label: 'Areas de Atuacao (separar com ;)', gridSize: 6 },
     { key: 'relevancia', label: 'Perfil em Destaque (tagline curta)', multiline: true, rows: 2, gridSize: 12 },
@@ -33,6 +36,7 @@ const FIELD_CONFIGS = {
   ],
   pesquisador: [
     { key: 'nome', label: 'Nome do especialista', required: true, gridSize: 6 },
+    { key: 'subtipo', label: 'Subtipo', required: true, gridSize: 6, select: true, options: PERSON_SUBTYPES },
     { key: 'instituicao', label: 'Instituicao', required: true, gridSize: 6 },
     { key: 'pais', label: 'Pais', required: true, gridSize: 4 },
     { key: 'h_index', label: 'h-index', gridSize: 4 },
@@ -96,7 +100,7 @@ export default function EditDialog({ open, onClose, onSave, item, type, isNew })
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ fontWeight: 700 }}>
-        {isNew ? 'Adicionar' : 'Editar'} {type === 'stakeholder' ? 'Stakeholder' : type === 'escola' ? 'Instituição de Educação' : 'Especialista'}
+        {isNew ? 'Adicionar' : 'Editar'} {type === 'pesquisador' ? 'Pessoa Física' : 'Pessoa Jurídica'}
       </DialogTitle>
       <DialogContent>
         {type !== 'pesquisador' ? (
