@@ -28,16 +28,33 @@ const ERROR_MESSAGES = {
   provider_5xx: 'O provedor de IA teve instabilidade neste card. Use Continuar enriquecimento para tentar novamente.',
   output_truncated: 'A resposta do provedor foi cortada pelo limite de tamanho antes de terminar este card.',
   enrichment_item_missing: 'O provedor não devolveu dados para este card.',
-  enrichment_source_changed: 'O catálogo mudou durante o processamento. Reabra a auditoria antes de consolidar o lote.',
-  enrichment_commit_quality_failed: 'A conferência final encontrou um card fora do padrão. Nenhuma alteração do lote foi mantida.',
+  enrichment_source_changed: 'O catálogo mudou durante o processamento. Reabra a auditoria antes de gravar os cards aprovados.',
+  enrichment_commit_quality_failed: 'A conferência final recusou um card gravado. Essa gravação foi desfeita; os cards já salvos foram mantidos.',
+  enrichment_batch_not_found: 'O lote não está mais disponível. Recarregue a página e inicie novamente.',
+  enrichment_batch_incomplete: 'Nenhum card aprovado para gravar ainda.',
   quality_gate_failed: 'A pesquisa não trouxe evidência suficiente para completar os campos exigidos.',
+  authentication_required: 'Sua sessão expirou. Entre novamente para continuar o enriquecimento.',
+  insufficient_role: 'Esta conta não tem permissão de administrador para enriquecer o catálogo.',
+  store_hydrate_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
+  store_read_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
+  invalid_enrichment_action: 'A janela enviou uma ação inválida. Recarregue a página.',
+  not_found: 'A rota de enriquecimento não respondeu. Recarregue a página.',
 };
 
-export function catalogEnrichmentErrorMessage(code) {
-  if (String(code || '').startsWith('catalog_source_http_')) {
+/**
+ * Um código sem tradução ainda precisa chegar ao operador. A mensagem genérica
+ * sozinha já escondeu duas falhas distintas — uma recusa do provedor e uma
+ * queda da carga inicial — e as duas exigiam ações opostas. O texto amigável
+ * explica, o código identifica; quando não há texto, o código é o que resta.
+ */
+export function catalogEnrichmentErrorMessage(code, status) {
+  const raw = String(code || '').trim();
+  if (raw.startsWith('catalog_source_http_')) {
     return 'Não foi possível consultar uma fonte pública para este card.';
   }
-  return ERROR_MESSAGES[code] || 'Não foi possível concluir o enriquecimento agora.';
+  if (ERROR_MESSAGES[raw]) return ERROR_MESSAGES[raw];
+  const detail = [raw || 'sem código', status ? `HTTP ${status}` : ''].filter(Boolean).join(', ');
+  return `Não foi possível concluir o enriquecimento agora (${detail}).`;
 }
 
 export function catalogEnrichmentFailureReason(failure) {
@@ -71,8 +88,9 @@ async function requestEnrichment(body) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(catalogEnrichmentErrorMessage(payload.error));
+    const error = new Error(catalogEnrichmentErrorMessage(payload.error, response.status));
     error.code = payload.error;
+    error.status = response.status;
     throw error;
   }
   return payload;
@@ -116,7 +134,7 @@ function QualityContract({ quality }) {
 function BatchProgress({ batch, running, runningSeconds }) {
   if (!batch || batch.completeWithoutChanges) return null;
   const counts = batch.counts || {};
-  const handled = Number(counts.passed || 0) + Number(counts.failed || 0);
+  const handled = Number(counts.passed || 0) + Number(counts.failed || 0) + Number(counts.committed || 0);
   const total = Number(counts.total || 0);
   const value = total ? Math.round((handled / total) * 100) : 0;
   return (
@@ -127,7 +145,8 @@ function BatchProgress({ batch, running, runningSeconds }) {
       </Stack>
       <LinearProgress variant="determinate" value={value} sx={{ height: 8, borderRadius: 999 }} />
       <Stack direction="row" gap={1} flexWrap="wrap">
-        <Chip size="small" label={`${counts.passed || 0} aprovados`} color="success" variant="outlined" />
+        <Chip size="small" label={`${counts.committed || 0} gravados`} color="success" variant="outlined" />
+        {Boolean(counts.passed) && <Chip size="small" label={`${counts.passed} aprovados`} color="success" variant="outlined" />}
         <Chip size="small" label={`${counts.pending || 0} pendentes`} variant="outlined" />
         {Boolean(counts.failed) && <Chip size="small" label={`${counts.failed} com pendência`} color="warning" variant="outlined" />}
       </Stack>
@@ -180,39 +199,50 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     return () => { active = false; continueRef.current = false; };
   }, [open]);
 
-  const commit = async (current) => {
-    const result = await requestEnrichment({ action: 'commit', batchId: current.batchId });
-    await onCatalogChanged?.();
-    const refreshed = await requestEnrichment();
-    setOverview(refreshed);
-    setBatch(null);
-    setNotice({ severity: 'success', text: `${result.applied?.length || 0} card(s) enriquecido(s). Todos passaram pela conferência final.` });
-  };
-
   const run = async (initial) => {
     continueRef.current = true;
     setRunningSeconds(0);
     setRunning(true);
-    setNotice({ severity: 'info', text: 'Pesquisando fontes e conferindo os cards. Você pode fechar esta janela e continuar o lote depois.' });
+    setNotice({ severity: 'info', text: 'Pesquisando fontes e conferindo os cards. Cada card aprovado é gravado na hora, então você pode fechar esta janela e continuar depois sem perder o que já passou.' });
     let current = initial;
+    let saved = 0;
     try {
-      while (continueRef.current && current?.counts?.pending > 0) {
+      // Grava antes de seguir: o card aprovado vira catálogo imediatamente, e
+      // uma interrupção mais adiante não desfaz o que já passou.
+      while (continueRef.current && (current?.counts?.pending > 0 || current?.counts?.passed > 0)) {
+        if (current.counts.passed > 0) {
+          const committed = await requestEnrichment({ action: 'commit', batchId: current.batchId });
+          saved += committed.applied?.length || 0;
+          current = committed;
+          setBatch(current);
+          await onCatalogChanged?.();
+          continue;
+        }
         setRunningSeconds(0);
         current = await requestEnrichment({ action: 'process', batchId: current.batchId });
         setBatch(current);
       }
-      if (continueRef.current && current?.readyToCommit) await commit(current);
-      else if (continueRef.current && current?.counts?.failed) {
+      if (!continueRef.current) return;
+      const refreshed = await requestEnrichment();
+      setOverview(refreshed);
+      setBatch(refreshed.pending);
+      const blocked = Number(current?.counts?.failed || 0);
+      if (!blocked) {
+        setNotice({ severity: 'success', text: `${saved} card(s) enriquecido(s) e gravado(s). Todos passaram pela conferência final.` });
+      } else {
         const onlyQualityGaps = (current.failures || []).every((failure) => !failure.error || failure.error === 'quality_gate_failed');
         setNotice({
-          severity: 'warning',
-          text: onlyQualityGaps
-            ? 'Alguns cards ainda não encontraram evidência suficiente. O lote não foi consolidado.'
-            : 'Alguns cards ficaram bloqueados. Veja o motivo de cada um abaixo antes de tentar novamente.',
+          severity: saved ? 'info' : 'warning',
+          text: `${saved} card(s) gravado(s); ${blocked} ainda bloqueado(s). ${onlyQualityGaps
+            ? 'A pesquisa não encontrou evidência pública suficiente para eles.'
+            : 'Veja o motivo de cada um abaixo antes de tentar novamente.'}`,
         });
       }
     } catch (error) {
-      setNotice({ severity: 'warning', text: error.message });
+      setNotice({
+        severity: 'warning',
+        text: saved ? `${saved} card(s) já gravado(s). ${error.message}` : error.message,
+      });
     } finally {
       continueRef.current = false;
       setRunning(false);
