@@ -9,6 +9,7 @@ import {
   rollbackCatalogEnrichment,
 } from './catalogEnrichment.js';
 import { catalogStore } from './catalogStore.js';
+import { getCatalog } from './catalog.js';
 
 const longDescription = 'Perfil factual sustentado pelas fontes públicas fornecidas. '.repeat(11);
 
@@ -59,7 +60,7 @@ describe('catalog enrichment batches', () => {
     });
   });
 
-  it('uses a collision-safe overlay id for schools projected from organizations', () => {
+  it('grava a escola projetada pela mesma identidade com que o catálogo a lê', () => {
     const school = {
       id: 'school:stakeholders:6', _source: 'stakeholders', _sourceId: 6,
       nome: 'Escola projetada', pais: 'Brasil', descricao: longDescription,
@@ -70,7 +71,24 @@ describe('catalog enrichment batches', () => {
 
     const batch = createCatalogEnrichmentBatch({ organization: [school], person: [] });
 
-    expect(batch.targets[0].storageId).toBe('organization-stakeholders-6');
+    expect(batch.targets[0].storageId).toBe('school:stakeholders:6');
+    expect(batch.targets[0].storageId).toBe(batch.targets[0].lookupId);
+  });
+
+  it('nunca endereça a gravação a um card diferente do que foi auditado', () => {
+    const organizations = getCatalog('organization');
+    const batch = createCatalogEnrichmentBatch({ organization: organizations, person: getCatalog('person') });
+
+    // Um id de gravação que pertence a outro registro sobrescreve uma
+    // organização alheia; um id que não existe cria um órfão e deixa o card
+    // auditado reprovado. Os dois casos já ocorreram no catálogo real.
+    const collisions = batch.targets.filter((target) => {
+      const holder = organizations.find((record) => String(record.id) === String(target.storageId));
+      return holder && String(holder.id) !== String(target.lookupId);
+    });
+
+    expect(collisions.map((target) => target.name)).toEqual([]);
+    expect(batch.targets.filter((target) => String(target.storageId) !== String(target.lookupId))).toEqual([]);
   });
 
   it('researches, validates and commits a complete batch before changing the catalog', async () => {
@@ -102,6 +120,44 @@ describe('catalog enrichment batches', () => {
     const storedBatch = catalogStore.getCommitted(batch.batchId);
     expect(rollbackCatalogEnrichment(storedBatch)).toMatchObject({ rolledBack: true, restored: 1 });
     expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining(shallow)]);
+  });
+
+  it('grava os cards aprovados e mantém apenas os reprovados pendentes', async () => {
+    const approved = { id: 'o-aprovado', nome: 'Instituto Aprovado', pais: 'Brasil' };
+    const blocked = { id: 'o-bloqueado', nome: 'Instituto Sem Evidência', pais: 'Brasil' };
+    catalogStore.replaceCategory('organization', [approved, blocked], []);
+    const batch = createCatalogEnrichmentBatch(providerFromStore(), new Date('2026-08-18T12:00:00Z'));
+    catalogStore.setPending(batch);
+    const searchEvidence = async () => ({
+      sources: [{ title: 'Site institucional', url: 'https://example.org', content: 'Atuação técnica.' }],
+      openAlex: null,
+    });
+    // O primeiro card recebe um enriquecimento completo; o segundo volta sem a
+    // evidência exigida e nunca chega a passar.
+    const generate = async ({ messages }) => {
+      const key = JSON.parse(messages[1].content)[0].targetKey;
+      return key.includes('o-aprovado')
+        ? { data: { items: [completeOrganization(key)] }, trace: {} }
+        : { data: { items: [{ ...completeOrganization(key), descricao: 'curta', fontes: [], website: '' }] }, trace: {} };
+    };
+
+    let summary;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      summary = await processCatalogEnrichment(batch.batchId, { searchEvidence, generate, enforceBudget: false });
+      if (summary.counts.passed > 0) {
+        summary = commitCatalogEnrichment(batch.batchId, { provideCatalog: providerFromStore });
+      }
+    }
+
+    expect(summary.counts).toMatchObject({ total: 2, committed: 1, failed: 1, pending: 0, passed: 0 });
+    // O card aprovado virou catálogo mesmo com o outro bloqueado.
+    expect(catalogStore.getRecords('organization').find((record) => record.id === 'o-aprovado')).toMatchObject({
+      enrichmentBatchId: batch.batchId,
+      descricao: expect.stringContaining('Perfil factual'),
+    });
+    expect(catalogStore.getRecords('organization').find((record) => record.id === 'o-bloqueado')).toEqual(expect.objectContaining(blocked));
+    // O lote continua pendente para uma nova tentativa do card bloqueado.
+    expect(catalogStore.getPending(batch.batchId)).not.toBeNull();
   });
 
   it('uses cited OpenRouter search when Tavily is unavailable', async () => {

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { auditCatalogQuality, auditCatalogRecord, catalogPublicUrls, catalogQualityPublicContract, isResearchProfile } from '../../src/domain/catalogQuality.js';
+import { CATALOG_QUALITY_VERSION, auditCatalogQuality, auditCatalogRecord, catalogPublicUrls, catalogQualityPublicContract, isResearchProfile } from '../../src/domain/catalogQuality.js';
 import { getCatalog } from './catalog.js';
 import { catalogStore } from './catalogStore.js';
 import { generateStructured } from './structuredGeneration.js';
@@ -81,19 +81,25 @@ function withoutInternalFields(value) {
     .map(([key, entry]) => [key, withoutInternalFields(entry)]));
 }
 
+/**
+ * O registro gravado precisa carregar a mesma identidade com que o catálogo
+ * derivado lê o card — só assim a gravação recai sobre o card pretendido.
+ *
+ * O esquema anterior reconstruía um id a partir da fonte
+ * (`organization-<fonte>-<id>`) ou do id bruto do arquivo de origem, e nenhum
+ * dos dois endereça o card: um card lido como `school:escolas:47` era gravado
+ * como `47`, id que no catálogo derivado pertence a outra organização. Dos 54
+ * cards de pessoa jurídica fora do padrão, 15 gravavam por cima de uma
+ * organização diferente e 39 criavam um registro órfão, deixando o card
+ * original reprovado. Nenhum atualizava o card pretendido — e a conferência
+ * final, ao reprovar, era o único motivo de o catálogo não ser corrompido.
+ */
 function storageRecord(record, category) {
   const original = record?._original && typeof record._original === 'object' ? record._original : {};
   const merged = withoutInternalFields({ ...original, ...record });
-  const sourceId = record?._sourceId ?? original?.id ?? record?.id;
-  const educationRecord = category === 'organization' && record?.subtipo === ORGANIZATION_SUBTYPES[0];
-  const storageId = educationRecord && record?._source
-    ? `organization-${record._source}-${String(sourceId)}`
-    : sourceId;
-  if (educationRecord) {
-    merged.id = storageId;
+  merged.id = record?.id ?? original?.id;
+  if (category === 'organization' && record?.subtipo === ORGANIZATION_SUBTYPES[0]) {
     merged.instituicao = record?.nome || record?.instituicao || original?.instituicao || original?.nome;
-  } else {
-    merged.id = storageId;
   }
   return merged;
 }
@@ -141,6 +147,7 @@ function counts(batch) {
     pending: values.filter((target) => target.status === 'pending').length,
     passed: values.filter((target) => target.status === 'passed').length,
     failed: values.filter((target) => target.status === 'failed').length,
+    committed: values.filter((target) => target.status === 'committed').length,
   };
 }
 
@@ -152,7 +159,11 @@ export function catalogEnrichmentBatchSummary(batch) {
     kind: batch.kind,
     createdAt: batch.createdAt,
     counts: progress,
-    readyToCommit: progress.total > 0 && progress.passed === progress.total,
+    // Cada card aprovado é gravado assim que passa. Exigir o lote inteiro
+    // aprovado antes de gravar qualquer coisa significava, com 91 cards fora do
+    // padrão, descartar o trabalho de 90 por causa de um — e o lote nunca
+    // fechava.
+    readyToCommit: progress.passed > 0,
     completeWithoutChanges: progress.total === 0,
     next: nextTarget ? {
       key: nextTarget.key,
@@ -178,21 +189,39 @@ export function catalogEnrichmentCapabilities() {
   return { ai, search, searchProvider, ready: ai && search };
 }
 
+function latestPendingBatch() {
+  return catalogStore.listPending()
+    .filter((batch) => batch?.kind === 'enrichment')
+    .sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)))[0];
+}
+
+/**
+ * Um lote criado sob outra versão do padrão descreve um catálogo que não existe
+ * mais: seus alvos, lacunas e impressões digitais vêm de regras anteriores, e
+ * retomá-lo apenas reproduz a falha original. Como um lote pendente bloqueia a
+ * criação de outro, ele precisa ser reconhecido como obsoleto em vez de
+ * sobreviver indefinidamente.
+ */
+function isCurrentBatch(batch) {
+  return Boolean(batch) && Number(batch.qualityVersion) === CATALOG_QUALITY_VERSION;
+}
+
 export function getCatalogEnrichmentOverview({ provideCatalog = catalogProvider } = {}) {
   const catalog = provideCatalog();
   const audit = auditCatalogQuality(catalog);
-  const pending = catalogStore.listPending().filter((batch) => batch?.kind === 'enrichment').sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)))[0];
+  const pending = latestPendingBatch();
   return {
     audit: publicAudit(audit),
     quality: catalogQualityPublicContract(),
     capabilities: catalogEnrichmentCapabilities(),
-    pending: pending ? catalogEnrichmentBatchSummary(pending) : null,
+    pending: isCurrentBatch(pending) ? catalogEnrichmentBatchSummary(pending) : null,
   };
 }
 
 export function startCatalogEnrichment({ provideCatalog = catalogProvider, now = new Date() } = {}) {
-  const existing = catalogStore.listPending().filter((batch) => batch?.kind === 'enrichment').sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)))[0];
-  if (existing) return catalogEnrichmentBatchSummary(existing);
+  const existing = latestPendingBatch();
+  if (isCurrentBatch(existing)) return catalogEnrichmentBatchSummary(existing);
+  if (existing) catalogStore.deletePending(existing.batchId);
   const batch = createCatalogEnrichmentBatch(provideCatalog(), now);
   catalogStore.setPending(batch);
   return catalogEnrichmentBatchSummary(batch);
@@ -629,10 +658,10 @@ function upsert(records, record) {
 export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvider, now = new Date() } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
-  const progress = counts(batch);
-  if (!progress.total || progress.passed !== progress.total) throw new Error('enrichment_batch_incomplete');
+  const ready = (batch.targets || []).filter((target) => target.status === 'passed');
+  if (!ready.length) throw new Error('enrichment_batch_incomplete');
   const currentCatalog = provideCatalog();
-  const drift = batch.targets.filter((target) => {
+  const drift = ready.filter((target) => {
     const current = findCurrentTarget(currentCatalog, target);
     return !current || fingerprint(storageRecord(current, target.category)) !== target.sourceFingerprint;
   });
@@ -643,7 +672,7 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
   const applied = [];
   const appliedRecords = [];
   const committedAt = now.toISOString();
-  for (const target of batch.targets) {
+  for (const target of ready) {
     const recordHash = fingerprint(target.result);
     const record = {
       ...target.result,
@@ -660,15 +689,52 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
     appliedRecords.push(record);
   }
   for (const category of CATEGORIES) catalogStore.replaceCategory(category, nextByCategory[category], beforeByCategory[category].rowHashes);
-  const after = auditCatalogQuality(provideCatalog());
-  if (after.needsEnrichment) {
+
+  // A conferência final vale sobre os cards que este commit gravou, lidos de
+  // volta pelo catálogo derivado — é ali que uma gravação endereçada ao card
+  // errado apareceria. Auditar o catálogo inteiro exigiria que nenhum outro
+  // card estivesse fora do padrão, o que reprovaria toda gravação parcial e
+  // desfaria trabalho já aprovado.
+  const derived = provideCatalog();
+  const rejected = ready.filter((target) => {
+    const stored = findCurrentTarget(derived, target);
+    return !stored || !auditCatalogRecord(stored, target.category).pass;
+  });
+  if (rejected.length) {
     for (const category of CATEGORIES) catalogStore.restore(category, beforeByCategory[category]);
     throw new Error('enrichment_commit_quality_failed');
   }
-  const committed = { ...batch, beforeByCategory, applied, appliedRecords, committedAt, auditAfter: publicAudit(after), counts: progress };
+
+  const committedKeys = new Set(ready.map((target) => target.key));
+  for (const target of batch.targets) {
+    if (!committedKeys.has(target.key)) continue;
+    target.status = 'committed';
+    target.result = null;
+  }
+  const remaining = batch.targets.some((target) => target.status !== 'committed');
+  if (remaining) catalogStore.setPending(batch);
+  else catalogStore.deletePending(batchId);
+
+  // O desfazer continua sendo por lote, mesmo com o lote gravado aos poucos: o
+  // estado anterior guardado é sempre o da primeira gravação, e as seguintes
+  // apenas acrescentam as suas mudanças.
+  const previous = catalogStore.getCommitted(batchId);
+  const committed = {
+    ...batch,
+    beforeByCategory: previous?.beforeByCategory || beforeByCategory,
+    applied: [...(previous?.applied || []), ...applied],
+    appliedRecords: [...(previous?.appliedRecords || []), ...appliedRecords],
+    committedAt,
+    counts: counts(batch),
+  };
   catalogStore.setCommitted(committed);
-  catalogStore.deletePending(batchId);
-  return { ...catalogEnrichmentBatchSummary(committed), committedAt, applied, records: appliedRecords, audit: publicAudit(after) };
+  return {
+    ...catalogEnrichmentBatchSummary(batch),
+    committedAt,
+    applied,
+    records: appliedRecords,
+    audit: publicAudit(auditCatalogQuality(derived)),
+  };
 }
 
 export function rollbackCatalogEnrichment(batch) {

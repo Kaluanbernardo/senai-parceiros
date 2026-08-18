@@ -8,7 +8,10 @@ function dayKey() {
 const DEFAULT_LIMITS = Object.freeze({ tokens: 100000, costUsd: 25, requests: 100 });
 const RADAR_EDITORIAL_DEFAULT_LIMITS = Object.freeze({ tokens: 500000, costUsd: 5, requests: 200 });
 const CATALOG_RESEARCH_DEFAULT_LIMITS = Object.freeze({ tokens: 1000000, costUsd: 25, requests: 100 });
-const CATALOG_ENRICHMENT_DEFAULT_LIMITS = Object.freeze({ tokens: 1000000, costUsd: 10, requests: 150 });
+// Um card equivale a uma requisição, e cada card tem até duas tentativas. Com
+// 91 cards fora do padrão, o teto anterior de 150 requisições era menor que o
+// próprio trabalho: o lote esgotava a cota antes de terminar, por construção.
+const CATALOG_ENRICHMENT_DEFAULT_LIMITS = Object.freeze({ tokens: 3000000, costUsd: 30, requests: 500 });
 
 function numericLimit(specificName, genericName, fallback) {
   const configured = (specificName ? process.env[specificName] : undefined)

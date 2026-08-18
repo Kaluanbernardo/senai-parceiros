@@ -39,9 +39,11 @@ describe('AI usage budget', () => {
 
   it('mantém orçamento disponível durante um lote completo de enriquecimento', () => {
     process.env.AI_DAILY_TOKEN_LIMIT = '1';
-    expect(getUsageBudget('catalog-enrichment').limits).toMatchObject({ requests: 150, tokens: 1000000, costUsd: 10 });
+    expect(getUsageBudget('catalog-enrichment').limits).toMatchObject({ requests: 500, tokens: 3000000, costUsd: 30 });
 
-    for (let card = 1; card <= 66; card += 1) {
+    // 91 cards fora do padrão, cada um com até duas tentativas: o teto precisa
+    // cobrir o lote inteiro, senão a cota acaba antes do trabalho.
+    for (let card = 1; card <= 182; card += 1) {
       expect(canUseAi('catalog-enrichment'), `orçamento esgotou antes do card ${card}`).toBe(true);
       recordAiUsage('catalog-enrichment', { total_tokens: 10_000 });
     }
