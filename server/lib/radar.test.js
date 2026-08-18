@@ -825,6 +825,32 @@ describe('radar domain', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it('preserva o status HTTP do provedor quando a reescrita é recusada', async () => {
+    // `provider_4xx` por si só não diz se a causa foi chave revogada, crédito
+    // esgotado ou payload recusado — só o status HTTP diferencia. Sem ele
+    // preservado até o operador, cada recusa exige reabrir os logs do provedor.
+    enableRadarProvider();
+    radarStore.configure({ driver: 'memory' });
+    radarStore.writeSnapshot({
+      items: [normalizeRadarItem({
+        id: 'paper-4xx', externalId: 'paper-4xx', section: 'research',
+        title: 'Vocational pathways in advanced manufacturing',
+        summaryPt: 'The study compares apprenticeship systems and workforce skills across industry.',
+        publishedAt: '2026-08-14', sourceName: 'OpenAlex', contentType: 'artigo', topics: ['EPT'],
+      })],
+      fetchedAt: '2026-08-14T12:00:00.000Z',
+      sourceStatus: {},
+      liveProvider: true,
+    });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":{"code":"insufficient_quota","message":"segredo do provedor"}}', { status: 402 })));
+
+    const result = await refreshRadarEditorials();
+
+    expect(result).toMatchObject({ refreshed: false, error: 'provider_4xx', httpStatus: 402 });
+    expect(result.lastRun.sourceStatus['Títulos e resumos editoriais']).toMatchObject({ status: 'error', error: 'provider_4xx', httpStatus: 402 });
+    expect(JSON.stringify(result)).not.toContain('segredo');
+  });
+
   it('derruba o run quando há fila de reescrita e a IA não está configurada', async () => {
     // Antes isto era um run bem-sucedido com todo item exibindo o texto cru da
     // fonte — indistinguível de um run que não tinha o que reescrever. Agora a

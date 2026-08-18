@@ -420,7 +420,14 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       // Um lote que falha deixaria os itens dele com o texto da fonte, e um
       // item com texto de fonte e indistinguivel de um item que nao precisava
       // de reescrita. A falha sobe para que o run inteiro falhe visivelmente.
-      throw new Error(reason);
+      const failure = new Error(reason);
+      // O código genérico (`provider_4xx`) agrupa causas com correções muito
+      // diferentes: chave revogada (401/403), crédito esgotado (402) ou um
+      // payload que o provedor recusou (400/422). O status HTTP não expõe corpo
+      // nem credencial, então sobrevive até o operador sem o cuidado reservado à
+      // mensagem do provedor.
+      if (Number.isFinite(Number(error?.status))) failure.status = Number(error.status);
+      throw failure;
     } finally {
       clearTimeout(timer);
     }
