@@ -24,12 +24,25 @@ const ERROR_MESSAGES = {
   catalog_search_not_configured: 'A pesquisa pública do catálogo ainda não está configurada.',
   ai_not_configured: 'O provedor de IA ainda não está configurado.',
   provider_timeout: 'A pesquisa deste card demorou mais que o limite. O lote ficou salvo; use Continuar enriquecimento para tentar novamente.',
+  provider_4xx: 'O provedor de IA recusou a chamada para este card (chave inválida, sem crédito ou parâmetro não suportado). Verifique a configuração de IA.',
+  provider_5xx: 'O provedor de IA teve instabilidade neste card. Use Continuar enriquecimento para tentar novamente.',
+  output_truncated: 'A resposta do provedor foi cortada pelo limite de tamanho antes de terminar este card.',
+  enrichment_item_missing: 'O provedor não devolveu dados para este card.',
   enrichment_source_changed: 'O catálogo mudou durante o processamento. Reabra a auditoria antes de consolidar o lote.',
   enrichment_commit_quality_failed: 'A conferência final encontrou um card fora do padrão. Nenhuma alteração do lote foi mantida.',
+  quality_gate_failed: 'A pesquisa não trouxe evidência suficiente para completar os campos exigidos.',
 };
 
 export function catalogEnrichmentErrorMessage(code) {
+  if (String(code || '').startsWith('catalog_source_http_')) {
+    return 'Não foi possível consultar uma fonte pública para este card.';
+  }
   return ERROR_MESSAGES[code] || 'Não foi possível concluir o enriquecimento agora.';
+}
+
+export function catalogEnrichmentFailureReason(failure) {
+  if (failure?.error && failure.error !== 'quality_gate_failed') return catalogEnrichmentErrorMessage(failure.error);
+  return (failure?.missing || []).join(' · ') || 'Evidência pública insuficiente';
 }
 
 export function catalogEnrichmentActionState({ running, hasFailed, pending, needsEnrichment }) {
@@ -190,7 +203,13 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
       }
       if (continueRef.current && current?.readyToCommit) await commit(current);
       else if (continueRef.current && current?.counts?.failed) {
-        setNotice({ severity: 'warning', text: 'Alguns cards ainda não encontraram evidência suficiente. O lote não foi consolidado.' });
+        const onlyQualityGaps = (current.failures || []).every((failure) => !failure.error || failure.error === 'quality_gate_failed');
+        setNotice({
+          severity: 'warning',
+          text: onlyQualityGaps
+            ? 'Alguns cards ainda não encontraram evidência suficiente. O lote não foi consolidado.'
+            : 'Alguns cards ficaram bloqueados. Veja o motivo de cada um abaixo antes de tentar novamente.',
+        });
       }
     } catch (error) {
       setNotice({ severity: 'warning', text: error.message });
@@ -276,7 +295,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
                 {(batch.failures || []).map((failure) => (
                   <Box key={failure.key} sx={{ p: 1.25, border: '1px solid', borderColor: 'warning.light', borderRadius: 1 }}>
                     <Typography variant="body2" fontWeight={700}>{failure.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{(failure.missing || []).join(' · ') || 'Evidência pública insuficiente'}</Typography>
+                    <Typography variant="caption" color="text.secondary">{catalogEnrichmentFailureReason(failure)}</Typography>
                   </Box>
                 ))}
               </Stack>
