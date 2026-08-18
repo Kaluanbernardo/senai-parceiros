@@ -72,7 +72,9 @@ function describeFailures(lastRun) {
   const detail = unproductive
     .map((entry) => {
       const reason = entry.error || (Array.isArray(entry.errors) && entry.errors[0]) || entry.status;
-      return `${entry.name} (${reason})`;
+      // `provider_4xx` agrupa chave revogada, crédito esgotado e payload
+      // recusado sob o mesmo rótulo; o status HTTP é o que os separa.
+      return `${entry.name} (${reason}${entry.httpStatus ? `, HTTP ${entry.httpStatus}` : ''})`;
     })
     .join(', ');
   return `: ${detail}`;
@@ -172,8 +174,12 @@ export default function RadarPage() {
       const status = body.lastRun?.sourceStatus?.['Títulos e resumos editoriais'];
       if (!response.ok || !body.stats) {
         const errorCode = body.error || status?.error || status?.errors?.[0];
+        // `provider_4xx` por si só agrupa causas com correções bem diferentes —
+        // chave revogada, crédito esgotado, payload recusado. O status HTTP que
+        // veio junto é o que separa uma da outra sem abrir os detalhes técnicos.
+        const httpStatus = body.httpStatus ?? status?.httpStatus;
         const detail = errorCode && !['radar_editorial_budget_exceeded', 'radar_editorial_provider_disabled'].includes(errorCode)
-          ? ` Motivo: ${errorCode}.`
+          ? ` Motivo: ${errorCode}${httpStatus ? ` (HTTP ${httpStatus})` : ''}.`
           : '';
         return { severity: 'warning', message: `${editorialFailureMessage(errorCode)}${detail}`, lastRun };
       }

@@ -1019,7 +1019,11 @@ export async function getRadarItems({ filters = {}, live = false, persist = true
     : [{ status: 'fulfilled', value: null }];
   if (editorialResult.status === 'rejected') {
     const reason = sanitizeProviderError(editorialResult.reason, 'radar_editorial_unavailable');
-    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', { error: reason });
+    // O status HTTP por trás de `provider_4xx` diz se a causa é chave/permissão
+    // (401/403), crédito esgotado (402) ou um payload recusado (400/422) — sem
+    // ele o operador não distingue as duas só pelo código genérico.
+    const httpStatus = Number.isFinite(Number(editorialResult.reason?.status)) ? Number(editorialResult.reason.status) : null;
+    sourceStatus['Títulos e resumos editoriais'] = providerStatus('Títulos e resumos editoriais', 'error', { error: reason, httpStatus });
     await failRun({ reason, sourceStatus, fetchedAt, persist });
   } else if (editorialResult.value) {
     // Reported even when nothing was rewritten. A model that silently ignores
@@ -1107,9 +1111,13 @@ export async function refreshRadarEditorials() {
   } catch (error) {
     const reason = sanitizeProviderError(error, 'radar_editorial_unavailable');
     const budget = error?.budget || getUsageBudget('radar-editorial');
+    // O status HTTP por trás de `provider_4xx` diz se a causa é chave/permissão
+    // (401/403), crédito esgotado (402) ou um payload recusado (400/422) — sem
+    // ele o operador não distingue as duas só pelo código genérico.
+    const httpStatus = Number.isFinite(Number(error?.status)) ? Number(error.status) : null;
     const sourceStatus = {
       ...(stored.sourceStatus || {}),
-      'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais', 'error', { error: reason, errors: [reason], budget }),
+      'Títulos e resumos editoriais': providerStatus('Títulos e resumos editoriais', 'error', { error: reason, errors: [reason], budget, httpStatus }),
     };
     const lastRun = radarStore.recordRun({
       status: 'failed',
@@ -1120,7 +1128,7 @@ export async function refreshRadarEditorials() {
       error: reason,
     });
     await safeStoreCall(() => radarStore.flush());
-    return { refreshed: false, error: reason, stats: null, budget, lastRun, store: radarStore.status() };
+    return { refreshed: false, error: reason, httpStatus, stats: null, budget, lastRun, store: radarStore.status() };
   }
   const { items, stats } = editorial;
   const sourceStatus = {
