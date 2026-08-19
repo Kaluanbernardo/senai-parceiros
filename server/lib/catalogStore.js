@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { readPilotDocument, writePilotDocument } from './supabase.js';
 import { normalizeCatalogCategory, normalizeCatalogRequest, withCatalogClassification } from '../../src/domain/catalogTaxonomy.js';
 
 const CATEGORIES = ['person', 'organization'];
@@ -120,7 +121,7 @@ class CatalogStore {
   }
 
   status() {
-    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' };
+    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase' };
   }
 
   load() {
@@ -250,6 +251,15 @@ class CatalogStore {
   }
 
   async hydrate({ force = false } = {}) {
+    if (this.driver === 'supabase') {
+      if (!force && this.remoteHydrated) return this.status();
+      const current = await readPilotDocument('catalog-store');
+      this.state = normalizeState(current.state);
+      this.remoteVersion = current.version;
+      this.remoteHydrated = true;
+      this.loaded = true;
+      return this.status();
+    }
     if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
     const { get } = await import('@vercel/blob');
     const result = await get(this.blobPath, { access: 'private', useCache: false });
@@ -273,6 +283,12 @@ class CatalogStore {
   }
 
   async flush({ attempts = 3 } = {}) {
+    if (this.driver === 'supabase') {
+      const result = await writePilotDocument('catalog-store', this.state, this.remoteVersion);
+      this.remoteVersion = result.version;
+      this.remoteHydrated = true;
+      return this.status();
+    }
     if (this.driver !== 'vercel_blob') return this.status();
     const { put, BlobPreconditionFailedError } = await import('@vercel/blob');
     for (let attempt = 1; attempt <= attempts; attempt += 1) {

@@ -111,7 +111,7 @@ export async function summarizeResearchItems(items = [], { previousItems = [] } 
         messages: summaryMessages(batch),
         maxOutputTokens: 900,
       });
-      await recordAiUsageAtomic('radar-summary', generated.trace.usage);
+      await recordAiUsageAtomic('radar-summary', generated.trace.usage, generated.trace.model);
       const summarized = new Map(applyGeneratedSummaries(batch, generated).map((item) => [itemId(item), item]));
       for (let itemIndex = 0; itemIndex < result.length; itemIndex += 1) {
         result[itemIndex] = summarized.get(itemId(result[itemIndex])) || result[itemIndex];

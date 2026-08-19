@@ -391,7 +391,7 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
         disableReasoning: true,
         signal: controller.signal,
       });
-      await recordAiUsageAtomic('radar-editorial', generated.trace.usage);
+      await recordAiUsageAtomic('radar-editorial', generated.trace.usage, generated.trace.model);
       for (const rewritten of applyGenerated(batch, generated)) {
         const position = byId.get(itemId(rewritten));
         if (position !== undefined) result[position] = rewritten;

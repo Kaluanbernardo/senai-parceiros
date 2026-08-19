@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { readPilotDocument, writePilotDocument } from './supabase.js';
 
 const DEFAULT_LOCK_TIMEOUT_MS = 5000;
 const DEFAULT_RETRIES = 8;
@@ -72,6 +73,7 @@ export class AtomicJsonStore {
     this.state = clone(this.emptyState());
     this.lastError = null;
     this.remoteHydrated = false;
+    this.remoteVersion = 0;
   }
 
   configure({ driver, filePath, blobPath } = {}) {
@@ -88,8 +90,8 @@ export class AtomicJsonStore {
   status() {
     return {
       driver: this.driver,
-      durable: this.driver === 'file' || this.driver === 'vercel_blob',
-      atomic: this.driver === 'file' || this.driver === 'vercel_blob',
+      durable: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase',
+      atomic: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase',
       remoteHydrated: this.remoteHydrated,
       lastError: this.lastError,
     };
@@ -175,6 +177,29 @@ export class AtomicJsonStore {
       }
     }
 
+    if (this.driver === 'supabase') {
+      let lastError = null;
+      for (let attempt = 0; attempt < retries; attempt += 1) {
+        try {
+          const current = await readPilotDocument(this.name);
+          const draft = clone(this.normalizeState(current.state));
+          const next = mutator(draft);
+          const state = clone(next === undefined ? draft : next);
+          const result = await writePilotDocument(this.name, state, current.version);
+          this.state = state;
+          this.remoteVersion = result.version;
+          this.remoteHydrated = true;
+          this.lastError = null;
+          return clone(state);
+        } catch (error) {
+          lastError = error;
+          if (Number(error?.status) !== 409 && !String(error?.message || '').includes('40001') && !String(error?.body || '').includes('pilot_document_conflict')) break;
+          await wait(25 * (attempt + 1));
+        }
+      }
+      this.lastError = lastError?.message === 'supabase_not_configured' ? 'supabase_not_configured' : 'store_update_failed';
+      throw new Error(this.lastError);
+    }
     if (this.driver !== 'vercel_blob') throw new Error('unsupported_store_driver');
     let lastError = null;
     for (let attempt = 0; attempt < retries; attempt += 1) {

@@ -64,12 +64,13 @@ export default async function handler(req, res) {
     }
     let ai = null;
     try {
-      const providerPool = rankProviderCandidates(local.candidatePool, 30);
+      const providerLimit = Math.max(1, Math.min(30, Number(process.env.SELECTION_AI_CANDIDATE_LIMIT) || 15));
+      const providerPool = rankProviderCandidates(local.candidatePool, providerLimit);
       // O provider recebe a mesma rubrica e os mesmos pesos derivados que o
       // cálculo local usa, para que as duas notas sejam comparáveis.
       ai = await evaluateWithProvider({ input: { ...evaluationInput, criteria: local.trace?.criteria || null }, candidates: providerPool.map((entry) => entry.candidate) });
-      ai.providerPreselection = { limit: 30, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
-      ai.budget = await recordAiUsageAtomic('selection', ai.usage);
+      ai.providerPreselection = { limit: providerLimit, selected: providerPool.map((entry) => entry.candidate.id), totalCatalog: local.candidatePool.length };
+      ai.budget = await recordAiUsageAtomic('selection', ai.usage, ai.model);
       ai.evaluations = ai.evaluations.map((evaluation) => ({
         ...evaluation,
         id: candidates.find((candidate) => String(candidate.id) === String(evaluation.id))?.id ?? evaluation.id,

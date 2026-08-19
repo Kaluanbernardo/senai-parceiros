@@ -7,6 +7,8 @@
  * configuration change instead of a rewrite of the interview flow.
  */
 
+import { aiCacheKey, readAiCache, writeAiCache } from './aiCache.js';
+
 const DEFAULT_OPENAI_MODEL = 'gpt-5-mini';
 const DEFAULT_OPENROUTER_MODEL = 'openrouter/auto';
 const DEFAULT_TRADEOFF = 7;
@@ -24,6 +26,20 @@ const DEFAULT_TEMPERATURE = 0.15;
  * inteira, entao o teto e alto e quem chama pede o que precisa.
  */
 const MAX_OUTPUT_TOKENS = 16000;
+
+function modelForTask(task, requestedModel, providerModel) {
+  if (String(requestedModel || '').trim()) return String(requestedModel).trim();
+  if (providerModel !== DEFAULT_OPENROUTER_MODEL) return providerModel;
+  const name = String(task || '').toLowerCase();
+  const mapped = name.includes('interview') ? process.env.AI_MODEL_INTERVIEW
+    : name.includes('selection') || name.includes('evaluate') ? process.env.AI_MODEL_SELECTION
+      : name.includes('catalog_research') ? process.env.AI_MODEL_CATALOG_RESEARCH
+        : name.includes('catalog_enrichment') ? process.env.AI_MODEL_CATALOG_ENRICHMENT
+          : name.includes('radar_editorial') ? process.env.AI_MODEL_RADAR_EDITORIAL
+            : name.includes('radar') ? process.env.AI_MODEL_RADAR_SUMMARY
+              : '';
+  return String(mapped || providerModel).trim();
+}
 
 /**
  * Nem toda chamada tem o mesmo valor por acerto. Escrever a pergunta da
@@ -238,11 +254,18 @@ export async function generateStructured({ task = 'structured_generation', schem
   // sem pesquisa atual, apesar de a interface afirmar o contrário.
   const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
   if (!providers.length) throw new Error('ai_not_configured');
+  const cacheable = /^catalog_|^radar_/.test(String(task));
+  const cacheModel = modelForTask(task, requestedModel, providers[0].model);
+  const cacheKey = cacheable ? aiCacheKey({ task, model: cacheModel, schema, messages, strictOutput, requireParameters, webSearch }) : null;
+  if (cacheKey) {
+    const cached = await readAiCache(cacheKey);
+    if (cached) return { data: cached.data, trace: { ...(cached.trace || {}), cacheHit: true, usage: { total_tokens: 0, cost: 0 } } };
+  }
   let lastError = null;
   for (const provider of providers) {
     try {
-      const providerModel = provider.id === 'openrouter' && String(requestedModel || '').trim()
-        ? String(requestedModel).trim()
+      const providerModel = provider.id === 'openrouter'
+        ? modelForTask(task, requestedModel, provider.model)
         : provider.model;
       const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput, requireParameters);
       const response = await fetch(provider.endpoint, {
@@ -287,12 +310,14 @@ export async function generateStructured({ task = 'structured_generation', schem
       // bastava dar mais espaco.
       if (choice?.finish_reason === 'length') throw new Error('output_truncated');
       const data = parseJson(choice?.message?.content);
-      return {
+      const result = {
         data,
         trace: {
           provider: provider.id,
           model: payload.model || providerModel,
           usage: payload.usage || null,
+          cost: Number(payload.usage?.cost ?? payload.usage?.cost_usd ?? 0) || 0,
+          cacheHit: Boolean(payload.usage?.cache_hit || payload.usage?.cached_tokens),
           task,
           fallback: false,
           costQualityTradeoff: provider.id === 'openrouter' ? safeTradeoff(costQualityTradeoff) : null,
@@ -300,6 +325,8 @@ export async function generateStructured({ task = 'structured_generation', schem
           webSearchSources: searchTool ? webSearchSources(choice?.message) : [],
         },
       };
+      if (cacheKey) await writeAiCache(cacheKey, task, result.trace.model, { data: result.data, trace: result.trace });
+      return result;
     } catch (error) {
       lastError = error;
       // An explicitly selected provider must not silently switch to another

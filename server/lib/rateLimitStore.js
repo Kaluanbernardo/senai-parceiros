@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { AtomicJsonStore } from './atomicJsonStore.js';
+import { readPilotDocument, writePilotDocument } from './supabase.js';
 
 function emptyState() {
   return { entries: {} };
@@ -67,6 +68,12 @@ export class RateLimitStore {
   }
 
   async hydrate({ force = false } = {}) {
+    if (this.store.driver === 'supabase') {
+      if (!force && this.store.remoteHydrated) return this.status();
+      try { const current = await readPilotDocument('rate-limit'); this.store.state = normalizeState(current.state); this.store.remoteVersion = current.version; this.store.remoteHydrated = true; this.store.lastError = null; }
+      catch { this.store.lastError = 'store_hydrate_failed'; this.store.remoteHydrated = true; }
+      return this.status();
+    }
     if (this.store.driver !== 'vercel_blob' || (!force && this.store.remoteHydrated)) return this.status();
     try {
       const current = await this.store.readBlob();
@@ -82,6 +89,11 @@ export class RateLimitStore {
   }
 
   async flush() {
+    if (this.store.driver === 'supabase') {
+      try { const result = await writePilotDocument('rate-limit', this.store.state, this.store.remoteVersion); this.store.remoteVersion = result.version; this.store.remoteHydrated = true; this.store.lastError = null; }
+      catch { this.store.lastError = 'store_flush_failed'; }
+      return this.status();
+    }
     if (this.store.driver !== 'vercel_blob') return this.status();
     try {
       const result = await this.store.writeBlob(this.store.state, this.store.remoteEtag);

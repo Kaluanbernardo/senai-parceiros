@@ -142,7 +142,7 @@ export async function evaluateWithOpenRouter({ input, candidates, signal }) {
     candidates,
     signal,
     apiKey: process.env.OPENROUTER_API_KEY,
-    model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
+    model: process.env.AI_MODEL_SELECTION || process.env.OPENROUTER_MODEL || 'openai/gpt-5-mini',
     endpoint: 'https://openrouter.ai/api/v1/chat/completions',
     provider: 'openrouter',
     headers: {
@@ -150,7 +150,7 @@ export async function evaluateWithOpenRouter({ input, candidates, signal }) {
       'X-Title': process.env.OPENROUTER_APP_NAME || 'SENAI-SP Farol de Parcerias',
       'X-OpenRouter-Metadata': 'enabled',
     },
-    plugins: [{ id: 'auto-router', cost_quality_tradeoff: Math.max(0, Math.min(10, Math.round(Number(process.env.OPENROUTER_COST_QUALITY_TRADEOFF || DEFAULT_TRADEOFF)))) }],
+    plugins: [],
     providerOptions: { require_parameters: true },
   });
 }

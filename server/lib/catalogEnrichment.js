@@ -573,7 +573,7 @@ export async function processCatalogEnrichment(batchId, {
     }
     throw error;
   }
-  if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null);
+  if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null, generated.trace?.model);
   const items = new Map((generated.data?.items || []).map((item) => [item.targetKey, item]));
   for (let index = 0; index < targets.length; index += 1) {
     const target = batch.targets.find((entry) => entry.key === targets[index].key);

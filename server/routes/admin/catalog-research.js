@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       const usages = Array.isArray(researched.trace.usages) && researched.trace.usages.length
         ? researched.trace.usages
         : [researched.trace.usage || null];
-      for (const usage of usages) await recordAiUsageAtomic('catalog_research', usage);
+      for (const usage of usages) await recordAiUsageAtomic('catalog_research', usage, researched.trace?.model);
     } catch (error) {
       usageRecorded = false;
       console.warn('catalog_research_usage_record_failed', {

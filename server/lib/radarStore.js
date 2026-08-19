@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { readPilotDocument, writePilotDocument } from './supabase.js';
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -28,7 +29,7 @@ class RadarStore {
   }
 
   status() {
-    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' };
+    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase' };
   }
 
   load() {
@@ -87,6 +88,15 @@ class RadarStore {
   }
 
   async hydrate({ force = false } = {}) {
+    if (this.driver === 'supabase') {
+      if (!force && this.remoteHydrated) return this.status();
+      const current = await readPilotDocument('radar-store');
+      this.state = { snapshot: current.state?.snapshot || null, lastRun: current.state?.lastRun || null };
+      this.remoteVersion = current.version;
+      this.remoteHydrated = true;
+      this.loaded = true;
+      return this.status();
+    }
     if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
     const { get } = await import('@vercel/blob');
     const result = await get(this.blobPath, { access: 'private', useCache: false });
@@ -128,6 +138,12 @@ class RadarStore {
    * the intended outcome and strictly better than never writing at all.
    */
   async flush({ attempts = 3 } = {}) {
+    if (this.driver === 'supabase') {
+      const result = await writePilotDocument('radar-store', this.state, this.remoteVersion);
+      this.remoteVersion = result.version;
+      this.remoteHydrated = true;
+      return this.status();
+    }
     if (this.driver !== 'vercel_blob') return this.status();
     const { put, BlobPreconditionFailedError } = await import('@vercel/blob');
     for (let attempt = 1; attempt <= attempts; attempt += 1) {

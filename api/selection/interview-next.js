@@ -216,7 +216,7 @@ export default async function handler(req, res) {
         minQuestions: MIN_QUESTIONS,
         maxQuestions: MAX_QUESTIONS,
       }, { signal: controller.signal });
-      const budget = await recordAiUsageAtomic('interview', ai.trace?.usage);
+      const budget = await recordAiUsageAtomic('interview', ai.trace?.usage, ai.trace?.model);
       // O que a IA extraiu da resposta entra no estado antes de qualquer
       // decisão: um campo já satisfeito não deve virar a próxima pergunta,
       // e pode ser o que encerra a entrevista.

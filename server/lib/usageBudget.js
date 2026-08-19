@@ -1,5 +1,6 @@
 import { usageStore } from './usageStore.js';
 import { emitOperationalAlert } from './alerts.js';
+import { recordSupabaseAiUsage, isSupabaseConfigured } from './supabase.js';
 
 function dayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -53,7 +54,12 @@ function usageFor(kind) {
 }
 
 function tokenCount(usage) {
-  return Number(usage?.total_tokens || 0) || Number(usage?.prompt_tokens || 0) + Number(usage?.completion_tokens || 0);
+  return Number(usage?.total_tokens || 0) || Number(usage?.prompt_tokens ?? usage?.input_tokens ?? 0) + Number(usage?.completion_tokens ?? usage?.output_tokens ?? 0) + Number(usage?.reasoning_tokens ?? usage?.completion_tokens_details?.reasoning_tokens ?? 0);
+}
+
+function costFor(usage, tokens, cap) {
+  const reported = Number(usage?.cost ?? usage?.cost_usd);
+  return Number.isFinite(reported) && reported >= 0 ? reported : (tokens / 1000) * cap.costPer1kUsd;
 }
 
 function budgetFor(current) {
@@ -67,6 +73,7 @@ export function getUsageBudget(kind = 'selection') {
 }
 
 export function canUseAi(kind = 'selection') {
+  if (String(process.env.AI_ENFORCE_BUDGET || '').toLowerCase() !== 'true') return true;
   const budget = getUsageBudget(kind);
   return budget.requests < budget.limits.requests && budget.tokens < budget.limits.tokens && budget.costUsd < budget.limits.costUsd;
 }
@@ -77,12 +84,12 @@ export function recordAiUsage(kind = 'selection', usage = null) {
   const tokens = tokenCount(usage);
   current.requests += 1;
   current.tokens += tokens;
-  current.costUsd += (tokens / 1000) * cap.costPer1kUsd;
+  current.costUsd += costFor(usage, tokens, cap);
   usageStore.set(`${dayKey()}:${kind}`, current);
   return getUsageBudget(kind);
 }
 
-export async function recordAiUsageAtomic(kind = 'selection', usage = null) {
+export async function recordAiUsageAtomic(kind = 'selection', usage = null, model = '') {
   const key = `${dayKey()}:${kind}`;
   const cap = limits(kind);
   const tokens = tokenCount(usage);
@@ -94,11 +101,12 @@ export async function recordAiUsageAtomic(kind = 'selection', usage = null) {
       ...current,
       requests: Number(current.requests || 0) + 1,
       tokens: Number(current.tokens || 0) + tokens,
-      costUsd: Number(current.costUsd || 0) + (tokens / 1000) * cap.costPer1kUsd,
+      costUsd: Number(current.costUsd || 0) + costFor(usage, tokens, cap),
     };
     state.entries[key] = current;
     return state;
   });
+  if (isSupabaseConfigured()) await recordSupabaseAiUsage(kind, model, usage);
   const budget = budgetFor(current);
   const threshold = Math.min(1, Math.max(0.5, Number(process.env.AI_ALERT_THRESHOLD || 0.8)));
   const requestsRatio = cap.requests ? current.requests / cap.requests : 0;
