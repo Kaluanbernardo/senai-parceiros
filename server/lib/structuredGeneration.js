@@ -215,14 +215,16 @@ function providerHeaders(provider) {
  *
  * `OPENROUTER_REASONING` reativa quando for desejado: low, medium ou high.
  */
-function reasoningOption(disableReasoning = false, defaultDisabled = true) {
+function reasoningOption(disableReasoning = false, defaultDisabled = true, requestedEffort = '') {
+  const explicit = String(requestedEffort || '').trim().toLowerCase();
+  if (['minimal', 'low', 'medium', 'high'].includes(explicit)) return { reasoning: { effort: explicit } };
   if (disableReasoning) return { reasoning: { enabled: false } };
   const configured = String(process.env.OPENROUTER_REASONING || '').trim().toLowerCase();
   if (['low', 'medium', 'high'].includes(configured)) return { reasoning: { effort: configured } };
   return defaultDisabled ? { reasoning: { enabled: false } } : {};
 }
 
-function providerOptions(provider, model, costQualityTradeoff, disableReasoning, strictOutput, requireParameters) {
+function providerOptions(provider, model, costQualityTradeoff, disableReasoning, strictOutput, requireParameters, reasoningEffort) {
   if (provider !== 'openrouter') return {};
   const isAutoRouter = String(model || '').trim().toLowerCase() === DEFAULT_OPENROUTER_MODEL;
   // Um modelo fixado já define se raciocínio existe. Enviar implicitamente o
@@ -232,7 +234,7 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning,
   // modelo de raciocínio e reintroduza latência sem o chamador pedir.
   const base = {
     ...(strictOutput && requireParameters ? { provider: { require_parameters: true } } : {}),
-    ...reasoningOption(disableReasoning, isAutoRouter),
+    ...reasoningOption(disableReasoning, isAutoRouter, reasoningEffort),
   };
   if (!isAutoRouter) return base;
   return {
@@ -247,7 +249,7 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning,
  * trace is deliberately sanitized: it contains no prompt, response body or
  * credential.
  */
-export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, strictOutput = true, requireParameters = true, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, webSearch, signal } = {}) {
+export async function generateStructured({ task = 'structured_generation', schema, messages, model: requestedModel, strictOutput = true, requireParameters = true, maxOutputTokens = 700, temperature = DEFAULT_TEMPERATURE, costQualityTradeoff, disableReasoning = false, reasoningEffort = '', webSearch, signal } = {}) {
   if (!schema || !Array.isArray(messages) || !messages.length) throw new Error('invalid_generation_request');
   const searchTool = webSearchTool(webSearch);
   // A ferramenta hospedada de busca usa o contrato do OpenRouter. Quando ela é
@@ -268,7 +270,7 @@ export async function generateStructured({ task = 'structured_generation', schem
       const providerModel = provider.id === 'openrouter'
         ? modelForTask(task, requestedModel, provider.model)
         : provider.model;
-      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput, requireParameters);
+      const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput, requireParameters, reasoningEffort);
       const outputTokenLimit = Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700));
       // Os modelos de raciocínio da OpenAI usam o contrato novo de Chat
       // Completions: recusam `max_tokens` e temperaturas diferentes do padrão.
