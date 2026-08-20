@@ -7,6 +7,7 @@ import adminStatus from '../server/routes/admin/status.js';
 import adminAiCheck from '../server/routes/admin/ai-check.js';
 import catalogEnrichment from '../server/routes/admin/catalog-enrichment.js';
 import aiUsage from '../server/routes/admin/ai-usage.js';
+import storageMigration from '../server/routes/admin/storage-migration.js';
 
 const handlers = {
   'catalog-import-batches': catalogImportBatches,
@@ -18,6 +19,7 @@ const handlers = {
   status: adminStatus,
   'ai-check': adminAiCheck,
   'ai-usage': aiUsage,
+  'storage-migration': storageMigration,
 };
 
 export default async function handler(req, res) {

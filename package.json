@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ai:smoke": "node scripts/smoke-structured-output.mjs",
+    "storage:migrate:supabase": "node scripts/migrate-vercel-blob-to-supabase.mjs",
     "radar:feeds:audit": "node scripts/audit-official-feeds.mjs",
     "handoff:preflight": "node scripts/handoff-preflight.mjs",
     "handoff:preflight:corporate": "node scripts/handoff-preflight.mjs --profile=corporate",
