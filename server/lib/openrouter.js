@@ -1,3 +1,5 @@
+import { requiresDefaultTemperature } from './modelCapabilities.js';
+
 const DEFAULT_MODEL = 'openrouter/auto';
 const DEFAULT_TRADEOFF = 7;
 
@@ -116,7 +118,7 @@ async function evaluateWithEndpoint({ input, candidates, signal, apiKey, model, 
     body: JSON.stringify({
       model,
       messages: [{ role: 'system', content: 'Responda somente JSON válido conforme o schema solicitado.' }, { role: 'user', content: prompt }],
-      temperature: 0.1,
+      ...(!requiresDefaultTemperature(model) ? { temperature: 0.1 } : {}),
       ...(plugins ? { plugins } : {}),
       ...(providerOptions ? { provider: providerOptions } : {}),
       response_format: { type: 'json_schema', json_schema: { name: 'selection_evaluation', strict: true, schema: evaluationSchema } },

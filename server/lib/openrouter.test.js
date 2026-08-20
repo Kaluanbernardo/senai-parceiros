@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { evaluateWithAzure } from './openrouter.js';
+import { evaluateWithAzure, evaluateWithOpenRouter } from './openrouter.js';
 
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.AZURE_OPENAI_ENDPOINT;
   delete process.env.AZURE_OPENAI_API_KEY;
   delete process.env.AZURE_OPENAI_DEPLOYMENT;
+  delete process.env.OPENROUTER_API_KEY;
+  delete process.env.AI_MODEL_SELECTION;
 });
 
 describe('Azure provider adapter', () => {
@@ -22,5 +24,26 @@ describe('Azure provider adapter', () => {
     expect(result.provider).toBe('azure');
     expect(fetchMock.mock.calls[0][0]).toContain('/openai/deployments/senai-deployment/chat/completions');
     expect(fetchMock.mock.calls[0][1].headers['api-key']).toBe('azure-test-key');
+  });
+});
+
+describe('OpenRouter provider adapter', () => {
+  it('omits temperature for the GPT-5 selection model required in production', async () => {
+    process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
+    process.env.AI_MODEL_SELECTION = 'openai/gpt-5-mini';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => {
+      bodies.push(JSON.parse(options.body));
+      return {
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify({ evaluations: [] }) } }] }),
+      };
+    }));
+
+    await evaluateWithOpenRouter({ input: {}, candidates: [] });
+
+    expect(bodies[0].temperature).toBeUndefined();
+    expect(bodies[0].provider).toEqual({ require_parameters: true });
+    expect(bodies[0].response_format.type).toBe('json_schema');
   });
 });
