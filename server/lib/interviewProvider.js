@@ -267,6 +267,10 @@ export async function generateNextQuestionWithProvider(state, { signal } = {}) {
     // Redigir pergunta não é extração: com temperatura de extração as perguntas
     // saíam parecidas entre si e entre sessões.
     temperature: Number(process.env.INTERVIEW_TEMPERATURE || 0.7),
+    // A entrevista já torna a leitura, as alternativas e a justificativa
+    // explícitas no próprio schema. Herdar OPENROUTER_REASONING restringe o
+    // Auto Router a ponto de não restar endpoint compatível com esse schema.
+    disableReasoning: true,
     // A entrevista pesa mais para qualidade que o resto do sistema, mas não ao
     // máximo: pedir 10 fazia o roteador escolher os modelos de raciocínio mais
     // pesados, que passavam de 45s e nunca chegavam a responder. Numa chamada
