@@ -7,6 +7,13 @@ export const MIGRATED_STORES = Object.freeze([
   { key: 'rate-limit', blobPathEnv: 'RATE_LIMIT_BLOB_PATH', defaultBlobPath: 'senai/security/rate-limits.json' },
 ]);
 
+export const VERSIONED_BASELINE_STATES = Object.freeze({
+  'catalog-store': { records: { person: [], organization: [] }, rowHashes: { person: [], organization: [] }, pendingBatches: {}, committedBatches: {} },
+  'radar-store': { snapshot: null, lastRun: null },
+  'ai-usage': { entries: {} },
+  'rate-limit': { entries: {} },
+});
+
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (!value || typeof value !== 'object') return value;
@@ -66,6 +73,23 @@ export async function buildMigrationPlan({ readBlob, readTarget, stores = MIGRAT
     entries.push({
       store,
       blobPath,
+      sourceState,
+      targetState: target.state,
+      ...planStoreMigration({ key: store.key, sourceState, targetState: target.state, targetVersion: target.version }),
+    });
+  }
+  return entries;
+}
+
+export async function buildVersionedBaselinePlan({ readTarget, stores = MIGRATED_STORES }) {
+  const entries = [];
+  for (const store of stores) {
+    const sourceState = VERSIONED_BASELINE_STATES[store.key];
+    if (!sourceState) throw new Error(`versioned_baseline_missing:${store.key}`);
+    const target = await readTarget(store.key);
+    entries.push({
+      store,
+      blobPath: null,
       sourceState,
       targetState: target.state,
       ...planStoreMigration({ key: store.key, sourceState, targetState: target.state, targetVersion: target.version }),

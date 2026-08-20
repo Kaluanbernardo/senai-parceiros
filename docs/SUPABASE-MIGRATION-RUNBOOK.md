@@ -38,6 +38,8 @@ Este corte preserva os blobs como rollback e só grava um documento no Supabase 
 
 Quando as credenciais existirem somente na Vercel, habilitar temporariamente `STORAGE_MIGRATION_ENABLED=true` e usar a rota administrativa `GET/POST /api/admin/storage-migration`. O `POST` exige `{ "action": "apply", "confirmation": "discard-supabase-test-writes" }`, grava o backup anterior no próprio Supabase e retorna apenas hashes e contagens. Repor a variável como `false` e reimplantar imediatamente após a verificação.
 
+Se o Blob estiver suspenso por cota e a continuidade do produto for prioritária, a mesma rota aceita `{ "action": "bootstrap-versioned-baseline", "confirmation": "discard-supabase-test-writes" }`. Esse modo não lê o Blob: preserva backup dos documentos atuais, zera overlays de catálogo e estados operacionais e deixa o catálogo e o Radar usarem suas bases versionadas. Os blobs continuam preservados para uma recuperação posterior.
+
 ## Conflito
 
 `conflict` significa que Blob e Supabase contêm estados diferentes. A execução normal não sobrescreve. `--replace-conflicts` exige autorização explícita, usa a versão exata lida no dry-run e mantém o estado anterior no diretório de backup.

@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(() => ({ role: 'admin' })),
   requireSameOrigin: vi.fn(() => true),
   buildMigrationPlan: vi.fn(),
+  buildVersionedBaselinePlan: vi.fn(),
   applyMigrationPlan: vi.fn(),
   readPilotDocument: vi.fn(),
   writePilotDocument: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('../../lib/http.js', () => ({
 }));
 vi.mock('../../lib/storageMigration.js', () => ({
   buildMigrationPlan: mocks.buildMigrationPlan,
+  buildVersionedBaselinePlan: mocks.buildVersionedBaselinePlan,
   applyMigrationPlan: mocks.applyMigrationPlan,
   readPrivateBlobJson: vi.fn(),
 }));
@@ -40,6 +42,7 @@ describe('admin storage migration route', () => {
   beforeEach(() => {
     process.env.STORAGE_MIGRATION_ENABLED = 'true';
     mocks.buildMigrationPlan.mockResolvedValue(plan);
+    mocks.buildVersionedBaselinePlan.mockResolvedValue([{ ...plan[0], blobPath: null, sourceState: { records: { person: [], organization: [] }, rowHashes: { person: [], organization: [] }, pendingBatches: {}, committedBatches: {} } }]);
     mocks.applyMigrationPlan.mockResolvedValue([{ key: 'catalog-store', version: 4, hash: 'source' }]);
     mocks.writePilotDocument.mockResolvedValue({ version: 1 });
   });
@@ -82,5 +85,20 @@ describe('admin storage migration route', () => {
     await handler({ method: 'GET', headers: {} }, res);
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith({ error: 'storage_migration_failed', code: 'blob_http_403' });
+  });
+
+  it('recovers onto the versioned baseline without reading the suspended Blob store', async () => {
+    mocks.readPilotDocument.mockResolvedValue({ state: { test: true }, version: 2 });
+    const res = response();
+    await handler({
+      method: 'POST',
+      headers: {},
+      body: { action: 'bootstrap-versioned-baseline', confirmation: 'discard-supabase-test-writes' },
+    }, res);
+    expect(mocks.buildMigrationPlan).not.toHaveBeenCalled();
+    expect(mocks.buildVersionedBaselinePlan).toHaveBeenCalledWith({ readTarget: mocks.readPilotDocument });
+    expect(mocks.applyMigrationPlan).toHaveBeenCalledWith(expect.objectContaining({ replaceConflicts: true }));
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'verified', mode: 'versioned-baseline' }));
   });
 });

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { requireSession } from '../../lib/cookies.js';
 import { methodNotAllowed, requireSameOrigin } from '../../lib/http.js';
-import { applyMigrationPlan, buildMigrationPlan, readPrivateBlobJson } from '../../lib/storageMigration.js';
+import { applyMigrationPlan, buildMigrationPlan, buildVersionedBaselinePlan, readPrivateBlobJson } from '../../lib/storageMigration.js';
 import { readPilotDocument, writePilotDocument } from '../../lib/supabase.js';
 
 function publicPlan(entries) {
@@ -30,9 +30,12 @@ export default async function handler(req, res) {
   if (!session) return;
 
   try {
-    const entries = await buildMigrationPlan({ readBlob: readPrivateBlobJson, readTarget: readPilotDocument });
+    const baselineRecovery = req.method === 'POST' && req.body?.action === 'bootstrap-versioned-baseline';
+    const entries = baselineRecovery
+      ? await buildVersionedBaselinePlan({ readTarget: readPilotDocument })
+      : await buildMigrationPlan({ readBlob: readPrivateBlobJson, readTarget: readPilotDocument });
     if (req.method === 'GET') return res.status(200).json({ mode: 'dry-run', stores: publicPlan(entries) });
-    if (req.body?.action !== 'apply' || req.body?.confirmation !== 'discard-supabase-test-writes') {
+    if (!['apply', 'bootstrap-versioned-baseline'].includes(req.body?.action) || req.body?.confirmation !== 'discard-supabase-test-writes') {
       return res.status(400).json({ error: 'migration_confirmation_required' });
     }
 
@@ -51,7 +54,7 @@ export default async function handler(req, res) {
       readTarget: readPilotDocument,
       replaceConflicts: true,
     });
-    return res.status(200).json({ status: 'verified', backupId, applied, stores: publicPlan(entries) });
+    return res.status(200).json({ status: 'verified', mode: baselineRecovery ? 'versioned-baseline' : 'blob-copy', backupId, applied, stores: publicPlan(entries) });
   } catch (error) {
     const message = String(error?.message || 'storage_migration_failed');
     const conflict = message.startsWith('migration_conflict:');

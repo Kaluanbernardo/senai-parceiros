@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyMigrationPlan, buildMigrationPlan, planStoreMigration, stateHash } from './storageMigration.js';
+import { applyMigrationPlan, buildMigrationPlan, buildVersionedBaselinePlan, planStoreMigration, stateHash } from './storageMigration.js';
 
 describe('storage migration', () => {
   it('hashes objects independently of key order', () => {
@@ -24,6 +24,18 @@ describe('storage migration', () => {
       readTarget: vi.fn().mockResolvedValue({ state: {}, version: 0 }),
     });
     expect(entries[0]).toMatchObject({ key: 'one', blobPath: 'one.json', action: 'copy' });
+  });
+
+  it('builds a recovery plan from versioned fallbacks without reading Blob', async () => {
+    const entries = await buildVersionedBaselinePlan({
+      readTarget: vi.fn().mockResolvedValue({ state: { test: true }, version: 2 }),
+    });
+    expect(entries).toHaveLength(4);
+    expect(entries.find((entry) => entry.key === 'catalog-store')).toMatchObject({
+      action: 'conflict',
+      sourceState: { records: { person: [], organization: [] }, rowHashes: { person: [], organization: [] }, pendingBatches: {}, committedBatches: {} },
+    });
+    expect(entries.find((entry) => entry.key === 'radar-store').sourceState).toEqual({ snapshot: null, lastRun: null });
   });
 
   it('copies and verifies an empty destination', async () => {
