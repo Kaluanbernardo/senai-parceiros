@@ -28,6 +28,7 @@ afterEach(() => {
   delete process.env.OPENROUTER_MODEL;
   delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
   delete process.env.OPENROUTER_REASONING;
+  delete process.env.AI_MODEL_INTERVIEW;
 });
 
 describe('adaptive interview provider', () => {
@@ -178,6 +179,7 @@ describe('adaptive interview provider', () => {
     process.env.OPENROUTER_API_KEY = 'test-key';
     process.env.OPENROUTER_MODEL = 'openrouter/auto';
     process.env.OPENROUTER_REASONING = 'low';
+    process.env.AI_MODEL_INTERVIEW = 'openai/gpt-5-mini';
     const bodies = [];
     vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
       bodies.push(JSON.parse(init.body));
@@ -187,6 +189,7 @@ describe('adaptive interview provider', () => {
     await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
     expect(bodies[0].reasoning).toBeUndefined();
+    expect(bodies[0].temperature).toBeUndefined();
     expect(bodies[0].provider).toEqual({ require_parameters: true });
   });
 
