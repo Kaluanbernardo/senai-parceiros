@@ -41,6 +41,23 @@ describe('structured generation boundary', () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it('uses the completion-token contract accepted by the default OpenAI model', async () => {
+    process.env.AI_PROVIDER = 'openai';
+    process.env.OPENAI_API_KEY = 'server-only-test-key';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'x' }], maxOutputTokens: 2200 });
+
+    expect(bodies[0].max_completion_tokens).toBe(2200);
+    expect(bodies[0].max_tokens).toBeUndefined();
+    expect(bodies[0].temperature).toBeUndefined();
+    expect(bodies[0].reasoning_effort).toBe('minimal');
+  });
+
   it('routes with the auto-router plugin only for the Auto Router', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';

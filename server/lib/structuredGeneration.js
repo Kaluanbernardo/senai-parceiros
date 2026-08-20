@@ -268,6 +268,18 @@ export async function generateStructured({ task = 'structured_generation', schem
         ? modelForTask(task, requestedModel, provider.model)
         : provider.model;
       const options = providerOptions(provider.id, providerModel, costQualityTradeoff, disableReasoning, strictOutput, requireParameters);
+      const outputTokenLimit = Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700));
+      // Os modelos de raciocínio da OpenAI usam o contrato novo de Chat
+      // Completions: recusam `max_tokens` e temperaturas diferentes do padrão.
+      // Esforço mínimo deixa o orçamento para o JSON auditável da entrevista.
+      const openAiReasoningModel = provider.id === 'openai'
+        && /^(?:gpt-5(?:[.-]|$)|o[1-9](?:[.-]|$))/i.test(String(providerModel));
+      const generationParameters = provider.id === 'openai'
+        ? {
+            max_completion_tokens: outputTokenLimit,
+            ...(openAiReasoningModel ? { reasoning_effort: 'minimal' } : { temperature: safeTemperature(temperature) }),
+          }
+        : { temperature: safeTemperature(temperature), max_tokens: outputTokenLimit };
       const response = await fetch(provider.endpoint, {
         method: 'POST',
         signal,
@@ -279,8 +291,7 @@ export async function generateStructured({ task = 'structured_generation', schem
         body: JSON.stringify({
           model: providerModel,
           messages,
-          temperature: safeTemperature(temperature),
-          max_tokens: Math.max(200, Math.min(MAX_OUTPUT_TOKENS, Number(maxOutputTokens) || 700)),
+          ...generationParameters,
           ...options,
           ...(searchTool ? { tools: [searchTool] } : {}),
           ...(strictOutput ? { response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } } } : {}),
