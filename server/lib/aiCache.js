@@ -18,3 +18,5 @@ export async function writeAiCache(key, task, model, result) {
   memory.set(key, { result, expiresAt: Date.now() + ttlHours * 3600000 });
   if (isSupabaseConfigured()) await putSupabaseAiCache(key, task, model, result, ttlHours);
 }
+
+export function resetAiCacheForTests() { memory.clear(); }

@@ -73,7 +73,10 @@ export function getUsageBudget(kind = 'selection') {
 }
 
 export function canUseAi(kind = 'selection') {
-  if (String(process.env.AI_ENFORCE_BUDGET || '').toLowerCase() !== 'true') return true;
+  // Preserve the original fail-safe default. The pilot may explicitly disable
+  // enforcement while observing costs, but an absent variable must not turn
+  // every configured cap into decoration.
+  if (String(process.env.AI_ENFORCE_BUDGET || 'true').toLowerCase() !== 'true') return true;
   const budget = getUsageBudget(kind);
   return budget.requests < budget.limits.requests && budget.tokens < budget.limits.tokens && budget.costUsd < budget.limits.costUsd;
 }
