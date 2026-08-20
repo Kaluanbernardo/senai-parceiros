@@ -75,4 +75,12 @@ describe('admin storage migration route', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'verified' }));
   });
+
+  it('exposes only a safe Blob status code when planning fails', async () => {
+    mocks.buildMigrationPlan.mockRejectedValueOnce(new Error('Vercel Blob: Failed to fetch blob: 403 Forbidden'));
+    const res = response();
+    await handler({ method: 'GET', headers: {} }, res);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({ error: 'storage_migration_failed', code: 'blob_http_403' });
+  });
 });

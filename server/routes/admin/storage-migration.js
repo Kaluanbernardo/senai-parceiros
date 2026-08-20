@@ -10,6 +10,17 @@ function publicPlan(entries) {
   }));
 }
 
+function safeFailureCode(message) {
+  if (/Failed to fetch blob: \d{3}/.test(message)) {
+    return `blob_http_${message.match(/Failed to fetch blob: (\d{3})/)[1]}`;
+  }
+  if (message.includes('Invalid token')) return 'blob_invalid_token';
+  if (message.includes('No token found')) return 'blob_token_missing';
+  if (message.includes('Response body is null')) return 'blob_empty_response';
+  if (message.startsWith('blob_read_failed:')) return `blob_http_${message.split(':').at(-1)}`;
+  return message.startsWith('Vercel Blob') ? 'blob_sdk_error' : 'storage_error';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (process.env.STORAGE_MIGRATION_ENABLED !== 'true') return res.status(404).json({ error: 'not_found' });
@@ -44,7 +55,8 @@ export default async function handler(req, res) {
   } catch (error) {
     const message = String(error?.message || 'storage_migration_failed');
     const conflict = message.startsWith('migration_conflict:');
-    console.error('storage_migration_failed', { code: conflict ? 'conflict' : message.split(':')[0] });
-    return res.status(conflict ? 409 : 503).json({ error: conflict ? message : 'storage_migration_failed' });
+    const code = conflict ? 'conflict' : safeFailureCode(message);
+    console.error('storage_migration_failed', { code });
+    return res.status(conflict ? 409 : 503).json({ error: conflict ? message : 'storage_migration_failed', ...(!conflict && { code }) });
   }
 }
