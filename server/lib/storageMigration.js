@@ -76,7 +76,10 @@ export async function buildMigrationPlan({ readBlob, readTarget, stores = MIGRAT
 
 export async function readPrivateBlobJson(blobPath) {
   const { get } = await import('@vercel/blob');
-  const result = await get(blobPath, { access: 'private', useCache: false });
+  // Vercel injects OIDC into every deployment. Passing the store token here is
+  // deliberate: otherwise the SDK gives OIDC precedence and a legacy Blob
+  // store can reject the read even though its connected token is available.
+  const result = await get(blobPath, { access: 'private', useCache: false, token: process.env.BLOB_READ_WRITE_TOKEN });
   if (!result) return null;
   if (result.statusCode !== 200 || !result.stream) throw new Error(`blob_read_failed:${blobPath}:${result.statusCode || 'unknown'}`);
   return JSON.parse(await new Response(result.stream).text());
