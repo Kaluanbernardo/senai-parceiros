@@ -27,6 +27,7 @@ afterEach(() => {
   delete process.env.AZURE_OPENAI_DEPLOYMENT;
   delete process.env.OPENROUTER_MODEL;
   delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
+  delete process.env.OPENROUTER_REASONING;
 });
 
 describe('adaptive interview provider', () => {
@@ -170,6 +171,23 @@ describe('adaptive interview provider', () => {
     // chega a tempo vale menos que um bom que chega.
     expect(bodies[0].plugins[0].cost_quality_tradeoff).toBe(4);
     expect(result.trace.costQualityTradeoff).toBe(4);
+  });
+
+  it('does not let global OpenRouter reasoning exclude every compatible interview endpoint', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    process.env.OPENROUTER_MODEL = 'openrouter/auto';
+    process.env.OPENROUTER_REASONING = 'low';
+    const bodies = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(validResponse) } }] }) };
+    }));
+
+    await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
+
+    expect(bodies[0].reasoning).toEqual({ enabled: false });
+    expect(bodies[0].provider).toEqual({ require_parameters: true });
   });
 
   it('keeps the JSON schema strict and routes through OpenRouter when configured', async () => {
