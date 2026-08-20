@@ -186,7 +186,7 @@ describe('adaptive interview provider', () => {
 
     await generateNextQuestionWithProvider({ category: 'organization', objective: 'benchmark', answers: { context: 'benchmarking' }, history: [], askedIds: ['context'] });
 
-    expect(bodies[0].reasoning).toEqual({ enabled: false });
+    expect(bodies[0].reasoning).toBeUndefined();
     expect(bodies[0].provider).toEqual({ require_parameters: true });
   });
 
