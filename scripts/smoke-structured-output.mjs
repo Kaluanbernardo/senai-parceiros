@@ -162,7 +162,7 @@ const PRESUMED = /\b(na (nossa|sua) (escola|unidade)|aqui na escola|industri[áa
  */
 function inspectInterview(result) {
   const problems = [];
-  const fields = (result.candidateQuestions || []).map((item) => item.targetField);
+  const fields = result.consideredFields || [];
   if (!result.situationRead) problems.push('não leu a situação (situationRead vazio)');
   if (fields.length < 2) problems.push(`considerou ${fields.length} pergunta(s) antes de escolher`);
   if (new Set(fields).size !== fields.length) problems.push('candidatas repetem o mesmo campo');
