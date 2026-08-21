@@ -11,6 +11,7 @@ import {
 import { generateStructured } from './structuredGeneration.js';
 import { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES } from '../../src/domain/catalogResearchFlow.js';
 import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES, normalizeCatalogRequest } from '../../src/domain/catalogTaxonomy.js';
+import { auditCatalogRecord } from '../../src/domain/catalogQuality.js';
 
 export { CATALOG_RESEARCH_BATCH_SIZE, CATALOG_RESEARCH_QUANTITIES };
 
@@ -120,9 +121,12 @@ function propertySchema(column, category) {
     return { type: ['integer', 'null'], minimum: 0, description };
   }
   if (column.type === 'lista') {
-    return { type: 'array', items: { type: 'string' }, description };
+    const minimum = column.name === 'fontes' || column.name === 'areas_temas' ? 3 : column.essential ? 1 : 0;
+    return { type: 'array', minItems: minimum, items: { type: 'string' }, description };
   }
-  return { type: 'string', description };
+  if (column.name === 'descricao') return { type: 'string', minLength: 400, description };
+  if (column.name === 'resumo') return { type: 'string', minLength: 80, description };
+  return { type: 'string', ...(column.essential ? { minLength: 1 } : {}), description };
 }
 
 export function catalogResearchOutputSchema(category, quantity) {
@@ -274,6 +278,30 @@ function mergePersonEnrichment(candidates, profiles) {
   });
 }
 
+function useful(value) {
+  return value !== null && value !== undefined && String(value).trim() !== '';
+}
+
+function mergeQualityEnrichment(candidates, enrichedCandidates) {
+  const byName = new Map((enrichedCandidates || []).map((candidate) => [normalizedIdentity(candidate.nome), candidate]));
+  return candidates.map((candidate) => {
+    const enriched = byName.get(normalizedIdentity(candidate.nome));
+    if (!enriched) return candidate;
+    const merged = { ...candidate };
+    for (const [field, value] of Object.entries(enriched)) {
+      if (field === 'nome' || field === 'subtipo') continue;
+      if (Array.isArray(value)) {
+        if (value.length) merged[field] = [...new Set([...(Array.isArray(candidate[field]) ? candidate[field] : []), ...value])];
+      } else if (['descricao', 'resumo', 'aderencia_contexto', 'relacao_publica', 'atuacao'].includes(field)) {
+        if (String(value ?? '').trim().length > String(candidate[field] ?? '').trim().length) merged[field] = value;
+      } else if (useful(value)) {
+        merged[field] = value;
+      }
+    }
+    return merged;
+  });
+}
+
 function mergedTrace(traces) {
   const usable = traces.filter(Boolean);
   const usage = usable.reduce((total, trace) => {
@@ -322,16 +350,38 @@ function candidateToEntry(candidate, category, rowNumber, consultedAt) {
   const qualityErrors = [];
   if (validSources.length < 3) qualityErrors.push(`Linha ${rowNumber}: informe ao menos três fontes públicas válidas.`);
   if (String(row.resumo || '').trim().length < 80) qualityErrors.push(`Linha ${rowNumber}: resumo factual insuficiente.`);
-  if (String(row.descricao || '').trim().length < 240) qualityErrors.push(`Linha ${rowNumber}: descrição factual insuficiente.`);
+  const record = rowToCanonical(row);
+  const quality = auditCatalogRecord(record, category);
+  qualityErrors.push(...quality.missing.map((gap) => `Linha ${rowNumber}: padrão mínimo ausente — ${gap.label}.`));
   const errors = [...validation.errors, ...qualityErrors];
   return {
     rowNumber,
     row,
-    record: rowToCanonical(row),
+    record,
     valid: errors.length === 0,
     errors,
     hash: rowHash(row),
   };
+}
+
+function qualityEnrichmentPrompt(request, candidates, consultedAt) {
+  const cards = candidates.map((candidate, index) => {
+    const entry = candidateToEntry(candidate, request.category, index + 1, consultedAt);
+    return {
+      nome: candidate.nome,
+      lacunas: entry.errors,
+      cardAtual: candidate,
+    };
+  }).filter((card) => card.lacunas.length > 0);
+  return [
+    'Enriqueça somente os cards recebidos até que todos atendam ao padrão mínimo do catálogo do SENAI-SP.',
+    'Não descubra nem substitua candidatos. Preserve a identidade, o subtipo e toda informação já confirmada.',
+    'Pesquise novamente fontes públicas para preencher cada lacuna indicada. A descrição deve ter pelo menos 400 caracteres, ser factual, específica e sustentada pelas fontes; não use frases genéricas para aumentar o texto.',
+    'Cada card deve ter pelo menos três temas específicos e três URLs públicas distintas. Preencha todos os campos centrais da categoria; quando um dado não central não for localizado, registre a busca em dados_nao_localizados.',
+    `Contexto original: ${request.context}`,
+    `Cards e lacunas: ${JSON.stringify(cards)}`,
+    'Devolva uma entrada completa para cada card recebido e responda somente o JSON exigido pelo schema.',
+  ].join('\n');
 }
 
 /**
@@ -388,6 +438,31 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     });
     candidates = mergePersonEnrichment(candidates, enrichment.data?.profiles);
     traces.push(enrichment.trace);
+  }
+  const shallowCandidates = candidates.filter((candidate, index) => !candidateToEntry(candidate, request.category, index + 1, consultedAt).valid);
+  if (shallowCandidates.length) {
+    const qualityEnrichment = await generate({
+      task: `catalog_research_quality_enrichment_${request.category}_batch_${request.batchIndex + 1}`,
+      model: 'openai/gpt-5.6-luna',
+      strictOutput: true,
+      requireParameters: false,
+      schema: catalogResearchOutputSchema(request.category, shallowCandidates.length),
+      messages: [
+        { role: 'system', content: 'Você completa fichas públicas do catálogo com rastreabilidade e aplica integralmente o padrão mínimo de qualidade.' },
+        { role: 'user', content: qualityEnrichmentPrompt(request, shallowCandidates, consultedAt) },
+      ],
+      maxOutputTokens: 16000,
+      temperature: 0.1,
+      webSearch: {
+        engine: 'native',
+        maxResults: 10,
+        maxTotalResults: 20,
+        searchContextSize: 'high',
+      },
+      signal,
+    });
+    candidates = mergeQualityEnrichment(candidates, qualityEnrichment.data?.candidates);
+    traces.push(qualityEnrichment.trace);
   }
   const trace = mergedTrace(traces);
   const rows = candidates.map((candidate, index) => candidateToEntry(candidate, request.category, index + 1, consultedAt));
