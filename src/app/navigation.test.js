@@ -27,8 +27,9 @@ describe('ferramenta de um caminho', () => {
   it('resolve a ferramenta pelo prefixo mais longo', () => {
     expect(findTool('/catalogo/pessoas-juridicas')?.id).toBe('catalog');
     expect(findTool('/radar')?.id).toBe('radar');
-    expect(findTool('/gerador-prompt')?.id).toBe('prompt');
-    expect(findTool('/pesquisar-catalogo')?.id).toBe('research');
+    expect(findTool('/pesquisar-parceiros')?.id).toBe('research');
+    expect(findTool('/pesquisar-parceiros/externa')?.id).toBe('research');
+    expect(findTool('/pesquisar-parceiros/interna')?.id).toBe('research');
   });
 
   it('devolve nada para a home e para caminhos desconhecidos', () => {
@@ -100,7 +101,7 @@ describe('rotas achatadas', () => {
   it('inclui as ferramentas e as subseções sem repetir rota', () => {
     const routes = getAllRoutes();
     expect(new Set(routes.map((entry) => entry.route)).size).toBe(routes.length);
-    expect(routes.filter((entry) => entry.isTool)).toHaveLength(5);
+    expect(routes.filter((entry) => entry.isTool)).toHaveLength(4);
     expect(routes.filter((entry) => entry.parentRoute === '/catalogo')).toHaveLength(2);
     routes.forEach((entry) => expect(entry.label).toBeTruthy());
   });

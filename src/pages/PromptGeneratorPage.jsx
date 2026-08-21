@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -17,13 +16,11 @@ import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { Link as RouterLink } from 'react-router-dom';
 import { CATEGORY_LABELS } from '../domain/interview';
 import { getCatalogHeaders } from '../domain/catalogImportSchema';
 import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 import { generateResearchPrompt } from '../domain/promptGenerator';
 import { buildCatalogTemplate, downloadTemplateBuffer } from '../services/catalogTemplate';
-import { useAuth } from '../context/AuthContext';
 import PageContainer from '../design-system/primitives/PageContainer';
 import PageHeader from '../design-system/primitives/PageHeader';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
@@ -39,7 +36,6 @@ function FieldGroup({ step, title, children }) {
 }
 
 export default function PromptGeneratorPage() {
-  const { user } = useAuth();
   const [form, setForm] = useState({ category: 'person', subtype: '', context: '', purpose: '', geography: '', quantity: '', extraCriteria: '', personProfiles: '', sourcePreferences: '' });
   const [showOptional, setShowOptional] = useState(false);
   const [snack, setSnack] = useState('');
@@ -99,29 +95,12 @@ export default function PromptGeneratorPage() {
           escolhidos à mão: o título saía maior que o de todas as outras e o
           conteúdo deslizava de lado a cada navegação. */}
       <PageHeader
-        eyebrow="PREPARAR PESQUISA"
+        eyebrow="PESQUISA EXTERNA"
         title="Monte um pedido claro para pesquisar com IA"
         description="Explique o que precisa. O Farol organiza as instruções para você copiar e usar na ferramenta de sua preferência."
         accent="prompt"
         dense
       />
-
-      {/* As duas ferramentas de pesquisa resolvem o mesmo problema por caminhos
-          diferentes, e nada no produto explicava a escolha — na barra elas
-          aparecem como "Preparar pesquisa" e "Pesquisar". */}
-      {user?.role === 'admin' && (
-        <Card variant="outlined" sx={{ mt: 3, bgcolor: T.surface.sunken }}>
-          <CardContent sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', py: 1.5 }}>
-            <TravelExploreIcon sx={{ color: T.tools.research.main }} />
-            <Typography variant="body2" sx={{ flex: 1, minWidth: 240, color: T.ink.base }}>
-              Prefere que o próprio Farol pesquise, verifique as fontes e prepare os cards para você aprovar?
-            </Typography>
-            <Button size="small" component={RouterLink} to="/pesquisar-catalogo">
-              Pesquisar novos parceiros
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       <Grid container spacing={3} sx={{ mt: 1 }} alignItems="flex-start">
         <Grid size={{ xs: 12, md: 5 }}>
