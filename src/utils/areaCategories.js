@@ -18,6 +18,16 @@ export const CATEGORIAS = [
   'Inclusão e Equidade',
 ];
 
+/**
+ * Taxonomia de navegação de temas para Pessoas Físicas.
+ *
+ * Os registros continuam guardando temas específicos (por exemplo,
+ * "aprendizagem dual"). As categorias abaixo não são uma segunda faceta:
+ * servem para agrupar esses temas no mesmo seletor e tornar a exploração
+ * compreensível sem obrigar a pessoa a conhecer o vocabulário do catálogo.
+ */
+export const THEME_GROUP_FALLBACK = 'Outros temas';
+
 // area substring → one or more category labels
 const AREA_MAP = [
   // ── Política e Governança ──────────────────────────────────────
@@ -159,4 +169,9 @@ export function getCategoriasFromAreas(areasStr) {
   }
   // preserve canonical order
   return CATEGORIAS.filter((c) => found.has(c));
+}
+
+/** Retorna o eixo mais representativo de um tema para agrupá-lo na interface. */
+export function getThemeGroup(theme) {
+  return getCategoriasFromAreas(theme)[0] || THEME_GROUP_FALLBACK;
 }

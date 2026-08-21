@@ -141,6 +141,7 @@ export function FilterPanel({ facets = [], children, onClearAll, activeCount = 0
             options={facet.options}
             value={facet.value}
             onChange={(_event, next) => facet.onChange(next)}
+            groupBy={facet.groupBy}
             limitTags={2}
             renderInput={(params) => <TextField {...params} label={facet.label} />}
           />
