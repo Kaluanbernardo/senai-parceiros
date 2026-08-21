@@ -1,5 +1,5 @@
 export const CATALOG_RESEARCH_BATCH_SIZE = 5;
-export const CATALOG_RESEARCH_QUANTITIES = Object.freeze([5, 20, 50, 100]);
+export const CATALOG_RESEARCH_QUANTITIES = Object.freeze([5, 10, 20, 50, 100]);
 export const CATALOG_RESEARCH_GEOGRAPHIES = Object.freeze([
   Object.freeze({ value: 'brasil', label: 'Brasil' }),
   Object.freeze({ value: 'internacional', label: 'Internacional' }),

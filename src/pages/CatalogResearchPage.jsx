@@ -1,25 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MergeIcon from '@mui/icons-material/Merge';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SearchIcon from '@mui/icons-material/Search';
-import TuneIcon from '@mui/icons-material/Tune';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid';
 import InputLabel from '@mui/material/InputLabel';
-import Link from '@mui/material/Link';
-import LinearProgress from '@mui/material/LinearProgress';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
@@ -82,15 +73,9 @@ function errorMessage(body) {
   if (body?.reason === 'ai_not_configured') return 'A pesquisa por IA não está configurada neste ambiente.';
   if (body?.reason === 'provider_timeout') return 'Um lote demorou mais que o limite. Os cards já concluídos foram preservados; tente continuar a pesquisa.';
   if (body?.reason === 'output_truncated') return 'Um lote ficou grande demais. Os cards já concluídos foram preservados; tente continuar a pesquisa.';
+  if (body?.error === 'research_subtype_required') return 'Selecione como deseja refinar a pesquisa.';
   if (body?.error === 'research_context_required') return 'Descreva o que você procura.';
   return 'Não foi possível concluir a pesquisa. Tente novamente.';
-}
-
-function statusLabel(row) {
-  if (row.status === 'invalid') return 'Evidência insuficiente';
-  if (row.status === 'possible_duplicate') return 'Possível duplicidade';
-  if (row.status === 'already_imported') return 'Já processado';
-  return 'Novo';
 }
 
 function summarize(text, maxSentences = 2) {
@@ -101,10 +86,6 @@ function summarize(text, maxSentences = 2) {
 
 function isHttpUrl(value) {
   try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; }
-}
-
-function sourceLabel(url) {
-  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
 function researchCardPresentation(record) {
@@ -147,8 +128,6 @@ export function ResearchCandidateCard({ row, decision, onDecision }) {
   const invalid = row.status === 'invalid';
   const duplicate = row.status === 'possible_duplicate';
   const importedDuplicate = duplicate && row.match?.source === 'imported';
-  const sources = Array.isArray(record.fontes) ? record.fontes : [];
-  const missing = Array.isArray(record.dados_nao_localizados) ? record.dados_nao_localizados : [];
   const presentation = researchCardPresentation(record);
   const approved = ['use_imported', 'merge'].includes(decision);
 
@@ -172,42 +151,10 @@ export function ResearchCandidateCard({ row, decision, onDecision }) {
           />
         </Box>
 
-        <SectionCard sx={{ borderColor: approved ? T.feedback.success : T.border.subtle }}>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-            <Stack direction="row" gap={.75} flexWrap="wrap" alignItems="center">
-              <Chip size="small" label={statusLabel(row)} color={invalid ? 'error' : duplicate ? 'warning' : 'default'} />
-              {record.confianca !== null && record.confianca !== undefined && <Chip size="small" variant="outlined" label={`${record.confianca}% confiança`} />}
-              <Chip size="small" variant="outlined" label={`${sources.length} ${sources.length === 1 ? 'fonte' : 'fontes'}`} />
-            </Stack>
-
-            {(duplicate || invalid || missing.length > 0) && (
-              <Stack gap={1} sx={{ mt: 1.25 }}>
-                {duplicate && <Alert severity="warning">Já existe correspondência com <strong>{row.match?.name}</strong>. {importedDuplicate ? 'Você pode mesclar os dados pesquisados ou manter o cadastro atual.' : 'O cadastro existente será preservado neste MVP.'}</Alert>}
-                {invalid && <Alert severity="error">{(row.errors || []).join(' ')}</Alert>}
-                {missing.length > 0 && <Alert severity="info">Não localizado: {missing.join('; ')}.</Alert>}
-              </Stack>
-            )}
-
-            {sources.length > 0 && (
-              <Accordion disableGutters elevation={0} sx={{ mt: 1, '&::before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 36, px: 0, '& .MuiAccordionSummary-content': { my: .5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: T.ink.muted }}>Ver fontes consultadas</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                  <Stack component="ul" gap={.5} sx={{ pl: 2.5, my: 0 }}>
-                    {sources.map((source) => (
-                      <Typography component="li" variant="body2" key={source}>
-                        <Link href={source} target="_blank" rel="noopener noreferrer" underline="hover">
-                          {sourceLabel(source)} <OpenInNewIcon sx={{ fontSize: 13, verticalAlign: 'middle' }} />
-                        </Link>
-                      </Typography>
-                    ))}
-                  </Stack>
-                </AccordionDetails>
-              </Accordion>
-            )}
-
-            <Stack direction="row" gap={1} justifyContent="flex-end" sx={{ mt: 1.25 }}>
+        <Box>
+          {duplicate && <Alert severity="warning" sx={{ mb: 1 }}>{importedDuplicate ? <><strong>{row.match?.name}</strong> já está no catálogo. Escolha manter o cadastro atual ou mesclar as informações.</> : <><strong>{row.match?.name}</strong> já está no catálogo e será mantido.</>}</Alert>}
+          {invalid && <Alert severity="error" sx={{ mb: 1 }}>Este resultado não tem evidências suficientes para ser adicionado.</Alert>}
+          <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
               {!invalid && !duplicate && row.status !== 'already_imported' && (
                 <>
                   <Button size="small" variant={decision === 'ignore' ? 'contained' : 'outlined'} color="inherit" startIcon={<CloseIcon />} onClick={() => onDecision('ignore')}>Descartar</Button>
@@ -220,9 +167,8 @@ export function ResearchCandidateCard({ row, decision, onDecision }) {
                   <Button size="small" variant={decision === 'merge' ? 'contained' : 'outlined'} color="success" startIcon={<MergeIcon />} onClick={() => onDecision('merge')}>Mesclar</Button>
                 </>
               )}
-            </Stack>
-          </CardContent>
-        </SectionCard>
+          </Stack>
+        </Box>
       </Stack>
       <DetailModal open={detailsOpen} onClose={() => setDetailsOpen(false)} item={presentation.detailItem} type={presentation.detailType} />
     </>
@@ -243,12 +189,18 @@ export default function CatalogResearchPage() {
   const approvedCount = useMemo(() => Object.values(decisions).filter((decision) => ['use_imported', 'merge'].includes(decision)).length, [decisions]);
   const previewSummary = useMemo(() => {
     const rows = flattenResearchPreviews(previews);
-    const sources = new Set(rows.flatMap((row) => Array.isArray(row.record?.fontes) ? row.record.fontes : []));
-    return { cards: rows.length, sources: sources.size };
+    return { cards: rows.length };
   }, [previews]);
 
   const change = (field, value) => {
     setForm((previous) => ({ ...previous, [field]: value }));
+    setPreviews([]);
+    setDecisions({});
+    setError('');
+  };
+
+  const changeCategory = (category) => {
+    setForm((previous) => ({ ...previous, category, subtype: '' }));
     setPreviews([]);
     setDecisions({});
     setError('');
@@ -357,24 +309,25 @@ export default function CatalogResearchPage() {
                 exclusive
                 fullWidth
                 value={form.category}
-                onChange={(_, value) => value && setForm((previous) => ({ ...previous, category: value, subtype: '' }))}
+                onChange={(_, value) => value && changeCategory(value)}
                 disabled={busy}
                 aria-label="Tipo de parceiro"
-                sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' } }}
+                sx={{ mt: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}
               >
                 {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                   <ToggleButton key={value} value={value} sx={{ py: 1.35, textTransform: 'none', fontWeight: 700 }}>{label}</ToggleButton>
                 ))}
               </ToggleButtonGroup>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Subtipo (opcional)</InputLabel>
+              <FormControl required fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Refinar pesquisa</InputLabel>
                 <Select
-                  label="Subtipo (opcional)"
+                  required
+                  label="Refinar pesquisa"
                   value={form.subtype}
                   onChange={(event) => change('subtype', event.target.value)}
                   disabled={busy}
                 >
-                  <MenuItem value="">Todos os subtipos</MenuItem>
+                  <MenuItem value="" disabled>Selecione o perfil desejado</MenuItem>
                   {SUBTYPES[form.category].map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -397,7 +350,7 @@ export default function CatalogResearchPage() {
             </Box>
 
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 5 }}>
                 <FormControl fullWidth>
                   <InputLabel>Fontes preferidas</InputLabel>
                   <Select label="Fontes preferidas" value={form.sourcePreferences} onChange={(event) => change('sourcePreferences', event.target.value)} disabled={busy}>
@@ -413,7 +366,7 @@ export default function CatalogResearchPage() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 12, sm: 5, md: 2 }}>
+              <Grid size={{ xs: 12, sm: 5, md: 3 }}>
                 <FormControl fullWidth>
                   <InputLabel>Resultados</InputLabel>
                   <Select label="Resultados" value={form.quantity} onChange={(event) => change('quantity', Number(event.target.value))} disabled={busy}>
@@ -423,28 +376,24 @@ export default function CatalogResearchPage() {
               </Grid>
             </Grid>
 
-            <Accordion disableGutters elevation={0} sx={{ border: `1px solid ${T.border.subtle}`, borderRadius: '12px !important', '&::before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="research-refinements-content" id="research-refinements-header">
-                <Stack direction="row" gap={1} alignItems="center"><TuneIcon fontSize="small" /><Typography variant="subtitle2">Refinar pesquisa (opcional)</Typography></Stack>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField fullWidth label="Como pretende usar o resultado?" value={form.purpose} onChange={(event) => change('purpose', event.target.value)} disabled={busy} />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField fullWidth multiline minRows={2} label="Fatores de priorização" helperText="O que faz um resultado aparecer antes dos demais." value={form.prioritizationFactors} onChange={(event) => change('prioritizationFactors', event.target.value)} disabled={busy} />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField fullWidth multiline minRows={2} label="Fatores de exclusão" helperText="Condições que eliminam um resultado da pesquisa." value={form.exclusionFactors} onChange={(event) => change('exclusionFactors', event.target.value)} disabled={busy} />
-                  </Grid>
+            <Box>
+              <Typography variant="overline" sx={{ color: T.tools.research.dark }}>3. Detalhes da pesquisa</Typography>
+              <Grid container spacing={2} alignItems="stretch" sx={{ mt: 0 }}>
+                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
+                  <TextField fullWidth multiline minRows={3} label="Como pretende usar o resultado?" helperText="Ex.: selecionar convidados ou mapear parceiros." value={form.purpose} onChange={(event) => change('purpose', event.target.value)} disabled={busy} />
                 </Grid>
-              </AccordionDetails>
-            </Accordion>
+                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
+                  <TextField fullWidth multiline minRows={3} label="Fatores de priorização" helperText="O que faz um resultado aparecer antes dos demais." value={form.prioritizationFactors} onChange={(event) => change('prioritizationFactors', event.target.value)} disabled={busy} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
+                  <TextField fullWidth multiline minRows={3} label="Fatores de exclusão" helperText="Condições que eliminam um resultado da pesquisa." value={form.exclusionFactors} onChange={(event) => change('exclusionFactors', event.target.value)} disabled={busy} />
+                </Grid>
+              </Grid>
+            </Box>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2}>
               <Typography variant="caption" sx={{ color: T.ink.subtle }}>A pesquisa aprofunda e verifica lotes de até cinco cards. Pedidos maiores podem levar vários minutos; cada lote concluído é preservado.</Typography>
-              <Button type="submit" variant="contained" size="large" startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />} disabled={busy || !form.context.trim() || previewSummary.cards >= form.quantity} sx={{ minWidth: 220, bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark } }}>
+              <Button type="submit" variant="contained" size="large" startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />} disabled={busy || !form.subtype || !form.context.trim() || previewSummary.cards >= form.quantity} sx={{ minWidth: 220, bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark }, '&:active': { transform: 'translateY(1px)' } }}>
                 {busy ? `Pesquisando ${Math.min(previewSummary.cards + 5, form.quantity)} de ${form.quantity}…` : previewSummary.cards ? 'Continuar pesquisa' : 'Iniciar pesquisa profunda'}
               </Button>
             </Stack>
@@ -458,25 +407,18 @@ export default function CatalogResearchPage() {
               <Box sx={{ p: 4, maxWidth: 560, textAlign: 'center' }}>
                 <SearchIcon sx={{ fontSize: 46, color: T.tools.research.main }} />
                 <Typography variant="h5" sx={{ mt: 1 }}>Os resultados aparecerão aqui para revisão</Typography>
-                <Typography variant="body2" sx={{ mt: 1, color: T.ink.muted }}>Cada card mostrará fontes, lacunas, confiança e possíveis duplicidades. Todos começam descartados até você aprová-los.</Typography>
+                <Typography variant="body2" sx={{ mt: 1, color: T.ink.muted }}>Cada sugestão será exibida como um card para sua aprovação.</Typography>
               </Box>
             </SectionCard>
           )}
           {busy && !previews.length && <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}><Stack alignItems="center" gap={2} sx={{ p: 4 }}><CircularProgress /><Typography>Pesquisando e conferindo fontes públicas…</Typography><Typography variant="body2" sx={{ color: T.ink.muted }}>O primeiro lote pode levar alguns minutos.</Typography></Stack></SectionCard>}
           {previews.length > 0 && (
             <>
-              <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2} sx={{ mb: 2 }}>
-                <Box>
-                  <Typography variant="h5">Revise as sugestões</Typography>
-                  <Typography variant="body2" sx={{ mt: .35, color: T.ink.muted }}>
-                    {previewSummary.cards} de {form.quantity} cards · {previewSummary.sources} {previewSummary.sources === 1 ? 'fonte consultada' : 'fontes consultadas'}
-                  </Typography>
-                </Box>
+              <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
                 <Button variant="contained" color="success" startIcon={commitBusy ? <CircularProgress size={18} color="inherit" /> : <CheckCircleOutlineIcon />} disabled={busy || commitBusy || approvedCount === 0} onClick={commit}>
                   Adicionar aprovados ({approvedCount})
                 </Button>
               </Stack>
-              {busy && <Box sx={{ mb: 2 }}><LinearProgress variant="determinate" value={Math.min(100, (previewSummary.cards / form.quantity) * 100)} /><Typography variant="caption" sx={{ mt: .5, display: 'block', color: T.ink.muted }}>Os cards concluídos já podem ser revisados enquanto o próximo lote é pesquisado.</Typography></Box>}
               <Grid container spacing={2}>
                 {flattenResearchPreviews(previews).map((row) => (
                   <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={`${row.batchId}:${row.hash || row.rowNumber}`}>
