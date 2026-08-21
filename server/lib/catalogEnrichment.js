@@ -185,6 +185,12 @@ export function catalogEnrichmentBatchSummary(batch) {
       error: target.error,
       missing: target.quality?.missing?.map((item) => item.label) || [],
     })),
+    enriched: (batch.targets || []).filter((target) => target.status === 'committed').map((target) => ({
+      key: target.key,
+      name: target.name,
+      category: target.category,
+      fields: Array.isArray(target.changes) ? target.changes : [],
+    })),
   };
 }
 
@@ -706,6 +712,25 @@ function upsert(records, record) {
   return { records: next, action: index < 0 ? 'created' : 'updated' };
 }
 
+const CHANGE_IGNORED_FIELDS = new Set([
+  'id', 'enrichmentBatchId', 'enrichmentInputHash', 'enrichmentRecordHash',
+  'enrichedAt', 'catalogQualityVersion',
+]);
+
+function comparable(value) {
+  if (Array.isArray(value)) return value.map(comparable);
+  if (!value || typeof value !== 'object') return value ?? '';
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, comparable(value[key])]));
+}
+
+export function catalogEnrichmentChanges(before = {}, after = {}) {
+  const fields = [...new Set([...Object.keys(before || {}), ...Object.keys(after || {})])]
+    .filter((field) => !field.startsWith('_') && !CHANGE_IGNORED_FIELDS.has(field))
+    .sort();
+  return fields.filter((field) => JSON.stringify(comparable(before?.[field])) !== JSON.stringify(comparable(after?.[field])))
+    .map((field) => ({ field, before: before?.[field] ?? '', after: after?.[field] ?? '' }));
+}
+
 export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvider, now = new Date() } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
@@ -736,8 +761,10 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
     };
     const updated = upsert(nextByCategory[target.category], record);
     nextByCategory[target.category] = updated.records;
-    applied.push({ category: target.category, id: record.id, action: updated.action, rowHash: recordHash });
+    const changes = catalogEnrichmentChanges(target.record, target.result);
+    applied.push({ category: target.category, id: record.id, action: updated.action, rowHash: recordHash, changes });
     appliedRecords.push(record);
+    target.changes = changes;
   }
   for (const category of CATEGORIES) catalogStore.replaceCategory(category, nextByCategory[category], beforeByCategory[category].rowHashes);
 

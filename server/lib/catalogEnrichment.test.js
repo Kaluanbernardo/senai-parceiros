@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   catalogEnrichmentBatchSummary,
+  catalogEnrichmentChanges,
   catalogEnrichmentCapabilities,
   commitCatalogEnrichment,
   createCatalogEnrichmentBatch,
@@ -114,6 +115,13 @@ describe('catalog enrichment batches', () => {
 
     const committed = commitCatalogEnrichment(batch.batchId, { provideCatalog: providerFromStore, now: new Date('2026-08-14T12:11:00Z') });
     expect(committed.audit.needsEnrichment).toBe(0);
+    expect(committed.enriched).toEqual([expect.objectContaining({
+      name: 'Instituto Teste',
+      fields: expect.arrayContaining([
+        expect.objectContaining({ field: 'descricao', before: '', after: expect.stringContaining('Perfil factual') }),
+        expect.objectContaining({ field: 'website' }),
+      ]),
+    })]);
     expect(catalogStore.getRecords('organization')[0]).toMatchObject({
       id: 'o-test',
       descricao: expect.stringContaining('Perfil factual'),
@@ -123,6 +131,16 @@ describe('catalog enrichment batches', () => {
     const storedBatch = catalogStore.getCommitted(batch.batchId);
     expect(rollbackCatalogEnrichment(storedBatch)).toMatchObject({ rolledBack: true, restored: 1 });
     expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining(shallow)]);
+  });
+
+  it('reports only effective public field changes', () => {
+    expect(catalogEnrichmentChanges(
+      { id: 'o-1', nome: 'Instituto', descricao: 'Curta', areas: ['EPT'], _source: 'fixture' },
+      { id: 'o-1', nome: 'Instituto', descricao: 'Descrição ampliada', areas: ['EPT', 'Indústria'], enrichedAt: '2026-08-20' },
+    )).toEqual([
+      { field: 'areas', before: ['EPT'], after: ['EPT', 'Indústria'] },
+      { field: 'descricao', before: 'Curta', after: 'Descrição ampliada' },
+    ]);
   });
 
   it('grava os cards aprovados e mantém apenas os reprovados pendentes', async () => {
