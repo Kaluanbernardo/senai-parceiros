@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import { getNavTools } from '../app/toolRegistry';
@@ -67,7 +66,14 @@ function useToolMeta() {
  * bloco como "só para administradores" para quem *é* administrador só diz o
  * que aquela pessoa já sabe, ao custo de partir a grade em duas.
  *
- * Uma grade só, cartões do mesmo tamanho e do mesmo peso.
+ * Daí a fileira única. Uma grade de duas colunas põe as ferramentas em ordem
+ * de leitura — primeira linha, segunda linha — e deixa a última sozinha num
+ * degrau final, o que sugere de novo uma sequência e um resto. Lado a lado,
+ * todas na mesma altura e na mesma largura, nenhuma vem antes de outra.
+ *
+ * As colunas são contadas a partir das ferramentas visíveis, não fixadas em
+ * cinco: quem não é administrador vê quatro, e uma sexta coluna vazia deixaria
+ * exatamente o buraco que a fileira existe para evitar.
  */
 export default function HomePage() {
   const navigate = useNavigate();
@@ -104,25 +110,34 @@ export default function HomePage() {
       <PageContainer width="wide">
         <Typography variant="h2">O que você quer fazer?</Typography>
 
-        <Grid container spacing={2} alignItems="stretch" sx={{ mt: 2.5 }}>
+        <Box
+          sx={{
+            mt: 2.5,
+            display: 'grid',
+            gap: 2,
+            alignItems: 'stretch',
+            // Empilhado onde uma fileira não caberia. Uma coluna só também não
+            // tem órfão — cada linha tem exatamente um bloco.
+            gridTemplateColumns: { xs: '1fr', lg: `repeat(${tools.length}, minmax(0, 1fr))` },
+          }}
+        >
           {tools.map((tool) => (
-            <Grid size={{ xs: 12, md: 6 }} key={tool.id}>
-              <ToolCard
-                icon={getToolIcon(tool.iconKey)}
-                label={tool.label}
-                // Todos os cartões descrevem o que a ferramenta faz e, quando
-                // dá para saber, trazem uma ficha com o que há dentro. Trocar a
-                // descrição de um deles pela contagem repetiria a ficha e daria
-                // àquele cartão um texto diferente dos demais.
-                description={tool.description}
-                themeKey={tool.themeKey}
-                actionLabel={tool.actionLabel}
-                meta={meta[tool.id]}
-                onClick={() => navigate(tool.route)}
-              />
-            </Grid>
+            <ToolCard
+              key={tool.id}
+              icon={getToolIcon(tool.iconKey)}
+              label={tool.label}
+              // Todos os cartões descrevem o que a ferramenta faz e, quando dá
+              // para saber, trazem uma ficha com o que há dentro. Trocar a
+              // descrição de um deles pela contagem repetiria a ficha e daria
+              // àquele cartão um texto diferente dos demais.
+              description={tool.description}
+              themeKey={tool.themeKey}
+              actionLabel={tool.actionLabel}
+              meta={meta[tool.id]}
+              onClick={() => navigate(tool.route)}
+            />
           ))}
-        </Grid>
+        </Box>
 
         <Typography variant="body2" sx={{ mt: 4, color: T.ink.subtle, maxWidth: T.layout.prose }}>
           As informações vêm de fontes públicas. Abra um perfil para conhecer o trabalho e acessar a fonte original.
