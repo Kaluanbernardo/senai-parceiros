@@ -12,6 +12,7 @@ import AppShell from './design-system/AppShell';
 // renders it synchronously for every signed-out visitor.
 const HomePage = lazy(() => import('./pages/HomePage'));
 const SelectionPage = lazy(() => import('./pages/SelectionPage'));
+const PartnerResearchHomePage = lazy(() => import('./pages/PartnerResearchHomePage'));
 const PromptGeneratorPage = lazy(() => import('./pages/PromptGeneratorPage'));
 const CatalogResearchPage = lazy(() => import('./pages/CatalogResearchPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
@@ -65,8 +66,11 @@ export default function App() {
     <Routes>
       <Route path="/" element={<InShell><HomePage /></InShell>} />
       <Route path="/selecionar" element={<InShell><SelectionPage /></InShell>} />
-      <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
-      <Route path="/pesquisar-catalogo" element={<InShell adminOnly><CatalogResearchPage /></InShell>} />
+      <Route path="/pesquisar-parceiros" element={<InShell><PartnerResearchHomePage /></InShell>} />
+      <Route path="/pesquisar-parceiros/externa" element={<InShell><PromptGeneratorPage /></InShell>} />
+      <Route path="/pesquisar-parceiros/interna" element={<InShell adminOnly><CatalogResearchPage /></InShell>} />
+      <Route path="/gerador-prompt" element={<Navigate to="/pesquisar-parceiros/externa" replace />} />
+      <Route path="/pesquisar-catalogo" element={<Navigate to="/pesquisar-parceiros/interna" replace />} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
       {/* `/catalogo` era uma tela intermediária com dois cartões que levavam
           exatamente às duas abas que já existem no topo da lista: um clique a

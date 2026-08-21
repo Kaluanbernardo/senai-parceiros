@@ -328,7 +328,7 @@ export default function CatalogResearchPage() {
   return (
     <PageContainer width="wide" tool="research">
       <PageHeader
-        eyebrow="PESQUISA PARA O CATÁLOGO"
+        eyebrow="PESQUISA INTERNA"
         title="Encontre novos parceiros com pesquisa profunda"
         description="A plataforma cruza fontes públicas, prepara cards completos e preserva cada lote concluído. Nada entra no catálogo sem sua aprovação card por card."
         accent="research"
