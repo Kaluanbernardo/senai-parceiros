@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid';
@@ -22,6 +25,7 @@ import { CATEGORY_LABELS } from '../domain/interview';
 import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 import { useData } from '../context/DataContext';
 import PageContainer from '../design-system/primitives/PageContainer';
+import NumberedStep from '../design-system/primitives/NumberedStep';
 import PageHeader from '../design-system/primitives/PageHeader';
 import SectionCard from '../design-system/primitives/SectionCard';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
@@ -80,6 +84,10 @@ export default function CatalogResearchPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [stateFilter, setStateFilter] = useState('all');
+  const [optionalOpen, setOptionalOpen] = useState(false);
+  // Com resultados na tela o formulário recolhe sozinho: ele já cumpriu o
+  // papel, e a revisão é que passa a precisar da tela inteira.
+  const [formOpen, setFormOpen] = useState(false);
 
   const rows = useMemo(() => flattenResearchPreviews(previews), [previews]);
   const approvedCount = countApprovedDecisions(decisions);
@@ -116,8 +124,7 @@ export default function CatalogResearchPage() {
     setError('');
   };
 
-  async function research(event) {
-    event.preventDefault();
+  async function runResearch() {
     setError('');
     setSuccess('');
     setBusy(true);
@@ -158,6 +165,11 @@ export default function CatalogResearchPage() {
     }
   }
 
+  const submitResearch = (event) => {
+    event.preventDefault();
+    runResearch();
+  };
+
   async function commit() {
     const approvedBatches = groupApprovedResearchDecisions(previews, decisions);
     if (!approvedBatches.length || approvedCount === 0) return;
@@ -197,6 +209,122 @@ export default function CatalogResearchPage() {
     }
   }
 
+  const hasResults = previews.length > 0;
+  const optionalFilled = [form.purpose, form.prioritizationFactors, form.exclusionFactors].filter((value) => value.trim()).length;
+
+  const formCard = (
+    <SectionCard component="form" onSubmit={submitResearch}>
+      <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
+        <NumberedStep number={1} title="Quem você quer encontrar?" accent="research" done={Boolean(form.subtype)}>
+          <Stack gap={2}>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              value={form.category}
+              onChange={(_, value) => value && changeCategory(value)}
+              disabled={busy}
+              aria-label="Tipo de parceiro"
+              sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}
+            >
+              {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                <ToggleButton key={value} value={value} sx={{ py: 1.35, textTransform: 'none', fontWeight: 700 }}>{label}</ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            <FormControl required fullWidth>
+              <InputLabel>Que tipo de parceiro?</InputLabel>
+              <Select
+                required
+                label="Que tipo de parceiro?"
+                value={form.subtype}
+                onChange={(event) => change('subtype', event.target.value)}
+                disabled={busy}
+              >
+                <MenuItem value="" disabled>Selecione o perfil desejado</MenuItem>
+                {SUBTYPES[form.category].map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Stack>
+        </NumberedStep>
+
+        <NumberedStep number={2} title="O que você procura?" accent="research" done={Boolean(form.context.trim())}>
+          <Stack gap={2}>
+            <TextField
+              required
+              fullWidth
+              multiline
+              minRows={3}
+              placeholder="Ex.: especialistas em inteligência artificial aplicada à manufatura, com atuação comprovada em projetos industriais"
+              value={form.context}
+              onChange={(event) => change('context', event.target.value)}
+              disabled={busy}
+              inputProps={{ 'aria-label': 'O que você procura?' }}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Fontes preferidas</InputLabel>
+              <Select label="Fontes preferidas" value={form.sourcePreferences} onChange={(event) => change('sourcePreferences', event.target.value)} disabled={busy}>
+                {SOURCE_OPTIONS.map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
+              <FormControl fullWidth>
+                <InputLabel>Escopo geográfico</InputLabel>
+                <Select label="Escopo geográfico" value={form.geography} onChange={(event) => change('geography', event.target.value)} disabled={busy}>
+                  {CATALOG_RESEARCH_GEOGRAPHIES.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 140 }}>
+                <InputLabel>Resultados</InputLabel>
+                <Select label="Resultados" value={form.quantity} onChange={(event) => change('quantity', Number(event.target.value))} disabled={busy}>
+                  {CATALOG_RESEARCH_QUANTITIES.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Stack>
+          </Stack>
+        </NumberedStep>
+
+        {/* Três campos de texto vazios lado a lado eram o maior bloco em branco
+            da tela, e os três são opcionais. Recolhidos, o formulário abre pela
+            metade da altura sem esconder nada — o contador diz o que há ali. */}
+        <NumberedStep number={3} title="Ajustes opcionais" accent="research" done={optionalFilled > 0} last>
+          <Button
+            fullWidth
+            onClick={() => setOptionalOpen((current) => !current)}
+            endIcon={<ExpandMoreIcon sx={{ transform: optionalOpen ? 'rotate(180deg)' : 'none', transition: `transform ${T.motion.fast}` }} />}
+            sx={{ justifyContent: 'space-between', color: T.ink.muted, border: `1px solid ${T.border.subtle}` }}
+            aria-expanded={optionalOpen}
+          >
+            {optionalFilled > 0 ? `${optionalFilled} de 3 preenchidos` : 'Refinar como a pesquisa ordena e descarta'}
+          </Button>
+          <Collapse in={optionalOpen}>
+            <Stack gap={2} sx={{ mt: 2 }}>
+              <TextField fullWidth multiline minRows={2} label="Como pretende usar o resultado?" helperText="Ex.: selecionar convidados ou mapear parceiros." value={form.purpose} onChange={(event) => change('purpose', event.target.value)} disabled={busy} />
+              <TextField fullWidth multiline minRows={2} label="Fatores de priorização" helperText="O que faz um resultado aparecer antes dos demais." value={form.prioritizationFactors} onChange={(event) => change('prioritizationFactors', event.target.value)} disabled={busy} />
+              <TextField fullWidth multiline minRows={2} label="Fatores de exclusão" helperText="Condições que eliminam um resultado da pesquisa." value={form.exclusionFactors} onChange={(event) => change('exclusionFactors', event.target.value)} disabled={busy} />
+            </Stack>
+          </Collapse>
+        </NumberedStep>
+
+        <Stack gap={.75} sx={{ mt: 3, pt: 3, borderTop: `1px solid ${T.border.subtle}` }}>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />}
+            disabled={busy || Boolean(missingRequirement) || previewSummary.cards >= form.quantity}
+            sx={{ bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark }, '&:active': { transform: 'translateY(1px)' } }}
+          >
+            {busy ? `Pesquisando ${Math.min(previewSummary.cards + 5, form.quantity)} de ${form.quantity}…` : previewSummary.cards ? 'Continuar pesquisa' : 'Iniciar pesquisa profunda'}
+          </Button>
+          {/* Um botão cinza e mudo não diz onde clicar. Enquanto falta algo, o
+              texto abaixo nomeia exatamente o quê. */}
+          {!busy && missingRequirement && (
+            <Typography variant="caption" sx={{ color: T.ink.subtle, textAlign: 'center' }}>{missingRequirement}</Typography>
+          )}
+        </Stack>
+      </CardContent>
+    </SectionCard>
+  );
+
   return (
     <PageContainer width="wide" tool="research">
       <PageHeader
@@ -210,125 +338,100 @@ export default function CatalogResearchPage() {
       {error && <Alert severity="error" sx={{ mt: 3 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mt: 3 }} action={<Button color="inherit" size="small" onClick={() => navigate('/catalogo')}>Ver catálogo</Button>}>{success}</Alert>}
 
-      <SectionCard component="form" onSubmit={research} sx={{ mt: 3 }}>
-        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          <Stack gap={3}>
-            <Box>
-              <Typography variant="overline" sx={{ color: T.tools.research.dark }}>1. Quem você quer encontrar?</Typography>
-              <ToggleButtonGroup
-                exclusive
-                fullWidth
-                value={form.category}
-                onChange={(_, value) => value && changeCategory(value)}
-                disabled={busy}
-                aria-label="Tipo de parceiro"
-                sx={{ mt: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}
-              >
-                {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                  <ToggleButton key={value} value={value} sx={{ py: 1.35, textTransform: 'none', fontWeight: 700 }}>{label}</ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-              <FormControl required fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Que tipo de parceiro?</InputLabel>
-                <Select
-                  required
-                  label="Que tipo de parceiro?"
-                  value={form.subtype}
-                  onChange={(event) => change('subtype', event.target.value)}
-                  disabled={busy}
-                >
-                  <MenuItem value="" disabled>Selecione o perfil desejado</MenuItem>
-                  {SUBTYPES[form.category].map((subtype) => <MenuItem key={subtype} value={subtype}>{subtype}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box>
-              <Typography variant="overline" sx={{ color: T.tools.research.dark }}>2. O que você procura?</Typography>
-              <TextField
-                required
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Ex.: especialistas em inteligência artificial aplicada à manufatura, com atuação comprovada em projetos industriais"
-                value={form.context}
-                onChange={(event) => change('context', event.target.value)}
-                disabled={busy}
-                inputProps={{ 'aria-label': 'O que você procura?' }}
-                sx={{ mt: 1 }}
-              />
-            </Box>
-
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 5 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Fontes preferidas</InputLabel>
-                  <Select label="Fontes preferidas" value={form.sourcePreferences} onChange={(event) => change('sourcePreferences', event.target.value)} disabled={busy}>
-                    {SOURCE_OPTIONS.map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 7, md: 4 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Escopo geográfico</InputLabel>
-                  <Select label="Escopo geográfico" value={form.geography} onChange={(event) => change('geography', event.target.value)} disabled={busy}>
-                    {CATALOG_RESEARCH_GEOGRAPHIES.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 5, md: 3 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Resultados</InputLabel>
-                  <Select label="Resultados" value={form.quantity} onChange={(event) => change('quantity', Number(event.target.value))} disabled={busy}>
-                    {CATALOG_RESEARCH_QUANTITIES.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-
-            <Box>
-              <Typography variant="overline" sx={{ color: T.tools.research.dark }}>3. Detalhes da pesquisa</Typography>
-              <Grid container spacing={2} alignItems="stretch" sx={{ mt: 0 }}>
-                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
-                  <TextField fullWidth multiline minRows={3} label="Como pretende usar o resultado?" helperText="Ex.: selecionar convidados ou mapear parceiros." value={form.purpose} onChange={(event) => change('purpose', event.target.value)} disabled={busy} />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
-                  <TextField fullWidth multiline minRows={3} label="Fatores de priorização" helperText="O que faz um resultado aparecer antes dos demais." value={form.prioritizationFactors} onChange={(event) => change('prioritizationFactors', event.target.value)} disabled={busy} />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
-                  <TextField fullWidth multiline minRows={3} label="Fatores de exclusão" helperText="Condições que eliminam um resultado da pesquisa." value={form.exclusionFactors} onChange={(event) => change('exclusionFactors', event.target.value)} disabled={busy} />
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2}>
-              <Typography variant="caption" sx={{ color: T.ink.subtle }}>A pesquisa aprofunda e verifica lotes de até cinco cards. Pedidos maiores podem levar vários minutos; cada lote concluído é preservado.</Typography>
-              {/* Um botão cinza e mudo não diz onde clicar. Enquanto falta algo,
-                  o texto ao lado nomeia exatamente o quê. */}
-              <Stack alignItems={{ sm: 'flex-end' }} gap={.5}>
-                <Button type="submit" variant="contained" size="large" startIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SearchIcon />} disabled={busy || Boolean(missingRequirement) || previewSummary.cards >= form.quantity} sx={{ minWidth: 220, bgcolor: T.tools.research.main, '&:hover': { bgcolor: T.tools.research.dark }, '&:active': { transform: 'translateY(1px)' } }}>
-                  {busy ? `Pesquisando ${Math.min(previewSummary.cards + 5, form.quantity)} de ${form.quantity}…` : previewSummary.cards ? 'Continuar pesquisa' : 'Iniciar pesquisa profunda'}
-                </Button>
-                {!busy && missingRequirement && (
-                  <Typography variant="caption" sx={{ color: T.ink.subtle }}>{missingRequirement}</Typography>
+      {!hasResults ? (
+        /* Antes da pesquisa: o formulário numa coluna de leitura e, ao lado, o
+           que vai acontecer. Esticado na largura inteira, um campo de uma
+           frase virava uma faixa de 1300px, e o lugar dos resultados era um
+           cartão vazio de 360px que só repetia o título da página. */
+        <Grid container spacing={3} sx={{ mt: 1 }} alignItems="flex-start">
+          <Grid size={{ xs: 12, lg: 7 }}>{formCard}</Grid>
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <SectionCard sx={{ bgcolor: T.surface.sunken, border: `1px solid ${T.border.subtle}` }}>
+              <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+                <Typography variant="overline" sx={{ color: T.tools.research.dark }}>Como funciona</Typography>
+                {/* A espera acontece aqui, onde estava a explicação do que vai
+                    acontecer — e não num cartão vazio mais abaixo, fora do
+                    campo de visão de quem acabou de clicar. */}
+                {busy && (
+                  <Stack direction="row" alignItems="center" gap={1.5} sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: T.surface.raised, border: `1px solid ${T.tools.research.main}` }}>
+                    <CircularProgress size={20} />
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>Pesquisando e conferindo fontes públicas…</Typography>
+                      <Typography variant="caption" sx={{ color: T.ink.muted }}>O primeiro lote pode levar alguns minutos.</Typography>
+                    </Box>
+                  </Stack>
                 )}
+                <Stack gap={2} sx={{ mt: 1.5 }}>
+                  {[
+                    ['A pesquisa sai em lotes de até cinco', 'Cada lote é aprofundado e conferido antes de virar card. Pedidos maiores levam vários minutos, e cada lote concluído fica preservado mesmo se o seguinte falhar.'],
+                    ['Você revisa card por card', 'Nada entra no catálogo sem sua aprovação. Aprovar em massa é um clique para os que chegam sem ressalva.'],
+                  ].map(([title, detail]) => (
+                    <Box key={title}>
+                      <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>{title}</Typography>
+                      <Typography variant="body2" sx={{ mt: .25, color: T.ink.muted }}>{detail}</Typography>
+                    </Box>
+                  ))}
+                </Stack>
+
+                {/* O vocabulário da revisão aparece antes da revisão: são três
+                    estados que pedem decisões diferentes, e chegar neles sem
+                    aviso é o que faz a tela de resultados parecer densa. */}
+                <Box sx={{ mt: 3, pt: 2.5, borderTop: `1px solid ${T.border.base}` }}>
+                  <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>O que você vai decidir</Typography>
+                  <Stack gap={1.25} sx={{ mt: 1.25 }}>
+                    {[
+                      ['Novos', 'adicionar ou descartar', T.feedback.success],
+                      ['Já no catálogo', 'manter o atual ou mesclar', T.feedback.warning],
+                      ['Sem evidência', 'ficam de fora, com o motivo', T.ink.subtle],
+                    ].map(([label, action, color]) => (
+                      <Stack key={label} direction="row" alignItems="center" gap={1.25}>
+                        <Chip label={label} size="small" sx={{ bgcolor: T.surface.raised, color, border: `1px solid ${color}`, fontWeight: 700, minWidth: 116 }} />
+                        <Typography variant="body2" sx={{ color: T.ink.muted }}>{action}</Typography>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </Box>
+              </CardContent>
+            </SectionCard>
+          </Grid>
+        </Grid>
+      ) : (
+        <Box sx={{ mt: 3 }}>
+          {/* Com resultados na tela, o formulário deixa de ser o assunto: ele
+              vira uma linha com o que foi pedido, e a revisão fica com a
+              largura inteira em vez de começar depois de 900px de campos. */}
+          <SectionCard sx={{ mb: 2 }}>
+            <CardContent sx={{ py: 1.75 }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1.5} alignItems={{ md: 'center' }} justifyContent="space-between">
+                <Box sx={{ minWidth: 0 }}>
+                  <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
+                    <Chip size="small" label={CATEGORY_LABELS[form.category]} variant="outlined" />
+                    {form.subtype && <Chip size="small" label={form.subtype} variant="outlined" />}
+                    <Chip size="small" label={CATALOG_RESEARCH_GEOGRAPHIES.find((option) => option.value === form.geography)?.label || form.geography} variant="outlined" />
+                  </Stack>
+                  <Typography variant="body2" sx={{ mt: .75, color: T.ink.muted, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    “{form.context.trim()}”
+                  </Typography>
+                </Box>
+                <Button
+                  onClick={() => setFormOpen((current) => !current)}
+                  endIcon={<ExpandMoreIcon sx={{ transform: formOpen ? 'rotate(180deg)' : 'none', transition: `transform ${T.motion.fast}` }} />}
+                  sx={{ flexShrink: 0 }}
+                  aria-expanded={formOpen}
+                >
+                  {formOpen ? 'Ocultar a pesquisa' : 'Ajustar a pesquisa'}
+                </Button>
               </Stack>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </SectionCard>
+            </CardContent>
+          </SectionCard>
+
+          <Collapse in={formOpen}>
+            <Box sx={{ maxWidth: 720, mb: 3 }}>{formCard}</Box>
+          </Collapse>
+        </Box>
+      )}
 
       <Box sx={{ mt: 3 }}>
-          {!previews.length && !busy && !success && (
-            <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}>
-              <Box sx={{ p: 4, maxWidth: 560, textAlign: 'center' }}>
-                <SearchIcon sx={{ fontSize: 46, color: T.tools.research.main }} />
-                <Typography variant="h5" sx={{ mt: 1 }}>Os resultados aparecerão aqui para revisão</Typography>
-                <Typography variant="body2" sx={{ mt: 1, color: T.ink.muted }}>Cada sugestão será exibida como um card para sua aprovação.</Typography>
-              </Box>
-            </SectionCard>
-          )}
-          {busy && !previews.length && <SectionCard sx={{ minHeight: 360, display: 'grid', placeItems: 'center' }}><Stack alignItems="center" gap={2} sx={{ p: 4 }}><CircularProgress /><Typography>Pesquisando e conferindo fontes públicas…</Typography><Typography variant="body2" sx={{ color: T.ink.muted }}>O primeiro lote pode levar alguns minutos.</Typography></Stack></SectionCard>}
           {previews.length > 0 && (
             <>
               {/* Barra do lote.
