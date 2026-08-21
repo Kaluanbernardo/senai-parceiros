@@ -575,6 +575,31 @@ describe('reescrita editorial do Radar', () => {
     await expect(editorializeRadarItems([gazetteItem('z')])).rejects.toThrow('invalid_output');
   });
 
+  it('isola provider_timeout no lote e preserva as reescritas dos lotes seguintes', async () => {
+    process.env.RADAR_EDITORIAL_MAX_ITEMS = '12';
+    const successfulReply = respondWith((item) => ({
+      id: item.id,
+      title: EDITORIAL_TITLE,
+      summary: EDITORIAL_SUMMARY,
+      topics: item.temas,
+    }));
+    const fetchMock = vi.fn(async (...args) => {
+      if (fetchMock.mock.calls.length === 1) throw new Error('provider_timeout');
+      return successfulReply(...args);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { items, stats } = await editorializeRadarItems(
+      Array.from({ length: 12 }, (_, index) => gazetteItem(`timeout-${index + 1}`)),
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(stats).toMatchObject({ rewritten: 6, failedBatches: 1, errors: ['provider_timeout'] });
+    expect(items.filter((item) => item.editorialStatus === 'ai')).toHaveLength(6);
+    expect(items.slice(0, 6).every((item) => item.editorialStatus === 'source')).toBe(true);
+    expect(getUsageBudget('radar-editorial')).toMatchObject({ requests: 2, tokens: 300 });
+  });
+
   it('para de reescrever ao esgotar o prazo, para não custar o snapshot da coleta', async () => {
     // The pass runs after every collector and before the snapshot write. A
     // serverless function killed here loses the whole run, so the deadline
