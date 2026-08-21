@@ -278,6 +278,18 @@ describe('structured generation boundary', () => {
     await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('empty_output');
   });
 
+  it('normaliza uma resposta HTTP 200 sem JSON válido do provedor', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => { throw new SyntaxError('Unexpected end of JSON input'); },
+    })));
+
+    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] }))
+      .rejects.toThrow('provider_invalid_response');
+  });
+
   it('aproveita o JSON quando o modelo o cerca de uma frase de cortesia', async () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';
