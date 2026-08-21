@@ -68,7 +68,7 @@ describe('reescrita editorial do Radar', () => {
           choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
         }), { status: 200 });
       }
-      if (request.method === 'POST') return new Response(null, { status: 204 });
+      if (request.method === 'POST') return new Response('', { status: 200 });
       return new Response('[]', { status: 200 });
     }));
 

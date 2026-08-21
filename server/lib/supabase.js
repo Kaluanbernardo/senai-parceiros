@@ -16,7 +16,17 @@ async function request(path, options = {}) {
   try {
     const response = await fetch(`${current.url}${path}`, { ...options, signal: options.signal || controller.signal, headers: { apikey: current.key, Authorization: `Bearer ${current.key}`, 'Content-Type': 'application/json', ...(options.headers || {}) } });
     if (!response.ok) { const error = new Error(`supabase_${response.status}`); error.status = response.status; error.body = (await response.text()).slice(0, 500); throw error; }
-    return response.status === 204 ? null : response.json();
+    if (response.status === 204) return null;
+    // PostgREST RPCs that return void may answer 200 with an empty body. That is
+    // still a successful write; attempting response.json() here turned it into
+    // "Unexpected end of JSON input" after the model had already done its job.
+    const raw = await response.text();
+    if (!raw.trim()) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error('supabase_invalid_response');
+    }
   } finally { clearTimeout(timer); }
 }
 
