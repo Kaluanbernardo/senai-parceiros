@@ -15,7 +15,7 @@ function candidate(overrides = {}) {
     pais: 'Brasil',
     cidade_estado: 'São Paulo, SP',
     resumo: 'Instituição de educação profissional com atuação pública documentada em formação técnica industrial e aprendizagem.',
-    descricao: 'O Instituto Técnico Exemplo oferece programas públicos de formação profissional voltados à indústria, mantém cooperação com empresas e publica informações institucionais sobre cursos, escala e resultados. As fontes consultadas confirmam sua identidade, sua localização e a relação dos programas com necessidades de qualificação profissional e desenvolvimento produtivo regional.',
+    descricao: 'O Instituto Técnico Exemplo oferece programas públicos de formação profissional voltados à indústria, mantém cooperação com empresas e publica informações institucionais sobre cursos, escala e resultados. As fontes consultadas confirmam sua identidade, sua localização e a relação dos programas com necessidades de qualificação profissional e desenvolvimento produtivo regional. Também documentam modalidades de oferta, alcance territorial e iniciativas voltadas às demandas de qualificação do setor produtivo.',
     areas_temas: ['educação profissional', 'manufatura', 'aprendizagem'],
     aderencia_contexto: 'Pode apoiar comparação de modelos de aprendizagem industrial.',
     relacao_publica: 'Atua com empresas industriais em programas publicados.',
@@ -76,6 +76,11 @@ describe('catalog research module', () => {
     const person = catalogResearchOutputSchema('person', CATALOG_RESEARCH_BATCH_SIZE).properties.candidates.items.properties;
     expect(person.h_index.type).toEqual(['integer', 'null']);
     expect(person.citacoes.type).toEqual(['integer', 'null']);
+    expect(person.descricao.minLength).toBe(400);
+    expect(person.resumo.minLength).toBe(80);
+    expect(person.areas_temas.minItems).toBe(3);
+    expect(person.fontes.minItems).toBe(3);
+    expect(person.perfil_principal_url.minLength).toBe(1);
   });
 
   it('turns researched JSON into the same canonical rows consumed by catalog preview', async () => {
@@ -118,6 +123,7 @@ describe('catalog research module', () => {
       .mockResolvedValueOnce({
         data: { candidates: [candidate({
           nome: 'Marina Exemplo',
+          subtipo: 'Pesquisador(a) ou acadêmico(a)',
           instituicao_atual: 'Instituto Federal Exemplo',
           google_scholar_url: '',
           h_index: null,
@@ -137,7 +143,7 @@ describe('catalog research module', () => {
           openalex_id: 'https://openalex.org/A123',
           h_index: 14,
           citacoes: 800,
-          publicacoes_relevantes: ['Artigo verificável | https://doi.org/10.1000/teste | 2025'],
+          publicacoes_relevantes: [1, 2, 3, 4, 5].map((index) => `Artigo verificável ${index} | https://doi.org/10.1000/teste-${index} | 2025`),
           fontes_enriquecimento: ['https://example.edu/marina', 'https://scholar.google.com/citations?user=abc'],
           dados_nao_localizados: ['linkedin_url: consulta dedicada sem correspondência inequívoca'],
         }] },
@@ -191,5 +197,52 @@ describe('catalog research module', () => {
 
     expect(result.parsed.rows[0].valid).toBe(false);
     expect(result.parsed.rows[0].errors.join(' ')).toMatch(/três fontes públicas/i);
+  });
+
+  it('repairs shallow research results against the catalog quality contract before preview', async () => {
+    const shallow = candidate({
+      resumo: 'Perfil curto.',
+      descricao: 'Descrição curta, ainda sem o padrão mínimo do card.',
+      areas_temas: [],
+      areas_formacao: [],
+      aderencia_contexto: '',
+      relacao_industria: '',
+      setor: '',
+      atuacao: '',
+      relacao_publica: '',
+      fontes: ['https://example.edu/'],
+    });
+    const enriched = candidate({
+      descricao: 'Perfil factual específico, sustentado pelas fontes públicas consultadas, sobre a oferta de educação profissional e tecnológica, a cooperação com empresas industriais e a presença regional da instituição. '.repeat(3),
+      setor: 'Educação profissional e tecnológica',
+      atuacao: 'Formação técnica, aprendizagem industrial e qualificação profissional',
+      relacao_publica: 'Mantém programas públicos de aprendizagem e cooperação técnica com empresas industriais.',
+    });
+    const generate = vi.fn()
+      .mockResolvedValueOnce({
+        data: { candidates: [shallow] },
+        trace: { provider: 'openrouter', model: 'test/model', usage: { total_tokens: 80 }, webSearchRequests: 1 },
+      })
+      .mockResolvedValueOnce({
+        data: { candidates: [enriched] },
+        trace: { provider: 'openrouter', model: 'test/model', usage: { total_tokens: 120 }, webSearchRequests: 2 },
+      });
+
+    const result = await researchCatalogCandidates(
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 5, geography: 'brasil' },
+      { generate, now: () => new Date('2026-08-14T12:00:00Z') },
+    );
+
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate.mock.calls[1][0]).toMatchObject({
+      task: 'catalog_research_quality_enrichment_organization_batch_1',
+      strictOutput: true,
+      webSearch: expect.objectContaining({ engine: 'native', searchContextSize: 'high' }),
+    });
+    expect(generate.mock.calls[1][0].messages[1].content).toContain('descrição com pelo menos 400 caracteres');
+    expect(generate.mock.calls[1][0].messages[1].content).toContain('áreas de formação');
+    expect(result.parsed.rows[0]).toMatchObject({ valid: true, rowNumber: 1 });
+    expect(result.parsed.rows[0].record.descricao.length).toBeGreaterThanOrEqual(400);
+    expect(result.trace).toMatchObject({ webSearchRequests: 3, usage: { total_tokens: 200 } });
   });
 });
