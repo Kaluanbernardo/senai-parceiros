@@ -69,53 +69,44 @@ export function personProfileLinks(item = {}) {
   return links;
 }
 
-export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
+/**
+ * Título, subtítulo e país de um registro, para o cabeçalho de quem o exibe.
+ *
+ * A ficha aparece em dois lugares — no painel lateral do catálogo e no diálogo
+ * da revisão de pesquisa. Ter o mesmo registro nomeado de duas formas conforme
+ * a tela é como um catálogo perde a confiança de quem o usa.
+ */
+export function describeDetailHeader(item, type = 'stakeholder') {
+  const isPerson = type === 'person' || type === 'pesquisador';
+  // As duas origens de pessoa jurídica nomeiam o registro em campos
+  // diferentes: `escolas` usa `instituicao`, `stakeholders` usa `nome`. Um
+  // stakeholder classificado como "Instituição de ensino" chegava aqui como
+  // tipo `escola` e abria a ficha sem título nenhum — ler os dois campos é o
+  // que impede a ficha de ficar anônima conforme a procedência do registro.
+  const rawTitle = isPerson ? item?.nome : (item?.nome || item?.instituicao);
+  return {
+    isPerson,
+    title: isPerson ? rawTitle : formatInstitutionName(rawTitle),
+    subtitle: isPerson ? [item?.cargo, item?.instituicao].filter(Boolean).join(' · ') : null,
+    country: item?.pais || '',
+  };
+}
+
+/**
+ * Corpo da ficha, sem moldura.
+ *
+ * Separado do diálogo para o catálogo poder abrir o mesmo conteúdo num painel
+ * lateral — que mantém a lista visível e cabe numa largura de leitura — sem
+ * que as duas superfícies passem a mostrar campos diferentes.
+ */
+export function DetailBody({ item, type = 'stakeholder' }) {
   if (!item) return null;
   const isPerson = type === 'person' || type === 'pesquisador';
   const profileLinks = isPerson ? personProfileLinks(item) : [];
 
-  const rawTitle =
-    type === 'stakeholder' ? item.nome :
-    isPerson ? item.nome :
-    item.instituicao;
-  const title = isPerson ? rawTitle : formatInstitutionName(rawTitle);
-
-  const subtitle =
-    isPerson ? [item.cargo, item.instituicao].filter(Boolean).join(' · ') : null;
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
-      <DialogTitle sx={{ pr: 6, pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" component="div" fontWeight={700}>
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography variant="body2" color="text.primary" fontWeight={500}>
-                {subtitle}
-              </Typography>
-            )}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
-              <CountryFlag pais={item.pais} size={16} />
-              <Typography variant="body2" color="text.secondary">
-                {item.pais}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-        <IconButton
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 12, top: 12 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
-
-      <DialogContent sx={{ pt: 2 }}>
-        {/* Links */}
+    <>
+      {/* Links */}
         {(profileLinks.length > 0 || (!isPerson && isHttpUrl(item.website))) && (
           <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
             {!isPerson && isHttpUrl(item.website) && (
@@ -364,6 +355,48 @@ export default function DetailModal({ open, onClose, item, type = 'stakeholder' 
             )}
           </>
         )}
+    </>
+  );
+}
+
+export default function DetailModal({ open, onClose, item, type = 'stakeholder' }) {
+  if (!item) return null;
+  const { title, subtitle } = describeDetailHeader(item, type);
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="paper">
+      <DialogTitle sx={{ pr: 6, pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" component="div" fontWeight={700}>
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography variant="body2" color="text.primary" fontWeight={500}>
+                {subtitle}
+              </Typography>
+            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
+              <CountryFlag pais={item.pais} size={16} />
+              <Typography variant="body2" color="text.secondary">
+                {item.pais}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+        <IconButton
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 12, top: 12 }}
+          aria-label="Fechar a ficha"
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <Divider />
+
+      <DialogContent sx={{ pt: 2 }}>
+        <DetailBody item={item} type={type} />
       </DialogContent>
     </Dialog>
   );

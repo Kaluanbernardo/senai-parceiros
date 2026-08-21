@@ -11,7 +11,6 @@ import AppShell from './design-system/AppShell';
 // login screen and the seed catalog.  LoginPage stays eager: `Protected`
 // renders it synchronously for every signed-out visitor.
 const HomePage = lazy(() => import('./pages/HomePage'));
-const CatalogHomePage = lazy(() => import('./pages/CatalogHomePage'));
 const SelectionPage = lazy(() => import('./pages/SelectionPage'));
 const PromptGeneratorPage = lazy(() => import('./pages/PromptGeneratorPage'));
 const CatalogResearchPage = lazy(() => import('./pages/CatalogResearchPage'));
@@ -69,7 +68,12 @@ export default function App() {
       <Route path="/gerador-prompt" element={<InShell><PromptGeneratorPage /></InShell>} />
       <Route path="/pesquisar-catalogo" element={<InShell adminOnly><CatalogResearchPage /></InShell>} />
       <Route path="/radar" element={<InShell><RadarPage /></InShell>} />
-      <Route path="/catalogo" element={<InShell><CatalogHomePage /></InShell>} />
+      {/* `/catalogo` era uma tela intermediária com dois cartões que levavam
+          exatamente às duas abas que já existem no topo da lista: um clique a
+          mais para chegar ao mesmo lugar. O caminho continua válido — links já
+          compartilhados apontam para ele — e agora entra direto na primeira
+          categoria. */}
+      <Route path="/catalogo" element={<Navigate to="/catalogo/pessoas-fisicas" replace />} />
       <Route path="/catalogo/pessoas-fisicas" element={<InShell><PesquisadoresPage /></InShell>} />
       <Route path="/catalogo/pessoas-juridicas" element={<InShell><OrganizacoesPage /></InShell>} />
       {/* Caminhos anteriores. O catch-all abaixo mandaria para a home, o que
@@ -77,7 +81,10 @@ export default function App() {
       {LEGACY_CATALOG_ROUTES.map(([from, to]) => (
         <Route key={from} path={from} element={<Navigate to={to} replace />} />
       ))}
-      <Route path="/admin" element={<Protected adminOnly><Suspense fallback={<PageFallback />}><AdminPage /></Suspense></Protected>} />
+      {/* A administração passou a viver dentro da casca. Uma barra própria,
+          sem trilha e sem marca, fazia perder a orientação justamente onde as
+          ações são irreversíveis — e obrigava a manter duas navegações. */}
+      <Route path="/admin" element={<InShell adminOnly><AdminPage /></InShell>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

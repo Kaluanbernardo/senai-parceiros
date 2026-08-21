@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { ResearchCandidateCard } from './CatalogResearchPage.jsx';
+import { ImportCandidateCard } from './ImportReview.jsx';
 
 function researchedPerson() {
   return {
@@ -28,10 +28,10 @@ function researchedPerson() {
   };
 }
 
-describe('catalog research candidate card', () => {
+describe('cartão de revisão de importação', () => {
   it('uses the catalog card anatomy and removes the redundant decision label', () => {
     const html = renderToStaticMarkup(
-      <ResearchCandidateCard row={researchedPerson()} decision="ignore" onDecision={vi.fn()} />,
+      <ImportCandidateCard row={researchedPerson()} decision="ignore" onDecision={vi.fn()} />,
     );
 
     expect(html).toContain('Marina Exemplo');

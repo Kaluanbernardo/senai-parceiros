@@ -120,12 +120,34 @@ export function collectTokenValues(items, field, separator = ';') {
  */
 export const SORT_OPTIONS = Object.freeze([
   Object.freeze({ id: 'relevance', label: 'Padrão' }),
+  Object.freeze({ id: 'recent', label: 'Adicionados recentemente' }),
   Object.freeze({ id: 'name-asc', label: 'Nome (A-Z)' }),
   Object.freeze({ id: 'name-desc', label: 'Nome (Z-A)' }),
   Object.freeze({ id: 'country-asc', label: 'País (A-Z)' }),
 ]);
 
+/**
+ * Instante de entrada no catálogo, como número comparável.
+ *
+ * Registros sem data ficam no fim: o catálogo cresce por importação e por
+ * pesquisa, e quem escolhe "adicionados recentemente" quer ver o que entrou —
+ * não a maioria que veio no seed inicial e não tem data registrada.
+ */
+export function addedAtValue(item) {
+  const raw = item?.adicionadoEm || item?._original?.adicionadoEm || item?.addedAt || item?.createdAt;
+  const time = raw ? new Date(raw).getTime() : Number.NaN;
+  return Number.isNaN(time) ? null : time;
+}
+
 const COMPARATORS = {
+  recent: (a, b) => {
+    const left = addedAtValue(a);
+    const right = addedAtValue(b);
+    if (left === null && right === null) return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+    if (left === null) return 1;
+    if (right === null) return -1;
+    return right - left || String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+  },
   'name-asc': (a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'),
   'name-desc': (a, b) => String(b.nome || '').localeCompare(String(a.nome || ''), 'pt-BR'),
   'country-asc': (a, b) =>

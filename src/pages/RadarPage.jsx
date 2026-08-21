@@ -27,7 +27,10 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import RadarIcon from '@mui/icons-material/Radar';
+import Collapse from '@mui/material/Collapse';
+import { Link as RouterLink } from 'react-router-dom';
 import { countUndatedItems, filterRadarItems, RADAR_SECTIONS } from '../domain/radar';
+import { describeRadarSnapshot, radarCatalogQuery } from '../domain/radarStatus';
 import { isOfficialAct } from '../domain/radarEditorial';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../design-system/primitives/EmptyState';
@@ -41,6 +44,12 @@ const sections = RADAR_SECTIONS.map((value) => ({
     research: 'Pesquisas e estudos',
     government: 'Publicações oficiais de São Paulo e Brasil',
     international: 'Publicações oficiais internacionais',
+  }[value],
+  /** Nome curto, para caber dentro de uma frase sem virar caixa baixa forçada. */
+  short: {
+    research: 'as pesquisas e estudos',
+    government: 'as publicações do Brasil e de São Paulo',
+    international: 'as publicações internacionais',
   }[value],
   description: {
     research: 'Estudos recentes sobre educação profissional, tecnologia e indústria.',
@@ -125,21 +134,28 @@ export default function RadarPage() {
   const [collecting, setCollecting] = useState(false);
   const [rewriting, setRewriting] = useState(false);
   const [collectResult, setCollectResult] = useState(null);
+  const [moreFilters, setMoreFilters] = useState(false);
+  const [failuresOpen, setFailuresOpen] = useState(false);
   const [filters, setFilters] = useState({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
 
   const activeSection = sections.find((entry) => entry.value === section) || sections[0];
 
+  /**
+   * Uma leitura só, sem seção.
+   *
+   * A leitura do Radar nunca consulta fonte externa — o parâmetro `section` do
+   * endpoint apenas recortava o mesmo snapshot que o cliente já sabe recortar.
+   * Buscando tudo de uma vez, trocar de seção deixa de custar uma requisição e
+   * uma espera, e as abas passam a poder dizer quantos itens têm antes de
+   * alguém clicar nelas para descobrir que estão vazias.
+   */
   const loadItems = async ({ quiet = false } = {}) => {
     // A quiet reload refreshes the cards without blanking the grid, which is
     // what lets the rewrite phase show its progress on the items themselves.
     if (!quiet) setLoading(true);
     setError('');
     try {
-      const serverQuery = section === 'research' && filters.query.trim().length >= 3 ? `&query=${encodeURIComponent(filters.query.trim().slice(0, 120))}` : '';
-      const response = await fetch(`/api/radar/items?section=${encodeURIComponent(section)}${serverQuery}`, {
-        credentials: 'include',
-        cache: 'no-store',
-      });
+      const response = await fetch('/api/radar/items', { credentials: 'include', cache: 'no-store' });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'radar_unavailable');
       setItems(body.items || []);
@@ -152,7 +168,7 @@ export default function RadarPage() {
     }
   };
 
-  useEffect(() => { loadItems(); }, [section]);
+  useEffect(() => { loadItems(); }, []);
 
   /**
    * Second phase of a collection, run as its own request.
@@ -268,19 +284,38 @@ export default function RadarPage() {
     ? JSON.stringify(collectResult.lastRun, null, 2)
     : '';
 
-  const options = useMemo(() => ({
-    sources: [...new Set(items.map((item) => item.sourceName))].sort(),
-    topics: [...new Set(items.flatMap((item) => item.topics))].sort(),
-    contentTypes: [...new Set(items.map((item) => item.contentType))].sort(),
-  }), [items]);
+  // As opções de filtro descrevem a seção aberta, não o acervo inteiro: uma
+  // lista de fontes com as três seções juntas oferece recortes que resultam em
+  // zero na seção em que a pessoa está.
+  const sectionItems = useMemo(() => filterRadarItems(items, { section }), [items, section]);
 
-  const visibleItems = useMemo(() => filterRadarItems(items, filters), [items, filters]);
+  const options = useMemo(() => ({
+    sources: [...new Set(sectionItems.map((item) => item.sourceName))].sort(),
+    topics: [...new Set(sectionItems.flatMap((item) => item.topics))].sort(),
+    contentTypes: [...new Set(sectionItems.map((item) => item.contentType))].sort(),
+    geographies: [...new Set(sectionItems.map((item) => item.geography))].filter(Boolean).sort(),
+  }), [sectionItems]);
+
+  const sectionCounts = useMemo(
+    () => Object.fromEntries(RADAR_SECTIONS.map((value) => [value, filterRadarItems(items, { section: value }).length])),
+    [items],
+  );
+
+  const snapshot = useMemo(() => describeRadarSnapshot(meta), [meta]);
+  // Para onde mandar quem caiu numa seção vazia: a primeira seção que de fato
+  // tem itens, se houver alguma.
+  const populatedSection = sections.find((entry) => entry.value !== section && (sectionCounts[entry.value] || 0) > 0) || null;
+
+  const visibleItems = useMemo(() => filterRadarItems(items, { ...filters, section }), [items, filters, section]);
   // A narrow window hides undated items by design; saying so keeps the omission
   // from looking like the source simply published nothing.
-  const undatedCount = useMemo(() => countUndatedItems(items), [items]);
+  const undatedCount = useMemo(() => countUndatedItems(sectionItems), [sectionItems]);
   const undatedHidden = undatedCount > 0 && filters.period !== '1y';
   const setFilter = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }));
   const clearFilters = () => setFilters({ query: '', period: '1y', topic: '', source: '', geography: '', contentType: '' });
+  // O contador cobre só o que está recolhido: busca e período ficam visíveis e
+  // não precisam ser anunciados por um número.
+  const extraFilterCount = [filters.source, filters.geography, filters.topic, filters.contentType].filter(Boolean).length;
 
   return (
     <PageContainer width="wide" tool="radar">
@@ -290,13 +325,15 @@ export default function RadarPage() {
         description={activeSection.description}
         accent="radar"
         dense
+        // "Recarregar" desceu para a barra de estado da coleta, ao lado da
+        // informação que ele atualiza. Aqui em cima, com o mesmo peso de
+        // "Coletar agora", as duas ações pareciam alternativas equivalentes —
+        // uma relê o snapshot em milissegundos, a outra consulta dez fontes
+        // externas por minutos e gasta orçamento de IA.
         actions={
-          <>
-            <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
-              <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>Recarregar</Button>
-            </Tooltip>
-            {isAdmin && (
-              <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
+          isAdmin ? (
+            <Tooltip describeChild title="Consulta as fontes oficiais, grava um novo snapshot e reescreve os textos em português" arrow>
+              <span>
                 <Button
                   variant="contained"
                   startIcon={collecting ? <CircularProgress size={16} color="inherit" /> : <CloudSyncIcon />}
@@ -305,47 +342,130 @@ export default function RadarPage() {
                 >
                   {rewriting ? 'Reescrevendo…' : collecting ? 'Coletando…' : 'Coletar agora'}
                 </Button>
-              </Tooltip>
-            )}
-          </>
+              </span>
+            </Tooltip>
+          ) : null
         }
       />
+
+      {/* Estado da coleta, permanente.
+          É a primeira pergunta de quem abre um radar — "isto está atualizado?"
+          — e a única que a tela não respondia. O dado já vinha em toda leitura
+          e só aparecia depois de uma coleta manual, dentro de um alerta. */}
+      <Alert
+        severity={snapshot.severity}
+        icon={<CloudSyncIcon fontSize="inherit" />}
+        sx={{ mt: 2.5, alignItems: 'center' }}
+        action={
+          <Stack direction="row" gap={1} alignItems="center">
+            {snapshot.failures.length > 0 && (
+              <Button size="small" color="inherit" onClick={() => setFailuresOpen((current) => !current)} aria-expanded={failuresOpen}>
+                {failuresOpen ? 'Ocultar' : 'Ver o que falhou'}
+              </Button>
+            )}
+            <Tooltip describeChild title="Relê o snapshot atual, sem consultar as fontes externas" arrow>
+              <span>
+                <Button size="small" color="inherit" startIcon={<RefreshIcon />} onClick={loadItems} disabled={loading || collecting || rewriting}>
+                  Recarregar
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
+        }
+      >
+        <Typography variant="body2">
+          {snapshot.never
+            ? 'Nenhuma coleta registrada neste ambiente.'
+            : <>Última coleta {snapshot.collectedAtLabel}
+                {snapshot.itemCount !== null ? ` · ${snapshot.itemCount} ${snapshot.itemCount === 1 ? 'item' : 'itens'}` : ''}
+                {snapshot.sourcesTotal ? ` · ${snapshot.sourcesOk} de ${snapshot.sourcesTotal} fontes responderam` : ''}
+                {snapshot.stale ? ' · a última tentativa falhou e este snapshot foi preservado' : ''}
+                {snapshot.volatile ? ' · snapshot apenas em memória, será perdido na próxima requisição' : ''}</>}
+        </Typography>
+        <Collapse in={failuresOpen}>
+          <Stack component="ul" sx={{ mt: 1, mb: 0, pl: 2.5 }} gap={.25}>
+            {snapshot.failures.map((failure) => (
+              <Typography component="li" variant="caption" key={failure.name}>
+                {failure.name}: {failure.reason}{failure.httpStatus ? ` (HTTP ${failure.httpStatus})` : ''}
+              </Typography>
+            ))}
+          </Stack>
+        </Collapse>
+      </Alert>
 
       {/* As seções viraram abas sobre uma linha, como as do catálogo. Envolvidas
           num cartão elas pareciam um controle segregado do conteúdo abaixo. */}
       <Box sx={{ mt: 2.5, borderBottom: `1px solid ${T.border.subtle}` }}>
         <Tabs value={section} onChange={(_, value) => { setSection(value); clearFilters(); }} variant="scrollable" scrollButtons="auto" aria-label="Seções do radar">
-          {sections.map((entry) => <Tab key={entry.value} value={entry.value} label={entry.label} />)}
+          {/* A contagem na aba evita o percurso "clicar, esperar, descobrir que
+              está vazia" — que é como se descobria antes. */}
+          {sections.map((entry) => (
+            <Tab key={entry.value} value={entry.value} label={loading ? entry.label : `${entry.label} · ${sectionCounts[entry.value] ?? 0}`} />
+          ))}
         </Tabs>
       </Box>
-      <Typography variant="body2" sx={{ mt: 1.5, color: T.ink.muted }}>
-        Escolha uma seção. Use a busca e os filtros apenas se quiser refinar o que aparece.
-      </Typography>
 
-      <Card sx={{ mt: 2.5 }}>
-        <CardContent>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }} flexWrap="wrap">
-            <FilterListIcon sx={{ color: T.ink.muted, fontSize: 20 }} />
-            <Typography variant="subtitle2" sx={{ color: T.ink.strong }}>Filtros</Typography>
-            <Typography variant="caption" sx={{ color: T.ink.subtle }}>A busca considera título, resumo, fonte, localidade e temas.</Typography>
-          </Stack>
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField fullWidth size="small" label="Buscar" value={filters.query} onChange={setFilter('query')} placeholder="ex.: inteligência artificial" InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }} />
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={1.5} alignItems={{ md: 'center' }} sx={{ mt: 2 }}>
+        <TextField
+          size="small"
+          label="Buscar"
+          value={filters.query}
+          onChange={setFilter('query')}
+          placeholder="ex.: inteligência artificial"
+          sx={{ flex: 1, minWidth: 0 }}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+        />
+        <FormControl size="small" sx={{ minWidth: 190 }}>
+          <InputLabel>Período</InputLabel>
+          <Select value={filters.period} label="Período" onChange={setFilter('period')}>
+            {periodOptions.map((entry) => <MenuItem key={entry.value} value={entry.value}>{entry.label}</MenuItem>)}
+          </Select>
+        </FormControl>
+        {/* Busca e período cobrem a maioria dos usos e ficam à vista; fonte,
+            local, tema e tipo entram sob demanda. Seis seletores abertos sobre
+            uma lista vazia era o pior arranjo possível, e o catálogo já resolve
+            a mesma tarefa deste jeito — dois padrões diferentes para a mesma
+            coisa é o que confunde. */}
+        <Button
+          startIcon={<FilterListIcon />}
+          variant={extraFilterCount > 0 ? 'contained' : 'outlined'}
+          onClick={() => setMoreFilters((current) => !current)}
+          aria-expanded={moreFilters}
+          aria-controls="mais-filtros-do-radar"
+          sx={{ flexShrink: 0 }}
+        >
+          {extraFilterCount > 0 ? `Filtros (${extraFilterCount})` : 'Mais filtros'}
+        </Button>
+        <Typography variant="body2" sx={{ color: T.ink.muted, whiteSpace: 'nowrap' }}>
+          {visibleItems.length} {visibleItems.length === 1 ? 'item' : 'itens'}
+        </Typography>
+      </Stack>
+
+      <Collapse in={moreFilters} id="mais-filtros-do-radar">
+        <Card sx={{ mt: 1.5 }}>
+          <CardContent>
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12, md: 4 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
+              <Grid size={{ xs: 12, sm: 4, md: 8 / 3 }}><FormControl fullWidth size="small"><InputLabel>Local</InputLabel><Select value={filters.geography} label="Local" onChange={setFilter('geography')}><MenuItem value="">Todos</MenuItem>{options.geographies.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
+              <Grid size={{ xs: 12, sm: 4, md: 8 / 3 }}><FormControl fullWidth size="small"><InputLabel>Tema</InputLabel><Select value={filters.topic} label="Tema" onChange={setFilter('topic')}><MenuItem value="">Todos</MenuItem>{options.topics.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
+              <Grid size={{ xs: 12, sm: 4, md: 8 / 3 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
             </Grid>
-            <Grid size={{ xs: 6, md: 2 }}><FormControl fullWidth size="small"><InputLabel>Período</InputLabel><Select value={filters.period} label="Período" onChange={setFilter('period')}>{periodOptions.map((entry) => <MenuItem key={entry.value} value={entry.value}>{entry.label}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 12, md: 3 }}><FormControl fullWidth size="small"><InputLabel>Fonte</InputLabel><Select value={filters.source} label="Fonte" onChange={setFilter('source')}><MenuItem value="">Todas</MenuItem>{options.sources.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Local</InputLabel><Select value={filters.geography} label="Local" onChange={setFilter('geography')}><MenuItem value="">Todos</MenuItem>{[...new Set(items.map((item) => item.geography))].sort().map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tema</InputLabel><Select value={filters.topic} label="Tema" onChange={setFilter('topic')}><MenuItem value="">Todos</MenuItem>{options.topics.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid size={{ xs: 6, md: 1 }}><FormControl fullWidth size="small"><InputLabel>Tipo</InputLabel><Select value={filters.contentType} label="Tipo" onChange={setFilter('contentType')}><MenuItem value="">Todos</MenuItem>{options.contentTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl></Grid>
-          </Grid>
-          <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 1.5 }} gap={1}>
-            <Button size="small" onClick={clearFilters}>Limpar filtros</Button>
-          </Stack>
-        </CardContent>
-      </Card>
+            <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 1.5 }} gap={1}>
+              <Button size="small" onClick={clearFilters}>Limpar filtros</Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       {meta?.mode === 'curated-fallback' && <Alert severity="info" sx={{ mt: 2 }}>Algumas fontes estão temporariamente indisponíveis. Mostramos as informações públicas que já foram conferidas.</Alert>}
+      {/* O recorte por período esconde os itens sem data por definição. Dizer
+          isso é o que separa "a janela é estreita" de "a fonte não publicou
+          nada" — a conta já era feita e nunca chegava à tela. */}
+      {undatedHidden && (
+        <Alert severity="info" sx={{ mt: 2 }} action={<Button color="inherit" size="small" onClick={() => setFilters((current) => ({ ...current, period: '1y' }))}>Ver os últimos 12 meses</Button>}>
+          {undatedCount} {undatedCount === 1 ? 'item institucional sem data está oculto' : 'itens institucionais sem data estão ocultos'} por causa do período escolhido.
+        </Alert>
+      )}
       {collectResult && (
         <Alert severity={collectResult.severity} sx={{ mt: 2 }} onClose={() => setCollectResult(null)}>
           {collectResult.message}
@@ -395,26 +515,52 @@ export default function RadarPage() {
                   {item.authors?.length > 0 && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>Autores: {item.authors.join(', ')}</Typography>}
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}><AccessTimeIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.35 }} />{localDate(item.publishedAt)}{item.geography ? ` · ${item.geography}` : ''}</Typography>
                 </CardContent>
-                <Box sx={{ px: 2, pb: 2 }}>
+                <Stack direction="row" gap={1} flexWrap="wrap" sx={{ px: 2, pb: 2 }}>
                   {item.sourceUrl ? <Button href={item.sourceUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon />} startIcon={<ArticleOutlinedIcon />}>Abrir fonte original</Button> : <Typography variant="caption" color="text.secondary">Fonte original não localizada</Typography>}
-                </Box>
+                  {/* Liga as duas metades do produto: o Radar diz o que mudou,
+                      o catálogo diz com quem falar sobre isso. Antes as duas
+                      conviviam sem se tocar. */}
+                  {radarCatalogQuery(item) && (
+                    <Button
+                      size="small"
+                      component={RouterLink}
+                      to={`/catalogo/pessoas-fisicas?q=${encodeURIComponent(radarCatalogQuery(item))}`}
+                    >
+                      Quem trabalha com isso
+                    </Button>
+                  )}
+                </Stack>
               </Card>
             </Grid>
           ))}
         </Grid>
       )}
+      {/* O vazio precisa dizer a causa certa. Comparar contra o acervo inteiro
+          fazia uma seção sem nenhum item coletado ser anunciada como "nenhuma
+          novidade para estes filtros", oferecendo limpar filtros que não
+          existiam — e escondendo que a coleta é que não trouxe nada ali. */}
       {!loading && !error && visibleItems.length === 0 && (
-        <EmptyState
-          icon={<RadarIcon />}
-          title={items.length > 0 ? 'Nenhuma novidade para estes filtros' : 'Ainda não há novidades nesta seção'}
-          description={
-            items.length > 0
-              ? 'Nenhuma novidade atende a todos os filtros escolhidos. Amplie o período ou remova um filtro.'
-              : 'Tente novamente mais tarde.'
-          }
-          action={items.length > 0 ? clearFilters : undefined}
-          actionLabel="Limpar os filtros"
-        />
+        sectionItems.length > 0 ? (
+          <EmptyState
+            icon={<RadarIcon />}
+            title="Nenhuma novidade para estes filtros"
+            description={`A seção tem ${sectionItems.length} ${sectionItems.length === 1 ? 'item' : 'itens'}, mas nenhum atende a todos os filtros escolhidos. Amplie o período ou remova um filtro.`}
+            action={clearFilters}
+            actionLabel="Limpar os filtros"
+          />
+        ) : (
+          <EmptyState
+            icon={<RadarIcon />}
+            title="A última coleta não trouxe itens para esta seção"
+            description={
+              populatedSection
+                ? `As outras seções têm novidades. ${activeSection.label} depende de fontes que não responderam ou não publicaram nada no período coletado.`
+                : 'Nenhuma seção tem itens no snapshot atual. Uma nova coleta pode trazer novidades.'
+            }
+            action={populatedSection ? () => { setSection(populatedSection.value); clearFilters(); } : undefined}
+            actionLabel={populatedSection ? `Ver ${populatedSection.short}` : undefined}
+          />
+        )
       )}
       <Typography variant="caption" sx={{ display: 'block', mt: 4, color: T.ink.subtle }}>Os cartões resumem informações públicas em português claro. Use Abrir fonte original para conferir o documento completo.</Typography>
     </PageContainer>
