@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
@@ -8,50 +8,7 @@ import PageContainer from '../design-system/primitives/PageContainer';
 import ToolCard from '../design-system/primitives/ToolCard';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 import { BRAND_NAME } from '../design-system/brand';
-import { buildLegalEntityCatalog } from '../domain/legalEntityCatalog';
-import { filterRadarItems } from '../domain/radar';
 import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
-
-/**
- * O que cada ferramenta tem dentro, quando isso é sabível sem sair da home.
- *
- * Um menu que só repete o próprio nome obriga a entrar para descobrir se vale
- * a visita. A ficha responde "tem algo aqui?" — é informação sobre o conteúdo,
- * não uma classificação de importância.
- */
-function useToolMeta() {
-  const { pesquisadores, stakeholders, escolas } = useData();
-  const [radarCount, setRadarCount] = useState(null);
-
-  const legalEntities = useMemo(
-    () => buildLegalEntityCatalog({ schools: escolas || [], stakeholders: stakeholders || [] }),
-    [escolas, stakeholders],
-  );
-
-  useEffect(() => {
-    let alive = true;
-    // Falhar aqui não pode custar a home: sem a contagem, o cartão do Radar
-    // apenas volta a ser o que era.
-    fetch('/api/radar/items', { credentials: 'include', cache: 'no-store' })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body) => {
-        if (!alive || !body) return;
-        setRadarCount(filterRadarItems(body.items || [], { period: '30d' }).length);
-      })
-      .catch(() => undefined);
-    return () => { alive = false; };
-  }, []);
-
-  return {
-    // Fichas curtas: o cartão tem uma coluna estreita, e uma frase inteira
-    // dentro dela sai pela borda em vez de informar.
-    catalog: `${(pesquisadores?.length || 0) + legalEntities.length} registros`,
-    radar: radarCount === null
-      ? undefined
-      : radarCount === 0 ? 'nada em 30 dias' : `${radarCount} em 30 dias`,
-  };
-}
 
 /**
  * Entrada do produto.
@@ -78,7 +35,6 @@ function useToolMeta() {
 export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const meta = useToolMeta();
   const tools = getNavTools(user?.role);
 
   return (
@@ -133,7 +89,6 @@ export default function HomePage() {
               description={tool.description}
               themeKey={tool.themeKey}
               actionLabel={tool.actionLabel}
-              meta={meta[tool.id]}
               onClick={() => navigate(tool.route)}
             />
           ))}

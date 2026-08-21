@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CheckIcon from '@mui/icons-material/Check';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -27,6 +26,7 @@ import { InterviewPlanner, QUESTION_BANK, fieldLabel } from '../domain/interview
 import { buildLocalEvaluation, getCandidatePool } from '../domain/selectionEngine';
 import SelectionResults from '../components/SelectionResults';
 import PageContainer from '../design-system/primitives/PageContainer';
+import NumberedStep from '../design-system/primitives/NumberedStep';
 import PageHeader from '../design-system/primitives/PageHeader';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 import { ORGANIZATION_SUBTYPES, PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
@@ -45,51 +45,6 @@ const OBJECTIVE_OPTIONS = [
   { id: 'research_support', label: OBJECTIVE_LABELS.research_support },
   { id: 'guided', label: OBJECTIVE_LABELS.guided },
 ];
-
-/**
- * Um passo do preparo, com o trilho numerado à esquerda.
- *
- * O trilho é o que transforma dois blocos soltos numa sequência: sem ele, "1."
- * e "2." eram apenas texto em negrito, e nada ligava um ao outro.
- */
-function SetupStep({ number, title, children, done, disabled, disabledHint }) {
-  return (
-    <Box sx={{ display: 'flex', gap: 2, opacity: disabled ? .55 : 1 }}>
-      <Stack alignItems="center" sx={{ display: { xs: 'none', md: 'flex' }, flexShrink: 0 }}>
-        <Box
-          aria-hidden
-          sx={{
-            width: 30,
-            height: 30,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            fontWeight: 800,
-            fontSize: T.fontSize.caption,
-            bgcolor: done ? T.ink.accent : T.surface.sunken,
-            color: done ? '#fff' : T.ink.muted,
-            border: `2px solid ${done ? T.ink.accent : T.border.base}`,
-          }}
-        >
-          {done ? <CheckIcon sx={{ fontSize: 17 }} /> : number}
-        </Box>
-      </Stack>
-
-      <Box sx={{ flex: 1, minWidth: 0, pb: 4 }}>
-        <Typography variant="h4" sx={{ color: T.ink.strong }}>
-          <Box component="span" sx={{ display: { md: 'none' }, color: T.ink.accent, mr: .75 }}>{number}.</Box>
-          {title}
-        </Typography>
-        {disabled && disabledHint && (
-          <Typography variant="body2" sx={{ mt: .5, color: T.ink.subtle }}>{disabledHint}</Typography>
-        )}
-        <Box sx={{ mt: 1.75, pointerEvents: disabled ? 'none' : 'auto' }} aria-disabled={disabled || undefined}>
-          {children}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
 
 export function shouldAdvanceOnEnter(event) {
   return event.key === 'Enter' && !event.shiftKey && !event.isComposing && !event.nativeEvent?.isComposing;
@@ -362,7 +317,7 @@ export default function SelectionPage() {
             sem dizer quantas decisões ainda vinham, e a que aparecia empurrava
             o conteúdo para baixo sem aviso. */}
         <Box sx={{ mt: 4 }}>
-          <SetupStep
+          <NumberedStep
             number={1}
             title="Quem você quer encontrar?"
             done={Boolean(category)}
@@ -422,9 +377,9 @@ export default function SelectionPage() {
                 </Stack>
               </Box>
             )}
-          </SetupStep>
+          </NumberedStep>
 
-          <SetupStep
+          <NumberedStep
             number={2}
             title="Para que você precisa desse parceiro?"
             done={Boolean(objective)}
@@ -432,6 +387,7 @@ export default function SelectionPage() {
             // que falta para liberá-lo.
             disabled={!category}
             disabledHint="Escolha uma categoria acima para liberar este passo."
+            last
           >
             <Stack gap={1}>
               {OBJECTIVE_OPTIONS.map((option) => {
@@ -457,7 +413,7 @@ export default function SelectionPage() {
                 );
               })}
             </Stack>
-          </SetupStep>
+          </NumberedStep>
         </Box>
 
         <Box sx={{ mt: 1, pl: { md: 5.5 } }}>

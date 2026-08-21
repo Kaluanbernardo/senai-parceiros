@@ -2,11 +2,13 @@ import React, { useMemo, useState } from 'react';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MergeIcon from '@mui/icons-material/Merge';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -86,10 +88,28 @@ export function importCardPresentation(record) {
  * atual — e nem a pesquisa nem a importação melhoram o catálogo.
  */
 function DuplicateComparison({ existing, incoming }) {
+  const [open, setOpen] = useState(false);
   const rows = compareCatalogRecords(existing, incoming);
   if (!rows.length) return null;
+  const changed = rows.filter((row) => row.differs).length;
   return (
-    <Box sx={{ mb: 1, border: `1px solid ${T.border.subtle}`, borderRadius: 1, overflow: 'hidden' }}>
+    <Box sx={{ mb: 1 }}>
+      {/* Recolhida por padrão. Aberta, esta tabela deixa o card do duplicado
+          bem mais alto que os vizinhos e abre um vão na fileira; e ela é
+          consultada no momento de decidir, não o tempo todo. O rótulo diz o
+          que há dentro, então continua sendo uma decisão informada. */}
+      <Button
+        size="small"
+        fullWidth
+        onClick={() => setOpen((current) => !current)}
+        endIcon={<ExpandMoreIcon sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: `transform ${T.motion.fast}` }} />}
+        sx={{ justifyContent: 'space-between', color: T.ink.muted, border: `1px solid ${T.border.subtle}`, mb: open ? 1 : 0 }}
+        aria-expanded={open}
+      >
+        {changed ? `Ver o que muda · ${changed} ${changed === 1 ? 'campo' : 'campos'}` : 'Ver a comparação'}
+      </Button>
+      <Collapse in={open}>
+    <Box sx={{ border: `1px solid ${T.border.subtle}`, borderRadius: 1, overflow: 'hidden' }}>
       <Stack direction="row" sx={{ bgcolor: T.surface.sunken, px: 1.25, py: .5 }}>
         <Typography variant="caption" sx={{ flex: 1, fontWeight: 700, color: T.ink.muted }}>No catálogo</Typography>
         <Typography variant="caption" sx={{ flex: 1, fontWeight: 700, color: T.ink.muted }}>Chegando agora</Typography>
@@ -109,6 +129,8 @@ function DuplicateComparison({ existing, incoming }) {
         </Stack>
       ))}
     </Box>
+      </Collapse>
+    </Box>
   );
 }
 
@@ -123,8 +145,12 @@ export function ImportCandidateCard({ row, decision, onDecision, existingRecord,
 
   return (
     <>
-      <Stack gap={1.25} sx={{ height: '100%' }}>
-        <Box sx={{ flex: 1, borderRadius: 1, outline: approved ? `2px solid ${T.feedback.success}` : 'none', outlineOffset: 2 }}>
+      {/* Sem altura forçada. Um card com a tabela de comparação da duplicata é
+          muito mais alto que os demais, e esticar a fileira inteira até ele
+          inflava os vizinhos — o resumo perdia o limite de três linhas e
+          virava um paredão de texto ao lado de um card que informa. */}
+      <Stack gap={1.25}>
+        <Box sx={{ borderRadius: 1, outline: approved ? `2px solid ${T.feedback.success}` : 'none', outlineOffset: 2 }}>
           <EntityCard
             item={presentation.item}
             view="grid"
@@ -235,7 +261,9 @@ export function ImportReviewToolbar({ rows, decisions, onDecisionsChange, stateF
 export function ImportReviewGrid({ rows, stateFilter, decisions, onDecision, existingById, dateLabel, columns = { xs: 12, sm: 6, lg: 4 } }) {
   const visible = useMemo(() => filterResearchRows(rows, stateFilter), [rows, stateFilter]);
   return (
-    <Grid container spacing={2}>
+    // `flex-start`: cada card tem a altura do seu conteúdo. Alinhados pelo
+    // topo, a duplicata pode crescer com a comparação sem arrastar a fileira.
+    <Grid container spacing={2} alignItems="flex-start">
       {visible.map((row) => (
         <Grid size={columns} key={`${row.batchId}:${row.hash || row.rowNumber}`}>
           <ImportCandidateCard
