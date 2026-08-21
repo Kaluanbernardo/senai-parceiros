@@ -262,7 +262,7 @@ export function DetailBody({ item, type = 'stakeholder' }) {
         {isPerson && (
           <>
             {listValues(item.perfis_atuacao).length > 0 && (
-              <InfoRow label="Atuação profissional">
+              <InfoRow label="Experiência de contribuição">
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {listValues(item.perfis_atuacao).map((profile) => <Chip key={profile} label={profile} size="small" variant="outlined" />)}
                 </Box>

@@ -22,7 +22,7 @@ const COMMON_COLUMNS = [
   { name: 'cidade_estado', type: 'texto', required: false, description: 'Cidade e estado/província, quando públicos.' },
   { name: 'resumo', type: 'texto', required: false, essential: true, description: 'Resumo curto baseado em fatos públicos.' },
   { name: 'descricao', type: 'texto', required: false, description: 'Descrição detalhada e pública.' },
-  { name: 'areas_temas', type: 'lista', required: false, essential: true, description: 'Temas separados por ponto e vírgula.' },
+  { name: 'areas_temas', type: 'lista', required: false, essential: true, description: 'Temas de especialidade separados por ponto e vírgula.' },
   { name: 'aderencia_contexto', type: 'texto', required: false, description: 'Aderência ao contexto pesquisado.' },
   { name: 'relacao_publica', type: 'texto', required: false, description: 'Relação pública com SENAI-SP, indústria ou ecossistema relevante.' },
   { name: 'evidencias_publicas', type: 'lista', required: false, description: 'Fatos/evidências e URLs resumidos, separados por ponto e vírgula.' },
@@ -37,10 +37,10 @@ const COMMON_COLUMNS = [
 
 const CATEGORY_COLUMNS = {
   person: [
-    { name: 'perfis_atuacao', type: 'lista', essential: true, description: 'Atuações profissionais, como pesquisa, indústria, educação, imprensa ou gestão pública.' },
+    { name: 'perfis_atuacao', type: 'lista', essential: true, description: 'Experiências de contribuição, como pesquisa, indústria, educação, imprensa ou gestão pública.' },
     { name: 'instituicao_atual', type: 'texto', essential: true, description: 'Instituição e vínculo atual.' },
     { name: 'cargo', type: 'texto', description: 'Cargo ou função pública atual.' },
-    { name: 'areas_especialidade', type: 'lista', essential: true, description: 'Áreas de especialidade.' },
+    { name: 'areas_especialidade', type: 'lista', essential: true, description: 'Temas de especialidade complementares.' },
     { name: 'perfil_principal_url', type: 'url', essential: true, description: 'Melhor perfil profissional público localizado.' },
     { name: 'linkedin_url', type: 'url', description: 'Perfil público no LinkedIn, quando localizado.' },
     { name: 'producoes_relevantes', type: 'lista', description: 'Título | URL | ano | tipo; ...' },

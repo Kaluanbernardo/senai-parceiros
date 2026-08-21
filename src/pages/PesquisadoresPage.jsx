@@ -18,7 +18,7 @@ import {
   matchesTokenizedFacet,
   sortItems,
 } from '../domain/catalogFilters';
-import { CATEGORIAS, getCategoriasFromAreas } from '../utils/areaCategories';
+import { getCategoriasFromAreas, getThemeGroup } from '../utils/areaCategories';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 import { PERSON_SUBTYPES } from '../domain/catalogTaxonomy';
 
@@ -30,6 +30,8 @@ const STATE_SCHEMA = Object.freeze({
   pais: { type: 'list' },
   area: { type: 'list' },
   tema: { type: 'list' },
+  contribuicao: { type: 'list' },
+  // Compatibilidade com URLs compartilhadas antes da revisão da taxonomia.
   atuacao: { type: 'list' },
   subtipo: { type: 'list' },
   genero: { type: 'single', default: 'todos' },
@@ -43,10 +45,11 @@ const STATE_SCHEMA = Object.freeze({
 
 const FILTER_DEFINITIONS = [
   { key: 'pais', label: 'País' },
-  { key: 'area', label: 'Área' },
-  { key: 'tema', label: 'Tema' },
-  { key: 'atuacao', label: 'Atuação' },
-  { key: 'subtipo', label: 'Subtipo' },
+  { key: 'area', label: 'Tema de especialidade' },
+  { key: 'tema', label: 'Tema de especialidade' },
+  { key: 'contribuicao', label: 'Experiência de contribuição' },
+  { key: 'atuacao', label: 'Experiência de contribuição' },
+  { key: 'subtipo', label: 'Perfil profissional' },
   { key: 'genero', label: 'Gênero', emptyValue: 'todos', format: (value) => (value === 'F' ? 'Feminino' : 'Masculino') },
 ];
 
@@ -85,7 +88,9 @@ export default function PesquisadoresPage() {
   const { state, setValue, removeValue, clear } = useCatalogState(STATE_SCHEMA);
 
   const countries = useMemo(() => collectFacetValues(pesquisadores, 'pais'), [pesquisadores]);
-  const themes = useMemo(() => collectTokenValues(pesquisadores, 'areas'), [pesquisadores]);
+  const themes = useMemo(() => collectTokenValues(pesquisadores, 'areas').sort((a, b) => (
+    getThemeGroup(a).localeCompare(getThemeGroup(b), 'pt-BR') || a.localeCompare(b, 'pt-BR')
+  )), [pesquisadores]);
   const profiles = useMemo(() => collectTokenValues(pesquisadores, 'perfis_atuacao'), [pesquisadores]);
 
   const filtered = useMemo(() => {
@@ -98,15 +103,15 @@ export default function PesquisadoresPage() {
         // cartão. Comparar contra o texto cru deixava as duas coisas diferentes.
         matchesFacet(getCategoriasFromAreas(item.areas), state.area) &&
         matchesTokenizedFacet(item.areas, state.tema) &&
-        matchesTokenizedFacet(item.perfis_atuacao, state.atuacao) &&
+        matchesTokenizedFacet(item.perfis_atuacao, [...state.contribuicao, ...state.atuacao]) &&
         matchesFacet(item.subtipo, state.subtipo) &&
         (state.genero === 'todos' || item.genero === state.genero),
     );
     return sortItems(matched, state.ordem);
-  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.atuacao, state.subtipo, state.genero, state.ordem]);
+  }, [pesquisadores, state.q, state.pais, state.area, state.tema, state.contribuicao, state.atuacao, state.subtipo, state.genero, state.ordem]);
 
   const activeChips = describeActiveFilters(
-    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, atuacao: state.atuacao, subtipo: state.subtipo, genero: state.genero },
+    { query: state.q, pais: state.pais, area: state.area, tema: state.tema, contribuicao: state.contribuicao, atuacao: state.atuacao, subtipo: state.subtipo, genero: state.genero },
     FILTER_DEFINITIONS,
   );
 
@@ -131,15 +136,21 @@ export default function PesquisadoresPage() {
         emptyIcon={<ScienceOutlinedIcon />}
         query={state.q}
         onQueryChange={(value) => setValue('q', value)}
-        searchPlaceholder="Buscar por nome, subtipo, cargo, instituição, atuação ou tema"
+        searchPlaceholder="Buscar por nome, perfil, cargo, instituição ou tema"
         activeChips={activeChips}
         onRemoveChip={removeChip}
         facets={[
-          { key: 'subtipo', label: 'Subtipo', options: PERSON_SUBTYPES, value: state.subtipo, onChange: (next) => setValue('subtipo', next) },
+          { key: 'subtipo', label: 'Perfil profissional', options: PERSON_SUBTYPES, value: state.subtipo, onChange: (next) => setValue('subtipo', next) },
           { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
-          { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
-          { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
-          { key: 'atuacao', label: 'Atuação', options: profiles, value: state.atuacao, onChange: (next) => setValue('atuacao', next) },
+          {
+            key: 'tema',
+            label: 'Temas de especialidade',
+            options: themes,
+            value: state.tema,
+            onChange: (next) => setValue('tema', next),
+            groupBy: getThemeGroup,
+          },
+          { key: 'contribuicao', label: 'Experiência de contribuição', options: profiles, value: state.contribuicao, onChange: (next) => setValue('contribuicao', next) },
         ]}
         filterExtras={
           <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
