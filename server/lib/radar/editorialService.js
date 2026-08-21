@@ -400,7 +400,12 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       }
       stats.model = `${generated.trace.provider}:${generated.trace.model}`;
     } catch (error) {
-      if (controller.signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+      const reason = sanitizeProviderError(error, 'radar_editorial_unavailable');
+      if (controller.signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError' || ['provider_timeout', 'timeout'].includes(reason)) {
+        // A request that reached the provider consumes the daily request budget
+        // even when no usage payload comes back. Otherwise repeated timeouts can
+        // bypass the guard and keep retrying indefinitely.
+        await recordAiUsageAtomic('radar-editorial', null);
         stats.failedBatches += 1;
         if (!stats.errors.includes('provider_timeout')) stats.errors.push('provider_timeout');
         // A timed-out batch remains pending. Continue with the next one while
@@ -415,7 +420,7 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
       // Um lote que falha deixaria os itens dele com o texto da fonte, e um
       // item com texto de fonte e indistinguivel de um item que nao precisava
       // de reescrita. A falha sobe para que o run inteiro falhe visivelmente.
-      throw new Error(sanitizeProviderError(error, 'radar_editorial_unavailable'));
+      throw new Error(reason);
     } finally {
       clearTimeout(timer);
     }
