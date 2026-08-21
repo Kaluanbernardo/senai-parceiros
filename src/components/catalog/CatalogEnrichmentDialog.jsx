@@ -43,6 +43,7 @@ const ERROR_MESSAGES = {
   store_hydrate_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
   store_read_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
   invalid_enrichment_action: 'A janela enviou uma ação inválida. Recarregue a página.',
+  enrichment_batch_stalled: 'O lote não avançou após as tentativas previstas. Os resultados concluídos foram preservados.',
   not_found: 'A rota de enriquecimento não respondeu. Recarregue a página.',
 };
 
@@ -92,6 +93,75 @@ async function requestEnrichment(body) {
     throw error;
   }
   return payload;
+}
+
+export async function runCatalogEnrichmentBatch(initialBatch, { request = requestEnrichment, onProgress = () => {} } = {}) {
+  let current = initialBatch;
+  const total = Math.max(1, Number(current?.counts?.total || 0));
+  let processedSteps = 0;
+  while (current?.next) {
+    if (processedSteps >= total * 2 + 1) throw new Error('enrichment_batch_stalled');
+    onProgress(current);
+    current = await request({ action: 'process', batchId: current.batchId });
+    onProgress(current);
+    if (Number(current.counts?.passed || 0) > 0) {
+      current = await request({ action: 'commit', batchId: current.batchId });
+      onProgress(current);
+    }
+    processedSteps += 1;
+  }
+  return current;
+}
+
+const FIELD_LABELS = Object.freeze({
+  descricao: 'Descrição', miniBio: 'Minibio', pesquisa: 'Perfil de pesquisa', diferencial: 'Resumo',
+  areas: 'Áreas e temas', areas_formacao: 'Áreas de formação', fontes: 'Fontes públicas',
+  evidencias_publicas: 'Evidências públicas', website: 'Website', website_oficial: 'Website oficial',
+  instituicao: 'Instituição atual', cargo: 'Cargo', perfis_atuacao: 'Perfis de atuação',
+  perfil_principal_url: 'Perfil principal', linkedin_url: 'LinkedIn', scholar: 'Google Scholar',
+  h_index: 'Índice h', citacoes: 'Citações', orcid: 'ORCID', openalex_id: 'OpenAlex', artigos: 'Publicações',
+  natureza: 'Natureza', natureza_juridica: 'Natureza jurídica', setor: 'Setor', atuacao: 'Atuação',
+  relacao: 'Relação pública', relacao_publica: 'Relação pública', programas_relevantes: 'Programas relevantes',
+  parcerias_industriais: 'Parcerias industriais', alcance_geografico: 'Alcance geográfico',
+  niveis_oferta: 'Níveis de oferta', relacao_industria: 'Relação com a indústria', escala: 'Escala',
+  acreditacoes: 'Acreditações', dados_nao_localizados: 'Dados não localizados', data_consulta: 'Data da consulta',
+});
+
+export function catalogEnrichmentFieldLabel(field) {
+  return FIELD_LABELS[field] || String(field || '').replaceAll('_', ' ');
+}
+
+function changeValue(value) {
+  const full = Array.isArray(value)
+    ? value.map((item) => (item && typeof item === 'object' ? item.titulo || item.url || JSON.stringify(item) : item)).join(' · ')
+    : value && typeof value === 'object' ? JSON.stringify(value) : String(value || 'Não informado');
+  return full.length > 220 ? `${full.slice(0, 217)}…` : full;
+}
+
+function EnrichmentResults({ enriched }) {
+  if (!enriched?.length) return null;
+  return (
+    <Stack gap={1}>
+      <Typography variant="subtitle2" fontWeight={800}>O que foi enriquecido</Typography>
+      <Stack gap={1} sx={{ maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
+        {enriched.map((card) => (
+          <Box key={card.key} sx={{ p: 1.5, border: '1px solid', borderColor: 'success.light', borderRadius: 1.5, bgcolor: 'success.50' }}>
+            <Typography variant="body2" fontWeight={800}>{card.name}</Typography>
+            <Typography variant="caption" color="text.secondary">{CATEGORY_LABELS[card.category]} · {card.fields?.length || 0} campo(s) alterado(s)</Typography>
+            <Stack gap={0.75} sx={{ mt: 1 }}>
+              {(card.fields || []).map((change) => (
+                <Box key={change.field}>
+                  <Typography variant="caption" fontWeight={800}>{catalogEnrichmentFieldLabel(change.field)}</Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">Antes: {changeValue(change.before)}</Typography>
+                  <Typography variant="caption" display="block" color="success.dark">Depois: {changeValue(change.after)}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Stack>
+  );
 }
 function AuditSummary({ audit }) {
   if (!audit) return null;
@@ -289,12 +359,54 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     }
   };
 
+  const handleEnrichAll = async (initialBatch = batch) => {
+    setRunningSeconds(0);
+    setRunning(true);
+    setNotice({ severity: 'info', text: 'Enriquecendo automaticamente todos os cards selecionados.' });
+    try {
+      const completed = await runCatalogEnrichmentBatch(initialBatch, {
+        onProgress: (current) => setBatch(current),
+      });
+      setBatch(completed);
+      await onCatalogChanged?.();
+      const refreshed = await requestEnrichment();
+      setOverview(refreshed);
+      const committed = Number(completed.counts?.committed || 0);
+      const failed = Number(completed.counts?.failed || 0);
+      setNotice({
+        severity: failed ? 'warning' : 'success',
+        text: failed
+          ? `${committed} card(s) enriquecido(s). ${failed} ainda ficaram com pendências; os demais foram preservados.`
+          : `${committed} card(s) enriquecido(s) e gravado(s) sem cliques adicionais.`,
+      });
+    } catch (error) {
+      setNotice({ severity: 'warning', text: error.message });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleStartAll = async () => {
+    setLoading(true);
+    setNotice(null);
+    try {
+      const created = await requestEnrichment({ action: 'start', targetKeys: candidates.map((candidate) => candidate.key) });
+      setBatch(created);
+      setLoading(false);
+      await handleEnrichAll(created);
+    } catch (error) {
+      setNotice({ severity: 'error', text: error.message });
+      setLoading(false);
+    }
+  };
+
   const handleRetry = async () => {
     setLoading(true);
     try {
       const retried = await requestEnrichment({ action: 'retry', batchId: batch.batchId });
       setBatch(retried);
-      setNotice({ severity: 'info', text: 'Os cards bloqueados voltaram para a fila. Decida um por vez.' });
+      setLoading(false);
+      await handleEnrichAll(retried);
     } catch (error) {
       setNotice({ severity: 'error', text: error.message });
     } finally {
@@ -342,6 +454,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           )}
           <BatchProgress batch={batch} running={running} runningSeconds={runningSeconds} />
           <CurrentCard target={batch?.next} />
+          <EnrichmentResults enriched={batch?.enriched} />
           {capabilities && !capabilities.ready && needsEnrichment > 0 && (
             <Alert severity="warning">
               {!capabilities.ai && !capabilities.search
@@ -364,25 +477,32 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           )}
           <Divider />
           <Typography variant="caption" color="text.secondary">
-            Você decide um card por vez. Enriquecer pesquisa e grava somente o card atual; pular não altera o catálogo. Os cards gravados continuam disponíveis no histórico para desfazer.
+            Você pode revisar card a card ou enriquecer toda a seleção automaticamente. Pular não altera o catálogo. Os cards gravados continuam disponíveis no histórico para desfazer.
           </Typography>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={handleClose} disabled={running}>Fechar</Button>
         {!batch ? (
-          <Button
-            variant="contained"
-            startIcon={<AutoFixHighOutlinedIcon />}
-            onClick={handleStart}
-            disabled={loading || running || !selectedKeys.length || !capabilities?.ready}
-          >
-            Iniciar com {selectedKeys.length} card(s)
-          </Button>
+          <>
+            <Button variant="contained" startIcon={<AutoFixHighOutlinedIcon />} onClick={handleStartAll} disabled={loading || running || !candidates.length || !capabilities?.ready}>
+              Enriquecer todos ({candidates.length})
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleStart}
+              disabled={loading || running || !selectedKeys.length || !capabilities?.ready}
+            >
+              Iniciar com {selectedKeys.length} card(s)
+            </Button>
+          </>
         ) : batch.next ? (
           <>
             <Button onClick={handleSkip} disabled={loading || running}>Pular para o próximo</Button>
-            <Button variant="contained" startIcon={<AutoFixHighOutlinedIcon />} onClick={handleEnrichCurrent} disabled={loading || running || !capabilities?.ready}>
+            <Button variant="contained" startIcon={<AutoFixHighOutlinedIcon />} onClick={() => handleEnrichAll(batch)} disabled={loading || running || !capabilities?.ready}>
+              Enriquecer todos os restantes
+            </Button>
+            <Button variant="outlined" onClick={handleEnrichCurrent} disabled={loading || running || !capabilities?.ready}>
               {running ? 'Processando...' : 'Enriquecer este card'}
             </Button>
           </>
