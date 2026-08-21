@@ -865,9 +865,22 @@ function storedItemStillQualifies(item) {
  * batch it could not finish and take the entire run down with it.
  */
 const DEFAULT_RUN_BUDGET_MS = 55_000;
+// The standalone editorial request has no collectors competing for its runtime.
+// Keep it below the route's 300s platform limit, with a full minute left for
+// persistence and response serialization even when the provider is slow.
+const DEFAULT_EDITORIAL_RUN_BUDGET_MS = 240_000;
+const DEFAULT_EDITORIAL_BATCH_TIMEOUT_MS = 45_000;
 
 function runBudgetMs() {
   return Math.max(5_000, Number(process.env.RADAR_RUN_BUDGET_MS || DEFAULT_RUN_BUDGET_MS));
+}
+
+function editorialRunBudgetMs() {
+  return Math.max(5_000, Number(process.env.RADAR_EDITORIAL_RUN_BUDGET_MS || DEFAULT_EDITORIAL_RUN_BUDGET_MS));
+}
+
+function editorialBatchTimeoutMs() {
+  return Math.max(1_000, Number(process.env.RADAR_EDITORIAL_STANDALONE_BATCH_TIMEOUT_MS || DEFAULT_EDITORIAL_BATCH_TIMEOUT_MS));
 }
 
 export async function getRadarItems({ filters = {}, live = false, persist = true, includeAi = true } = {}) {
@@ -1106,7 +1119,8 @@ export async function refreshRadarEditorials() {
   try {
     editorial = await editorializeRadarItems(stored.items.map(normalizeRadarItem), {
       previousItems: stored.items,
-      deadlineAt: startedAt + runBudgetMs(),
+      deadlineAt: startedAt + editorialRunBudgetMs(),
+      batchTimeoutMs: editorialBatchTimeoutMs(),
     });
   } catch (error) {
     const reason = sanitizeProviderError(error, 'radar_editorial_unavailable');

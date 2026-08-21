@@ -5,7 +5,7 @@
   ],
   "functions": {
     "api/admin.js": { "maxDuration": 300 },
-    "api/radar/refresh.js": { "maxDuration": 60 },
+    "api/radar/refresh.js": { "maxDuration": 300 },
     "api/selection/interview-next.js": { "maxDuration": 60 },
     "api/selection/evaluate.js": { "maxDuration": 60 }
   },

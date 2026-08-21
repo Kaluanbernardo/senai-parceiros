@@ -318,7 +318,16 @@ export async function generateStructured({ task = 'structured_generation', schem
         failure.providerMessage = await providerFailureMessage(response);
         throw failure;
       }
-      const payload = await response.json();
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        // Alguns gateways encerram uma resposta aceita sem entregar o JSON
+        // anunciado. Não deixe o SyntaxError da plataforma escapar como um
+        // HTTP 400 da aplicação: o chamador precisa poder tratar a
+        // instabilidade como falha do provedor.
+        throw new Error('provider_invalid_response');
+      }
       const choice = payload.choices?.[0];
       // `length` significa que a resposta bateu no teto de tokens e parou no
       // meio. Sem distinguir isso de um modelo que ignora o schema, a mesma

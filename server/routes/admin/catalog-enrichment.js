@@ -5,6 +5,7 @@ import {
   getCatalogEnrichmentOverview,
   processCatalogEnrichment,
   retryCatalogEnrichment,
+  skipCatalogEnrichmentTarget,
   startCatalogEnrichment,
 } from '../../lib/catalogEnrichment.js';
 import { flushCatalogStore, hydrateCatalogStore } from '../../lib/catalogImport.js';
@@ -22,9 +23,10 @@ export default async function handler(req, res) {
 
     const payload = await readJson(req);
     let result;
-    if (payload?.action === 'start') result = startCatalogEnrichment();
+    if (payload?.action === 'start') result = startCatalogEnrichment({ targetKeys: payload.targetKeys });
     else if (payload?.action === 'process') result = await processCatalogEnrichment(payload.batchId);
     else if (payload?.action === 'retry') result = retryCatalogEnrichment(payload.batchId);
+    else if (payload?.action === 'skip') result = skipCatalogEnrichmentTarget(payload.batchId, payload.targetKey);
     else if (payload?.action === 'commit') result = commitCatalogEnrichment(payload.batchId);
     else return res.status(400).json({ error: 'invalid_enrichment_action' });
     await Promise.all([flushCatalogStore(), flushUsageBudget()]);

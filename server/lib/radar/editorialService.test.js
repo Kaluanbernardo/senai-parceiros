@@ -52,9 +52,32 @@ afterEach(() => {
   delete process.env.RADAR_EDITORIAL_DEADLINE_BUFFER_MS;
   delete process.env.AI_DAILY_REQUEST_LIMIT;
   delete process.env.OPENROUTER_REASONING;
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 });
 
 describe('reescrita editorial do Radar', () => {
+  it('preserva a reescrita quando o provedor omite métricas e o Supabase está ativo', async () => {
+    process.env.SUPABASE_URL = 'https://supabase.example';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async (url, request = {}) => {
+      if (String(url).includes('openrouter.ai')) {
+        const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+        return new Response(JSON.stringify({
+          model: 'test/model',
+          choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+        }), { status: 200 });
+      }
+      if (request.method === 'POST') return new Response('', { status: 200 });
+      return new Response('[]', { status: 200 });
+    }));
+
+    const { items: [item], stats } = await editorializeRadarItems([gazetteItem('sem-metricas')]);
+
+    expect(stats).toMatchObject({ rewritten: 1, failedBatches: 0 });
+    expect(item.editorialStatus).toBe('ai');
+  });
+
   it('substitui o título legal do ato por uma manchete em linguagem simples', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
@@ -675,6 +698,32 @@ describe('reescrita editorial do Radar', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(items.filter((item) => item.editorialStatus === 'ai')).toHaveLength(6);
     expect(stats).toMatchObject({ rewritten: 6, failedBatches: 1, deadlineReached: false, errors: ['provider_timeout'] });
+  });
+
+  it('permite que a etapa editorial isolada amplie o timeout do lote', async () => {
+    process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS = '5';
+    vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
+      const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+      return await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve({
+          ok: true,
+          json: async () => ({
+            model: 'test/model',
+            usage: { total_tokens: 100 },
+            choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+          }),
+        }), 20);
+        request.signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+        }, { once: true });
+      });
+    }));
+
+    const { items, stats } = await editorializeRadarItems([gazetteItem('lento')], { batchTimeoutMs: 100 });
+
+    expect(stats).toMatchObject({ rewritten: 1, failedBatches: 0 });
+    expect(items[0].editorialStatus).toBe('ai');
   });
 
   it('respeita o prazo do chamador quando ele é mais curto que o próprio', async () => {

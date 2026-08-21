@@ -10,6 +10,7 @@ const CATEGORIES = ['organization', 'person'];
 const MAX_ATTEMPTS = 2;
 const BATCH_SIZE = 1;
 const PROCESS_TIMEOUT_MS = 45_000;
+const INTERACTION_VERSION = 2;
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -123,17 +124,20 @@ function createTarget(record, category) {
   };
 }
 
-export function createCatalogEnrichmentBatch(catalog, now = new Date()) {
+export function createCatalogEnrichmentBatch(catalog, now = new Date(), targetKeys) {
   const audit = auditCatalogQuality(catalog);
+  const selected = Array.isArray(targetKeys) ? new Set(targetKeys.map(String)) : null;
   const targets = audit.categories.flatMap(({ category, results }) => results
     .filter((entry) => !entry.quality.pass)
-    .map((entry) => createTarget(entry.record, category)));
+    .map((entry) => createTarget(entry.record, category)))
+    .filter((target) => !selected || selected.has(target.key));
   return {
     kind: 'enrichment',
     batchId: `enrich-${now.getTime()}-${crypto.randomBytes(4).toString('hex')}`,
     category: 'catalog',
-    filename: 'Enriquecimento automático do catálogo',
+    filename: 'Enriquecimento assistido do catálogo',
     qualityVersion: audit.version,
+    interactionVersion: INTERACTION_VERSION,
     auditBefore: publicAudit(audit),
     targets,
     createdAt: now.toISOString(),
@@ -148,6 +152,7 @@ function counts(batch) {
     passed: values.filter((target) => target.status === 'passed').length,
     failed: values.filter((target) => target.status === 'failed').length,
     committed: values.filter((target) => target.status === 'committed').length,
+    skipped: values.filter((target) => target.status === 'skipped').length,
   };
 }
 
@@ -171,6 +176,7 @@ export function catalogEnrichmentBatchSummary(batch) {
       category: nextTarget.category,
       attempt: Math.min(MAX_ATTEMPTS, Number(nextTarget.attempts || 0) + 1),
       maxAttempts: MAX_ATTEMPTS,
+      missing: nextTarget.quality?.missing?.map((item) => item.label) || [],
     } : null,
     failures: (batch.targets || []).filter((target) => target.status === 'failed').slice(0, 30).map((target) => ({
       key: target.key,
@@ -178,6 +184,12 @@ export function catalogEnrichmentBatchSummary(batch) {
       category: target.category,
       error: target.error,
       missing: target.quality?.missing?.map((item) => item.label) || [],
+    })),
+    enriched: (batch.targets || []).filter((target) => target.status === 'committed').map((target) => ({
+      key: target.key,
+      name: target.name,
+      category: target.category,
+      fields: Array.isArray(target.changes) ? target.changes : [],
     })),
   };
 }
@@ -203,7 +215,9 @@ function latestPendingBatch() {
  * sobreviver indefinidamente.
  */
 function isCurrentBatch(batch) {
-  return Boolean(batch) && Number(batch.qualityVersion) === CATALOG_QUALITY_VERSION;
+  return Boolean(batch)
+    && Number(batch.qualityVersion) === CATALOG_QUALITY_VERSION
+    && Number(batch.interactionVersion) === INTERACTION_VERSION;
 }
 
 export function getCatalogEnrichmentOverview({ provideCatalog = catalogProvider } = {}) {
@@ -214,15 +228,29 @@ export function getCatalogEnrichmentOverview({ provideCatalog = catalogProvider 
     audit: publicAudit(audit),
     quality: catalogQualityPublicContract(),
     capabilities: catalogEnrichmentCapabilities(),
+    candidates: audit.categories.flatMap(({ category, results }) => results
+      .filter((entry) => !entry.quality.pass)
+      .map((entry) => {
+        const target = createTarget(entry.record, category);
+        return {
+          key: target.key,
+          name: target.name,
+          category: target.category,
+          missing: target.quality?.missing?.map((item) => item.label) || [],
+        };
+      })),
     pending: isCurrentBatch(pending) ? catalogEnrichmentBatchSummary(pending) : null,
   };
 }
 
-export function startCatalogEnrichment({ provideCatalog = catalogProvider, now = new Date() } = {}) {
+export function startCatalogEnrichment({ provideCatalog = catalogProvider, now = new Date(), targetKeys } = {}) {
   const existing = latestPendingBatch();
   if (isCurrentBatch(existing)) return catalogEnrichmentBatchSummary(existing);
   if (existing) catalogStore.deletePending(existing.batchId);
-  const batch = createCatalogEnrichmentBatch(provideCatalog(), now);
+  if (!Array.isArray(targetKeys) || !targetKeys.length) throw new Error('enrichment_selection_required');
+  const selected = [...new Set(targetKeys.map(String))];
+  const batch = createCatalogEnrichmentBatch(provideCatalog(), now, selected);
+  if (batch.targets.length !== selected.length) throw new Error('invalid_enrichment_selection');
   catalogStore.setPending(batch);
   return catalogEnrichmentBatchSummary(batch);
 }
@@ -544,6 +572,16 @@ function recordSelectedTargetError(batch, selected, error) {
   return catalogEnrichmentBatchSummary(batch);
 }
 
+function isRecoverableTargetError(error) {
+  return new Set([
+    'provider_5xx',
+    'provider_invalid_response',
+    'output_truncated',
+    'empty_output',
+    'invalid_output',
+  ]).has(errorCode(error));
+}
+
 function evidenceWithHostedCitations(evidence, generated, citations) {
   const generatedUrls = new Set([
     ...(Array.isArray(generated?.fontes) ? generated.fontes : []),
@@ -600,6 +638,10 @@ export async function processCatalogEnrichment(batchId, {
       if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
       return recordSelectedTargetError(batch, targets, new Error('provider_timeout'));
     }
+    if (isRecoverableTargetError(error)) {
+      if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
+      return recordSelectedTargetError(batch, targets, error);
+    }
     throw error;
   }
   if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', generated.trace?.usage || null, generated.trace?.model);
@@ -643,6 +685,21 @@ export function retryCatalogEnrichment(batchId) {
   return catalogEnrichmentBatchSummary(batch);
 }
 
+export function skipCatalogEnrichmentTarget(batchId, targetKey) {
+  const batch = catalogStore.getPending(batchId);
+  if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
+  const current = (batch.targets || []).find((target) => target.status === 'pending');
+  if (!current || current.key !== String(targetKey || '')) throw new Error('enrichment_target_not_current');
+  current.status = 'skipped';
+  current.result = null;
+  current.error = '';
+  const summary = catalogEnrichmentBatchSummary(batch);
+  const actionable = (batch.targets || []).some((target) => ['pending', 'passed', 'failed'].includes(target.status));
+  if (actionable) catalogStore.setPending(batch);
+  else catalogStore.deletePending(batchId);
+  return summary;
+}
+
 function findCurrentTarget(catalog, target) {
   return (catalog[target.category] || []).find((record) => String(record.id) === target.lookupId);
 }
@@ -653,6 +710,25 @@ function upsert(records, record) {
   if (index < 0) next.push(record);
   else next[index] = record;
   return { records: next, action: index < 0 ? 'created' : 'updated' };
+}
+
+const CHANGE_IGNORED_FIELDS = new Set([
+  'id', 'enrichmentBatchId', 'enrichmentInputHash', 'enrichmentRecordHash',
+  'enrichedAt', 'catalogQualityVersion',
+]);
+
+function comparable(value) {
+  if (Array.isArray(value)) return value.map(comparable);
+  if (!value || typeof value !== 'object') return value ?? '';
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, comparable(value[key])]));
+}
+
+export function catalogEnrichmentChanges(before = {}, after = {}) {
+  const fields = [...new Set([...Object.keys(before || {}), ...Object.keys(after || {})])]
+    .filter((field) => !field.startsWith('_') && !CHANGE_IGNORED_FIELDS.has(field))
+    .sort();
+  return fields.filter((field) => JSON.stringify(comparable(before?.[field])) !== JSON.stringify(comparable(after?.[field])))
+    .map((field) => ({ field, before: before?.[field] ?? '', after: after?.[field] ?? '' }));
 }
 
 export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvider, now = new Date() } = {}) {
@@ -685,8 +761,10 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
     };
     const updated = upsert(nextByCategory[target.category], record);
     nextByCategory[target.category] = updated.records;
-    applied.push({ category: target.category, id: record.id, action: updated.action, rowHash: recordHash });
+    const changes = catalogEnrichmentChanges(target.record, target.result);
+    applied.push({ category: target.category, id: record.id, action: updated.action, rowHash: recordHash, changes });
     appliedRecords.push(record);
+    target.changes = changes;
   }
   for (const category of CATEGORIES) catalogStore.replaceCategory(category, nextByCategory[category], beforeByCategory[category].rowHashes);
 
@@ -711,7 +789,7 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
     target.status = 'committed';
     target.result = null;
   }
-  const remaining = batch.targets.some((target) => target.status !== 'committed');
+  const remaining = batch.targets.some((target) => ['pending', 'passed', 'failed'].includes(target.status));
   if (remaining) catalogStore.setPending(batch);
   else catalogStore.deletePending(batchId);
 

@@ -16,7 +16,17 @@ async function request(path, options = {}) {
   try {
     const response = await fetch(`${current.url}${path}`, { ...options, signal: options.signal || controller.signal, headers: { apikey: current.key, Authorization: `Bearer ${current.key}`, 'Content-Type': 'application/json', ...(options.headers || {}) } });
     if (!response.ok) { const error = new Error(`supabase_${response.status}`); error.status = response.status; error.body = (await response.text()).slice(0, 500); throw error; }
-    return response.status === 204 ? null : response.json();
+    if (response.status === 204) return null;
+    // PostgREST RPCs that return void may answer 200 with an empty body. That is
+    // still a successful write; attempting response.json() here turned it into
+    // "Unexpected end of JSON input" after the model had already done its job.
+    const raw = await response.text();
+    if (!raw.trim()) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error('supabase_invalid_response');
+    }
   } finally { clearTimeout(timer); }
 }
 
@@ -31,12 +41,16 @@ export async function writePilotDocument(key, state, expectedVersion = null) {
 }
 
 export async function recordSupabaseAiUsage(task, model, usage = {}, cacheHit = false) {
-  const input = Number(usage.prompt_tokens ?? usage.input_tokens ?? 0) || 0;
-  const output = Number(usage.completion_tokens ?? usage.output_tokens ?? 0) || 0;
-  const reasoning = Number(usage.reasoning_tokens ?? usage.completion_tokens_details?.reasoning_tokens ?? 0) || 0;
-  const cached = Number(usage.cached_tokens ?? usage.prompt_tokens_details?.cached_tokens ?? 0) || 0;
-  const total = Number(usage.total_tokens || input + output) || 0;
-  const cost = Number(usage.cost ?? usage.cost_usd ?? 0) || 0;
+  // OpenRouter may complete a valid structured response without returning its
+  // optional usage block. The caller still records one request, so `null` is a
+  // legitimate input here — not a reason to discard the generated content.
+  const metrics = usage && typeof usage === 'object' ? usage : {};
+  const input = Number(metrics.prompt_tokens ?? metrics.input_tokens ?? 0) || 0;
+  const output = Number(metrics.completion_tokens ?? metrics.output_tokens ?? 0) || 0;
+  const reasoning = Number(metrics.reasoning_tokens ?? metrics.completion_tokens_details?.reasoning_tokens ?? 0) || 0;
+  const cached = Number(metrics.cached_tokens ?? metrics.prompt_tokens_details?.cached_tokens ?? 0) || 0;
+  const total = Number(metrics.total_tokens || input + output) || 0;
+  const cost = Number(metrics.cost ?? metrics.cost_usd ?? 0) || 0;
   await request('/rest/v1/rpc/record_ai_usage', { method: 'POST', body: JSON.stringify({ p_task: task, p_model: model || '', p_input_tokens: input, p_output_tokens: output, p_reasoning_tokens: reasoning, p_cached_tokens: cached, p_total_tokens: total, p_cost_usd: cost, p_cache_hit: Boolean(cacheHit) }) });
 }
 

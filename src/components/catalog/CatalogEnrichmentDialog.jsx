@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -26,18 +27,23 @@ const ERROR_MESSAGES = {
   provider_timeout: 'A pesquisa deste card demorou mais que o limite. O lote ficou salvo; use Continuar enriquecimento para tentar novamente.',
   provider_4xx: 'O provedor de IA recusou a chamada para este card (chave inválida, sem crédito ou parâmetro não suportado). Verifique a configuração de IA.',
   provider_5xx: 'O provedor de IA teve instabilidade neste card. Use Continuar enriquecimento para tentar novamente.',
+  provider_invalid_response: 'O provedor de IA devolveu uma resposta incompleta para este card. O lote foi preservado; use Tentar novamente.',
   output_truncated: 'A resposta do provedor foi cortada pelo limite de tamanho antes de terminar este card.',
   enrichment_item_missing: 'O provedor não devolveu dados para este card.',
   enrichment_source_changed: 'O catálogo mudou durante o processamento. Reabra a auditoria antes de gravar os cards aprovados.',
   enrichment_commit_quality_failed: 'A conferência final recusou um card gravado. Essa gravação foi desfeita; os cards já salvos foram mantidos.',
   enrichment_batch_not_found: 'O lote não está mais disponível. Recarregue a página e inicie novamente.',
   enrichment_batch_incomplete: 'Nenhum card aprovado para gravar ainda.',
+  enrichment_selection_required: 'Escolha pelo menos um card para iniciar.',
+  invalid_enrichment_selection: 'A seleção contém um card que não está mais pendente. Reabra a janela e escolha novamente.',
+  enrichment_target_not_current: 'O card visível mudou. Reabra a janela antes de continuar.',
   quality_gate_failed: 'A pesquisa não trouxe evidência suficiente para completar os campos exigidos.',
   authentication_required: 'Sua sessão expirou. Entre novamente para continuar o enriquecimento.',
   insufficient_role: 'Esta conta não tem permissão de administrador para enriquecer o catálogo.',
   store_hydrate_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
   store_read_failed: 'Não foi possível ler o armazenamento do catálogo agora.',
   invalid_enrichment_action: 'A janela enviou uma ação inválida. Recarregue a página.',
+  enrichment_batch_stalled: 'O lote não avançou após as tentativas previstas. Os resultados concluídos foram preservados.',
   not_found: 'A rota de enriquecimento não respondeu. Recarregue a página.',
 };
 
@@ -60,13 +66,6 @@ export function catalogEnrichmentErrorMessage(code, status) {
 export function catalogEnrichmentFailureReason(failure) {
   if (failure?.error && failure.error !== 'quality_gate_failed') return catalogEnrichmentErrorMessage(failure.error);
   return (failure?.missing || []).join(' · ') || 'Evidência pública insuficiente';
-}
-
-export function catalogEnrichmentActionState({ running, hasFailed, pending, needsEnrichment }) {
-  if (running) return { kind: 'running', label: 'Processando...' };
-  if (hasFailed) return { kind: 'retry', label: 'Tentar novamente' };
-  if (pending > 0) return { kind: 'continue', label: 'Continuar enriquecimento' };
-  return { kind: 'start', label: `Enriquecer ${needsEnrichment || ''} card(s)` };
 }
 
 export function catalogEnrichmentRunningMessage(batch, elapsedSeconds = 0) {
@@ -94,6 +93,75 @@ async function requestEnrichment(body) {
     throw error;
   }
   return payload;
+}
+
+export async function runCatalogEnrichmentBatch(initialBatch, { request = requestEnrichment, onProgress = () => {} } = {}) {
+  let current = initialBatch;
+  const total = Math.max(1, Number(current?.counts?.total || 0));
+  let processedSteps = 0;
+  while (current?.next) {
+    if (processedSteps >= total * 2 + 1) throw new Error('enrichment_batch_stalled');
+    onProgress(current);
+    current = await request({ action: 'process', batchId: current.batchId });
+    onProgress(current);
+    if (Number(current.counts?.passed || 0) > 0) {
+      current = await request({ action: 'commit', batchId: current.batchId });
+      onProgress(current);
+    }
+    processedSteps += 1;
+  }
+  return current;
+}
+
+const FIELD_LABELS = Object.freeze({
+  descricao: 'Descrição', miniBio: 'Minibio', pesquisa: 'Perfil de pesquisa', diferencial: 'Resumo',
+  areas: 'Áreas e temas', areas_formacao: 'Áreas de formação', fontes: 'Fontes públicas',
+  evidencias_publicas: 'Evidências públicas', website: 'Website', website_oficial: 'Website oficial',
+  instituicao: 'Instituição atual', cargo: 'Cargo', perfis_atuacao: 'Perfis de atuação',
+  perfil_principal_url: 'Perfil principal', linkedin_url: 'LinkedIn', scholar: 'Google Scholar',
+  h_index: 'Índice h', citacoes: 'Citações', orcid: 'ORCID', openalex_id: 'OpenAlex', artigos: 'Publicações',
+  natureza: 'Natureza', natureza_juridica: 'Natureza jurídica', setor: 'Setor', atuacao: 'Atuação',
+  relacao: 'Relação pública', relacao_publica: 'Relação pública', programas_relevantes: 'Programas relevantes',
+  parcerias_industriais: 'Parcerias industriais', alcance_geografico: 'Alcance geográfico',
+  niveis_oferta: 'Níveis de oferta', relacao_industria: 'Relação com a indústria', escala: 'Escala',
+  acreditacoes: 'Acreditações', dados_nao_localizados: 'Dados não localizados', data_consulta: 'Data da consulta',
+});
+
+export function catalogEnrichmentFieldLabel(field) {
+  return FIELD_LABELS[field] || String(field || '').replaceAll('_', ' ');
+}
+
+function changeValue(value) {
+  const full = Array.isArray(value)
+    ? value.map((item) => (item && typeof item === 'object' ? item.titulo || item.url || JSON.stringify(item) : item)).join(' · ')
+    : value && typeof value === 'object' ? JSON.stringify(value) : String(value || 'Não informado');
+  return full.length > 220 ? `${full.slice(0, 217)}…` : full;
+}
+
+function EnrichmentResults({ enriched }) {
+  if (!enriched?.length) return null;
+  return (
+    <Stack gap={1}>
+      <Typography variant="subtitle2" fontWeight={800}>O que foi enriquecido</Typography>
+      <Stack gap={1} sx={{ maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
+        {enriched.map((card) => (
+          <Box key={card.key} sx={{ p: 1.5, border: '1px solid', borderColor: 'success.light', borderRadius: 1.5, bgcolor: 'success.50' }}>
+            <Typography variant="body2" fontWeight={800}>{card.name}</Typography>
+            <Typography variant="caption" color="text.secondary">{CATEGORY_LABELS[card.category]} · {card.fields?.length || 0} campo(s) alterado(s)</Typography>
+            <Stack gap={0.75} sx={{ mt: 1 }}>
+              {(card.fields || []).map((change) => (
+                <Box key={change.field}>
+                  <Typography variant="caption" fontWeight={800}>{catalogEnrichmentFieldLabel(change.field)}</Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">Antes: {changeValue(change.before)}</Typography>
+                  <Typography variant="caption" display="block" color="success.dark">Depois: {changeValue(change.after)}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Stack>
+  );
 }
 function AuditSummary({ audit }) {
   if (!audit) return null;
@@ -134,7 +202,7 @@ function QualityContract({ quality }) {
 function BatchProgress({ batch, running, runningSeconds }) {
   if (!batch || batch.completeWithoutChanges) return null;
   const counts = batch.counts || {};
-  const handled = Number(counts.passed || 0) + Number(counts.failed || 0) + Number(counts.committed || 0);
+  const handled = Number(counts.passed || 0) + Number(counts.failed || 0) + Number(counts.committed || 0) + Number(counts.skipped || 0);
   const total = Number(counts.total || 0);
   const value = total ? Math.round((handled / total) * 100) : 0;
   return (
@@ -148,6 +216,7 @@ function BatchProgress({ batch, running, runningSeconds }) {
         <Chip size="small" label={`${counts.committed || 0} gravados`} color="success" variant="outlined" />
         {Boolean(counts.passed) && <Chip size="small" label={`${counts.passed} aprovados`} color="success" variant="outlined" />}
         <Chip size="small" label={`${counts.pending || 0} pendentes`} variant="outlined" />
+        {Boolean(counts.skipped) && <Chip size="small" label={`${counts.skipped} pulados`} variant="outlined" />}
         {Boolean(counts.failed) && <Chip size="small" label={`${counts.failed} com pendência`} color="warning" variant="outlined" />}
       </Stack>
       {running && (
@@ -165,6 +234,62 @@ function BatchProgress({ batch, running, runningSeconds }) {
   );
 }
 
+function CardSelection({ candidates, selectedKeys, onChange }) {
+  const selected = new Set(selectedKeys);
+  return (
+    <Stack gap={1.25}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
+        <Box>
+          <Typography variant="subtitle2" fontWeight={800}>Escolha os cards que deseja enriquecer</Typography>
+          <Typography variant="body2" color="text.secondary">Nenhum card é selecionado automaticamente.</Typography>
+        </Box>
+        <Stack direction="row" gap={1}>
+          <Button size="small" onClick={() => onChange(candidates.map((candidate) => candidate.key))}>Selecionar todos</Button>
+          <Button size="small" onClick={() => onChange([])}>Limpar</Button>
+        </Stack>
+      </Stack>
+      <Stack gap={0.75} sx={{ maxHeight: 320, overflowY: 'auto', pr: 0.5 }}>
+        {candidates.map((candidate) => (
+          <Box
+            component="label"
+            key={candidate.key}
+            sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', p: 1.25, border: '1px solid', borderColor: selected.has(candidate.key) ? 'primary.main' : 'divider', borderRadius: 1.5, cursor: 'pointer' }}
+          >
+            <Checkbox
+              checked={selected.has(candidate.key)}
+              onChange={() => onChange(selected.has(candidate.key)
+                ? selectedKeys.filter((key) => key !== candidate.key)
+                : [...selectedKeys, candidate.key])}
+              sx={{ p: 0.25 }}
+            />
+            <Box>
+              <Typography variant="body2" fontWeight={700}>{candidate.name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {CATEGORY_LABELS[candidate.category]} · {(candidate.missing || []).join(' · ')}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Stack>
+      <Typography variant="body2" fontWeight={700}>{selectedKeys.length} card(s) selecionado(s)</Typography>
+    </Stack>
+  );
+}
+
+function CurrentCard({ target }) {
+  if (!target) return null;
+  return (
+    <Box sx={{ p: 2, border: '1px solid', borderColor: 'primary.main', borderRadius: 1.5, bgcolor: 'primary.50' }}>
+      <Typography variant="overline" color="primary.main" fontWeight={800}>Card atual</Typography>
+      <Typography variant="h6" fontWeight={800}>{target.name}</Typography>
+      <Typography variant="body2" color="text.secondary">{CATEGORY_LABELS[target.category]}</Typography>
+      {Boolean(target.missing?.length) && (
+        <Typography variant="body2" sx={{ mt: 1 }}>Lacunas: {target.missing.join(' · ')}</Typography>
+      )}
+    </Box>
+  );
+}
+
 export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChanged }) {
   const [overview, setOverview] = useState(null);
   const [batch, setBatch] = useState(null);
@@ -172,7 +297,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   const [running, setRunning] = useState(false);
   const [runningSeconds, setRunningSeconds] = useState(0);
   const [notice, setNotice] = useState(null);
-  const continueRef = useRef(false);
+  const [selectedKeys, setSelectedKeys] = useState([]);
 
   useEffect(() => {
     if (!running) return undefined;
@@ -181,10 +306,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   }, [running]);
 
   useEffect(() => {
-    if (!open) {
-      continueRef.current = false;
-      return undefined;
-    }
+    if (!open) return undefined;
     let active = true;
     setLoading(true);
     setNotice(null);
@@ -193,58 +315,32 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
         if (!active) return;
         setOverview(payload);
         setBatch(payload.pending);
+        setSelectedKeys([]);
       })
       .catch((error) => active && setNotice({ severity: 'error', text: error.message }))
       .finally(() => active && setLoading(false));
-    return () => { active = false; continueRef.current = false; };
+    return () => { active = false; };
   }, [open]);
 
-  const run = async (initial) => {
-    continueRef.current = true;
+  const handleEnrichCurrent = async () => {
     setRunningSeconds(0);
     setRunning(true);
-    setNotice({ severity: 'info', text: 'Pesquisando fontes e conferindo os cards. Cada card aprovado é gravado na hora, então você pode fechar esta janela e continuar depois sem perder o que já passou.' });
-    let current = initial;
-    let saved = 0;
+    setNotice({ severity: 'info', text: `Pesquisando fontes e conferindo ${batch.next.name}.` });
     try {
-      // Grava antes de seguir: o card aprovado vira catálogo imediatamente, e
-      // uma interrupção mais adiante não desfaz o que já passou.
-      while (continueRef.current && (current?.counts?.pending > 0 || current?.counts?.passed > 0)) {
-        if (current.counts.passed > 0) {
-          const committed = await requestEnrichment({ action: 'commit', batchId: current.batchId });
-          saved += committed.applied?.length || 0;
-          current = committed;
-          setBatch(current);
-          await onCatalogChanged?.();
-          continue;
-        }
-        setRunningSeconds(0);
-        current = await requestEnrichment({ action: 'process', batchId: current.batchId });
-        setBatch(current);
-      }
-      if (!continueRef.current) return;
-      const refreshed = await requestEnrichment();
-      setOverview(refreshed);
-      setBatch(refreshed.pending);
-      const blocked = Number(current?.counts?.failed || 0);
-      if (!blocked) {
-        setNotice({ severity: 'success', text: `${saved} card(s) enriquecido(s) e gravado(s). Todos passaram pela conferência final.` });
+      let current = await requestEnrichment({ action: 'process', batchId: batch.batchId });
+      if (Number(current.counts?.passed || 0) > 0) {
+        current = await requestEnrichment({ action: 'commit', batchId: current.batchId });
+        await onCatalogChanged?.();
+        setNotice({ severity: 'success', text: current.next ? 'Card enriquecido e gravado. Agora escolha o que fazer com o próximo.' : 'Card enriquecido e gravado.' });
+      } else if (current.next?.key === batch.next.key) {
+        setNotice({ severity: 'warning', text: 'Este card ainda não atingiu o padrão. Você pode tentar enriquecê-lo novamente ou pular.' });
       } else {
-        const onlyQualityGaps = (current.failures || []).every((failure) => !failure.error || failure.error === 'quality_gate_failed');
-        setNotice({
-          severity: saved ? 'info' : 'warning',
-          text: `${saved} card(s) gravado(s); ${blocked} ainda bloqueado(s). ${onlyQualityGaps
-            ? 'A pesquisa não encontrou evidência pública suficiente para eles.'
-            : 'Veja o motivo de cada um abaixo antes de tentar novamente.'}`,
-        });
+        setNotice({ severity: 'warning', text: current.next ? 'Este card ficou bloqueado. Agora escolha o que fazer com o próximo.' : 'Este card ficou bloqueado.' });
       }
+      setBatch(current);
     } catch (error) {
-      setNotice({
-        severity: 'warning',
-        text: saved ? `${saved} card(s) já gravado(s). ${error.message}` : error.message,
-      });
+      setNotice({ severity: 'warning', text: error.message });
     } finally {
-      continueRef.current = false;
       setRunning(false);
     }
   };
@@ -253,16 +349,53 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     setLoading(true);
     setNotice(null);
     try {
-      const created = await requestEnrichment({ action: 'start' });
+      const created = await requestEnrichment({ action: 'start', targetKeys: selectedKeys });
       setBatch(created);
-      if (created.completeWithoutChanges) {
-        setNotice({ severity: 'success', text: 'O catálogo já está integralmente no padrão de qualidade.' });
-      } else {
-        await run(created);
-      }
+      setNotice({ severity: 'info', text: 'Seleção salva. Escolha se deseja enriquecer ou pular o primeiro card.' });
     } catch (error) {
       setNotice({ severity: 'error', text: error.message });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnrichAll = async (initialBatch = batch) => {
+    setRunningSeconds(0);
+    setRunning(true);
+    setNotice({ severity: 'info', text: 'Enriquecendo automaticamente todos os cards selecionados.' });
+    try {
+      const completed = await runCatalogEnrichmentBatch(initialBatch, {
+        onProgress: (current) => setBatch(current),
+      });
+      setBatch(completed);
+      await onCatalogChanged?.();
+      const refreshed = await requestEnrichment();
+      setOverview(refreshed);
+      const committed = Number(completed.counts?.committed || 0);
+      const failed = Number(completed.counts?.failed || 0);
+      setNotice({
+        severity: failed ? 'warning' : 'success',
+        text: failed
+          ? `${committed} card(s) enriquecido(s). ${failed} ainda ficaram com pendências; os demais foram preservados.`
+          : `${committed} card(s) enriquecido(s) e gravado(s) sem cliques adicionais.`,
+      });
+    } catch (error) {
+      setNotice({ severity: 'warning', text: error.message });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleStartAll = async () => {
+    setLoading(true);
+    setNotice(null);
+    try {
+      const created = await requestEnrichment({ action: 'start', targetKeys: candidates.map((candidate) => candidate.key) });
+      setBatch(created);
+      setLoading(false);
+      await handleEnrichAll(created);
+    } catch (error) {
+      setNotice({ severity: 'error', text: error.message });
       setLoading(false);
     }
   };
@@ -272,7 +405,8 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     try {
       const retried = await requestEnrichment({ action: 'retry', batchId: batch.batchId });
       setBatch(retried);
-      await run(retried);
+      setLoading(false);
+      await handleEnrichAll(retried);
     } catch (error) {
       setNotice({ severity: 'error', text: error.message });
     } finally {
@@ -280,21 +414,26 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     }
   };
 
-  const handleClose = () => {
-    continueRef.current = false;
-    onClose();
+  const handleSkip = async () => {
+    setLoading(true);
+    try {
+      const skipped = await requestEnrichment({ action: 'skip', batchId: batch.batchId, targetKey: batch.next.key });
+      setBatch(skipped);
+      setNotice({ severity: 'info', text: skipped.next ? 'Card pulado. Agora escolha o que fazer com o próximo.' : 'Card pulado. A seleção chegou ao fim.' });
+    } catch (error) {
+      setNotice({ severity: 'error', text: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleClose = () => onClose();
 
   const audit = overview?.audit;
   const capabilities = overview?.capabilities;
   const needsEnrichment = Number(audit?.needsEnrichment || 0);
   const hasFailed = Number(batch?.counts?.failed || 0) > 0;
-  const primaryAction = catalogEnrichmentActionState({
-    running,
-    hasFailed,
-    pending: Number(batch?.counts?.pending || 0),
-    needsEnrichment,
-  });
+  const candidates = overview?.candidates || [];
 
   return (
     <Dialog open={open} onClose={running ? undefined : handleClose} fullWidth maxWidth="md">
@@ -310,7 +449,12 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           )}
           <AuditSummary audit={audit} />
           <QualityContract quality={overview?.quality} />
+          {!batch && candidates.length > 0 && (
+            <CardSelection candidates={candidates} selectedKeys={selectedKeys} onChange={setSelectedKeys} />
+          )}
           <BatchProgress batch={batch} running={running} runningSeconds={runningSeconds} />
+          <CurrentCard target={batch?.next} />
+          <EnrichmentResults enriched={batch?.enriched} />
           {capabilities && !capabilities.ready && needsEnrichment > 0 && (
             <Alert severity="warning">
               {!capabilities.ai && !capabilities.search
@@ -333,28 +477,38 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           )}
           <Divider />
           <Typography variant="caption" color="text.secondary">
-            O enriquecimento é consolidado como um único lote. Se qualquer card não passar, o lote permanece pendente e pode ser retomado; depois de concluído, ele também pode ser desfeito pelo histórico de importações.
+            Você pode revisar card a card ou enriquecer toda a seleção automaticamente. Pular não altera o catálogo. Os cards gravados continuam disponíveis no histórico para desfazer.
           </Typography>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleClose}>{running ? 'Fechar e continuar depois' : 'Fechar'}</Button>
-        {primaryAction.kind === 'running' ? (
-          <Button variant="contained" disabled>{primaryAction.label}</Button>
-        ) : primaryAction.kind === 'retry' ? (
-          <Button variant="contained" onClick={handleRetry} disabled={loading || running || !capabilities?.ready}>{primaryAction.label}</Button>
-        ) : primaryAction.kind === 'continue' ? (
-          <Button variant="contained" onClick={() => run(batch)} disabled={loading || running || !capabilities?.ready}>{primaryAction.label}</Button>
-        ) : (
-          <Button
-            variant="contained"
-            startIcon={<AutoFixHighOutlinedIcon />}
-            onClick={handleStart}
-            disabled={loading || running || !needsEnrichment || !capabilities?.ready}
-          >
-            {primaryAction.label}
-          </Button>
-        )}
+        <Button onClick={handleClose} disabled={running}>Fechar</Button>
+        {!batch ? (
+          <>
+            <Button variant="contained" startIcon={<AutoFixHighOutlinedIcon />} onClick={handleStartAll} disabled={loading || running || !candidates.length || !capabilities?.ready}>
+              Enriquecer todos ({candidates.length})
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleStart}
+              disabled={loading || running || !selectedKeys.length || !capabilities?.ready}
+            >
+              Iniciar com {selectedKeys.length} card(s)
+            </Button>
+          </>
+        ) : batch.next ? (
+          <>
+            <Button onClick={handleSkip} disabled={loading || running}>Pular para o próximo</Button>
+            <Button variant="contained" startIcon={<AutoFixHighOutlinedIcon />} onClick={() => handleEnrichAll(batch)} disabled={loading || running || !capabilities?.ready}>
+              Enriquecer todos os restantes
+            </Button>
+            <Button variant="outlined" onClick={handleEnrichCurrent} disabled={loading || running || !capabilities?.ready}>
+              {running ? 'Processando...' : 'Enriquecer este card'}
+            </Button>
+          </>
+        ) : hasFailed ? (
+          <Button variant="contained" onClick={handleRetry} disabled={loading || running || !capabilities?.ready}>Tentar cards bloqueados novamente</Button>
+        ) : null}
       </DialogActions>
     </Dialog>
   );

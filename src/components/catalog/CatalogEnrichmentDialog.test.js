@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { catalogEnrichmentActionState, catalogEnrichmentErrorMessage, catalogEnrichmentFailureReason, catalogEnrichmentRunningMessage } from './CatalogEnrichmentDialog.jsx';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  catalogEnrichmentErrorMessage,
+  catalogEnrichmentFailureReason,
+  catalogEnrichmentFieldLabel,
+  catalogEnrichmentRunningMessage,
+  runCatalogEnrichmentBatch,
+} from './CatalogEnrichmentDialog.jsx';
 
 describe('catalog enrichment errors', () => {
   it('explains a blocked card by its real processing error instead of hiding it behind the quality gaps', () => {
@@ -21,18 +27,55 @@ describe('catalog enrichment errors', () => {
     expect(catalogEnrichmentErrorMessage('provider_timeout')).not.toBe('Não foi possível concluir o enriquecimento agora.');
   });
 
-  it('shows that processing continues after a card becomes blocked', () => {
-    expect(catalogEnrichmentActionState({
-      running: true,
-      hasFailed: true,
-      pending: 43,
-      needsEnrichment: 67,
-    })).toEqual({ kind: 'running', label: 'Processando...' });
+  it('explica a resposta incompleta do provedor sem expor o erro de JSON', () => {
+    const message = catalogEnrichmentErrorMessage('provider_invalid_response');
+    expect(message).toContain('resposta incompleta');
+    expect(message).not.toContain('JSON');
   });
 
   it('identifies the active card and keeps visible time moving between responses', () => {
     expect(catalogEnrichmentRunningMessage({
       next: { name: 'Ewart Keep', attempt: 2, maxAttempts: 2 },
     }, 17)).toBe('Processando Ewart Keep (tentativa 2 de 2) · 17 s nesta etapa. Cada card pode levar até 45 segundos; o contador avança quando a etapa termina.');
+  });
+
+  it('processes and commits every remaining card without another click', async () => {
+    const responses = [
+      { batchId: 'batch-1', counts: { total: 2, pending: 1, passed: 1 }, next: { key: 'organization:1', name: 'Primeiro' } },
+      { batchId: 'batch-1', counts: { total: 2, committed: 1, pending: 1, passed: 0 }, next: { key: 'organization:2', name: 'Segundo' }, enriched: [{ key: 'organization:1', fields: [{ field: 'descricao' }] }] },
+      { batchId: 'batch-1', counts: { total: 2, pending: 0, passed: 1 }, next: null },
+      { batchId: 'batch-1', counts: { total: 2, committed: 2, pending: 0, passed: 0 }, next: null, enriched: [{ key: 'organization:1' }, { key: 'organization:2' }] },
+    ];
+    const request = vi.fn(async () => responses.shift());
+
+    const result = await runCatalogEnrichmentBatch({
+      batchId: 'batch-1', counts: { total: 2, pending: 2, passed: 0 }, next: { key: 'organization:1', name: 'Primeiro' },
+    }, { request });
+
+    expect(request.mock.calls.map(([body]) => body.action)).toEqual(['process', 'commit', 'process', 'commit']);
+    expect(result.counts.committed).toBe(2);
+    expect(result.enriched).toHaveLength(2);
+  });
+
+  it('continues the bulk queue after a card exhausts its attempts', async () => {
+    const responses = [
+      { batchId: 'batch-1', counts: { total: 2, pending: 2, failed: 0, passed: 0 }, next: { key: 'organization:1', name: 'Primeiro', attempt: 2, maxAttempts: 2 } },
+      { batchId: 'batch-1', counts: { total: 2, pending: 1, failed: 1, passed: 0 }, next: { key: 'organization:2', name: 'Segundo', attempt: 1, maxAttempts: 2 } },
+      { batchId: 'batch-1', counts: { total: 2, pending: 0, failed: 1, passed: 1 }, next: null },
+      { batchId: 'batch-1', counts: { total: 2, committed: 1, pending: 0, failed: 1, passed: 0 }, next: null, enriched: [{ key: 'organization:2' }] },
+    ];
+    const request = vi.fn(async () => responses.shift());
+
+    const result = await runCatalogEnrichmentBatch({
+      batchId: 'batch-1', counts: { total: 2, pending: 2, failed: 0, passed: 0 }, next: { key: 'organization:1', name: 'Primeiro', attempt: 1, maxAttempts: 2 },
+    }, { request });
+
+    expect(request.mock.calls.map(([body]) => body.action)).toEqual(['process', 'process', 'process', 'commit']);
+    expect(result.counts).toMatchObject({ committed: 1, failed: 1, pending: 0 });
+  });
+
+  it('uses readable labels for the enriched field report', () => {
+    expect(catalogEnrichmentFieldLabel('perfil_principal_url')).toBe('Perfil principal');
+    expect(catalogEnrichmentFieldLabel('campo_novo')).toBe('campo novo');
   });
 });
