@@ -1,6 +1,6 @@
 import { ORGANIZATION_SUBTYPES, normalizeCatalogCategory } from './catalogTaxonomy.js';
 
-export const CATALOG_QUALITY_VERSION = 2;
+export const CATALOG_QUALITY_VERSION = 3;
 
 export const CATALOG_QUALITY_RULES = Object.freeze({
   descriptionMinCharacters: 400,
@@ -80,12 +80,35 @@ export function directPublicationUrls(record = {}) {
   }))];
 }
 
+const RESEARCH_PROFILE_TYPES = ['scholar', 'lattes', 'orcid', 'researchgate', 'academia'];
+const RESEARCH_HOSTS = /(^|\.)(scholar\.google\.|lattes\.cnpq\.|orcid\.org|researchgate\.net|academia\.edu|openalex\.org|semanticscholar\.org)/i;
+
+/**
+ * Só um indício concreto no próprio dado classifica a ficha como perfil de
+ * pesquisa — e com ela vem a exigência mais dura do padrão, cinco publicações
+ * com link direto.
+ *
+ * `perfis_atuacao` não serve como indício. O catálogo preenche 'pesquisa' por
+ * padrão em toda pessoa sem atuação declarada (ver `getCatalog` e
+ * `canonicalizeResearchers`), então lê-lo aqui classificava as 88 pessoas como
+ * pesquisadoras e cobrava de todas as cinco publicações — a regra que mais
+ * reprovava cards no enriquecimento. O rótulo continua valendo para busca e
+ * seleção; ele apenas não decide sozinho o padrão de qualidade.
+ */
 export function isResearchProfile(record = {}) {
-  const profiles = list(record.perfis_atuacao).join(' ').toLowerCase();
-  return /pesquis|academ|cient/i.test(profiles)
-    || ['scholar', 'lattes', 'orcid', 'researchgate', 'academia'].includes(text(record.profileType).toLowerCase())
-    || useful(record.h_index)
-    || (Array.isArray(record.artigos) && record.artigos.length > 0);
+  if (RESEARCH_PROFILE_TYPES.includes(text(record.profileType).toLowerCase())) return true;
+  if (useful(record.h_index) || useful(record.orcid) || useful(record.openalex_id)) return true;
+  if (Array.isArray(record.artigos) && record.artigos.length > 0) return true;
+  if (list(record.publicacoes_relevantes).length > 0 || list(record.producoes_relevantes).length > 0) return true;
+  return [record.scholar, record.google_scholar_url, record.perfil_principal_url, record.lattes_url]
+    .flatMap(urlsIn)
+    .some((value) => {
+      try {
+        return RESEARCH_HOSTS.test(new URL(value).hostname);
+      } catch {
+        return false;
+      }
+    });
 }
 
 const CORE_FIELDS = Object.freeze({

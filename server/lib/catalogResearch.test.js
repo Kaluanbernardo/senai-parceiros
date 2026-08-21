@@ -47,17 +47,19 @@ describe('catalog research module', () => {
       });
     }
     expect(normalizeCatalogResearchRequest({
-      category: 'person', context: 'IA industrial', quantity: 20, geography: 'internacional', sourcePreferences: 'academic',
+      category: 'person', subtype: 'Pesquisador(a) ou acadêmico(a)', context: 'IA industrial', quantity: 20, geography: 'internacional', sourcePreferences: 'academic',
       prioritizationFactors: 'experiência industrial', exclusionFactors: 'consultorias sem projetos públicos',
       batchIndex: 2, excludeCandidates: ['Pessoa já localizada'],
     })).toMatchObject({
       sourcePreferences: 'academic', geography: 'internacional', prioritizationFactors: 'experiência industrial',
       exclusionFactors: 'consultorias sem projetos públicos', batchIndex: 2, excludeCandidates: ['Pessoa já localizada'],
     });
+    expect(normalizeCatalogResearchRequest({ category: 'organization', subtype: 'Empresa', context: 'IA industrial', quantity: 10, geography: 'brasil' })).toMatchObject({ quantity: 10 });
+    expect(() => normalizeCatalogResearchRequest({ category: 'person', context: 'x', quantity: 5, geography: 'brasil' })).toThrow('research_subtype_required');
     expect(() => normalizeCatalogResearchRequest({ category: 'organization', subtype: 'Instituição de ensino', context: 'x', quantity: 3, geography: 'brasil' })).toThrow('invalid_research_quantity');
-    expect(() => normalizeCatalogResearchRequest({ category: 'other', context: 'x', quantity: 5, geography: 'brasil' })).toThrow('invalid_research_category');
-    expect(() => normalizeCatalogResearchRequest({ category: 'person', context: 'x', quantity: 5, geography: 'mundo' })).toThrow('invalid_research_geography');
-    expect(() => normalizeCatalogResearchRequest({ category: 'person', context: 'x', quantity: 5, geography: 'brasil', sourcePreferences: 'qualquer site' })).toThrow('invalid_research_source_preference');
+    expect(() => normalizeCatalogResearchRequest({ category: 'other', subtype: 'Outro', context: 'x', quantity: 5, geography: 'brasil' })).toThrow('invalid_research_category');
+    expect(() => normalizeCatalogResearchRequest({ category: 'person', subtype: 'Educador(a)', context: 'x', quantity: 5, geography: 'mundo' })).toThrow('invalid_research_geography');
+    expect(() => normalizeCatalogResearchRequest({ category: 'person', subtype: 'Educador(a)', context: 'x', quantity: 5, geography: 'brasil', sourcePreferences: 'qualquer site' })).toThrow('invalid_research_source_preference');
   });
 
   it('builds a strict output contract with every importable field for the selected category', () => {
@@ -143,7 +145,7 @@ describe('catalog research module', () => {
       });
 
     const result = await researchCatalogCandidates(
-      { category: 'person', context: 'Especialistas em IA na educação profissional', quantity: 5, geography: 'brasil' },
+      { category: 'person', subtype: 'Pesquisador(a) ou acadêmico(a)', context: 'Especialistas em IA na educação profissional', quantity: 5, geography: 'brasil' },
       { generate, now: () => new Date('2026-08-14T12:00:00Z') },
     );
 

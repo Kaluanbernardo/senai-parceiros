@@ -56,7 +56,7 @@ function limitedText(value, field, maximum, { required = false } = {}) {
 }
 
 export function normalizeCatalogResearchRequest(input = {}) {
-  const requestedSubtype = limitedText(input.subtype, 'research_subtype', 120);
+  const requestedSubtype = limitedText(input.subtype, 'research_subtype', 120, { required: true });
   const request = normalizeCatalogRequest(input.category, requestedSubtype);
   const category = normalizeCatalogCategory(request.category);
   if (!CATEGORY_LABELS[category]) throw new Error('invalid_research_category');
