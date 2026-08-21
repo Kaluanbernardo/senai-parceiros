@@ -52,9 +52,32 @@ afterEach(() => {
   delete process.env.RADAR_EDITORIAL_DEADLINE_BUFFER_MS;
   delete process.env.AI_DAILY_REQUEST_LIMIT;
   delete process.env.OPENROUTER_REASONING;
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 });
 
 describe('reescrita editorial do Radar', () => {
+  it('preserva a reescrita quando o provedor omite métricas e o Supabase está ativo', async () => {
+    process.env.SUPABASE_URL = 'https://supabase.example';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'server-only-test-key';
+    vi.stubGlobal('fetch', vi.fn(async (url, request = {}) => {
+      if (String(url).includes('openrouter.ai')) {
+        const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+        return new Response(JSON.stringify({
+          model: 'test/model',
+          choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+        }), { status: 200 });
+      }
+      if (request.method === 'POST') return new Response(null, { status: 204 });
+      return new Response('[]', { status: 200 });
+    }));
+
+    const { items: [item], stats } = await editorializeRadarItems([gazetteItem('sem-metricas')]);
+
+    expect(stats).toMatchObject({ rewritten: 1, failedBatches: 0 });
+    expect(item.editorialStatus).toBe('ai');
+  });
+
   it('substitui o título legal do ato por uma manchete em linguagem simples', async () => {
     vi.stubGlobal('fetch', respondWith((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })));
 
