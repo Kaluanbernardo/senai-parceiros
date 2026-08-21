@@ -4,9 +4,12 @@ import {
   catalogEnrichmentCapabilities,
   commitCatalogEnrichment,
   createCatalogEnrichmentBatch,
+  getCatalogEnrichmentOverview,
   mergeCatalogEnrichment,
   processCatalogEnrichment,
   rollbackCatalogEnrichment,
+  skipCatalogEnrichmentTarget,
+  startCatalogEnrichment,
 } from './catalogEnrichment.js';
 import { catalogStore } from './catalogStore.js';
 import { getCatalog } from './catalog.js';
@@ -259,6 +262,91 @@ describe('catalog enrichment batches', () => {
       counts: { passed: 0, pending: 0, failed: 1 },
       next: null,
       failures: [{ name: 'Instituto demorado', error: 'provider_timeout' }],
+    });
+  });
+
+  it('inicia somente com os cards escolhidos pela pessoa', () => {
+    const first = { id: 'o-escolhido', nome: 'Instituto Escolhido', pais: 'Brasil' };
+    const second = { id: 'o-nao-escolhido', nome: 'Instituto Não Escolhido', pais: 'Brasil' };
+    catalogStore.replaceCategory('organization', [first, second], []);
+
+    const summary = startCatalogEnrichment({
+      provideCatalog: providerFromStore,
+      targetKeys: ['organization:o-escolhido'],
+      now: new Date('2026-08-20T12:00:00Z'),
+    });
+
+    expect(summary.counts).toMatchObject({ total: 1, pending: 1 });
+    expect(summary.next).toMatchObject({ key: 'organization:o-escolhido', name: 'Instituto Escolhido' });
+  });
+
+  it('expõe apenas os dados necessários para a seleção inicial', () => {
+    const shallow = { id: 'o-selecao', nome: 'Instituto para Seleção', pais: 'Brasil', _private: 'não expor' };
+    const overview = getCatalogEnrichmentOverview({ provideCatalog: () => ({ organization: [shallow], person: [] }) });
+
+    expect(overview.candidates).toEqual([
+      expect.objectContaining({ key: 'organization:o-selecao', name: 'Instituto para Seleção', category: 'organization', missing: expect.any(Array) }),
+    ]);
+    expect(overview.candidates[0].record).toBeUndefined();
+    expect(JSON.stringify(overview.candidates)).not.toContain('não expor');
+  });
+
+  it('recusa iniciar sem uma seleção explícita', () => {
+    catalogStore.replaceCategory('organization', [{ id: 'o-1', nome: 'Instituto 1', pais: 'Brasil' }], []);
+
+    expect(() => startCatalogEnrichment({ provideCatalog: providerFromStore, targetKeys: [] }))
+      .toThrow('enrichment_selection_required');
+  });
+
+  it('não retoma um lote legado que foi criado sem seleção explícita', () => {
+    const records = [1, 2].map((id) => ({ id: `o-legacy-${id}`, nome: `Instituto Legado ${id}`, pais: 'Brasil' }));
+    catalogStore.replaceCategory('organization', records, []);
+    const legacy = createCatalogEnrichmentBatch({ organization: records, person: [] });
+    delete legacy.interactionVersion;
+    catalogStore.setPending(legacy);
+
+    const summary = startCatalogEnrichment({
+      provideCatalog: providerFromStore,
+      targetKeys: ['organization:o-legacy-2'],
+    });
+
+    expect(summary.batchId).not.toBe(legacy.batchId);
+    expect(summary.counts).toMatchObject({ total: 1, pending: 1 });
+    expect(summary.next.key).toBe('organization:o-legacy-2');
+  });
+
+  it('pula somente o card atual e apresenta o próximo sem enriquecê-lo', () => {
+    const records = [1, 2].map((id) => ({ id: `o-skip-${id}`, nome: `Instituto ${id}`, pais: 'Brasil' }));
+    catalogStore.replaceCategory('organization', records, []);
+    const beforeSkip = catalogStore.getRecords('organization');
+    const batch = createCatalogEnrichmentBatch({ organization: records, person: [] });
+    catalogStore.setPending(batch);
+
+    const skipped = skipCatalogEnrichmentTarget(batch.batchId, batch.targets[0].key);
+
+    expect(skipped.counts).toMatchObject({ total: 2, skipped: 1, pending: 1 });
+    expect(skipped.next).toMatchObject({ key: batch.targets[1].key, name: 'Instituto 2' });
+    expect(catalogStore.getRecords('organization')).toEqual(beforeSkip);
+    expect(() => skipCatalogEnrichmentTarget(batch.batchId, batch.targets[0].key))
+      .toThrow('enrichment_target_not_current');
+  });
+
+  it('isola uma resposta JSON inválida do provedor no card atual', async () => {
+    const shallow = { id: 'o-provider-json', nome: 'Instituto com resposta vazia', pais: 'Brasil' };
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], person: [] });
+    catalogStore.setPending(batch);
+    const searchEvidence = async () => ({ sources: [], openAlex: null });
+    const generate = async () => { throw new Error('provider_invalid_response'); };
+
+    const firstAttempt = await processCatalogEnrichment(batch.batchId, {
+      searchEvidence,
+      generate,
+      enforceBudget: false,
+    });
+
+    expect(firstAttempt).toMatchObject({
+      counts: { passed: 0, pending: 1, failed: 0 },
+      next: { name: 'Instituto com resposta vazia', attempt: 2 },
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catalogEnrichmentActionState, catalogEnrichmentErrorMessage, catalogEnrichmentFailureReason, catalogEnrichmentRunningMessage } from './CatalogEnrichmentDialog.jsx';
+import { catalogEnrichmentErrorMessage, catalogEnrichmentFailureReason, catalogEnrichmentRunningMessage } from './CatalogEnrichmentDialog.jsx';
 
 describe('catalog enrichment errors', () => {
   it('explains a blocked card by its real processing error instead of hiding it behind the quality gaps', () => {
@@ -21,13 +21,10 @@ describe('catalog enrichment errors', () => {
     expect(catalogEnrichmentErrorMessage('provider_timeout')).not.toBe('Não foi possível concluir o enriquecimento agora.');
   });
 
-  it('shows that processing continues after a card becomes blocked', () => {
-    expect(catalogEnrichmentActionState({
-      running: true,
-      hasFailed: true,
-      pending: 43,
-      needsEnrichment: 67,
-    })).toEqual({ kind: 'running', label: 'Processando...' });
+  it('explica a resposta incompleta do provedor sem expor o erro de JSON', () => {
+    const message = catalogEnrichmentErrorMessage('provider_invalid_response');
+    expect(message).toContain('resposta incompleta');
+    expect(message).not.toContain('JSON');
   });
 
   it('identifies the active card and keeps visible time moving between responses', () => {
