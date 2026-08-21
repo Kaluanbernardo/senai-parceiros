@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CountryFlag } from '../../utils/countryCode';
-import { formatEntityAddedAt } from '../../utils/entityDate';
+import { formatEntityAddedAt, hasEntityAddedAt } from '../../utils/entityDate';
 import { DESIGN_TOKENS as T } from '../../design-system/tokens';
 
 /**
@@ -110,44 +110,50 @@ export default function EntityCard({
               : { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%' }
           }
         >
-          {!compact && (
-            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-              <Typography variant="overline" sx={{ color: tone.dark, fontSize: T.fontSize.overline }}>
-                {eyebrow}
-              </Typography>
-              <Stack direction="row" alignItems="center" gap={.75} sx={{ flexShrink: 0 }}>
-                {badge && (
-                  <Chip
-                    size="small"
-                    label={badge}
-                    sx={{ bgcolor: tone.soft, color: tone.dark, fontWeight: 700, height: 22, fontSize: T.fontSize.overline }}
-                  />
-                )}
-                {flags.includes('partnership') && (
-                  <Tooltip title="Já tem relação de parceria com o SENAI">
-                    <HandshakeOutlinedIcon sx={{ fontSize: 18, color: T.feedback.success }} />
-                  </Tooltip>
-                )}
-              </Stack>
-            </Stack>
-          )}
-
           <Box sx={compact ? { flex: '2 1 0', minWidth: 0 } : undefined}>
-            <Typography
-              variant={compact ? 'subtitle1' : 'h5'}
-              sx={{
-                mt: compact ? 0 : .5,
-                color: T.ink.strong,
-                // Nomes longos de instituição quebram; sem limite eles empurram
-                // o resumo para fora do cartão e desalinham a grade inteira.
-                display: '-webkit-box',
-                WebkitLineClamp: compact ? 1 : 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
-              {title}
-            </Typography>
+            {/* O nome abre o cartão.
+                O subtipo ocupava este lugar, em versalete colorido acima do
+                título, e em nove de cada dez pessoas físicas ele dizia a mesma
+                coisa: "PESQUISADOR(A) OU ACADÊMICO(A)". Um rótulo que não muda
+                de um registro para o outro não separa nada — e estava no ponto
+                de maior destaque, empurrando para baixo o que de fato
+                distingue. Ele desceu para o rodapé, junto das fichas de área,
+                onde continua legível e volta a informar quando de fato varia,
+                como nas pessoas jurídicas. */}
+            <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+              <Typography
+                variant={compact ? 'subtitle1' : 'h5'}
+                sx={{
+                  color: T.ink.strong,
+                  flex: 1,
+                  minWidth: 0,
+                  // Nomes longos de instituição quebram; sem limite eles empurram
+                  // o resumo para fora do cartão e desalinham a grade inteira.
+                  display: '-webkit-box',
+                  WebkitLineClamp: compact ? 1 : 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {title}
+              </Typography>
+              {!compact && (
+                <Stack direction="row" alignItems="center" gap={.75} sx={{ flexShrink: 0, mt: .25 }}>
+                  {badge && (
+                    <Chip
+                      size="small"
+                      label={badge}
+                      sx={{ bgcolor: tone.soft, color: tone.dark, fontWeight: 700, height: 22, fontSize: T.fontSize.overline, border: `1px solid ${tone.main}` }}
+                    />
+                  )}
+                  {flags.includes('partnership') && (
+                    <Tooltip title="Já tem relação de parceria com o SENAI">
+                      <HandshakeOutlinedIcon sx={{ fontSize: 18, color: T.feedback.success }} />
+                    </Tooltip>
+                  )}
+                </Stack>
+              )}
+            </Stack>
 
             <Stack direction="row" alignItems="center" gap={.75} sx={{ mt: .35, minWidth: 0 }}>
               {item?.pais && <CountryFlag pais={item.pais} size={13} />}
@@ -158,9 +164,15 @@ export default function EntityCard({
                 {[subtitle, item?.pais].filter(Boolean).join(' · ')}
               </Typography>
             </Stack>
-            <Typography variant="caption" sx={{ display: 'block', mt: .25, color: T.ink.subtle }}>
-              {dateLabel} {formatEntityAddedAt(item)}
-            </Typography>
+            {/* Só entra quando existe data. Sem esta condição a linha aparecia
+                em todos os cartões dizendo "Data não registrada" — uma linha
+                por cartão para informar que não há informação. A procedência
+                completa fica na ficha, que é onde ela é consultada. */}
+            {hasEntityAddedAt(item) && (
+              <Typography variant="caption" sx={{ display: 'block', mt: .25, color: T.ink.subtle }}>
+                {dateLabel} {formatEntityAddedAt(item)}
+              </Typography>
+            )}
           </Box>
 
           {compact && (
@@ -173,6 +185,13 @@ export default function EntityCard({
               // deixariam cada uma ilegível.
               sx={{ flex: '1 1 0', minWidth: 0, display: { xs: 'none', md: 'flex' } }}
             >
+              {eyebrow && (
+                <Chip
+                  label={eyebrow}
+                  size="small"
+                  sx={{ height: 21, fontSize: T.fontSize.overline, fontWeight: 700, bgcolor: T.surface.sunken, color: tone.dark, maxWidth: 190 }}
+                />
+              )}
               {tags.slice(0, 2).map((tag) => (
                 <Chip
                   key={tag}
@@ -218,9 +237,16 @@ export default function EntityCard({
               fica encostado à direita. `mt: auto` prende o rodapé embaixo,
               o que mantém a linha de base alinhada entre cartões de alturas
               diferentes na mesma fileira da grade. */}
-          {!compact && (visibleTags.length > 0 || link) && (
+          {!compact && (visibleTags.length > 0 || link || eyebrow) && (
             <Stack direction="row" alignItems="flex-end" gap={1} sx={{ mt: 'auto', pt: 1.5 }}>
               <Stack direction="row" gap={.5} flexWrap="wrap" sx={{ flex: 1, minWidth: 0 }}>
+                {eyebrow && (
+                  <Chip
+                    label={eyebrow}
+                    size="small"
+                    sx={{ height: 21, fontSize: T.fontSize.overline, fontWeight: 700, bgcolor: T.surface.sunken, color: tone.dark }}
+                  />
+                )}
                 {visibleTags.map((tag) => (
                   <Chip
                     key={tag}

@@ -60,7 +60,9 @@ export default function ToolCard({ icon, label, description, themeKey = 'selecti
               size="small"
               label={meta}
               variant="outlined"
-              sx={{ bgcolor: T.surface.raised, color: tone.dark, borderColor: tone.main, fontWeight: 700, height: 22, fontSize: T.fontSize.overline }}
+              // Sem limite, uma ficha longa atravessa a borda do cartão numa
+              // coluna estreita e deixa de ser legível.
+              sx={{ bgcolor: T.surface.raised, color: tone.dark, borderColor: tone.main, fontWeight: 700, height: 22, fontSize: T.fontSize.overline, maxWidth: '60%' }}
             />
           )}
         </Stack>

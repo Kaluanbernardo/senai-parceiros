@@ -131,7 +131,14 @@ export default function LoginPage() {
             </Stack>
           )}
 
+          {/* Quem não consegue entrar precisava de uma saída: "Usuário ou senha
+              inválidos" sem dizer a quem pedir acesso é um beco. O acesso é
+              corporativo, então a resposta cabe em uma linha. */}
           <Typography variant="caption" sx={{ display: 'block', mt: 3, color: T.ink.subtle }}>
+            O acesso é liberado pela equipe de TI do {BRAND_NAME.institution}. Se você não consegue entrar
+            ou esqueceu a senha, procure quem administra a ferramenta na sua área.
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1, color: T.ink.subtle }}>
             Suas respostas são usadas apenas durante esta sessão.
           </Typography>
         </Card>

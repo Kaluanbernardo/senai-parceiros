@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
@@ -20,6 +20,7 @@ import Alert from '@mui/material/Alert';
 import Grid from '@mui/material/Grid';
 import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
+import { Link as RouterLink } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { CATEGORY_LABELS, OBJECTIVE_LABELS } from '../domain/interview';
 import { InterviewPlanner, QUESTION_BANK, fieldLabel } from '../domain/interviewPlanner';
@@ -149,6 +150,20 @@ export default function SelectionPage() {
   const questions = reviewing ? reviewQuestions : (plannerState?.currentQuestion ? [plannerState.currentQuestion] : []);
   const question = reviewing ? reviewQuestions[questionIndex] : plannerState?.currentQuestion;
   const currentAnswer = plannerState?.answers?.[question?.id] || '';
+
+  // Progresso monotônico: o denominador é descoberto ao longo da entrevista, e
+  // uma barra que recua faz o sistema parecer quebrado.
+  const rawProgress = reviewing
+    ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100
+    : Math.min(100, ((conversation.length + capturedFields.length) / Math.max(conversation.length + capturedFields.length + remainingRequired.length, 1)) * 100);
+  const progressFloor = useRef(0);
+  if (reviewing) progressFloor.current = 0;
+  else progressFloor.current = Math.max(progressFloor.current, rawProgress);
+  const progressValue = reviewing ? rawProgress : progressFloor.current;
+
+  // Para onde ir quando a entrevista não puder continuar. Sem isto, a pessoa
+  // fica numa tela sem próximo passo depois de já ter respondido.
+  const catalogFallbackRoute = `${category === 'organization' ? '/catalogo/pessoas-juridicas' : '/catalogo/pessoas-fisicas'}${subtype ? `?subtipo=${encodeURIComponent(subtype)}` : ''}`;
 
   function chooseCategory(value) {
     setCategory(value);
@@ -487,17 +502,31 @@ export default function SelectionPage() {
         </Box>
         {reviewing && <Chip label="Revisando respostas" color="primary" variant="outlined" />}
       </Stack>
-      {/* O progresso acompanha o que já foi entendido, não uma cota de perguntas. */}
-      <LinearProgress variant="determinate" value={reviewing ? ((questionIndex + 1) / Math.max(reviewQuestions.length, 1)) * 100 : Math.min(100, ((conversation.length + capturedFields.length) / Math.max(conversation.length + capturedFields.length + remainingRequired.length, 1)) * 100)} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
+      {/* O progresso acompanha o que já foi entendido, não uma cota de
+          perguntas — e nunca anda para trás. O denominador muda a cada
+          resposta, então uma barra calculada direto do estado atual encolhia
+          quando a IA descobria que faltava entender mais uma coisa, o que lê
+          como erro do sistema, não como progresso. */}
+      <LinearProgress variant="determinate" value={progressValue} sx={{ mt: 2, height: 8, borderRadius: 4 }} />
+      <Typography variant="caption" sx={{ display: 'block', mt: .75, color: T.ink.subtle }}>
+        {reviewing
+          ? `Revisando ${questionIndex + 1} de ${reviewQuestions.length}`
+          : `Pergunta ${conversation.length + 1}${remainingRequired.length ? ` · faltam cerca de ${remainingRequired.length}` : ' · quase lá'}`}
+      </Typography>
       {!reviewing && adaptiveNotice && (
         <Alert severity={adaptiveNotice.severity} sx={{ mt: 2 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1}>
             <Typography variant="body2" sx={{ flex: 1 }}>{adaptiveNotice.message}</Typography>
-            {/* Não há mais "seguir com uma pergunta padrão": sem IA a entrevista
-                não avança, e oferecer isso prometeria algo que não existe. */}
+            {/* Não há "seguir com uma pergunta padrão": sem IA a entrevista não
+                avança, e oferecer isso prometeria algo que não existe. O que
+                existe é o catálogo — e parar numa tela sem próximo passo é o
+                pior desfecho possível para quem já respondeu quatro perguntas. */}
             {adaptiveNotice.retryable && adaptiveRetry && (
               <Button size="small" variant="outlined" onClick={() => advanceWithAdaptiveProvider(adaptiveRetry.state, adaptiveRetry.answer)} disabled={busy}>Tentar novamente</Button>
             )}
+            <Button size="small" component={RouterLink} to={catalogFallbackRoute}>
+              Procurar no catálogo
+            </Button>
           </Stack>
         </Alert>
       )}

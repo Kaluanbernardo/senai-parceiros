@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import CatalogShell from '../components/catalog/CatalogShell';
+import DetailPanel from '../components/catalog/DetailPanel';
 import EntityCard from '../components/catalog/EntityCard';
-import FilterBar from '../components/catalog/FilterBar';
-import DetailModal from '../components/DetailModal';
 import { useCatalogState } from '../app/useCatalogState';
 import { useData } from '../context/DataContext';
+import { resolveCatalogSelection } from '../domain/catalogSelection';
 import {
   collectFacetValues,
   collectTokenValues,
@@ -35,6 +35,10 @@ const STATE_SCHEMA = Object.freeze({
   genero: { type: 'single', default: 'todos' },
   ordem: { type: 'single', default: 'relevance' },
   exibir: { type: 'single', default: 'grid' },
+  // O registro aberto entra na URL junto dos filtros. Sem isto dava para
+  // compartilhar uma lista filtrada e não dava para compartilhar uma pessoa,
+  // e o "voltar" do navegador saía da lista em vez de fechar a ficha.
+  perfil: { type: 'text', default: '' },
 });
 
 const FILTER_DEFINITIONS = [
@@ -79,8 +83,6 @@ function profileLink(item) {
 export default function PesquisadoresPage() {
   const { pesquisadores } = useData();
   const { state, setValue, removeValue, clear } = useCatalogState(STATE_SCHEMA);
-  const [expanded, setExpanded] = useState(false);
-  const [selected, setSelected] = useState(null);
 
   const countries = useMemo(() => collectFacetValues(pesquisadores, 'pais'), [pesquisadores]);
   const themes = useMemo(() => collectTokenValues(pesquisadores, 'areas'), [pesquisadores]);
@@ -110,6 +112,8 @@ export default function PesquisadoresPage() {
 
   const removeChip = (chip) => (chip.group === 'query' ? setValue('q', '') : removeValue(chip.group, chip.value));
 
+  const selection = resolveCatalogSelection(filtered, pesquisadores, state.perfil);
+
   return (
     <>
       <CatalogShell
@@ -123,47 +127,40 @@ export default function PesquisadoresPage() {
         onSortChange={(value) => setValue('ordem', value)}
         view={state.exibir}
         onViewChange={(value) => setValue('exibir', value)}
-        hasActiveFilters={activeChips.length > 0}
         onClearFilters={clear}
         emptyIcon={<ScienceOutlinedIcon />}
-        filterBar={
-          <FilterBar
-            query={state.q}
-            onQueryChange={(value) => setValue('q', value)}
-            placeholder="Buscar por nome, subtipo, cargo, instituição, atuação ou tema"
-            expanded={expanded}
-            onToggleExpanded={() => setExpanded((current) => !current)}
-            activeChips={activeChips}
-            onRemoveChip={removeChip}
-            onClearAll={clear}
-            facets={[
-              { key: 'subtipo', label: 'Subtipo', options: PERSON_SUBTYPES, value: state.subtipo, onChange: (next) => setValue('subtipo', next) },
-              { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
-              { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
-              { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
-              { key: 'atuacao', label: 'Atuação', options: profiles, value: state.atuacao, onChange: (next) => setValue('atuacao', next) },
-            ]}
-          >
-            <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-              <Typography variant="caption" sx={{ color: T.ink.muted, fontWeight: 700 }}>Gênero</Typography>
-              {GENDER_OPTIONS.map((option) => {
-                const active = state.genero === option.value;
-                return (
-                  <Chip
-                    key={option.value}
-                    label={option.label}
-                    size="small"
-                    variant={active ? 'filled' : 'outlined'}
-                    onClick={() => setValue('genero', option.value)}
-                    // O estado selecionado não pode ser só a cor de fundo: quem
-                    // não distingue as cores precisa do `aria-pressed`.
-                    aria-pressed={active}
-                    sx={active ? { bgcolor: T.tools.catalog.main, color: '#fff' } : undefined}
-                  />
-                );
-              })}
-            </Stack>
-          </FilterBar>
+        query={state.q}
+        onQueryChange={(value) => setValue('q', value)}
+        searchPlaceholder="Buscar por nome, subtipo, cargo, instituição, atuação ou tema"
+        activeChips={activeChips}
+        onRemoveChip={removeChip}
+        facets={[
+          { key: 'subtipo', label: 'Subtipo', options: PERSON_SUBTYPES, value: state.subtipo, onChange: (next) => setValue('subtipo', next) },
+          { key: 'pais', label: 'País', options: countries, value: state.pais, onChange: (next) => setValue('pais', next) },
+          { key: 'area', label: 'Área de atuação', options: CATEGORIAS, value: state.area, onChange: (next) => setValue('area', next) },
+          { key: 'tema', label: 'Tema', options: themes, value: state.tema, onChange: (next) => setValue('tema', next) },
+          { key: 'atuacao', label: 'Atuação', options: profiles, value: state.atuacao, onChange: (next) => setValue('atuacao', next) },
+        ]}
+        filterExtras={
+          <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+            <Typography variant="caption" sx={{ color: T.ink.muted, fontWeight: 700 }}>Gênero</Typography>
+            {GENDER_OPTIONS.map((option) => {
+              const active = state.genero === option.value;
+              return (
+                <Chip
+                  key={option.value}
+                  label={option.label}
+                  size="small"
+                  variant={active ? 'filled' : 'outlined'}
+                  onClick={() => setValue('genero', option.value)}
+                  // O estado selecionado não pode ser só a cor de fundo: quem
+                  // não distingue as cores precisa do `aria-pressed`.
+                  aria-pressed={active}
+                  sx={active ? { bgcolor: T.tools.catalog.main, color: '#fff' } : undefined}
+                />
+              );
+            })}
+          </Stack>
         }
         renderItem={(item) => (
           <EntityCard
@@ -177,11 +174,18 @@ export default function PesquisadoresPage() {
             tags={getCategoriasFromAreas(item.areas)}
             badge={item.h_index ? `h-index ${item.h_index}` : undefined}
             link={profileLink(item)}
-            onClick={() => setSelected(item)}
+            onClick={() => setValue('perfil', String(item.id))}
           />
         )}
       />
-      <DetailModal open={Boolean(selected)} onClose={() => setSelected(null)} item={selected} type="person" />
+      <DetailPanel
+        item={selection.item}
+        type="person"
+        onClose={() => setValue('perfil', '')}
+        position={{ index: selection.index, total: selection.total }}
+        onPrevious={() => selection.previousId && setValue('perfil', selection.previousId)}
+        onNext={() => selection.nextId && setValue('perfil', selection.nextId)}
+      />
     </>
   );
 }

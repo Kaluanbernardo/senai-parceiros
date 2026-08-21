@@ -24,7 +24,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CountryFlag } from '../utils/countryCode';
 import { getDisplayLogoUrl } from '../utils/media';
-import { formatEntityAddedAt } from '../utils/entityDate';
+import { formatEntityAddedAt, hasEntityAddedAt } from '../utils/entityDate';
+import { getComparator } from '../utils/tableSort';
 
 const COLUMNS = {
   legalEntity: [
@@ -50,50 +51,36 @@ const COLUMNS = {
     { id: 'id', label: '#', width: 50 },
     { id: 'logo', label: '', width: 50, sortable: false },
     { id: 'nome', label: 'Nome', flex: true },
-    { id: 'pais', label: 'Pais', width: 130 },
+    { id: 'pais', label: 'País', width: 130 },
     { id: 'natureza', label: 'Natureza', width: 100 },
     { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
     { id: 'relacao_status', label: 'Parceria', width: 100, sortable: false },
     { id: 'website', label: 'Site', width: 60, sortable: false },
-    { id: 'actions', label: 'Acoes', width: 100, sortable: false },
+    { id: 'actions', label: 'Ações', width: 100, sortable: false },
   ],
   escola: [
     { id: 'id', label: '#', width: 50 },
     { id: 'logo', label: '', width: 50, sortable: false },
-    { id: 'instituicao', label: 'Instituicao', flex: true },
-    { id: 'pais', label: 'Pais', width: 130 },
-    { id: 'areas', label: 'Areas', width: 200 },
+    { id: 'instituicao', label: 'Instituição', flex: true },
+    { id: 'pais', label: 'País', width: 130 },
+    { id: 'areas', label: 'Áreas', width: 200 },
     { id: 'adicionadoEm', label: 'Adicionada em', width: 145 },
     { id: 'website', label: 'Site', width: 60, sortable: false },
-    { id: 'actions', label: 'Acoes', width: 100, sortable: false },
+    { id: 'actions', label: 'Ações', width: 100, sortable: false },
   ],
   pesquisador: [
     { id: 'id', label: '#', width: 50 },
     { id: 'nome', label: 'Nome', flex: true },
-    { id: 'instituicao', label: 'Instituicao', width: 180 },
-    { id: 'pais', label: 'Pais', width: 130 },
+    { id: 'instituicao', label: 'Instituição', width: 180 },
+    { id: 'pais', label: 'País', width: 130 },
     { id: 'h_index', label: 'h-index', width: 80 },
     { id: 'adicionadoEm', label: 'Adicionado em', width: 145 },
     { id: 'scholar', label: 'Scholar', width: 60, sortable: false },
-    { id: 'actions', label: 'Acoes', width: 100, sortable: false },
+    { id: 'actions', label: 'Ações', width: 100, sortable: false },
   ],
 };
 
-const naturezaColors = { 'Publica': 'info', 'Privada': 'warning', 'PPP': 'success' };
-
-function descendingComparator(a, b, orderBy) {
-  const aVal = (a[orderBy] || '').toString().toLowerCase();
-  const bVal = (b[orderBy] || '').toString().toLowerCase();
-  if (bVal < aVal) return -1;
-  if (bVal > aVal) return 1;
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
+const naturezaColors = { 'Pública': 'info', 'Privada': 'warning', 'PPP': 'success' };
 
 export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
   const [search, setSearch] = useState('');
@@ -188,7 +175,7 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
         const has = item.relacao && !item.relacao.includes('Sem registro');
         return (
           <Chip
-            label={has ? 'Sim' : 'Nao'}
+            label={has ? 'Sim' : 'Não'}
             size="small"
             color={has ? 'success' : 'default'}
             variant={has ? 'filled' : 'outlined'}
@@ -210,7 +197,9 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
       case 'h_index':
         return <Typography variant="body2" noWrap>{item.h_index || '-'}</Typography>;
       case 'adicionadoEm':
-        return <Typography variant="body2" color="text.secondary" noWrap>{formatEntityAddedAt(item)}</Typography>;
+        // Numa tabela, a célula vazia já diz "não registrada": a frase inteira
+        // repetida em todas as linhas só rouba largura das colunas que informam.
+        return <Typography variant="body2" color="text.secondary" noWrap>{hasEntityAddedAt(item) ? formatEntityAddedAt(item) : '—'}</Typography>;
       case 'website':
         return item.website ? (
           <Tooltip title={item.website}>
@@ -265,7 +254,7 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
       <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Buscar em todos os campos..."
+          placeholder="Buscar em todos os campos…"
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(0); }}
           sx={{ flex: 1, maxWidth: 400 }}
@@ -283,14 +272,13 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
           {filtered.length} de {data.length} registros
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={onAdd}
-          size="small"
-        >
-          Adicionar
-        </Button>
+        {/* O cabeçalho da página é dono da ação de criar; repetida aqui, a
+            mesma ação aparecia duas vezes na mesma tela. */}
+        {onAdd && (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd} size="small">
+            Adicionar
+          </Button>
+        )}
       </Box>
 
       {/* Table */}
@@ -307,6 +295,11 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
                     fontWeight: 700,
                     bgcolor: 'grey.100',
                     ...(col.flex ? { width: '100%' } : {}),
+                    // Editar e excluir ficam presos à direita. Sem isto a
+                    // coluna era cortada pela borda da tabela em 1440px: o
+                    // botão de excluir só aparecia para quem rolasse na
+                    // horizontal, e nada indicava que havia algo lá.
+                    ...(col.id === 'actions' ? { position: 'sticky', right: 0, zIndex: 3 } : {}),
                   }}
                   sortDirection={orderBy === col.id ? order : false}
                 >
@@ -334,7 +327,15 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
                 onDoubleClick={() => onEdit(item)}
               >
                 {columns.map(col => (
-                  <TableCell key={col.id} sx={{ py: 1 }}>
+                  <TableCell
+                    key={col.id}
+                    sx={{
+                      py: 1,
+                      ...(col.id === 'actions'
+                        ? { position: 'sticky', right: 0, zIndex: 1, bgcolor: 'background.paper', borderLeft: 1, borderLeftColor: 'divider' }
+                        : {}),
+                    }}
+                  >
                     {renderCell(item, col.id)}
                   </TableCell>
                 ))}
@@ -361,7 +362,7 @@ export default function AdminTable({ data, type, onEdit, onDelete, onAdd }) {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[10, 25, 50, 100]}
-        labelRowsPerPage="Linhas por pagina:"
+        labelRowsPerPage="Linhas por página:"
         labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
       />
     </Box>
