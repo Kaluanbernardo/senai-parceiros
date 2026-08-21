@@ -306,7 +306,7 @@ export default function SelectionPage() {
     return (
       <PageContainer width="page" tool="selection">
         <PageHeader
-          eyebrow="ENCONTRAR PARCEIROS"
+          eyebrow="SELEÇÃO DE PARCEIROS"
           title="Quem você precisa encontrar?"
           description="Faça duas escolhas e responda a perguntas curtas. No final, você receberá opções para conhecer e comparar."
           accent="selection"
