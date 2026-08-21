@@ -310,7 +310,7 @@ function emptyStats() {
   return { pending: 0, candidates: 0, reused: 0, batches: 0, rewritten: 0, rejected: 0, failedBatches: 0, deadlineReached: false, budgetExceeded: false, errors: [] };
 }
 
-export async function editorializeRadarItems(items = [], { previousItems = [], deadlineAt: runDeadlineAt = null } = {}) {
+export async function editorializeRadarItems(items = [], { previousItems = [], deadlineAt: runDeadlineAt = null, batchTimeoutMs: requestedBatchTimeoutMs = null } = {}) {
   const result = reuseStoredEditorials(Array.isArray(items) ? items : [], previousItems);
   const stats = emptyStats();
   stats.reused = result.filter((item) => item.editorialStatus === 'ai').length;
@@ -363,7 +363,9 @@ export async function editorializeRadarItems(items = [], { previousItems = [], d
   // Tiny test/local budgets should still get a chance to run; the production
   // buffer applies when the caller actually granted enough time to preserve it.
   const deadlineBufferMs = availableAtStart > configuredBufferMs ? configuredBufferMs : 0;
-  const configuredBatchTimeoutMs = Math.max(1, Number(process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS || DEFAULT_BATCH_TIMEOUT_MS));
+  const configuredBatchTimeoutMs = Math.max(1, Number(requestedBatchTimeoutMs
+    || process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS
+    || DEFAULT_BATCH_TIMEOUT_MS));
 
   for (let index = 0; index < candidates.length; index += EDITORIAL_BATCH_SIZE) {
     if (!canUseAi('radar-editorial')) {

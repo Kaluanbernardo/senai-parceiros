@@ -677,6 +677,32 @@ describe('reescrita editorial do Radar', () => {
     expect(stats).toMatchObject({ rewritten: 6, failedBatches: 1, deadlineReached: false, errors: ['provider_timeout'] });
   });
 
+  it('permite que a etapa editorial isolada amplie o timeout do lote', async () => {
+    process.env.RADAR_EDITORIAL_BATCH_TIMEOUT_MS = '5';
+    vi.stubGlobal('fetch', vi.fn(async (_url, request) => {
+      const requested = JSON.parse(JSON.parse(request.body).messages.at(-1).content);
+      return await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve({
+          ok: true,
+          json: async () => ({
+            model: 'test/model',
+            usage: { total_tokens: 100 },
+            choices: [{ message: { content: JSON.stringify({ items: requested.map((item) => ({ id: item.id, title: EDITORIAL_TITLE, summary: EDITORIAL_SUMMARY, topics: item.temas })) }) } }],
+          }),
+        }), 20);
+        request.signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+        }, { once: true });
+      });
+    }));
+
+    const { items, stats } = await editorializeRadarItems([gazetteItem('lento')], { batchTimeoutMs: 100 });
+
+    expect(stats).toMatchObject({ rewritten: 1, failedBatches: 0 });
+    expect(items[0].editorialStatus).toBe('ai');
+  });
+
   it('respeita o prazo do chamador quando ele é mais curto que o próprio', async () => {
     // Collection has already spent most of the platform's budget by the time
     // this pass starts, so a budget measured from here would start from the
