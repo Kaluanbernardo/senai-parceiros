@@ -78,7 +78,7 @@ export default function AppShell({ children, user, onLogout }) {
             color="inherit"
             aria-label="Abrir menu de navegação"
             onClick={() => setDrawerOpen(true)}
-            sx={{ display: { md: 'none' } }}
+            sx={{ display: { lg: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
@@ -93,11 +93,21 @@ export default function AppShell({ children, user, onLogout }) {
 
           {/* Navegação principal no desktop. `nav` com nome acessível para o
               leitor de tela distinguir esta lista da gaveta e da trilha. */}
+          {/* A barra horizontal só aparece onde os cinco rótulos cabem
+              inteiros. Entre 900 e 1080px eles não cabiam: o `Stack` encolhia
+              os botões enquanto o rótulo seguia `nowrap`, e as ferramentas
+              apareciam escritas umas por cima das outras — "Preparar pesquisa"
+              passava 25px da própria caixa.
+
+              Encolher os botões não resolve, só troca a sobreposição por itens
+              escondidos sem aviso atrás dos controles da direita. Nessa faixa
+              quem responde é a gaveta, que já existe, lista tudo e ainda traz
+              as categorias do catálogo. */}
           <Stack
             component="nav"
             aria-label="Ferramentas"
             direction="row"
-            sx={{ display: { xs: 'none', md: 'flex' }, gap: .25, flex: 1, minWidth: 0 }}
+            sx={{ display: { xs: 'none', lg: 'flex' }, gap: .25, flex: 1, minWidth: 0 }}
           >
             {navTools.map((tool) => {
               const active = isActive(location.pathname, tool.route, tool.matchPrefix);
@@ -114,6 +124,7 @@ export default function AppShell({ children, user, onLogout }) {
                     bgcolor: active ? tone.main : 'transparent',
                     fontWeight: active ? 750 : 600,
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     '&:hover': { bgcolor: active ? tone.dark : 'rgba(255,255,255,.10)', color: T.ink.onInverted },
                     '&:focus-visible': { outline: 'none', boxShadow: T.focus.ringInverted },
                   }}
