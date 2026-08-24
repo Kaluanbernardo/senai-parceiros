@@ -582,6 +582,13 @@ function isRecoverableTargetError(error) {
   ]).has(errorCode(error));
 }
 
+function isAbortError(error, signal) {
+  return Boolean(signal?.aborted)
+    || error?.name === 'AbortError'
+    || error?.name === 'TimeoutError'
+    || /\baborted\b/i.test(String(error?.message || ''));
+}
+
 function evidenceWithHostedCitations(evidence, generated, citations) {
   const generatedUrls = new Set([
     ...(Array.isArray(generated?.fontes) ? generated.fontes : []),
@@ -634,7 +641,7 @@ export async function processCatalogEnrichment(batchId, {
       signal,
     });
   } catch (error) {
-    if (signal.aborted || error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+    if (isAbortError(error, signal)) {
       if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
       return recordSelectedTargetError(batch, targets, new Error('provider_timeout'));
     }

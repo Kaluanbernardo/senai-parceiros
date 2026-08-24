@@ -283,6 +283,23 @@ describe('catalog enrichment batches', () => {
     });
   });
 
+  it('classifies runtimes that report abort only in the exception message as timeout', async () => {
+    const shallow = { id: 'o-aborted-message', nome: 'Instituto interrompido', pais: 'Brasil' };
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], school: [], person: [] });
+    catalogStore.setPending(batch);
+
+    const processed = await processCatalogEnrichment(batch.batchId, {
+      searchEvidence: async () => ({ sources: [], openAlex: null }),
+      generate: async () => { throw new Error('This operation was aborted'); },
+      enforceBudget: false,
+      timeoutMs: 5_000,
+    });
+
+    expect(processed.failures).toEqual([]);
+    expect(processed.next).toMatchObject({ name: 'Instituto interrompido', attempt: 2 });
+    expect(catalogStore.getPending(batch.batchId).targets[0].error).toBe('provider_timeout');
+  });
+
   it('inicia somente com os cards escolhidos pela pessoa', () => {
     const first = { id: 'o-escolhido', nome: 'Instituto Escolhido', pais: 'Brasil' };
     const second = { id: 'o-nao-escolhido', nome: 'Instituto Não Escolhido', pais: 'Brasil' };
