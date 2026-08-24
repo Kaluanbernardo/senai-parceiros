@@ -11,6 +11,12 @@ import {
 import { flushCatalogStore, hydrateCatalogStore } from '../../lib/catalogImport.js';
 import { flushUsageBudget, hydrateUsageBudget } from '../../lib/usageBudget.js';
 
+function isAbortError(error) {
+  return error?.name === 'AbortError'
+    || error?.name === 'TimeoutError'
+    || /\baborted\b/i.test(String(error?.message || ''));
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (!['GET', 'POST'].includes(req.method)) return methodNotAllowed(res, ['GET', 'POST']);
@@ -32,7 +38,9 @@ export default async function handler(req, res) {
     await Promise.all([flushCatalogStore(), flushUsageBudget()]);
     return res.status(200).json(result);
   } catch (error) {
-    const code = String(error?.message || 'catalog_enrichment_failed').slice(0, 100);
+    const code = isAbortError(error)
+      ? 'provider_timeout'
+      : String(error?.message || 'catalog_enrichment_failed').slice(0, 100);
     console.error('catalog_enrichment_failed', {
       code,
       status: Number(error?.status || 0) || undefined,
