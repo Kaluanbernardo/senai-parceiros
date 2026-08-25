@@ -17,6 +17,10 @@ export function countResearchCandidates(previews = []) {
   return flattenResearchPreviews(previews).filter((row) => row?.status ? row.status === 'new' : Boolean(row?.record?.nome || row?.record?.instituicao)).length;
 }
 
+export function visibleResearchPreviews(previews = [], busy = false) {
+  return busy ? [] : previews;
+}
+
 export function nextResearchBatch(previews = [], requestedQuantity = CATALOG_RESEARCH_QUANTITIES[0]) {
   const rows = flattenResearchPreviews(previews);
   const remaining = Math.max(0, Number(requestedQuantity) - countResearchCandidates(previews));

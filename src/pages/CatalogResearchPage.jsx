@@ -37,6 +37,7 @@ import {
   groupApprovedResearchDecisions,
   researchDecisionKey,
   runCatalogResearchBatches,
+  visibleResearchPreviews,
 } from '../domain/catalogResearchFlow';
 import { countApprovedDecisions } from '../domain/catalogResearchReview';
 import { buildLegalEntityCatalog } from '../domain/legalEntityCatalog';
@@ -95,7 +96,8 @@ export default function CatalogResearchPage() {
   // papel, e a revisão é que passa a precisar da tela inteira.
   const [formOpen, setFormOpen] = useState(false);
 
-  const rows = useMemo(() => flattenResearchPreviews(previews), [previews]);
+  const reviewPreviews = visibleResearchPreviews(previews, busy);
+  const rows = useMemo(() => flattenResearchPreviews(reviewPreviews), [reviewPreviews]);
   const approvedCount = countApprovedDecisions(decisions);
   const previewSummary = { cards: countResearchCandidates(previews) };
   const missingRequirement = !form.subtype
@@ -248,7 +250,7 @@ export default function CatalogResearchPage() {
     }
   }
 
-  const hasResults = previews.length > 0;
+  const hasResults = reviewPreviews.length > 0;
   const optionalFilled = [form.purpose, form.prioritizationFactors, form.exclusionFactors].filter((value) => value.trim()).length;
 
   const formCard = (
@@ -471,7 +473,7 @@ export default function CatalogResearchPage() {
       )}
 
       <Box sx={{ mt: 3 }}>
-          {previews.length > 0 && (
+          {reviewPreviews.length > 0 && (
             <>
               {/* Barra do lote.
                   Depois de uma espera que passa do minuto, o primeiro efeito

@@ -8,6 +8,7 @@ import {
   nextResearchBatch,
   researchDecisionKey,
   runCatalogResearchBatches,
+  visibleResearchPreviews,
 } from './catalogResearchFlow.js';
 
 describe('catalog deep-research flow', () => {
@@ -59,6 +60,12 @@ describe('catalog deep-research flow', () => {
     expect(calls.map((call) => call.batchIndex)).toEqual([0, 1, 2, 3]);
     expect(calls.map((call) => call.excludeCandidates.length)).toEqual([0, 5, 10, 15]);
     expect(result).toMatchObject({ cards: 20, complete: true });
+  });
+
+  it('holds completed batches until the whole requested quantity is ready', () => {
+    const previews = [{ batchId: 'batch-0', rows: [{ rowNumber: 1, record: { nome: 'Parcial' } }] }];
+    expect(visibleResearchPreviews(previews, true)).toEqual([]);
+    expect(visibleResearchPreviews(previews, false)).toBe(previews);
   });
 
   it('runs a 10-card request as two sequential batches', async () => {
