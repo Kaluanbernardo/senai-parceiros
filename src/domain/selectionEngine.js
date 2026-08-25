@@ -535,7 +535,13 @@ const DIMENSION_LABELS = Object.freeze({
 });
 
 function sortEntries(entries) {
-  return [...entries].sort((a, b) => b.total - a.total || b.strategicValue - a.strategicValue);
+  return [...entries].sort((a, b) => {
+    const total = (Number(b.total) || 0) - (Number(a.total) || 0);
+    if (total) return total;
+    const strategic = (Number(b.strategicValue) || 0) - (Number(a.strategicValue) || 0);
+    if (strategic) return strategic;
+    return String(a.candidate?.id ?? '').localeCompare(String(b.candidate?.id ?? ''), 'pt-BR', { numeric: true });
+  });
 }
 
 export function rankProviderCandidates(entries, limit = 30) {
@@ -594,7 +600,10 @@ export function selectShortlist(entries, { minimum = 5, maximum = 10, threshold 
     if (selected.length >= target) break;
     if (!selected.includes(entry)) selected.push(entry);
   }
-  return selected;
+  // Diversidade decide quem entra; a posição continua sendo exclusivamente
+  // de mérito. Sem esta ordenação, um registro com nota menor podia ocupar o
+  // topo só por pertencer a uma instituição diferente.
+  return sortEntries(selected);
 }
 
 function exclusionReport(entries, shortlist, threshold) {

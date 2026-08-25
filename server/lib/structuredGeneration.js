@@ -97,7 +97,7 @@ function webSearchSources(message) {
       content: String(annotation.url_citation.content || '').slice(0, 1200),
     }));
 }
-function providerConfig() {
+function providerConfig({ hostedWebSearch = false } = {}) {
   const preferred = String(process.env.AI_PROVIDER || '').trim().toLowerCase();
   const azureEndpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
   const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_MODEL || '';
@@ -126,6 +126,7 @@ function providerConfig() {
       endpoint: azureUrl,
     },
   };
+  if (hostedWebSearch) return [all.openrouter].filter((item) => item.key && item.endpoint);
   const order = preferred === 'azure'
     ? ['azure']
     : preferred === 'openrouter'
@@ -334,7 +335,7 @@ export async function generateStructured({ task = 'structured_generation', schem
   // A ferramenta hospedada de busca usa o contrato do OpenRouter. Quando ela é
   // requerida, cair silenciosamente para OpenAI/Azure produziria uma resposta
   // sem pesquisa atual, apesar de a interface afirmar o contrário.
-  const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
+  const providers = providerConfig({ hostedWebSearch: Boolean(searchTool) });
   if (!providers.length) throw new Error('ai_not_configured');
   const cacheable = /^(?:catalog_|radar_)/.test(String(task)) && !searchTool;
   const cacheModel = modelForTask(task, requestedModel, providers[0].model);

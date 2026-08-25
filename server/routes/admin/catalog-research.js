@@ -1,4 +1,4 @@
-import { consumeCatalogResearchAttempt, flushRateLimitStore, hydrateRateLimitStore } from '../../lib/auth.js';
+import { consumeCatalogResearchAttempt } from '../../lib/auth.js';
 import { getCatalog } from '../../lib/catalog.js';
 import { catalogStore } from '../../lib/catalogStore.js';
 import { flushCatalogStore, hydrateCatalogStore, listPendingResearchBatches, previewCatalogImport } from '../../lib/catalogImport.js';
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   if (!session) return;
 
   if (req.method === 'GET') {
-    await Promise.all([hydrateCatalogStore({ force: true }), hydrateRateLimitStore({ force: true })]);
+    await hydrateCatalogStore({ force: true });
     return res.status(200).json({
       pending: listPendingResearchBatches().map((preview) => responseForPreview(preview, preview.metadata?.trace || {}, true)),
     });
@@ -56,7 +56,6 @@ export default async function handler(req, res) {
   try {
     await Promise.all([
       hydrateCatalogStore({ force: true }),
-      hydrateRateLimitStore({ force: true }),
       hydrateUsageBudget({ force: true }),
     ]);
     const payload = await readJson(req, 32 * 1024);
@@ -70,7 +69,6 @@ export default async function handler(req, res) {
       if (pending) return res.status(200).json(responseForPreview(pending, pending.metadata?.trace || {}, true));
     }
     const limited = await consumeCatalogResearchAttempt(req, session);
-    await flushRateLimitStore();
     if (limited) return res.status(429).json({ error: 'too_many_research_attempts' });
     if (!canUseAi('catalog_research')) return res.status(429).json({ error: 'ai_budget_exceeded' });
 

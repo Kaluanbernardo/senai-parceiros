@@ -1,5 +1,5 @@
 import { authenticateEntraToken } from '../../server/lib/entra.js';
-import { completeLogin, consumeLoginAttempt, getAuthProvider, hydrateRateLimitStore } from '../../server/lib/auth.js';
+import { completeLogin, consumeLoginAttempt, getAuthProvider } from '../../server/lib/auth.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
 
 export default async function handler(req, res) {
@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res);
   if (!requireSameOrigin(req, res)) return;
   if (getAuthProvider() !== 'entra') return res.status(404).json({ error: 'corporate_identity_login_disabled' });
-  await hydrateRateLimitStore({ force: true });
   try {
     const body = await readJson(req).catch(() => ({}));
     const bearer = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '').trim();

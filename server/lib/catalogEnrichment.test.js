@@ -133,6 +133,23 @@ describe('catalog enrichment batches', () => {
     expect(catalogStore.getRecords('organization')).toEqual([expect.objectContaining(shallow)]);
   });
 
+  it('returns an idempotent result when the commit response is retried', async () => {
+    const shallow = { id: 'o-idempotent', nome: 'Instituto Idempotente', pais: 'Brasil' };
+    catalogStore.replaceCategory('organization', [shallow], []);
+    const batch = createCatalogEnrichmentBatch(providerFromStore());
+    catalogStore.setPending(batch);
+    await processCatalogEnrichment(batch.batchId, {
+      searchEvidence: async () => ({ sources: [{ url: 'https://example.org', content: 'Fonte pública.' }], openAlex: null }),
+      generate: async () => ({ data: { items: [completeOrganization(batch.targets[0].key)] }, trace: {} }),
+      enforceBudget: false,
+    });
+
+    const committed = commitCatalogEnrichment(batch.batchId, { provideCatalog: providerFromStore });
+    const retried = commitCatalogEnrichment(batch.batchId, { provideCatalog: providerFromStore, expectedRevision: committed.revision });
+
+    expect(retried).toMatchObject({ idempotent: true, counts: { committed: 1 } });
+  });
+
   it('reports only effective public field changes', () => {
     expect(catalogEnrichmentChanges(
       { id: 'o-1', nome: 'Instituto', descricao: 'Curta', areas: ['EPT'], _source: 'fixture' },
@@ -181,16 +198,14 @@ describe('catalog enrichment batches', () => {
     expect(catalogStore.getPending(batch.batchId)).not.toBeNull();
   });
 
-  it('uses cited OpenRouter search when Tavily is unavailable', async () => {
+  it('uses cited OpenRouter hosted search without a secondary search provider', async () => {
     const previousOpenRouterKey = process.env.OPENROUTER_API_KEY;
-    const previousTavilyKey = process.env.TAVILY_API_KEY;
     process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
-    delete process.env.TAVILY_API_KEY;
     try {
       expect(catalogEnrichmentCapabilities()).toMatchObject({
         ai: true,
         search: true,
-        searchProvider: 'openrouter',
+        searchProvider: 'openrouter_web_search',
         ready: true,
       });
       const shallow = { id: 'o-hosted-search', nome: 'Instituto com busca hospedada', pais: 'Brasil' };
@@ -213,14 +228,12 @@ describe('catalog enrichment batches', () => {
       expect(generationRequest.model).toBe('openai/gpt-4.1-mini');
       expect(generationRequest.requireParameters).toBe(false);
       expect(generationRequest.webSearch).toEqual({ engine: 'native', maxResults: 5, maxTotalResults: 8, searchContextSize: 'medium' });
-      expect(generationRequest.maxOutputTokens).toBe(2600);
+      expect(generationRequest.maxOutputTokens).toBe(4200);
       expect(generationRequest.messages[0].content).toContain('pesquisa web hospedada');
       expect(processed.readyToCommit).toBe(true);
     } finally {
       if (previousOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
       else process.env.OPENROUTER_API_KEY = previousOpenRouterKey;
-      if (previousTavilyKey === undefined) delete process.env.TAVILY_API_KEY;
-      else process.env.TAVILY_API_KEY = previousTavilyKey;
     }
   });
 
@@ -281,6 +294,25 @@ describe('catalog enrichment batches', () => {
       next: null,
       failures: [{ name: 'Instituto demorado', error: 'provider_timeout' }],
     });
+  });
+
+  it('requires OpenRouter for hosted search instead of advertising an unrelated provider', () => {
+    const previousOpenAiKey = process.env.OPENAI_API_KEY;
+    const previousOpenRouterKey = process.env.OPENROUTER_API_KEY;
+    process.env.OPENAI_API_KEY = 'openai-test-key';
+    delete process.env.OPENROUTER_API_KEY;
+
+    expect(catalogEnrichmentCapabilities()).toMatchObject({
+      ai: false,
+      search: false,
+      searchProvider: 'none',
+      ready: false,
+    });
+
+    if (previousOpenAiKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = previousOpenAiKey;
+    if (previousOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previousOpenRouterKey;
   });
 
   it('classifies runtimes that report abort only in the exception message as timeout', async () => {
@@ -383,6 +415,43 @@ describe('catalog enrichment batches', () => {
       counts: { passed: 0, pending: 1, failed: 0 },
       next: { name: 'Instituto com resposta vazia', attempt: 2 },
     });
+  });
+
+  it('keeps a transient source outage isolated to the current target', async () => {
+    const shallow = { id: 'o-source-500', nome: 'Instituto com fonte instável', pais: 'Brasil' };
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], person: [] });
+    catalogStore.setPending(batch);
+
+    const processed = await processCatalogEnrichment(batch.batchId, {
+      searchEvidence: async () => { throw new Error('catalog_source_http_500'); },
+      generate: async () => { throw new Error('should_not_generate'); },
+      enforceBudget: false,
+    });
+
+    expect(processed).toMatchObject({
+      counts: { pending: 1, failed: 0 },
+      next: { name: 'Instituto com fonte instável', attempt: 2 },
+      failures: [],
+    });
+    expect(catalogStore.getPending(batch.batchId).targets[0]).toMatchObject({
+      attempts: 1,
+      status: 'pending',
+      error: 'catalog_source_http_500',
+      errorStage: 'search',
+    });
+  });
+
+  it('rejects a stale batch revision before spending provider budget', async () => {
+    const shallow = { id: 'o-stale-revision', nome: 'Instituto desatualizado', pais: 'Brasil' };
+    const batch = createCatalogEnrichmentBatch({ organization: [shallow], person: [] });
+    catalogStore.setPending(batch);
+
+    await expect(processCatalogEnrichment(batch.batchId, {
+      expectedRevision: 1,
+      searchEvidence: async () => ({ sources: [], openAlex: null }),
+      generate: async () => { throw new Error('should_not_generate'); },
+      enforceBudget: false,
+    })).rejects.toMatchObject({ message: 'catalog_store_conflict', status: 409 });
   });
 
   it('keeps a generated card pending when the post-generation gate still fails', async () => {

@@ -45,7 +45,7 @@ afterEach(() => {
 });
 
 describe('POST /api/admin/catalog-enrichment', () => {
-  it('classifies an abort during persistence as a provider timeout', async () => {
+  it('classifies an abort during persistence as a store failure, not a provider timeout', async () => {
     vi.mocked(processCatalogEnrichment).mockResolvedValue({
       batchId: 'enrich-test',
       counts: { total: 1, pending: 1, passed: 0 },
@@ -56,7 +56,24 @@ describe('POST /api/admin/catalog-enrichment', () => {
 
     await handler(request(), res);
 
-    expect(res.statusCode).toBe(504);
-    expect(res.body).toEqual({ error: 'provider_timeout' });
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toEqual({ error: 'catalog_store_flush_failed' });
+  });
+
+  it('forwards the batch revision to protect the action from stale clients', async () => {
+    vi.mocked(processCatalogEnrichment).mockResolvedValue({
+      batchId: 'enrich-test',
+      revision: 8,
+      counts: { total: 1, pending: 1, passed: 0 },
+      next: { key: 'organization:1', name: 'Instituto' },
+    });
+    const req = request();
+    req.body = { action: 'process', batchId: 'enrich-test', revision: 7 };
+    const res = response();
+
+    await handler(req, res);
+
+    expect(processCatalogEnrichment).toHaveBeenCalledWith('enrich-test', { expectedRevision: 7 });
+    expect(res.statusCode).toBe(200);
   });
 });

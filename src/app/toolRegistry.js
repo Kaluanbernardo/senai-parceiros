@@ -6,6 +6,18 @@
  */
 export const TOOL_REGISTRY = Object.freeze([
   Object.freeze({
+    id: 'research',
+    route: '/pesquisar-parceiros',
+    matchPrefix: '/pesquisar-parceiros',
+    label: 'Pesquisar novos parceiros',
+    navLabel: 'Pesquisar',
+    description: 'Escolha entre pesquisar no Farol ou preparar um pedido para usar em outra IA.',
+    actionLabel: 'Escolher como pesquisar',
+    iconKey: 'research',
+    themeKey: 'research',
+    status: 'ready',
+  }),
+  Object.freeze({
     id: 'selection',
     route: '/selecionar',
     matchPrefix: '/selecionar',
@@ -43,18 +55,6 @@ export const TOOL_REGISTRY = Object.freeze([
     actionLabel: 'Ver novidades',
     iconKey: 'radar',
     themeKey: 'radar',
-    status: 'ready',
-  }),
-  Object.freeze({
-    id: 'research',
-    route: '/pesquisar-parceiros',
-    matchPrefix: '/pesquisar-parceiros',
-    label: 'Pesquisar novos parceiros',
-    navLabel: 'Pesquisar',
-    description: 'Escolha entre pesquisar no Farol ou preparar um pedido para usar em outra IA.',
-    actionLabel: 'Escolher como pesquisar',
-    iconKey: 'research',
-    themeKey: 'research',
     status: 'ready',
   }),
 ]);

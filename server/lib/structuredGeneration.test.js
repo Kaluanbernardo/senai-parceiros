@@ -8,14 +8,17 @@ const schema = {
   properties: { value: { type: 'string' } },
 };
 
-afterEach(() => {
+  afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.AI_PROVIDER;
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENROUTER_MODEL;
   delete process.env.OPENROUTER_COST_QUALITY_TRADEOFF;
   delete process.env.OPENROUTER_REASONING;
-  delete process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.AZURE_OPENAI_API_KEY;
+    delete process.env.AZURE_OPENAI_ENDPOINT;
+    delete process.env.AZURE_OPENAI_DEPLOYMENT;
 });
 
 describe('structured generation boundary', () => {
@@ -358,6 +361,24 @@ describe('structured generation boundary', () => {
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';
     vi.stubGlobal('fetch', async () => ({ ok: false, status: 429, text: async () => 'secret provider body' }));
     await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('provider_rate_limited');
+  });
+
+  it('uses OpenRouter for hosted search even when another provider is selected globally', async () => {
+    process.env.AI_PROVIDER = 'azure';
+    process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
+    process.env.AZURE_OPENAI_API_KEY = 'azure-test-key';
+    process.env.AZURE_OPENAI_ENDPOINT = 'https://azure.example.test';
+    process.env.AZURE_OPENAI_DEPLOYMENT = 'deployment';
+    const requests = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+      requests.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+
+    await generateStructured({ schema, messages: [{ role: 'user', content: 'pesquise' }], webSearch: { engine: 'native' } });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].url).toContain('openrouter.ai');
   });
 
   it('retries a transient provider rate limit once', async () => {

@@ -4,7 +4,7 @@ import { buildLocalEvaluation, mergeEvaluation } from '../../server/lib/selectio
 import { evaluateWithProvider } from '../../server/lib/ai.js';
 import { getCatalog } from '../../server/lib/catalog.js';
 import { rankProviderCandidates } from '../../src/domain/selectionEngine.js';
-import { consumeSelectionAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
+import { consumeSelectionAttempt } from '../../server/lib/auth.js';
 import { OBJECTIVE_LABELS } from '../../src/domain/interview.js';
 import {
   normalizeCatalogRequest,
@@ -21,7 +21,6 @@ export default async function handler(req, res) {
   if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
-  await hydrateRateLimitStore({ force: true });
   try {
     const payload = await readJson(req);
     const requestedSubtype = String(payload?.subtype || '').trim();

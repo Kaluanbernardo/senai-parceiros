@@ -102,6 +102,23 @@ describe('POST /api/selection/interview/next', () => {
     expect(res.body.state.subtype).toBe('Instituição de ensino');
   });
 
+  it('rejects optional questions while decision-critical fields are still missing', async () => {
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    const state = InterviewPlanner.start({ category: 'organization', objective: 'benchmark' });
+    vi.mocked(generateNextQuestionWithProvider).mockResolvedValue({
+      ...providerAnswer,
+      targetField: 'budget',
+      question: { ...providerAnswer.question, targetField: 'budget', prompt: 'Qual é o orçamento?', reasonTag: 'definir_recursos' },
+    });
+
+    const res = response();
+    await handler(request(state, 'Comparar práticas de formação dual'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.trace).toMatchObject({ provider: 'local-fallback', fallback: true, degraded: true, stopReason: 'provider_question_rejected' });
+    expect(res.body.question.targetField).not.toBe('budget');
+  });
+
   it('refuses a question about a field the answer already covered', async () => {
     process.env.OPENROUTER_API_KEY = 'test-key';
     const state = InterviewPlanner.start({ category: 'organization', objective: 'project_partner' });
@@ -115,10 +132,11 @@ describe('POST /api/selection/interview/next', () => {
     const res = response();
     await handler(request(state, 'Um piloto com instrutores da rede'), res);
 
-    // A cobertura ainda não permite encerrar e não há pergunta local: recusar a
-    // pergunta do modelo é falha do provedor, não motivo para roteiro.
-    expect(res.statusCode).toBe(502);
-    expect(res.body).toMatchObject({ error: 'ai_unavailable', reason: 'provider_question_rejected', retryable: true });
+    // A cobertura ainda não permite encerrar; o fallback local retoma o próximo
+    // gap obrigatório sem repetir o público que já foi extraído.
+    expect(res.statusCode).toBe(200);
+    expect(res.body.trace).toMatchObject({ provider: 'local-fallback', fallback: true, degraded: true });
+    expect(res.body.question.targetField).not.toBe('audience');
   });
 
   it('deixa reperguntar o campo que uma resposta fora de propósito não respondeu', async () => {

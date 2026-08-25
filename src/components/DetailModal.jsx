@@ -12,6 +12,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { CountryFlag } from '../utils/countryCode';
+import { getMacroThemesFromAreas } from '../utils/areaCategories';
 import { formatInstitutionName } from '../domain/institutionName';
 import { DESIGN_TOKENS as T } from '../design-system/tokens';
 
@@ -103,6 +104,7 @@ export function DetailBody({ item, type = 'stakeholder' }) {
   if (!item) return null;
   const isPerson = type === 'person' || type === 'pesquisador';
   const profileLinks = isPerson ? personProfileLinks(item) : [];
+  const macroThemes = isPerson ? getMacroThemesFromAreas(item.areas) : [];
 
   return (
     <>
@@ -261,13 +263,6 @@ export function DetailBody({ item, type = 'stakeholder' }) {
 
         {isPerson && (
           <>
-            {listValues(item.perfis_atuacao).length > 0 && (
-              <InfoRow label="Experiência de contribuição">
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {listValues(item.perfis_atuacao).map((profile) => <Chip key={profile} label={profile} size="small" variant="outlined" />)}
-                </Box>
-              </InfoRow>
-            )}
             {item.h_index && (
               <InfoRow label="h-index">
                 <Typography variant="h6" color="secondary.main" fontWeight={700}>
@@ -276,12 +271,12 @@ export function DetailBody({ item, type = 'stakeholder' }) {
               </InfoRow>
             )}
 
-            <InfoRow label="Áreas de especialidade">
+            <InfoRow label="Temas de especialidade">
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {listValues(item.areas).map((area, i) => (
+                {macroThemes.map((theme) => (
                   <Chip
-                    key={i}
-                    label={area.trim()}
+                    key={theme}
+                    label={theme}
                     size="small"
                     variant="outlined"
                     color="secondary"

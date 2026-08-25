@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { AtomicJsonStore } from './atomicJsonStore.js';
-import { readPilotDocument, writePilotDocument } from './supabase.js';
+import { consumeSupabaseOperationLimit, readPilotDocument, writePilotDocument } from './supabase.js';
 
 function emptyState() {
   return { entries: {} };
@@ -49,6 +49,9 @@ export class RateLimitStore {
   }
 
   async consume(key, limit, windowMs) {
+    if (this.store.driver === 'supabase') {
+      return !(await consumeSupabaseOperationLimit(key, limit, windowMs));
+    }
     const now = Date.now();
     let limited = false;
     await this.store.update((state) => {

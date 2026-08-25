@@ -40,6 +40,18 @@ export async function writePilotDocument(key, state, expectedVersion = null) {
   return { version: Number(rows?.[0]?.version || 0) };
 }
 
+export async function consumeSupabaseOperationLimit(key, limit, windowMs) {
+  const rows = await request('/rest/v1/rpc/consume_operation_limit', {
+    method: 'POST',
+    body: JSON.stringify({
+      p_key: key,
+      p_limit: Math.max(0, Number(limit) || 0),
+      p_window_seconds: Math.max(1, Math.ceil((Number(windowMs) || 0) / 1000)),
+    }),
+  });
+  return rows === true || rows?.[0] === true || rows?.[0]?.consume_operation_limit === true;
+}
+
 export async function recordSupabaseAiUsage(task, model, usage = {}, cacheHit = false) {
   // OpenRouter may complete a valid structured response without returning its
   // optional usage block. The caller still records one request, so `null` is a

@@ -12,6 +12,22 @@ const BATCH_SIZE = 1;
 const PROCESS_TIMEOUT_MS = 45_000;
 const INTERACTION_VERSION = 2;
 
+function conflictError() {
+  const error = new Error('catalog_store_conflict');
+  error.status = 409;
+  error.retryable = true;
+  return error;
+}
+
+function bumpRevision(batch) {
+  batch.revision = Number(batch.revision || 0) + 1;
+}
+
+function assertRevision(batch, expectedRevision) {
+  if (expectedRevision === undefined || expectedRevision === null || expectedRevision === '') return;
+  if (Number(expectedRevision) !== Number(batch.revision || 0)) throw conflictError();
+}
+
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
@@ -138,6 +154,7 @@ export function createCatalogEnrichmentBatch(catalog, now = new Date(), targetKe
     filename: 'Enriquecimento assistido do catálogo',
     qualityVersion: audit.version,
     interactionVersion: INTERACTION_VERSION,
+    revision: 0,
     auditBefore: publicAudit(audit),
     targets,
     createdAt: now.toISOString(),
@@ -163,6 +180,7 @@ export function catalogEnrichmentBatchSummary(batch) {
     batchId: batch.batchId,
     kind: batch.kind,
     createdAt: batch.createdAt,
+    revision: Number(batch.revision || 0),
     counts: progress,
     // Cada card aprovado é gravado assim que passa. Exigir o lote inteiro
     // aprovado antes de gravar qualquer coisa significava, com 91 cards fora do
@@ -183,6 +201,9 @@ export function catalogEnrichmentBatchSummary(batch) {
       name: target.name,
       category: target.category,
       error: target.error,
+      stage: target.errorStage || 'validation',
+      attempts: Number(target.attempts || 0),
+      durationMs: Number(target.lastDurationMs || 0) || undefined,
       missing: target.quality?.missing?.map((item) => item.label) || [],
     })),
     enriched: (batch.targets || []).filter((target) => target.status === 'committed').map((target) => ({
@@ -195,10 +216,16 @@ export function catalogEnrichmentBatchSummary(batch) {
 }
 
 export function catalogEnrichmentCapabilities() {
-  const ai = Boolean(process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT));
-  const searchProvider = process.env.TAVILY_API_KEY ? 'tavily' : process.env.OPENROUTER_API_KEY ? 'openrouter' : 'none';
-  const search = searchProvider !== 'none';
-  return { ai, search, searchProvider, ready: ai && search };
+  // Este fluxo depende da busca web hospedada do OpenRouter. OpenAI/Azure
+  // continuam válidos para outras tarefas, mas não tornam este fluxo pronto.
+  const openRouter = Boolean(process.env.OPENROUTER_API_KEY);
+  return {
+    ai: openRouter,
+    search: openRouter,
+    searchProvider: openRouter ? 'openrouter_web_search' : 'none',
+    ready: openRouter,
+    reason: openRouter ? '' : 'openrouter_web_search_required',
+  };
 }
 
 function latestPendingBatch() {
@@ -323,36 +350,9 @@ async function openAlexEvidence(record, fetchImpl, signal) {
   };
 }
 
-function evidenceQuery(record, category) {
-  const identity = [record.nome || record.instituicao, record.instituicao, record.pais].filter(Boolean).map((value) => `"${text(value)}"`).join(' ');
-  if (category === 'person') return `${identity} perfil profissional publicações projetos biografia`;
-  if (record.subtipo === ORGANIZATION_SUBTYPES[0]) return `${identity} educação profissional cursos indústria site oficial`;
-  return `${identity} atuação programas parcerias indústria site oficial`;
-}
-
 export async function collectCatalogEvidence(target, { fetchImpl = globalThis.fetch, signal } = {}) {
-  if (!process.env.TAVILY_API_KEY && !process.env.OPENROUTER_API_KEY) throw new Error('catalog_search_not_configured');
+  if (!process.env.OPENROUTER_API_KEY) throw new Error('catalog_search_not_configured');
   const sources = [];
-  if (process.env.TAVILY_API_KEY) {
-    const response = await fetchJson(`${String(process.env.TAVILY_API_URL || 'https://api.tavily.com').replace(/\/$/, '')}/search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
-      body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
-        query: evidenceQuery(target.record, target.category),
-        search_depth: process.env.TAVILY_SEARCH_DEPTH || 'advanced',
-        max_results: 8,
-        include_answer: false,
-        include_raw_content: false,
-      }),
-      signal,
-    }, fetchImpl);
-    sources.push(...(response.results || []).map((result) => ({
-      title: text(result.title).slice(0, 240),
-      url: safeUrl(result.url),
-      content: text(result.content || result.raw_content).slice(0, 700),
-    })).filter((source) => source.url && source.content));
-  }
   const existing = catalogPublicUrls(target.record).map((url) => ({ title: 'Link já registrado no card', url, content: 'Fonte pública já associada ao perfil.' }));
   let openAlex = null;
   if (target.researchProfile) {
@@ -466,6 +466,13 @@ function allowedGeneratedUrl(value, allowed) {
   return normalized && allowed.has(normalized) ? normalized : '';
 }
 
+function verifiedEvidenceText(value, allowed) {
+  const entry = text(value);
+  if (!entry) return '';
+  const urls = [...entry.matchAll(/https?:\/\/[^\s;|)\]}]+/gi)].map((match) => safeUrl(match[0])).filter(Boolean);
+  return urls.every((url) => allowed.has(url)) ? entry : '';
+}
+
 function prefer(current, generated) {
   return useful(current) ? current : generated;
 }
@@ -504,7 +511,10 @@ export function mergeCatalogEnrichment(target, generated, evidence, now = new Da
     website_oficial: prefer(current.website_oficial || current.website, allowedGeneratedUrl(generated.website, allowed)),
     areas: unique([current.areas, current.areas_formacao, generated.areas, evidence.openAlex?.topics || []]),
     fontes: unique([current.fontes || [], generatedSources]),
-    evidencias_publicas: unique([current.evidencias_publicas || [], generated.evidencias_publicas || []]),
+    evidencias_publicas: unique([
+      current.evidencias_publicas || [],
+      (generated.evidencias_publicas || []).map((entry) => verifiedEvidenceText(entry, allowed)).filter(Boolean),
+    ]),
     dados_nao_localizados: unique([current.dados_nao_localizados || [], generated.dados_nao_localizados || []]),
     data_consulta: now.toISOString().slice(0, 10),
   };
@@ -559,27 +569,33 @@ function errorCode(error) {
   return String(error?.message || 'catalog_enrichment_failed').replace(/[^a-z0-9_-]+/gi, '_').slice(0, 80);
 }
 
-function recordSelectedTargetError(batch, selected, error) {
+function recordSelectedTargetError(batch, selected, error, stage = error?.stage || 'processing', now = new Date(), durationMs = 0) {
   for (const selectedTarget of selected) {
     const target = batch.targets.find((entry) => entry.key === selectedTarget.key);
     if (!target) continue;
     target.attempts += 1;
     target.status = target.attempts < MAX_ATTEMPTS ? 'pending' : 'failed';
     target.error = errorCode(error);
+    target.errorStage = stage;
+    target.lastDurationMs = Math.max(0, Number(durationMs) || 0);
+    target.lastErrorAt = now.toISOString();
     target.result = null;
   }
+  bumpRevision(batch);
   catalogStore.setPending(batch);
   return catalogEnrichmentBatchSummary(batch);
 }
 
 function isRecoverableTargetError(error) {
+  const code = errorCode(error);
   return new Set([
     'provider_5xx',
     'provider_invalid_response',
     'output_truncated',
     'empty_output',
     'invalid_output',
-  ]).has(errorCode(error));
+    'catalog_search_timeout',
+  ]).has(code) || /^catalog_source_http_(408|409|425|429|5\d\d)$/.test(code);
 }
 
 function isAbortError(error, signal) {
@@ -608,23 +624,28 @@ export async function processCatalogEnrichment(batchId, {
   enforceBudget = true,
   now = new Date(),
   timeoutMs = PROCESS_TIMEOUT_MS,
+  expectedRevision,
 } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
+  assertRevision(batch, expectedRevision);
   const targets = selectedTargets(batch);
   if (!targets.length) return catalogEnrichmentBatchSummary(batch);
   if (enforceBudget && !canUseAi('catalog-enrichment')) throw new Error('budget_exceeded');
   const usesConfiguredSearch = searchEvidence === collectCatalogEvidence;
-  const hostedWebSearch = usesConfiguredSearch && !process.env.TAVILY_API_KEY && Boolean(process.env.OPENROUTER_API_KEY);
-  if (usesConfiguredSearch && !process.env.TAVILY_API_KEY && !hostedWebSearch) throw new Error('catalog_search_not_configured');
+  const hostedWebSearch = usesConfiguredSearch && Boolean(process.env.OPENROUTER_API_KEY);
+  if (usesConfiguredSearch && !hostedWebSearch) throw new Error('catalog_search_not_configured');
   const requestedTimeout = Number(timeoutMs);
   const signal = AbortSignal.timeout(Number.isFinite(requestedTimeout)
     ? Math.max(1, Math.min(PROCESS_TIMEOUT_MS, Math.round(requestedTimeout)))
     : PROCESS_TIMEOUT_MS);
+  const startedAt = Date.now();
+  let stage = 'search';
   let evidence;
   let generated;
   try {
     evidence = await Promise.all(targets.map((target) => searchEvidence(target, { signal })));
+    stage = 'generation';
     generated = await generate({
       task: `catalog_enrichment_${targets[0].category}`,
       schema: generationSchema(targets[0].category, targets[0].researchProfile, targets.length),
@@ -634,7 +655,7 @@ export async function processCatalogEnrichment(batchId, {
       // roteador, porém, rejeita a combinação com a ferramenta hospedada antes
       // de encaminhá-la a endpoints que declaram suporte aos parâmetros.
       requireParameters: !hostedWebSearch,
-      maxOutputTokens: hostedWebSearch ? 2600 : 4000,
+      maxOutputTokens: hostedWebSearch ? 4200 : 5000,
       temperature: 0.1,
       costQualityTradeoff: 8,
       webSearch: hostedWebSearch ? { engine: 'native', maxResults: 5, maxTotalResults: 8, searchContextSize: 'medium' } : undefined,
@@ -642,12 +663,15 @@ export async function processCatalogEnrichment(batchId, {
     });
   } catch (error) {
     if (isAbortError(error, signal)) {
-      if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
-      return recordSelectedTargetError(batch, targets, new Error('provider_timeout'));
+      const timeout = new Error(stage === 'search' ? 'catalog_search_timeout' : 'provider_timeout');
+      timeout.stage = stage;
+      if (enforceBudget && stage === 'generation') await recordAiUsageAtomic('catalog-enrichment', null);
+      return recordSelectedTargetError(batch, targets, timeout, stage, now, Date.now() - startedAt);
     }
     if (isRecoverableTargetError(error)) {
-      if (enforceBudget) await recordAiUsageAtomic('catalog-enrichment', null);
-      return recordSelectedTargetError(batch, targets, error);
+      error.stage = error.stage || stage;
+      if (enforceBudget && stage === 'generation') await recordAiUsageAtomic('catalog-enrichment', null);
+      return recordSelectedTargetError(batch, targets, error, stage, now, Date.now() - startedAt);
     }
     throw error;
   }
@@ -668,38 +692,52 @@ export async function processCatalogEnrichment(batchId, {
       target.result = quality.pass ? merged : null;
       target.status = quality.pass ? 'passed' : (target.attempts < MAX_ATTEMPTS ? 'pending' : 'failed');
       target.error = quality.pass ? '' : 'quality_gate_failed';
+      target.errorStage = quality.pass ? '' : 'validation';
+      target.lastDurationMs = Math.max(0, Date.now() - startedAt);
+      if (quality.pass) target.lastErrorAt = '';
     } catch (error) {
       target.status = target.attempts < MAX_ATTEMPTS ? 'pending' : 'failed';
       target.error = errorCode(error);
+      target.errorStage = 'validation';
+      target.lastDurationMs = Math.max(0, Date.now() - startedAt);
       target.result = null;
     }
   }
+  bumpRevision(batch);
   catalogStore.setPending(batch);
   return catalogEnrichmentBatchSummary(batch);
 }
 
-export function retryCatalogEnrichment(batchId) {
+export function retryCatalogEnrichment(batchId, { expectedRevision } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
+  assertRevision(batch, expectedRevision);
   for (const target of batch.targets || []) {
     if (target.status !== 'failed') continue;
     target.status = 'pending';
     target.attempts = 0;
     target.error = '';
+    target.errorStage = '';
+    target.lastDurationMs = 0;
+    target.lastErrorAt = '';
     target.result = null;
   }
+  bumpRevision(batch);
   catalogStore.setPending(batch);
   return catalogEnrichmentBatchSummary(batch);
 }
 
-export function skipCatalogEnrichmentTarget(batchId, targetKey) {
+export function skipCatalogEnrichmentTarget(batchId, targetKey, { expectedRevision } = {}) {
   const batch = catalogStore.getPending(batchId);
   if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
+  assertRevision(batch, expectedRevision);
   const current = (batch.targets || []).find((target) => target.status === 'pending');
   if (!current || current.key !== String(targetKey || '')) throw new Error('enrichment_target_not_current');
   current.status = 'skipped';
   current.result = null;
   current.error = '';
+  current.errorStage = '';
+  bumpRevision(batch);
   const summary = catalogEnrichmentBatchSummary(batch);
   const actionable = (batch.targets || []).some((target) => ['pending', 'passed', 'failed'].includes(target.status));
   if (actionable) catalogStore.setPending(batch);
@@ -738,9 +776,21 @@ export function catalogEnrichmentChanges(before = {}, after = {}) {
     .map((field) => ({ field, before: before?.[field] ?? '', after: after?.[field] ?? '' }));
 }
 
-export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvider, now = new Date() } = {}) {
+export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvider, now = new Date(), expectedRevision } = {}) {
   const batch = catalogStore.getPending(batchId);
-  if (!batch || batch.kind !== 'enrichment') throw new Error('enrichment_batch_not_found');
+  if (!batch || batch.kind !== 'enrichment') {
+    const committed = catalogStore.getCommitted(batchId);
+    if (committed?.kind === 'enrichment') {
+      return {
+        ...catalogEnrichmentBatchSummary(committed),
+        committedAt: committed.committedAt,
+        idempotent: true,
+        audit: publicAudit(auditCatalogQuality(provideCatalog())),
+      };
+    }
+    throw new Error('enrichment_batch_not_found');
+  }
+  assertRevision(batch, expectedRevision);
   const ready = (batch.targets || []).filter((target) => target.status === 'passed');
   if (!ready.length) throw new Error('enrichment_batch_incomplete');
   const currentCatalog = provideCatalog();
@@ -796,6 +846,7 @@ export function commitCatalogEnrichment(batchId, { provideCatalog = catalogProvi
     target.status = 'committed';
     target.result = null;
   }
+  bumpRevision(batch);
   const remaining = batch.targets.some((target) => ['pending', 'passed', 'failed'].includes(target.status));
   if (remaining) catalogStore.setPending(batch);
   else catalogStore.deletePending(batchId);

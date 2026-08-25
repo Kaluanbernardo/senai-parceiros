@@ -18,6 +18,19 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function storeError(code, status = 503) {
+  const error = new Error(code);
+  error.status = status;
+  error.retryable = status >= 500 || status === 409;
+  return error;
+}
+
+function isConflict(error) {
+  const status = Number(error?.statusCode || error?.status || error?.response?.status || 0);
+  const message = String(error?.message || '').toLowerCase();
+  return status === 409 || status === 412 || message.includes('precondition') || message.includes('etag mismatch') || message.includes('conflict');
+}
+
 function classifiedRecord(record, sourceCategory) {
   const request = normalizeCatalogRequest(sourceCategory);
   const source = request.subtype && !record?.subtipo ? { ...record, subtipo: request.subtype } : record;
@@ -109,6 +122,8 @@ class CatalogStore {
     this.loaded = false;
     this.remoteHydrated = false;
     this.remoteEtag = null;
+    this.remoteVersion = 0;
+    this.lastError = null;
   }
 
   configure({ driver, filePath } = {}) {
@@ -116,12 +131,21 @@ class CatalogStore {
     if (filePath) this.filePath = filePath;
     this.state = emptyState();
     this.loaded = false;
+    this.remoteHydrated = false;
+    this.remoteEtag = null;
+    this.remoteVersion = 0;
+    this.lastError = null;
     this.load();
     return this.status();
   }
 
   status() {
-    return { driver: this.driver, durable: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase' };
+    return {
+      driver: this.driver,
+      durable: this.driver === 'file' || this.driver === 'vercel_blob' || this.driver === 'supabase',
+      remoteHydrated: this.remoteHydrated,
+      lastError: this.lastError,
+    };
   }
 
   load() {
@@ -132,7 +156,10 @@ class CatalogStore {
       const parsed = JSON.parse(fs.readFileSync(this.filePath, 'utf8'));
       this.state = normalizeState(parsed);
     } catch (error) {
-      if (error?.code !== 'ENOENT') console.warn('[catalog-store] failed to load store', error.message);
+      if (error?.code !== 'ENOENT') {
+        this.lastError = 'store_read_failed';
+        console.warn('[catalog-store] failed to load store', error.message);
+      }
     }
   }
 
@@ -245,6 +272,8 @@ class CatalogStore {
     this.loaded = true;
     this.remoteHydrated = false;
     this.remoteEtag = null;
+    this.remoteVersion = 0;
+    this.lastError = null;
     if (this.driver === 'file') {
       try { fs.rmSync(this.filePath, { force: true }); } catch { /* test cleanup */ }
     }
@@ -258,55 +287,64 @@ class CatalogStore {
       this.remoteVersion = current.version;
       this.remoteHydrated = true;
       this.loaded = true;
+      this.lastError = null;
       return this.status();
     }
     if (this.driver !== 'vercel_blob' || (!force && this.remoteHydrated)) return this.status();
     const { get } = await import('@vercel/blob');
     const result = await get(this.blobPath, { access: 'private', useCache: false });
-    if (result?.statusCode === 200 && result.stream) {
+    if (result?.statusCode === 404 || !result?.stream) {
+      this.state = emptyState();
+      this.remoteEtag = null;
+    } else if (result?.statusCode === 200 && result.stream) {
       this.state = normalizeState(JSON.parse(await new Response(result.stream).text()));
       this.remoteEtag = result.blob?.etag || null;
     }
     this.remoteHydrated = true;
     this.loaded = true;
+    this.lastError = null;
     return this.status();
   }
 
-  async refreshRemoteEtag() {
-    try {
-      const { head } = await import('@vercel/blob');
-      const info = await head(this.blobPath);
-      this.remoteEtag = info?.etag || null;
-    } catch {
-      this.remoteEtag = null;
-    }
-  }
-
-  async flush({ attempts = 3 } = {}) {
+  async flush() {
     if (this.driver === 'supabase') {
-      const result = await writePilotDocument('catalog-store', this.state, this.remoteVersion);
-      this.remoteVersion = result.version;
-      this.remoteHydrated = true;
-      return this.status();
+      try {
+        const result = await writePilotDocument('catalog-store', this.state, this.remoteVersion);
+        this.remoteVersion = result.version;
+        this.remoteHydrated = true;
+        this.lastError = null;
+        return this.status();
+      } catch (error) {
+        if (isConflict(error)) {
+          this.lastError = 'catalog_store_conflict';
+          throw storeError('catalog_store_conflict', 409);
+        }
+        this.lastError = 'catalog_store_flush_failed';
+        throw error;
+      }
     }
     if (this.driver !== 'vercel_blob') return this.status();
     const { put, BlobPreconditionFailedError } = await import('@vercel/blob');
-    for (let attempt = 1; attempt <= attempts; attempt += 1) {
-      const options = { access: 'private', allowOverwrite: true, contentType: 'application/json' };
-      if (this.remoteEtag && attempt < attempts) options.ifMatch = this.remoteEtag;
-      try {
-        const result = await put(this.blobPath, JSON.stringify(this.state), options);
-        this.remoteEtag = result.etag || null;
-        this.remoteHydrated = true;
-        return this.status();
-      } catch (error) {
-        const precondition = error instanceof BlobPreconditionFailedError
-          || /precondition failed|etag mismatch/i.test(String(error?.message || ''));
-        if (!precondition || attempt === attempts) throw error;
-        await this.refreshRemoteEtag();
+    const options = {
+      access: 'private',
+      allowOverwrite: Boolean(this.remoteEtag),
+      contentType: 'application/json',
+    };
+    if (this.remoteEtag) options.ifMatch = this.remoteEtag;
+    try {
+      const result = await put(this.blobPath, JSON.stringify(this.state), options);
+      this.remoteEtag = result.etag || null;
+      this.remoteHydrated = true;
+      this.lastError = null;
+      return this.status();
+    } catch (error) {
+      if (error instanceof BlobPreconditionFailedError || isConflict(error)) {
+        this.lastError = 'catalog_store_conflict';
+        throw storeError('catalog_store_conflict', 409);
       }
+      this.lastError = 'catalog_store_flush_failed';
+      throw error;
     }
-    return this.status();
   }
 }
 

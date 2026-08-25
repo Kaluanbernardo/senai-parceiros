@@ -1,4 +1,4 @@
-import { authenticate, completeLogin, consumeLoginAttempt, getAuthProvider, hydrateRateLimitStore } from '../../server/lib/auth.js';
+import { authenticate, completeLogin, consumeLoginAttempt, getAuthProvider } from '../../server/lib/auth.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
 
 export default async function handler(req, res) {
@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res);
   if (!requireSameOrigin(req, res)) return;
   if (getAuthProvider() !== 'local') return res.status(503).json({ error: 'corporate_identity_provider_not_configured' });
-  await hydrateRateLimitStore({ force: true });
   try {
     const { username, password } = await readJson(req);
     if (await consumeLoginAttempt(req)) return res.status(429).json({ error: 'too_many_attempts' });

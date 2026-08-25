@@ -112,7 +112,7 @@ describe('selection engine', () => {
       { candidate: { id: 6, instituicao: 'E' }, total: 94, strategicValue: 94 },
     ];
     const shortlist = selectShortlist(entries);
-    expect(shortlist.map((entry) => entry.candidate.id)).toEqual([1, 3, 4, 6, 2]);
+    expect(shortlist.map((entry) => entry.candidate.id)).toEqual([1, 2, 3, 4, 6]);
     expect(shortlist.some((entry) => entry.severeRisk?.confirmed)).toBe(false);
   });
 

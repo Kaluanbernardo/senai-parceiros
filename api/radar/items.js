@@ -1,6 +1,6 @@
 import { getSession } from '../../server/lib/cookies.js';
 import { getRadarItems, getRadarFeedPolicy, getRadarFeedReadiness, RADAR_SECTIONS, RADAR_SOURCE_POLICY, RADAR_WEB_POLICY } from '../../server/lib/radar.js';
-import { consumeRadarAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
+import { consumeRadarAttempt } from '../../server/lib/auth.js';
 
 export default async function handler(req, res) {
   // The Blob is the snapshot cache. Caching this response in the browser made
@@ -12,7 +12,6 @@ export default async function handler(req, res) {
   }
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
-  await hydrateRateLimitStore({ force: true });
   const url = new URL(req.url || '/api/radar/items', 'http://localhost');
   const section = url.searchParams.get('section') || undefined;
   if (section && !RADAR_SECTIONS.includes(section)) return res.status(400).json({ error: 'invalid_radar_section' });

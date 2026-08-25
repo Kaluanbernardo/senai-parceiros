@@ -171,7 +171,13 @@ export function getCategoriasFromAreas(areasStr) {
   return CATEGORIAS.filter((c) => found.has(c));
 }
 
+/** Normaliza temas granulares para os macrotemas exibidos no catálogo. */
+export function getMacroThemesFromAreas(areasStr) {
+  const categories = getCategoriasFromAreas(areasStr);
+  return categories.length ? categories : [THEME_GROUP_FALLBACK];
+}
+
 /** Retorna o eixo mais representativo de um tema para agrupá-lo na interface. */
 export function getThemeGroup(theme) {
-  return getCategoriasFromAreas(theme)[0] || THEME_GROUP_FALLBACK;
+  return getMacroThemesFromAreas(theme)[0];
 }

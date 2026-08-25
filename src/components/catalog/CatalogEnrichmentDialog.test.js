@@ -74,6 +74,26 @@ describe('catalog enrichment errors', () => {
     expect(result.counts).toMatchObject({ committed: 1, failed: 1, pending: 0 });
   });
 
+  it('commits an approved result that was persisted before the client received the commit response', async () => {
+    const request = vi.fn(async () => ({
+      batchId: 'batch-approved',
+      revision: 2,
+      counts: { total: 1, pending: 0, passed: 0, committed: 1 },
+      next: null,
+    }));
+
+    const result = await runCatalogEnrichmentBatch({
+      batchId: 'batch-approved',
+      revision: 1,
+      counts: { total: 1, pending: 0, passed: 1, committed: 0 },
+      readyToCommit: true,
+      next: null,
+    }, { request });
+
+    expect(request).toHaveBeenCalledWith({ action: 'commit', batchId: 'batch-approved', revision: 1 });
+    expect(result.counts.committed).toBe(1);
+  });
+
   it('uses readable labels for the enriched field report', () => {
     expect(catalogEnrichmentFieldLabel('perfil_principal_url')).toBe('Perfil principal');
     expect(catalogEnrichmentFieldLabel('campo_novo')).toBe('campo novo');

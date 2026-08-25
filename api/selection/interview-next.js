@@ -1,6 +1,6 @@
 import { getSession } from '../../server/lib/cookies.js';
 import { readJson, methodNotAllowed, requireSameOrigin } from '../../server/lib/http.js';
-import { consumeInterviewAttempt, hydrateRateLimitStore } from '../../server/lib/auth.js';
+import { consumeInterviewAttempt } from '../../server/lib/auth.js';
 import { generateNextQuestionWithProvider } from '../../server/lib/ai.js';
 import { InterviewPlanner, MAX_QUESTIONS, MIN_QUESTIONS, QUESTION_BANK } from '../../src/domain/interviewPlanner.js';
 import { CATEGORY_IDS, OBJECTIVE_IDS } from '../../src/domain/interview.js';
@@ -67,18 +67,41 @@ function readyResponse(state, stopReason, trace = {}) {
     validation: { ...(state.validation || {}), valid: !coverage.missing.length },
     progress: { asked: state.askedIds.length, max: MAX_QUESTIONS },
   };
-  return { state: ready, question: null, trace: { ...trace, fallback: false, degraded: false, stopReason, coverage } };
+  return { state: ready, question: null, trace: { ...trace, fallback: trace.fallback ?? false, degraded: trace.degraded ?? false, stopReason, coverage } };
 }
 
 /**
- * A entrevista não tem roteiro local: sem IA não há próxima pergunta, e a
- * resposta é um erro visível. Uma pergunta escrita localmente seria
- * indistinguível de uma pergunta adaptada, e a degradação passaria despercebida
- * justamente na parte da ferramenta que depende de adaptação.
+ * Falhas de rede/configuração continuam visíveis. Já uma resposta estruturada
+ * inválida não deve quebrar a entrevista: nesse caso o planejador local escolhe
+ * o próximo gap obrigatório e o trace deixa claro que houve degradação.
  */
 function providerUnavailable(res, reason) {
   const status = reason === 'ai_budget_exceeded' ? 429 : reason === 'ai_not_configured' ? 503 : 502;
   return res.status(status).json({ error: 'ai_unavailable', reason, retryable: reason !== 'ai_not_configured' && reason !== 'ai_budget_exceeded' });
+}
+
+function localFallbackResponse(state, reason, trace = {}) {
+  const fallback = InterviewPlanner.next(state);
+  const coverage = InterviewPlanner.coverage(fallback);
+  if (!fallback?.currentQuestion) {
+    if (coverage.canStop) return readyResponse(fallback, reason, { ...trace, fallback: true, degraded: true, provider: 'local-fallback', coverage });
+    return null;
+  }
+  return {
+    state: fallback,
+    question: fallback.currentQuestion,
+    trace: {
+      ...trace,
+      provider: 'local-fallback',
+      model: null,
+      fallback: true,
+      degraded: true,
+      stopReason: reason,
+      targetField: fallback.currentQuestion.targetField,
+      reasonTag: fallback.currentQuestion.reasonTag,
+      coverage,
+    },
+  };
 }
 
 /**
@@ -105,6 +128,13 @@ function asQuestion(value, state) {
   // recusava a pergunta por já haver texto ali.
   const retryingRejectedAnswer = ['off_topic', 'contradictory'].includes(value.lastAnswerQuality)
     && targetField === lastTargetField(state);
+  // A IA pode escolher a melhor formulação e a melhor ordem entre os gaps,
+  // mas não pode criar uma etapa opcional enquanto ainda falta informação
+  // necessária para distinguir os candidatos. Uma resposta fora de propósito
+  // é a exceção: o campo continua sendo o alvo mesmo que o texto inválido o
+  // tenha tornado formalmente preenchido.
+  const missingRequired = new Set(InterviewPlanner.coverage(state).missing);
+  if (missingRequired.size > 0 && !missingRequired.has(targetField) && !retryingRejectedAnswer) return null;
   // Um campo já coberto — perguntado antes ou entregue de passagem numa
   // resposta anterior — nunca volta como próxima pergunta, mesmo reescrito.
   if (!retryingRejectedAnswer && (alreadyAnswered || state.derived?.[targetField])) return null;
@@ -155,8 +185,6 @@ export default async function handler(req, res) {
   if (!requireSameOrigin(req, res)) return;
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'authentication_required' });
-  await hydrateRateLimitStore({ force: true });
-
   try {
     const payload = await readJson(req);
     const invalidRequestedSubtype = Boolean(payload?.state?.subtype && !isCatalogSubtype(payload.state.category, payload.state.subtype));
@@ -238,6 +266,8 @@ export default async function handler(req, res) {
       // encerra; caso contrário é falha do provedor, não caso de roteiro local.
       if (!question) {
         if (coverage.canStop) return res.status(200).json(readyResponse(enrichedState, 'provider_question_rejected', { ...ai.trace, budget }));
+        const fallback = localFallbackResponse(enrichedState, 'provider_question_rejected', { ...ai.trace, budget });
+        if (fallback) return res.status(200).json(fallback);
         return providerUnavailable(res, 'provider_question_rejected');
       }
       const next = withAdaptiveQuestion({

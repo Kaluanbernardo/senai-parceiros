@@ -23,6 +23,12 @@ const CATEGORY_LABELS = {
 const ERROR_MESSAGES = {
   budget_exceeded: 'O limite diário de IA foi atingido. O lote ficou salvo e pode continuar depois.',
   catalog_search_not_configured: 'A pesquisa pública do catálogo ainda não está configurada.',
+  catalog_search_timeout: 'A consulta às fontes públicas demorou mais que o limite. O lote ficou salvo; tente novamente.',
+  catalog_store_conflict: 'O catálogo mudou em outra operação. Recarregue a auditoria antes de continuar.',
+  catalog_store_flush_failed: 'Não foi possível salvar o progresso do lote. Tente novamente; nenhum resultado não confirmado foi aplicado.',
+  catalog_store_hydrate_failed: 'Não foi possível carregar o armazenamento do catálogo agora. Tente novamente.',
+  usage_store_hydrate_failed: 'Não foi possível carregar o controle de consumo de IA agora. Tente novamente.',
+  usage_store_flush_failed: 'Não foi possível salvar o consumo de IA agora. Tente novamente.',
   ai_not_configured: 'O provedor de IA ainda não está configurado.',
   provider_timeout: 'A pesquisa deste card demorou mais que o limite. O lote ficou salvo; use Continuar enriquecimento para tentar novamente.',
   provider_4xx: 'O provedor de IA recusou a chamada para este card (chave inválida, sem crédito ou parâmetro não suportado). Verifique a configuração de IA.',
@@ -99,15 +105,23 @@ export async function runCatalogEnrichmentBatch(initialBatch, { request = reques
   let current = initialBatch;
   const total = Math.max(1, Number(current?.counts?.total || 0));
   let processedSteps = 0;
+  const commitReady = async () => {
+    if (!current?.readyToCommit && Number(current?.counts?.passed || 0) <= 0) return;
+    current = await request({ action: 'commit', batchId: current.batchId, revision: current.revision });
+    onProgress(current);
+  };
+
+  if (!current?.next) {
+    await commitReady();
+    return current;
+  }
+
   while (current?.next) {
     if (processedSteps >= total * 2 + 1) throw new Error('enrichment_batch_stalled');
     onProgress(current);
-    current = await request({ action: 'process', batchId: current.batchId });
+    current = await request({ action: 'process', batchId: current.batchId, revision: current.revision });
     onProgress(current);
-    if (Number(current.counts?.passed || 0) > 0) {
-      current = await request({ action: 'commit', batchId: current.batchId });
-      onProgress(current);
-    }
+    await commitReady();
     processedSteps += 1;
   }
   return current;
@@ -327,9 +341,9 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
     setRunning(true);
     setNotice({ severity: 'info', text: `Pesquisando fontes e conferindo ${batch.next.name}.` });
     try {
-      let current = await requestEnrichment({ action: 'process', batchId: batch.batchId });
+      let current = await requestEnrichment({ action: 'process', batchId: batch.batchId, revision: batch.revision });
       if (Number(current.counts?.passed || 0) > 0) {
-        current = await requestEnrichment({ action: 'commit', batchId: current.batchId });
+        current = await requestEnrichment({ action: 'commit', batchId: current.batchId, revision: current.revision });
         await onCatalogChanged?.();
         setNotice({ severity: 'success', text: current.next ? 'Card enriquecido e gravado. Agora escolha o que fazer com o próximo.' : 'Card enriquecido e gravado.' });
       } else if (current.next?.key === batch.next.key) {
@@ -403,7 +417,7 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   const handleRetry = async () => {
     setLoading(true);
     try {
-      const retried = await requestEnrichment({ action: 'retry', batchId: batch.batchId });
+      const retried = await requestEnrichment({ action: 'retry', batchId: batch.batchId, revision: batch.revision });
       setBatch(retried);
       setLoading(false);
       await handleEnrichAll(retried);
@@ -417,9 +431,23 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
   const handleSkip = async () => {
     setLoading(true);
     try {
-      const skipped = await requestEnrichment({ action: 'skip', batchId: batch.batchId, targetKey: batch.next.key });
+      const skipped = await requestEnrichment({ action: 'skip', batchId: batch.batchId, targetKey: batch.next.key, revision: batch.revision });
       setBatch(skipped);
       setNotice({ severity: 'info', text: skipped.next ? 'Card pulado. Agora escolha o que fazer com o próximo.' : 'Card pulado. A seleção chegou ao fim.' });
+    } catch (error) {
+      setNotice({ severity: 'error', text: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCommitReady = async () => {
+    setLoading(true);
+    try {
+      const committed = await requestEnrichment({ action: 'commit', batchId: batch.batchId, revision: batch.revision });
+      setBatch(committed);
+      await onCatalogChanged?.();
+      setNotice({ severity: 'success', text: 'Cards aprovados gravados no catálogo.' });
     } catch (error) {
       setNotice({ severity: 'error', text: error.message });
     } finally {
@@ -457,7 +485,9 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
           <EnrichmentResults enriched={batch?.enriched} />
           {capabilities && !capabilities.ready && needsEnrichment > 0 && (
             <Alert severity="warning">
-              {!capabilities.ai && !capabilities.search
+              {capabilities.reason === 'openrouter_web_search_required'
+                ? 'Configure o OpenRouter com busca web hospedada antes de iniciar.'
+                : !capabilities.ai && !capabilities.search
                 ? 'Configure o provedor de IA e a pesquisa pública antes de iniciar.'
                 : !capabilities.ai ? 'Configure o provedor de IA antes de iniciar.' : 'Configure a pesquisa pública antes de iniciar.'}
             </Alert>
@@ -506,6 +536,8 @@ export default function CatalogEnrichmentDialog({ open, onClose, onCatalogChange
               {running ? 'Processando...' : 'Enriquecer este card'}
             </Button>
           </>
+        ) : batch.readyToCommit ? (
+          <Button variant="contained" onClick={handleCommitReady} disabled={loading || running}>Gravar aprovados</Button>
         ) : hasFailed ? (
           <Button variant="contained" onClick={handleRetry} disabled={loading || running || !capabilities?.ready}>Tentar cards bloqueados novamente</Button>
         ) : null}
