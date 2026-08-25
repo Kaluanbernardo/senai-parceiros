@@ -95,6 +95,32 @@ describe('catalog deep-research flow', () => {
     expect(result).toMatchObject({ cards: 10, complete: true });
   });
 
+  it('requests replacements when a batch contains catalog duplicates', async () => {
+    const calls = [];
+    const result = await runCatalogResearchBatches({
+      requestedQuantity: 5,
+      requestBatch: async (batch) => {
+        calls.push(batch);
+        return batch.batchIndex === 0
+          ? { batchId: 'batch-0', rows: [
+            { rowNumber: 1, status: 'new', record: { nome: 'Novo 1' } },
+            { rowNumber: 2, status: 'new', record: { nome: 'Novo 2' } },
+            { rowNumber: 3, status: 'new', record: { nome: 'Novo 3' } },
+            { rowNumber: 4, status: 'possible_duplicate', record: { nome: 'Já existe 1' } },
+            { rowNumber: 5, status: 'already_imported', record: { nome: 'Já existe 2' } },
+          ] }
+          : { batchId: 'batch-1', rows: [
+            { rowNumber: 1, status: 'new', record: { nome: 'Novo 4' } },
+            { rowNumber: 2, status: 'new', record: { nome: 'Novo 5' } },
+          ] };
+      },
+    });
+
+    expect(calls.map((call) => call.batchSize)).toEqual([5, 2]);
+    expect(calls[1].excludeCandidates).toEqual(['Novo 1', 'Novo 2', 'Novo 3', 'Já existe 1', 'Já existe 2']);
+    expect(result).toMatchObject({ cards: 5, complete: true });
+  });
+
   it('does not count invalid or duplicate rows toward the requested quantity', async () => {
     const previews = [{ batchId: 'a', rows: [
       { rowNumber: 1, status: 'invalid', record: { nome: 'Inválido' } },
