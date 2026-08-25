@@ -357,6 +357,30 @@ describe('structured generation boundary', () => {
     process.env.AI_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'server-only-test-key';
     vi.stubGlobal('fetch', async () => ({ ok: false, status: 429, text: async () => 'secret provider body' }));
-    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('budget_exceeded');
+    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).rejects.toThrow('provider_rate_limited');
+  });
+
+  it('retries a transient provider rate limit once', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    let attempts = 0;
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      attempts += 1;
+      if (attempts === 1) return { ok: false, status: 429, headers: { get: () => '0' }, text: async () => JSON.stringify({ error: { code: 'rate_limit_exceeded' } }) };
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) };
+    }));
+    await expect(generateStructured({ schema, messages: [{ role: 'user', content: 'x' }] })).resolves.toMatchObject({ data: { value: 'ok' } });
+    expect(attempts).toBe(2);
+  });
+
+  it('does not cache live web-search calls', async () => {
+    process.env.AI_PROVIDER = 'openrouter';
+    process.env.OPENROUTER_API_KEY = 'server-only-test-key';
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: '{"value":"ok"}' } }] }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    const options = { task: 'catalog_research_organization_batch_1', schema, messages: [{ role: 'user', content: 'live query' }], webSearch: { engine: 'native' } };
+    await generateStructured(options);
+    await generateStructured(options);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -102,6 +102,7 @@ describe('catalog research module', () => {
       model: 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
+      disableReasoning: true,
       maxOutputTokens: 16000,
       webSearch: expect.objectContaining({ engine: 'native', maxResults: 10, maxTotalResults: 20, searchContextSize: 'high' }),
     }));
@@ -197,6 +198,36 @@ describe('catalog research module', () => {
 
     expect(result.parsed.rows[0].valid).toBe(false);
     expect(result.parsed.rows[0].errors.join(' ')).toMatch(/três fontes públicas/i);
+  });
+
+  it('removes repeated or previously excluded candidates before creating rows', async () => {
+    const generate = vi.fn(async () => ({
+      data: { candidates: [candidate({ nome: 'Já localizado' }), candidate({ nome: 'Nova instituição' }), candidate({ nome: 'nova instituição' })] },
+      trace: { provider: 'openrouter', model: 'test/model' },
+    }));
+    const result = await researchCatalogCandidates(
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Aprendizagem industrial', quantity: 5, geography: 'brasil', excludeCandidates: ['Já localizado'] },
+      { generate },
+    );
+    expect(result.parsed.rows).toHaveLength(1);
+    expect(result.parsed.rows[0].record.nome).toBe('Nova instituição');
+  });
+
+  it('marks model sources that are absent from web-search citations as unverified', async () => {
+    const result = await researchCatalogCandidates(
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Aprendizagem industrial', quantity: 5, geography: 'brasil' },
+      {
+        generate: async () => ({
+          data: { candidates: [candidate()] },
+          trace: {
+            provider: 'openrouter', model: 'test/model', webSearchSources: [{ url: 'https://example.edu/' }],
+          },
+        }),
+      },
+    );
+    expect(result.parsed.metadata.consultedSources).toBe(1);
+    expect(result.parsed.rows[0].valid).toBe(false);
+    expect(result.parsed.rows[0].errors.join(' ')).toMatch(/não confirmada/i);
   });
 
   it('repairs shallow research results against the catalog quality contract before preview', async () => {

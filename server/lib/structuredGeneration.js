@@ -143,17 +143,62 @@ function providerConfig() {
  * erro esperado, nada é aproveitado: um corpo desconhecido não vira
  * diagnóstico, vira ruído — e pode carregar o que não deveria sair daqui.
  */
-async function providerFailureMessage(response) {
+async function providerFailureDetails(response) {
   try {
     const raw = await response.text();
-    if (!raw || raw.length > 8000) return '';
+    if (!raw || raw.length > 8000) return { code: '', message: '' };
     const parsed = JSON.parse(raw);
     const message = parsed?.error?.message || parsed?.message || '';
     const reason = parsed?.error?.code || parsed?.error?.type || '';
-    return String([reason, message].filter(Boolean).join(': ') || '').slice(0, 300);
+    return {
+      code: String(reason || '').slice(0, 120),
+      message: String(message || '').slice(0, 300),
+    };
   } catch {
-    return '';
+    return { code: '', message: '' };
   }
+}
+
+function retryAfterMs(response) {
+  const value = response?.headers?.get?.('retry-after');
+  if (!value) return 0;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, Math.min(5000, Math.round(seconds * 1000)));
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, Math.min(5000, date - Date.now())) : 0;
+}
+
+function providerErrorCode(status, details) {
+  if (status === 429) {
+    const text = `${details.code} ${details.message}`.toLowerCase();
+    return /budget|quota|credit|insufficient|spend|billing/.test(text) ? 'budget_exceeded' : 'provider_rate_limited';
+  }
+  if (status === 401 || status === 403) return 'provider_4xx';
+  if (status >= 500) return 'provider_5xx';
+  return 'provider_4xx';
+}
+
+function retryableProviderError(error) {
+  return [408, 409, 425, 429].includes(Number(error?.status))
+    || Number(error?.status) >= 500
+    || error?.name === 'TypeError';
+}
+
+async function waitForRetry(delayMs, signal) {
+  if (delayMs <= 0) return;
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, delayMs);
+    const onAbort = () => {
+      clearTimeout(timer);
+      const error = new Error('This operation was aborted');
+      error.name = 'AbortError';
+      reject(error);
+    };
+    const cleanup = () => signal?.removeEventListener('abort', onAbort);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    signal?.addEventListener('abort', cleanup, { once: true });
+    setTimeout(cleanup, delayMs);
+  });
 }
 
 function parseJson(content) {
@@ -243,6 +288,40 @@ function providerOptions(provider, model, costQualityTradeoff, disableReasoning,
   };
 }
 
+async function requestProvider(provider, body, signal) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(provider.endpoint, {
+        method: 'POST',
+        signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(provider.id === 'azure' ? { 'api-key': provider.key } : { Authorization: `Bearer ${provider.key}` }),
+          ...providerHeaders(provider.id),
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      if (!retryableProviderError(error) || attempt === 1 || signal?.aborted) throw error;
+      await waitForRetry(250, signal);
+      continue;
+    }
+    if (response.ok) return response;
+
+    const details = await providerFailureDetails(response);
+    const failure = new Error(providerErrorCode(response.status, details));
+    failure.status = response.status;
+    failure.providerMessage = String([details.code, details.message].filter(Boolean).join(': ') || '').slice(0, 300);
+    if (retryableProviderError(failure) && attempt === 0 && !signal?.aborted) {
+      await waitForRetry(retryAfterMs(response) || 250, signal);
+      continue;
+    }
+    throw failure;
+  }
+  throw new Error('provider_error');
+}
+
 /**
  * Generate and parse a strict JSON response.
  * `messages` may contain a system message and a user message.  The returned
@@ -257,7 +336,7 @@ export async function generateStructured({ task = 'structured_generation', schem
   // sem pesquisa atual, apesar de a interface afirmar o contrário.
   const providers = providerConfig().filter((provider) => !searchTool || provider.id === 'openrouter');
   if (!providers.length) throw new Error('ai_not_configured');
-  const cacheable = /^catalog_|^radar_/.test(String(task));
+  const cacheable = /^(?:catalog_|radar_)/.test(String(task)) && !searchTool;
   const cacheModel = modelForTask(task, requestedModel, providers[0].model);
   const cacheKey = cacheable ? aiCacheKey({ task, model: cacheModel, schema, messages, strictOutput, requireParameters, webSearch }) : null;
   if (cacheKey) {
@@ -285,39 +364,14 @@ export async function generateStructured({ task = 'structured_generation', schem
             ...(!reasoningModel ? { temperature: safeTemperature(temperature) } : {}),
             max_tokens: outputTokenLimit,
           };
-      const response = await fetch(provider.endpoint, {
-        method: 'POST',
-        signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(provider.id === 'azure' ? { 'api-key': provider.key } : { Authorization: `Bearer ${provider.key}` }),
-          ...providerHeaders(provider.id),
-        },
-        body: JSON.stringify({
+      const response = await requestProvider(provider, {
           model: providerModel,
           messages,
           ...generationParameters,
           ...options,
           ...(searchTool ? { tools: [searchTool] } : {}),
           ...(strictOutput ? { response_format: { type: 'json_schema', json_schema: { name: task.replace(/[^a-z0-9_]+/gi, '_').slice(0, 64) || 'structured_output', strict: true, schema } } } : {}),
-        }),
-      });
-      if (!response.ok) {
-        const code = response.status === 401 || response.status === 403
-          ? 'provider_4xx'
-          : response.status === 429
-            ? 'budget_exceeded'
-            : response.status >= 500 ? 'provider_5xx' : 'provider_4xx';
-        const failure = new Error(code);
-        failure.status = response.status;
-        // O provedor explica a recusa em texto — schema invalido, nenhum
-        // endpoint compativel, politica de dados — e sem isso o diagnostico
-        // vira tentativa e erro. Fica numa propriedade separada, nunca em
-        // `message`: so a superficie administrativa a le, e o codigo continua
-        // sendo a unica coisa que chega ao usuario e a trace.
-        failure.providerMessage = await providerFailureMessage(response);
-        throw failure;
-      }
+        }, signal);
       let payload;
       try {
         payload = await response.json();

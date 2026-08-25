@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CATALOG_RESEARCH_GEOGRAPHIES,
   CATALOG_RESEARCH_QUANTITIES,
+  countResearchCandidates,
   flattenResearchPreviews,
   groupApprovedResearchDecisions,
   nextResearchBatch,
@@ -78,5 +79,21 @@ describe('catalog deep-research flow', () => {
 
     expect(calls.map((call) => call.batchSize)).toEqual([5, 5]);
     expect(result).toMatchObject({ cards: 10, complete: true });
+  });
+
+  it('does not count invalid or duplicate rows toward the requested quantity', async () => {
+    const previews = [{ batchId: 'a', rows: [
+      { rowNumber: 1, status: 'invalid', record: { nome: 'Inválido' } },
+      { rowNumber: 2, status: 'possible_duplicate', record: { nome: 'Duplicado' } },
+      { rowNumber: 3, status: 'already_imported', record: { nome: 'Importado' } },
+    ] }];
+    expect(countResearchCandidates(previews)).toBe(0);
+    expect(nextResearchBatch(previews, 5)).toMatchObject({ batchIndex: 1, batchSize: 5, excludeCandidates: ['Inválido', 'Duplicado', 'Importado'] });
+    const result = await runCatalogResearchBatches({
+      initialPreviews: previews,
+      requestedQuantity: 5,
+      requestBatch: async () => ({ batchId: 'b', rows: [{ rowNumber: 1, status: 'invalid', record: { nome: 'Outro inválido' } }] }),
+    });
+    expect(result).toMatchObject({ cards: 0, complete: false });
   });
 });

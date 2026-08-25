@@ -13,9 +13,13 @@ export function flattenResearchPreviews(previews = []) {
   return previews.flatMap((preview) => (preview?.rows || []).map((row) => ({ ...row, batchId: preview.batchId })));
 }
 
+export function countResearchCandidates(previews = []) {
+  return flattenResearchPreviews(previews).filter((row) => row?.status ? row.status === 'new' : Boolean(row?.record?.nome || row?.record?.instituicao)).length;
+}
+
 export function nextResearchBatch(previews = [], requestedQuantity = CATALOG_RESEARCH_QUANTITIES[0]) {
   const rows = flattenResearchPreviews(previews);
-  const remaining = Math.max(0, Number(requestedQuantity) - rows.length);
+  const remaining = Math.max(0, Number(requestedQuantity) - countResearchCandidates(previews));
   if (!remaining) return null;
   return {
     batchIndex: previews.length,
@@ -27,7 +31,7 @@ export function nextResearchBatch(previews = [], requestedQuantity = CATALOG_RES
 export async function runCatalogResearchBatches({ initialPreviews = [], requestedQuantity, requestBatch, onBatch } = {}) {
   if (typeof requestBatch !== 'function') throw new TypeError('research_batch_request_required');
   let previews = [...initialPreviews];
-  const initialCards = flattenResearchPreviews(previews).length;
+  const initialCards = countResearchCandidates(previews);
   const maximumBatches = Math.ceil(Math.max(0, Number(requestedQuantity) - initialCards) / CATALOG_RESEARCH_BATCH_SIZE) + 2;
   for (let attempt = 0; attempt < maximumBatches; attempt += 1) {
     const batch = nextResearchBatch(previews, requestedQuantity);
@@ -44,8 +48,8 @@ export async function runCatalogResearchBatches({ initialPreviews = [], requeste
   }
   return {
     previews,
-    cards: flattenResearchPreviews(previews).length,
-    complete: flattenResearchPreviews(previews).length >= Number(requestedQuantity),
+    cards: countResearchCandidates(previews),
+    complete: countResearchCandidates(previews) >= Number(requestedQuantity),
   };
 }
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -32,6 +32,7 @@ import { DESIGN_TOKENS as T } from '../design-system/tokens';
 import {
   CATALOG_RESEARCH_GEOGRAPHIES,
   CATALOG_RESEARCH_QUANTITIES,
+  countResearchCandidates,
   flattenResearchPreviews,
   groupApprovedResearchDecisions,
   researchDecisionKey,
@@ -62,6 +63,10 @@ const SOURCE_OPTIONS = Object.freeze([
 
 const SUBTYPES = Object.freeze({ person: PERSON_SUBTYPES, organization: ORGANIZATION_SUBTYPES });
 
+function newResearchRunId() {
+  return globalThis.crypto?.randomUUID?.() || `research-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function errorMessage(body) {
   if (body?.error === 'too_many_research_attempts') return 'Muitas pesquisas em sequência. Aguarde alguns minutos antes de tentar novamente.';
   if (body?.error === 'ai_budget_exceeded') return 'O limite diário de uso da IA foi atingido.';
@@ -77,6 +82,7 @@ export default function CatalogResearchPage() {
   const navigate = useNavigate();
   const data = useData();
   const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [researchRunId, setResearchRunId] = useState(newResearchRunId);
   const [previews, setPreviews] = useState([]);
   const [decisions, setDecisions] = useState({});
   const [busy, setBusy] = useState(false);
@@ -91,12 +97,43 @@ export default function CatalogResearchPage() {
 
   const rows = useMemo(() => flattenResearchPreviews(previews), [previews]);
   const approvedCount = countApprovedDecisions(decisions);
-  const previewSummary = { cards: rows.length };
+  const previewSummary = { cards: countResearchCandidates(previews) };
   const missingRequirement = !form.subtype
     ? 'Escolha um tipo de parceiro no passo 1 para começar.'
     : !form.context.trim()
       ? 'Descreva o que você procura no passo 2 para começar.'
       : '';
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/admin/catalog-research', { credentials: 'include' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((body) => {
+        if (!active || !Array.isArray(body?.pending) || previews.length) return;
+        const groups = new Map();
+        body.pending.forEach((preview) => {
+          const request = preview.researchRequest;
+          if (!request?.researchRunId) return;
+          const group = groups.get(request.researchRunId) || [];
+          group.push(preview);
+          groups.set(request.researchRunId, group);
+        });
+        const latest = [...groups.values()]
+          .sort((left, right) => Math.max(...right.map((item) => Number(item.researchRequest?.batchIndex || 0))) - Math.max(...left.map((item) => Number(item.researchRequest?.batchIndex || 0))))[0];
+        const request = latest?.[0]?.researchRequest;
+        if (!request) return;
+        const restored = [...latest].sort((left, right) => Number(left.researchRequest?.batchIndex || 0) - Number(right.researchRequest?.batchIndex || 0));
+        setForm({ ...EMPTY_FORM, ...request });
+        setResearchRunId(request.researchRunId);
+        setPreviews(restored);
+        setDecisions(Object.fromEntries(restored.flatMap((preview) => (preview.rows || []).map((row) => [
+          researchDecisionKey(preview.batchId, row.rowNumber),
+          row.status === 'possible_duplicate' ? 'keep_existing' : 'ignore',
+        ]))));
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   /**
    * O registro que já está no catálogo, para a duplicata poder ser comparada.
@@ -112,6 +149,7 @@ export default function CatalogResearchPage() {
 
   const change = (field, value) => {
     setForm((previous) => ({ ...previous, [field]: value }));
+    setResearchRunId(newResearchRunId());
     setPreviews([]);
     setDecisions({});
     setError('');
@@ -119,6 +157,7 @@ export default function CatalogResearchPage() {
 
   const changeCategory = (category) => {
     setForm((previous) => ({ ...previous, category, subtype: '' }));
+    setResearchRunId(newResearchRunId());
     setPreviews([]);
     setDecisions({});
     setError('');
@@ -138,7 +177,7 @@ export default function CatalogResearchPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ ...form, ...batch }),
+            body: JSON.stringify({ ...form, researchRunId, ...batch }),
           });
           const body = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(errorMessage(body));
@@ -158,7 +197,7 @@ export default function CatalogResearchPage() {
       });
       if (!result.complete) setError(`A pesquisa encontrou ${result.cards} de ${form.quantity} cards com evidência suficiente. Você pode continuar para buscar os restantes.`);
     } catch (requestError) {
-      const preserved = flattenResearchPreviews(workingPreviews).length;
+      const preserved = countResearchCandidates(workingPreviews);
       setError(`${requestError.message || 'Não foi possível concluir a pesquisa.'}${preserved ? ` ${preserved} cards já concluídos foram preservados.` : ''}`);
     } finally {
       setBusy(false);

@@ -22,14 +22,14 @@ function response() {
   };
 }
 
-function request(role = 'admin') {
+function request(role = 'admin', overrides = {}) {
   const token = createSessionToken({ username: 'user', role });
   return {
-    method: 'POST',
+    method: overrides.method || 'POST',
     url: '/api/admin?action=catalog-research',
     headers: { cookie: `senai_session=${encodeURIComponent(token)}` },
     socket: { remoteAddress: 'catalog-research-test' },
-    body: { category: 'organization', context: 'Referências de formação industrial', quantity: 1 },
+    body: { category: 'organization', context: 'Referências de formação industrial', quantity: 1, ...overrides.body },
   };
 }
 
@@ -111,6 +111,31 @@ describe('POST /api/admin/catalog-research', () => {
     expect(warning).toHaveBeenCalledWith('catalog_research_usage_record_failed', { code: 'store_conflict' });
     accounting.mockRestore();
     warning.mockRestore();
+  });
+
+  it('reuses a pending batch for the same research run and batch index', async () => {
+    vi.mocked(researchCatalogCandidates).mockResolvedValue(researchedBatch());
+    const body = { researchRunId: 'run-1', batchIndex: 0 };
+    const first = response();
+    await handler(request('admin', { body }), first);
+    const second = response();
+    await handler(request('admin', { body }), second);
+
+    expect(second.statusCode).toBe(200);
+    expect(second.body.batchId).toBe(first.body.batchId);
+    expect(researchCatalogCandidates).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists pending research batches so the UI can resume after a reload', async () => {
+    vi.mocked(researchCatalogCandidates).mockResolvedValue(researchedBatch());
+    const created = response();
+    await handler(request('admin', { body: { researchRunId: 'run-resume', batchIndex: 0 } }), created);
+    const listed = response();
+    await handler(request('admin', { method: 'GET' }), listed);
+
+    expect(listed.statusCode).toBe(200);
+    expect(listed.body.pending).toHaveLength(1);
+    expect(listed.body.pending[0].researchRequest).toMatchObject({ researchRunId: 'run-resume', batchIndex: 0 });
   });
 
   it('allows a deep-research batch to run beyond the old 55-second limit', async () => {

@@ -72,6 +72,7 @@ export function normalizeCatalogResearchRequest(input = {}) {
   }
   const batchIndex = Number(input.batchIndex || 0);
   if (!Number.isInteger(batchIndex) || batchIndex < 0 || batchIndex > 99) throw new Error('invalid_research_batch_index');
+  const researchRunId = limitedText(input.researchRunId, 'research_run_id', 100);
   const geography = limitedText(input.geography || 'brasil', 'research_geography', 30).toLowerCase();
   if (!GEOGRAPHY_LABELS[geography]) throw new Error('invalid_research_geography');
   const excludeCandidates = Array.isArray(input.excludeCandidates)
@@ -83,6 +84,7 @@ export function normalizeCatalogResearchRequest(input = {}) {
     quantity,
     batchSize,
     batchIndex,
+    researchRunId,
     context: limitedText(input.context, 'research_context', 1600, { required: true }),
     purpose: limitedText(input.purpose, 'research_purpose', 800),
     geography,
@@ -331,6 +333,17 @@ function rowHash(row) {
   return crypto.createHash('sha256').update(JSON.stringify(row)).digest('hex');
 }
 
+function uniqueCandidates(candidates, excludedNames = []) {
+  const excluded = new Set(excludedNames.map(normalizedIdentity).filter(Boolean));
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    const key = normalizedIdentity(candidate?.nome || candidate?.instituicao_atual || candidate?.instituicao);
+    if (!key || excluded.has(key) || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function candidateToEntry(candidate, category, rowNumber, consultedAt) {
   const columnMap = new Map(getCatalogColumns(category).map((column) => [column.name, column]));
   const row = Object.fromEntries(getCatalogHeaders(category).map((header) => [header, '']));
@@ -393,9 +406,10 @@ export async function researchCatalogCandidates(input, { generate = generateStru
   const request = normalizeCatalogResearchRequest(input);
   const discovery = await generate({
     task: `catalog_research_${request.category}_batch_${request.batchIndex + 1}`,
-    model: 'openai/gpt-5.6-luna',
+    model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
     strictOutput: true,
     requireParameters: false,
+    disableReasoning: true,
     schema: catalogResearchOutputSchema(request.category, request.batchSize),
     messages: [
       { role: 'system', content: 'Você realiza pesquisa pública, rastreável e conservadora para o catálogo de stakeholders do SENAI-SP.' },
@@ -412,15 +426,18 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     signal,
   });
   const consultedAt = now().toISOString().slice(0, 10);
-  let candidates = Array.isArray(discovery.data?.candidates) ? discovery.data.candidates.slice(0, request.batchSize) : [];
+  let candidates = Array.isArray(discovery.data?.candidates)
+    ? uniqueCandidates(discovery.data.candidates, request.excludeCandidates).slice(0, request.batchSize)
+    : [];
   if (!candidates.length) throw new Error('research_empty_output');
   const traces = [discovery.trace];
   if (request.category === 'person') {
     const enrichment = await generate({
       task: `catalog_research_person_enrichment_batch_${request.batchIndex + 1}`,
-      model: 'openai/gpt-5.6-luna',
+      model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
+      disableReasoning: true,
       schema: personEnrichmentOutputSchema(candidates.length),
       messages: [
         { role: 'system', content: 'Você verifica identidades e perfis acadêmicos públicos com rastreabilidade e sem inferir URLs ou métricas.' },
@@ -443,9 +460,10 @@ export async function researchCatalogCandidates(input, { generate = generateStru
   if (shallowCandidates.length) {
     const qualityEnrichment = await generate({
       task: `catalog_research_quality_enrichment_${request.category}_batch_${request.batchIndex + 1}`,
-      model: 'openai/gpt-5.6-luna',
+      model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
+      disableReasoning: true,
       schema: catalogResearchOutputSchema(request.category, shallowCandidates.length),
       messages: [
         { role: 'system', content: 'Você completa fichas públicas do catálogo com rastreabilidade e aplica integralmente o padrão mínimo de qualidade.' },
@@ -465,7 +483,18 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     traces.push(qualityEnrichment.trace);
   }
   const trace = mergedTrace(traces);
-  const rows = candidates.map((candidate, index) => candidateToEntry(candidate, request.category, index + 1, consultedAt));
+  const citedSources = new Set((trace.webSearchSources || []).map((source) => validHttpUrl(source?.url)).filter(Boolean));
+  const rows = candidates.map((candidate, index) => {
+    const row = candidateToEntry(candidate, request.category, index + 1, consultedAt);
+    if (!citedSources.size) return row;
+    const unverifiedSources = (row.record?.fontes || []).filter((source) => !citedSources.has(validHttpUrl(source)));
+    if (!unverifiedSources.length) return row;
+    return {
+      ...row,
+      valid: false,
+      errors: [...row.errors, `Linha ${row.rowNumber}: fonte(s) não confirmada(s) pela pesquisa web.`],
+    };
+  });
   return {
     category: request.category,
     parsed: {
@@ -479,8 +508,10 @@ export async function researchCatalogCandidates(input, { generate = generateStru
         provider: trace.provider,
         model: trace.model,
         webSearchRequests: trace.webSearchRequests || 0,
+        consultedSources: citedSources.size,
         batchIndex: request.batchIndex,
         requestedQuantity: request.quantity,
+        researchRequest: request,
       },
       filename: `Pesquisa profunda — ${CATEGORY_LABELS[request.category]} — lote ${request.batchIndex + 1} — ${consultedAt}`,
       rowCount: rows.length,

@@ -311,6 +311,10 @@ export function getImportBatch(batchId) {
   return catalogStore.getCommitted(batchId) || catalogStore.getPending(batchId) || null;
 }
 
+export function listPendingResearchBatches() {
+  return catalogStore.listPending().filter((batch) => batch?.metadata?.origin === 'catalog_research');
+}
+
 export function listImportBatches() {
   return catalogStore.listBatches();
 }
