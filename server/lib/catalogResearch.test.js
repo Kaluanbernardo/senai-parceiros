@@ -102,7 +102,6 @@ describe('catalog research module', () => {
       model: 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
-      disableReasoning: true,
       maxOutputTokens: 16000,
       webSearch: expect.objectContaining({ engine: 'native', maxResults: 10, maxTotalResults: 20, searchContextSize: 'high' }),
     }));
@@ -117,6 +116,27 @@ describe('catalog research module', () => {
     expect(result.parsed.rows[0].record.areas_formacao).toEqual(['mecatrônica', 'automação']);
     expect(result.parsed.rows[0].record.fontes).toHaveLength(3);
     expect(result.parsed.rows[0].row.data_consulta).toBe('2026-08-14');
+  });
+
+  it('lets a pinned research model use its mandatory reasoning contract', async () => {
+    const generate = vi.fn(async (options) => {
+      if (options.disableReasoning) {
+        const error = new Error('provider_4xx');
+        error.status = 400;
+        error.providerMessage = 'Reasoning is mandatory for this endpoint and cannot be disabled.';
+        throw error;
+      }
+      return {
+        data: { candidates: [candidate()] },
+        trace: { provider: 'openrouter', model: 'test/model' },
+      };
+    });
+
+    await expect(researchCatalogCandidates(
+      { category: 'organization', subtype: 'Instituição de ensino', context: 'Comparar aprendizagem industrial', quantity: 5, geography: 'brasil' },
+      { generate },
+    )).resolves.toMatchObject({ category: 'organization' });
+    expect(generate.mock.calls[0][0].disableReasoning).toBeUndefined();
   });
 
   it('runs a separate targeted identity pass before academic fields can be declared missing', async () => {

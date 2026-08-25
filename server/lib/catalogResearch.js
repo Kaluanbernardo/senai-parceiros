@@ -409,7 +409,6 @@ export async function researchCatalogCandidates(input, { generate = generateStru
     model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
     strictOutput: true,
     requireParameters: false,
-    disableReasoning: true,
     schema: catalogResearchOutputSchema(request.category, request.batchSize),
     messages: [
       { role: 'system', content: 'Você realiza pesquisa pública, rastreável e conservadora para o catálogo de stakeholders do SENAI-SP.' },
@@ -437,7 +436,6 @@ export async function researchCatalogCandidates(input, { generate = generateStru
       model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
-      disableReasoning: true,
       schema: personEnrichmentOutputSchema(candidates.length),
       messages: [
         { role: 'system', content: 'Você verifica identidades e perfis acadêmicos públicos com rastreabilidade e sem inferir URLs ou métricas.' },
@@ -463,7 +461,6 @@ export async function researchCatalogCandidates(input, { generate = generateStru
       model: process.env.AI_MODEL_CATALOG_RESEARCH || 'openai/gpt-5.6-luna',
       strictOutput: true,
       requireParameters: false,
-      disableReasoning: true,
       schema: catalogResearchOutputSchema(request.category, shallowCandidates.length),
       messages: [
         { role: 'system', content: 'Você completa fichas públicas do catálogo com rastreabilidade e aplica integralmente o padrão mínimo de qualidade.' },
