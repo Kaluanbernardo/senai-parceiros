@@ -63,9 +63,16 @@ describe('catalog deep-research flow', () => {
   });
 
   it('holds completed batches until the whole requested quantity is ready', () => {
-    const previews = [{ batchId: 'batch-0', rows: [{ rowNumber: 1, record: { nome: 'Parcial' } }] }];
+    const previews = [{ batchId: 'batch-0', rows: [
+      { rowNumber: 1, status: 'new', record: { nome: 'Novo' } },
+      { rowNumber: 2, status: 'possible_duplicate', record: { nome: 'Já existe' } },
+      { rowNumber: 3, status: 'invalid', record: { nome: 'Sem evidência' } },
+    ] }];
     expect(visibleResearchPreviews(previews, true)).toEqual([]);
-    expect(visibleResearchPreviews(previews, false)).toBe(previews);
+    expect(visibleResearchPreviews(previews, false)).toEqual([{ batchId: 'batch-0', rows: [
+      previews[0].rows[0],
+      previews[0].rows[2],
+    ] }]);
   });
 
   it('runs a 10-card request as two sequential batches', async () => {

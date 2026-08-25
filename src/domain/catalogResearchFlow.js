@@ -18,7 +18,13 @@ export function countResearchCandidates(previews = []) {
 }
 
 export function visibleResearchPreviews(previews = [], busy = false) {
-  return busy ? [] : previews;
+  if (busy) return [];
+  return previews
+    .map((preview) => ({
+      ...preview,
+      rows: (preview?.rows || []).filter((row) => !['possible_duplicate', 'already_imported'].includes(row.status)),
+    }))
+    .filter((preview) => preview.rows.length);
 }
 
 export function nextResearchBatch(previews = [], requestedQuantity = CATALOG_RESEARCH_QUANTITIES[0]) {
